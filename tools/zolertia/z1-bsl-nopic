@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Serial Bootstrap Loader software for the MSP430 embedded proccessor.
+#!/usr/bin/env python3
+# Serial Bootstrap Loader software for the MSP430 embedded processor.
 #
 # (C) 2001-2003 Chris Liechti <cliechti@gmx.net>
 # this is distributed under a free software license, see license-bsl.txt
@@ -9,16 +9,15 @@
 # based on the application note slas96b.pdf from Texas Instruments, Inc.,
 # Volker Rzehak
 # additional infos from slaa089a.pdf
-# 
+#
 # Forked by Travis Goodspeed <travis at tnbelt.com> for use with the GoodFET
 # JTAG programmer.
 
-import sys, time, string, cStringIO, struct
-sys.path.append("/usr/lib/tinyos")
+import sys, time, io, struct
 import serial, os, glob
 
 #forked from TinyOS Telos version.
-VERSION = string.split("Revision: 1.39-goodfet-8 z1 fork")[1] 
+VERSION = "Revision: 1.39-goodfet-8 z1 fork".split()[1]
 
 DEBUG = 0                                       #disable debug messages by default
 
@@ -274,8 +273,8 @@ class LowLevel:
         """Calculates a checksum of "data"."""
         checksum = 0
 
-        for i in range(length/2):
-            checksum = checksum ^ (ord(data[i*2]) | (ord(data[i*2+1]) << 8))    #xor-ing
+        for i in range(length//2):
+            checksum = checksum ^ (data[i*2] | (data[i*2+1] << 8))    #xor-ing
         return 0xffff & (checksum ^ 0xffff)         #inverting
 
     def __init__(self, aTimeout = None, aProlongFactor = None):
@@ -296,9 +295,9 @@ class LowLevel:
         self.swapRSTTEST = 0
         self.telosLatch = 0
         self.telosI2C = 0
-        
+
         self.z1 = 0
-        
+
         self.protocolMode = self.MODE_BSL
         self.BSLMemAccessWarning = 0                #Default: no warning.
         self.slowmode = 0
@@ -334,7 +333,7 @@ class LowLevel:
         otherwise the serial port might not be released and can not be
         used in other programs.
         Returns zero if the function is successful."""
-        if DEBUG > 1: sys.stderr.write("* comDone()")
+        if DEBUG > 1: sys.stderr.write("* comDone()\n")
         self.SetRSTpin(1)                       #disable power
         self.SetTESTpin(0)                      #disable power
         self.serialport.close()
@@ -345,8 +344,8 @@ class LowLevel:
 
         hdr = self.serialport.read(1)
         if not hdr: raise BSLException("Timeout")
-        rxHeader = ord(hdr) & 0xf0;
-        rxNum    = ord(hdr) & 0x0f;
+        rxHeader = hdr[0] & 0xf0
+        rxNum    = hdr[0] & 0x0f
 
         if self.protocolMode == self.MODE_BSL:
             self.reqNo = 0
@@ -357,7 +356,7 @@ class LowLevel:
 
     def comRxFrame(self, rxNum):
         if DEBUG > 1: sys.stderr.write("* comRxFrame()\n")
-        rxFrame = chr(self.DATA_FRAME | rxNum)
+        rxFrame = bytes([self.DATA_FRAME | rxNum])
 
         if DEBUG > 2: sys.stderr.write("  comRxFrame() header...\n")
         rxFramedata = self.serialport.read(3)
@@ -365,8 +364,8 @@ class LowLevel:
         rxFrame = rxFrame + rxFramedata
 
         if DEBUG > 3: sys.stderr.write("  comRxFrame() check header...\n")
-        if rxFrame[1] == chr(0) and rxFrame[2] == rxFrame[3]:   #Add. header info. correct?
-            rxLengthCRC = ord(rxFrame[2]) + 2       #Add CRC-Bytes to length
+        if rxFrame[1] == 0 and rxFrame[2] == rxFrame[3]:   #Add. header info. correct?
+            rxLengthCRC = rxFrame[2] + 2       #Add CRC-Bytes to length
             if DEBUG > 2: sys.stderr.write("  comRxFrame() receiving data, size: %s\n" % rxLengthCRC)
 
             rxFramedata = self.serialport.read(rxLengthCRC)
@@ -375,9 +374,9 @@ class LowLevel:
             #Check received frame:
             if DEBUG > 3: sys.stderr.write("  comRxFrame() crc check\n")
             #rxLength+4: Length with header but w/o CRC:
-            checksum = self.calcChecksum(rxFrame, ord(rxFrame[2]) + 4)
-            if rxFrame[ord(rxFrame[2])+4] == chr(0xff & checksum) and \
-               rxFrame[ord(rxFrame[2])+5] == chr(0xff & (checksum >> 8)): #Checksum correct?
+            checksum = self.calcChecksum(rxFrame, rxFrame[2] + 4)
+            if rxFrame[rxFrame[2]+4] == (0xff & checksum) and \
+               rxFrame[rxFrame[2]+5] == (0xff & (checksum >> 8)): #Checksum correct?
                 #Frame received correctly (=> send next frame)
                 if DEBUG > 2: sys.stderr.write("* comRxFrame() OK\n")
                 return rxFrame
@@ -400,11 +399,10 @@ class LowLevel:
         In this routine all the necessary protocol stuff is handled.
         Returns zero if the function was successful."""
         if DEBUG > 1: sys.stderr.write("* comTxRx()\n")
-        txFrame     = []
+        txFrame     = b''
         rxHeader    = 0
         rxNum       = 0
 
-        dataOut = list(dataOut)     #convert to a list for simpler data fill in
         #Transmitting part ----------------------------------------
         #Prepare data for transmit
         if (length % 2) != 0:
@@ -414,16 +412,16 @@ class LowLevel:
             else:
                 dataOut.append(0)     #fill with zero
 
-        txFrame = "%c%c%c%c" % (self.DATA_FRAME | self.seqNo, cmd, len(dataOut), len(dataOut))
+        txFrame = bytes([self.DATA_FRAME | self.seqNo, cmd, len(dataOut), len(dataOut)])
 
         self.reqNo = (self.seqNo + 1) % self.MAX_FRAME_COUNT
 
-        txFrame = txFrame + string.join(dataOut,'')
+        txFrame = txFrame + dataOut
         checksum = self.calcChecksum(txFrame, length + 4)
-        txFrame = txFrame + chr(checksum & 0xff)
-        txFrame = txFrame + chr((checksum >> 8) & 0xff)
+        txFrame = txFrame + bytes([checksum & 0xff])
+        txFrame = txFrame + bytes([(checksum >> 8) & 0xff])
 
-        accessAddr = (0x0212 + (checksum^0xffff)) & 0xfffe  #0x0212: Address of wCHKSUM
+        accessAddr = (0x0212 + (checksum ^ 0xffff)) & 0xfffe  # 0x0212: Address of wCHKSUM
         if self.BSLMemAccessWarning and accessAddr < self.BSL_CRITICAL_ADDR:
             sys.stderr.write("WARNING: This command might change data at address %04x or %04x!\n" % (accessAddr, accessAddr + 1))
 
@@ -431,11 +429,11 @@ class LowLevel:
         #TODO: Check after each transmitted character,
         #TODO: if microcontroller did send a character (probably a NAK!).
         for c in txFrame:
-            self.serialport.write(c)
-            if DEBUG > 3: sys.stderr.write("\ttx %02x" % ord(c))
+            self.serialport.write(bytes([c]))
+            if DEBUG > 3: sys.stderr.write("\ttx %02x" % c)
             #if self.serialport.inWaiting(): break  #abort when BSL replies, probably NAK
         else:
-            if DEBUG > 1: sys.stderr.write( "  comTxRx() transmit OK\n")
+            if DEBUG > 1: sys.stderr.write("  comTxRx() transmit OK\n")
 
         #Receiving part -------------------------------------------
         rxHeader, rxNum = self.comRxHeader()        #receive header
@@ -514,7 +512,7 @@ class LowLevel:
         self.picROMclock(0, True)
         #k = 1
         #while not self.serial.getCTS():
-        #    pass 
+        #    pass
         #time.sleep(0.1)
         return recbuf
 
@@ -531,7 +529,7 @@ class LowLevel:
         self.picROMclock(r)
         #time.sleep(0.1)
         return recbuf
-        
+
     def picROMclock(self, masterout, slow = False):
         #print "setting masterout to "+str(masterout)
         self.serialport.setRTS(masterout)
@@ -556,10 +554,10 @@ class LowLevel:
         Parameters:
             invokeBSL = 1: complete sequence
             invokeBSL = 0: only RST/NMI pin accessed
-            
+
         By now only BSL mode is accessed
         '''
-        
+
         if DEBUG > 1: sys.stderr.write("* bslReset(invokeBSL=%s)\n" % invokeBSL)
         if invokeBSL:
             #sys.stderr.write("in Z1 bsl reset...\n")
@@ -599,15 +597,15 @@ class LowLevel:
         self.telosSetSCL(0)
 
     def telosI2CWriteByte(self, byte):
-        self.telosI2CWriteBit( byte & 0x80 );
-        self.telosI2CWriteBit( byte & 0x40 );
-        self.telosI2CWriteBit( byte & 0x20 );
-        self.telosI2CWriteBit( byte & 0x10 );
-        self.telosI2CWriteBit( byte & 0x08 );
-        self.telosI2CWriteBit( byte & 0x04 );
-        self.telosI2CWriteBit( byte & 0x02 );
-        self.telosI2CWriteBit( byte & 0x01 );
-        self.telosI2CWriteBit( 0 );  # "acknowledge"
+        self.telosI2CWriteBit( byte & 0x80 )
+        self.telosI2CWriteBit( byte & 0x40 )
+        self.telosI2CWriteBit( byte & 0x20 )
+        self.telosI2CWriteBit( byte & 0x10 )
+        self.telosI2CWriteBit( byte & 0x08 )
+        self.telosI2CWriteBit( byte & 0x04 )
+        self.telosI2CWriteBit( byte & 0x02 )
+        self.telosI2CWriteBit( byte & 0x01 )
+        self.telosI2CWriteBit( 0 )  # "acknowledge"
 
     def telosI2CWriteCmd(self, addr, cmdbyte):
         self.telosI2CStart()
@@ -617,26 +615,27 @@ class LowLevel:
 
     def telosBReset(self,invokeBSL=0):
         # "BSL entry sequence at dedicated JTAG pins"
-            # rst !s0: 0 0 0 0 1 1
+        # rst !s0: 0 0 0 0 1 1
         # tck !s1: 1 0 1 0 0 1
-            #   s0|s1: 1 3 1 3 2 0
-    
+        #   s0|s1: 1 3 1 3 2 0
+
         # "BSL entry sequence at shared JTAG pins"
-            # rst !s0: 0 0 0 0 1 1
+        # rst !s0: 0 0 0 0 1 1
         # tck !s1: 0 1 0 1 1 0
-            #   s0|s1: 3 1 3 1 0 2
+        #   s0|s1: 3 1 3 1 0 2
+
         if invokeBSL:
-          self.telosI2CWriteCmd(0,1)
-          self.telosI2CWriteCmd(0,3)
-          self.telosI2CWriteCmd(0,1)
-          self.telosI2CWriteCmd(0,3)
-          self.telosI2CWriteCmd(0,2)
-          self.telosI2CWriteCmd(0,0)
+            self.telosI2CWriteCmd(0,1)
+            self.telosI2CWriteCmd(0,3)
+            self.telosI2CWriteCmd(0,1)
+            self.telosI2CWriteCmd(0,3)
+            self.telosI2CWriteCmd(0,2)
+            self.telosI2CWriteCmd(0,0)
         else:
-          self.telosI2CWriteCmd(0,3)
-          self.telosI2CWriteCmd(0,2)
-          self.telosI2CWriteCmd(0,0)
-          time.sleep(0.250)       #give MSP430's oscillator time to stabilize
+            self.telosI2CWriteCmd(0,3)
+            self.telosI2CWriteCmd(0,2)
+            self.telosI2CWriteCmd(0,0)
+            time.sleep(0.250)       #give MSP430's oscillator time to stabilize
         self.serialport.flushInput()  #clear buffers
 
     def bslReset(self, invokeBSL=0):
@@ -645,31 +644,31 @@ class LowLevel:
             invokeBSL = 1: complete sequence
             invokeBSL = 0: only RST/NMI pin accessed
 
-        RST is inverted twice on boot loader hardware
+        RST is inverted twice on bootloader hardware
         TEST is inverted (only once)
         Need positive voltage on DTR, RTS for power-supply of hardware"""
-        
+
         #print 'goint to reset!'
-        
+
         if self.telosI2C:
             self.telosBReset(invokeBSL)
             return
-    
+
         if self.z1:
             if DEBUG > 1: sys.stderr.write("* entering bsl with z1\n")
             self.bslResetZ1(invokeBSL)
             return
-    
+
         if DEBUG > 1: sys.stderr.write("* bslReset(invokeBSL=%s)\n" % invokeBSL)
         self.SetRSTpin(1)       #power suply
         self.SetTESTpin(1)      #power suply
-        time.sleep(0.250)       #charge capacitor on boot loader hardware
-    
+        time.sleep(0.250)       #charge capacitor on bootloader hardware
+
         if self.telosLatch:
             self.SetTESTpin(0)
             self.SetRSTpin(0)
             self.SetTESTpin(1)
-    
+
             self.SetRSTpin(0)       #RST  pin: GND
         if invokeBSL:
             self.SetTESTpin(1)  #TEST pin: GND
@@ -681,10 +680,10 @@ class LowLevel:
         else:
             self.SetRSTpin(1)   #RST  pin: Vcc
         time.sleep(0.250)       #give MSP430's oscillator time to stabilize
-    
+
         self.serialport.flushInput()    #clear buffers
 
-    def bslSync(self,wait=0):
+    def bslSync(self, wait=0):
         """Transmits Synchronization character and expects to receive Acknowledge character
         if wait is 0 it must work the first time. otherwise if wait is 1
         it is retried (forever).
@@ -696,49 +695,51 @@ class LowLevel:
             loopcnt = loopcnt - 1                   #count down tries
             self.serialport.flushInput()            #clear input, in case a prog is running
 
-            self.serialport.write(chr(self.BSL_SYNC))   #Send synchronization byte
+            self.serialport.write(bytes([self.BSL_SYNC]))   #Send synchronization byte
             c = self.serialport.read(1)             #read answer
-            if c == chr(self.DATA_ACK):             #ACk
+            if c == bytes([self.DATA_ACK]):         #ACk
                 if DEBUG > 1: sys.stderr.write("  bslSync() OK\n")
                 return                              #Sync. successful
             elif not c:                             #timeout
-                    if loopcnt > 4:
-                        if DEBUG > 1:
-                            sys.stderr.write("  bslSync() timeout, retry ...\n")
-                    elif loopcnt == 4:
-                        #nmi may have caused the first reset to be ignored, try again
-                        self.bslReset(0) 
-                        self.bslReset(1)
-                    elif loopcnt > 0:
-                        if DEBUG > 1:
-                            sys.stderr.write("  bslSync() timeout, retry ...\n")
-                    else :
-                        if DEBUG > 1:
-                            sys.stderr.write("  bslSync() timeout\n")
-            else:                                   #garbage
-                if DEBUG > 1: sys.stderr.write("  bslSync() failed (0x%02x), retry ...\n" % ord(c))
-                
+                if loopcnt > 4:
+                    if DEBUG > 1:
+                        sys.stderr.write("  bslSync() timeout, retry ...\n")
+                elif loopcnt == 4:
+                    #nmi may have caused the first reset to be ignored, try again
+                    self.bslReset(0)
+                    self.bslReset(1)
+                elif loopcnt > 0:
+                    if DEBUG > 1:
+                        sys.stderr.write("  bslSync() timeout, retry ...\n")
+                else:
+                    if DEBUG > 1:
+                        sys.stderr.write("  bslSync() timeout\n")
+            else:                                   # garbage
+                if DEBUG > 1: sys.stderr.write("  bslSync() failed (0x%02x), retry ...\n" % c[0])
+
                 raise BSLException(self.ERR_BSL_SYNC)       #Sync. failed
 
-    def bslTxRx(self, cmd, addr, length = 0, blkout = None, wait=0):
+    def bslTxRx(self, cmd, addr, length=0, blkout=None, wait=0):
         """Transmits a command (cmd) with its parameters:
         start-address (addr), length (len) and additional
-        data (blkout) to boot loader.
+        data (blkout) to bootloader.
         wait specified if the bsl sync should be tried once or
         repeated, forever
-        Parameters return by boot loader are passed via blkin.
+        Parameters return by bootloader are passed via blkin.
         """
         if DEBUG > 1: sys.stderr.write("* bslTxRx()\n")
+        if blkout is None:
+            blkout = b''
 
         if cmd == self.BSL_TXBLK:
             #Align to even start address
             if (addr % 2) != 0:
                 addr = addr - 1                     #Decrement address and
-                blkout = chr(0xFF) + blkOut         #fill first byte of blkout with 0xFF
+                blkout = b'\xff' + blkout           #fill first byte of blkout with 0xFF
                 length = length + 1
             #Make sure that len is even
             if (length % 2) != 0:
-                blkout = blkout + chr(0xFF)         #Inc. len and fill last byte of blkout with 0xFF
+                blkout += b'\xff'                   #Inc. len and fill last byte of blkout with 0xFF
                 length = length + 1
 
         elif cmd == self.BSL_RXBLK:
@@ -754,7 +755,7 @@ class LowLevel:
         #    length = len + 4
 
         #Add necessary information data to frame
-        dataOut =  struct.pack("<HH", addr, length)
+        dataOut = struct.pack("<HH", addr, length)
 
         if blkout: #Copy data out of blkout into frame
             dataOut = dataOut + blkout
@@ -804,7 +805,7 @@ class Memory:
 
     def loadIHex(self, file):
         """load data from a (opened) file in Intel-HEX format"""
-        segmentdata = []
+        segmentdata = b''
         currentAddr = 0
         startAddr   = 0
         offsetAddr  = 0
@@ -814,29 +815,29 @@ class Memory:
             l = l.strip()       #fix CR-LF issues...
             length  = int(l[1:3],16)
             address = int(l[3:7],16)
-            type    = int(l[7:9],16)
+            field_type = int(l[7:9], 16)
             check   = int(l[-2:],16)
-            if type == 0x00:
+            if field_type == 0x00:
                 if currentAddr != offsetAddr + address:
                     if segmentdata:
-                        self.segments.append( Segment(startAddr, string.join(segmentdata,'')) )
+                        self.segments.append(Segment(startAddr, segmentdata))
                     startAddr = currentAddr = offsetAddr + address
-                    segmentdata = []
+                    segmentdata = b''
                 for i in range(length):
-                    segmentdata.append( chr(int(l[9+2*i:11+2*i],16)) )
+                    segmentdata += bytes([int(l[9+2*i:11+2*i],16)])
                 currentAddr = length + currentAddr
-            elif type == 0x02:
+            elif field_type == 0x02:
                 if segmentdata:
-                    self.segments.append( Segment(startAddr, string.join(segmentdata,'')) )
+                    self.segments.append(Segment(startAddr, segmentdata))
                 offsetAddr = int(l[9:13],16)*16
                 startAddr = currentAddr = offsetAddr
-                segmentdata = []
-            elif type in (0x01, 0x03, 0x04, 0x05):
+                segmentdata = b''
+            elif field_type in (0x01, 0x03, 0x04, 0x05):
                 pass
             else:
-                sys.stderr.write("Ignored unknown field (type 0x%02x) in ihex file.\n" % type)
+                sys.stderr.write("Ignored unknown field (type 0x%02x) in ihex file.\n" % field_type)
         if segmentdata:
-            self.segments.append( Segment(startAddr, string.join(segmentdata,'')) )
+            self.segments.append( Segment(startAddr, segmentdata) )
 
         if DEBUG:
             sys.stderr.write("loadIHex\n")
@@ -845,27 +846,28 @@ class Memory:
 
     def loadTIText(self, file):
         """load data from a (opened) file in TI-Text format"""
-        next        = 1
-        startAddr   = 0
-        segmentdata = []
-        #Convert data for MSP430, TXT-File is parsed line by line
-        while next >= 1:
-            #Read one line
+        startAddr = 0
+        segmentdata = b''
+        # Convert data for MSP430, TXT-File is parsed line by line
+        while True:
+            # Read one line
             l = file.readline()
-            if not l: break #EOF
+            if not l:
+                break  # EOF
             l = l.strip()
-            if l[0] == 'q': break
+            if l[0] == 'q':
+                break
             elif l[0] == '@':        #if @ => new address => send frame and set new addr.
                 #create a new segment
                 if segmentdata:
-                    self.segments.append( Segment(startAddr, string.join(segmentdata,'')) )
-                startAddr = int(l[1:],16)
-                segmentdata = []
+                    self.segments.append(Segment(startAddr, segmentdata))
+                startAddr = int(l[1:], 16)
+                segmentdata = b''
             else:
-                for i in string.split(l):
-                    segmentdata.append(chr(int(i,16)))
+                for i in l.split():
+                    segmentdata += bytes([int(i, 16)])
         if segmentdata:
-            self.segments.append( Segment(startAddr, string.join(segmentdata,'')) )
+            self.segments.append( Segment(startAddr, segmentdata) )
 
     def loadELF(self, file):
         """load data from a (opened) file in ELF object format.
@@ -880,45 +882,45 @@ class Memory:
                 sys.stderr.write("ELF section %s at 0x%04x %d bytes\n" % (section.name, section.lma, len(section.data)))
             if len(section.data):
                 self.segments.append( Segment(section.lma, section.data) )
-        
+
     def loadFile(self, filename):
         """fill memory with the contents of a file. file type is determined from extension"""
         #TODO: do a contents based detection
         if filename[-4:].lower() == '.txt':
-            self.loadTIText(open(filename, "rb"))
+            self.loadTIText(open(filename, "r"))
         elif filename[-4:].lower() in ('.a43', '.hex'):
-            self.loadIHex(open(filename, "rb"))
+            self.loadIHex(open(filename, "r"))
         else:
             self.loadELF(open(filename, "rb"))
 
     def getMemrange(self, fromadr, toadr):
         """get a range of bytes from the memory. unavailable values are filled with 0xff."""
-        res = ''
-        toadr = toadr + 1   #python indxes are excluding end, so include it
+        res = b''
+        toadr = toadr + 1   # python indxes are excluding end, so include it
         while fromadr < toadr:
-            #print "fromto: %04x %04x" % (fromadr, toadr)
+            # print("fromto: %04x %04x" % (fromadr, toadr))
             for seg in self.segments:
-                #print seg
+                # print(seg)
                 segend = seg.startaddress + len(seg.data)
-                if seg.startaddress <= fromadr and fromadr < segend:
-                    #print "startok 0x%04x %d" % (seg.startaddress, len(seg.data))
-                    #print ("0x%04x "*3) % (segend, fromadr, toadr)
-                    if toadr > segend:   #not all data in segment
-                        #print "out of segment"
+                if seg.startaddress <= fromadr < segend:
+                    # print("startok 0x%04x %d" % (seg.startaddress, len(seg.data)))
+                    # print(("0x%04x "*3) % (segend, fromadr, toadr))
+                    if toadr > segend:   # not all data in segment
+                        # print("out of segment")
                         catchlength = segend-fromadr
                     else:
                         catchlength = toadr-fromadr
-                    #print toadr-fromadr
-                    #print catchlength
+                    # print(toadr-fromadr)
+                    # print(catchlength)
                     res = res + seg.data[fromadr-seg.startaddress : fromadr-seg.startaddress+catchlength]
-                    fromadr = fromadr + catchlength    #adjust start
+                    fromadr = fromadr + catchlength    # adjust start
                     if len(res) >= toadr-fromadr:
-                        break#return res
+                        break  # return res
             else:
-                    res = res + chr(255)
-                    fromadr = fromadr + 1 #adjust start
-                    #print "fill FF"
-        #print "res: %r" % res
+                res += b'\xff'
+                fromadr = fromadr + 1  # adjust start
+                #print("fill FF")
+        # print("res: %r" % res)
         return res
 
 
@@ -959,7 +961,7 @@ class BootStrapLoader(LowLevel):
             #Load PC with 0x0220.
             #This will invoke the patched bootstrap loader subroutines.
             self.bslTxRx(self.BSL_LOADPC,           #Command: Load PC
-                           0x0220)                  #Address to load into PC
+                         0x0220)                    #Address to load into PC
             self.BSLMemAccessWarning = 0 #Error is removed within workaround code
         return
 
@@ -969,7 +971,7 @@ class BootStrapLoader(LowLevel):
         if self.patchLoaded:
             self.BSLMemAccessWarning = 1                #Turn warning back on.
 
-    
+
     def verifyBlk(self, addr, blkout, action):
         """verify memory against data or 0xff"""
         if DEBUG > 1: sys.stderr.write("* verifyBlk()\n")
@@ -985,21 +987,22 @@ class BootStrapLoader(LowLevel):
                 if action & self.ACTION_VERIFY:
                     #Compare data in blkout and blkin
                     if blkin[i] != blkout[i]:
-                        sys.stderr.write("Verification failed at 0x%04x (0x%02x, 0x%02x)\n" % (addr+i, ord(blkin[i]), ord(blkout[i])))
+                        sys.stderr.write("Verification failed at 0x%04x (0x%02x, 0x%02x)\n" % (addr+i, blkin[i], blkout[i]))
                         sys.stderr.flush()
                         raise BSLException(self.ERR_VERIFY_FAILED)      #Verify failed!
                     continue
                 elif action & self.ACTION_ERASE_CHECK:
                     #Compare data in blkin with erase pattern
-                    if blkin[i] != chr(0xff):
-                        sys.stderr.write("Erase Check failed at 0x%04x (0x%02x)\n" % (addr+i, ord(blkin[i])))
+                    if blkin[i] != 0xff:
+                        sys.stderr.write("Erase Check failed at 0x%04x (0x%02x)\n" % (addr+i, blkin[i]))
                         sys.stderr.flush()
                         raise BSLException(self.ERR_ERASE_CHECK_FAILED) #Erase Check failed!
                     continue
-    def readBlk(self,adr,len):
-        """Read a block of memory."""
-        blkin = self.bslTxRx(self.BSL_RXBLK, addr, len(blkout))
-        
+
+    # def readBlk(self,adr,len):
+    #     """Read a block of memory."""
+    #     blkin = self.bslTxRx(self.BSL_RXBLK, addr, len(blkout))
+
     def programBlk(self, addr, blkout, action):
         """program a memory block"""
         if DEBUG > 1: sys.stderr.write("* programBlk()\n")
@@ -1039,7 +1042,7 @@ class BootStrapLoader(LowLevel):
                 pstart = pstart + length
                 currentAddr = currentAddr + length
                 self.byteCtr = self.byteCtr + length #total sum
-    
+
     def uploadData(self, startaddress, size, wait=0):
         """upload a datablock"""
         if DEBUG > 1: sys.stderr.write("* uploadData()\n")
@@ -1064,11 +1067,11 @@ class BootStrapLoader(LowLevel):
             sys.stderr.write("Transmit default password ...\n")
             sys.stderr.flush()
             #Flash is completely erased, the contents of all Flash cells is 0xff
-            passwd = chr(0xff)*32
+            passwd = b'\xff'*32
         else:
             #sanity check of password
             if len(passwd) != 32:
-                raise ValueError, "password has wrong length (%d)\n" % len(passwd)
+                raise ValueError("password has wrong length (%d)\n" % len(passwd))
             sys.stderr.write('Transmit password ...\n')
             sys.stderr.flush()
         #send the password
@@ -1078,17 +1081,17 @@ class BootStrapLoader(LowLevel):
                        passwd,              #password
                        wait=wait)           #if wait is 1, try to sync forever
         self.pwdsent = True
-        
+
 
     def getNewPassword(self):
-        print 'getting new password'
+        print('getting new password')
         newpassword = self.bslTxRx(self.BSL_RXBLK, 0xffe0, 0x0020)
         return newpassword
 
 
     def writeCalibTables(self):
-        print 'writing new tables'
-        print CALIB_TABLES
+        print('writing new tables')
+        print(CALIB_TABLES)
         calibtables = ["84C016FEFFFFFFFFFFFFFFFFFFFFFFFF",
                        "FFFFFFFFFFFFFFFFFFFF100880000001",
                        "7E270B790DAA7E4D06DF083308FEFFFF",
@@ -1099,7 +1102,7 @@ class BootStrapLoader(LowLevel):
         self.programBlk(0x10F0, "FFFFFFFFFFFF08018F958E9A8D8886D1", self.ACTION_PROGRAM)
 
     def writeCalibTables2(self):
-        print 'writing new tables 2ond part'
+        print('writing new tables 2ond part')
         #self.programBlk(0x10C0, "84C016FEFFFFFFFFFFFFFFFFFFFFFFFF", self.ACTION_PROGRAM)
         #self.programBlk(0x10D0, "FFFFFFFFFFFFFFFFFFFF100880000001", self.ACTION_PROGRAM)
         #self.programBlk(0x10E0, "7E270B790DAA7E4D06DF083308FEFFFF", self.ACTION_PROGRAM)
@@ -1112,7 +1115,7 @@ class BootStrapLoader(LowLevel):
         """Erase the flash memory completely (with mass erase command)"""
         sys.stderr.write("Mass Erase...\n")
         sys.stderr.flush()
-        self.bslReset(1)                            #Invoke the boot loader.
+        self.bslReset(1)                            #Invoke the bootloader.
         for i in range(self.meraseCycles):
             if i == 1: sys.stderr.write("Additional Mass Erase Cycles...\n")
             self.bslTxRx(self.BSL_MERAS,            #Command: Mass Erase
@@ -1128,8 +1131,8 @@ class BootStrapLoader(LowLevel):
         sys.stderr.write("Main Erase...\n")
         sys.stderr.flush()
         self.bslTxRx(self.BSL_ERASE,                #Command: Segment Erase
-                            0xfffe,                 #Any address within flash memory.
-                            0xa504)                 #Required setting for main erase!
+                     0xfffe,                        #Any address within flash memory.
+                     0xa504)                        #Required setting for main erase!
         #self.passwd = None                          #Password gets erased WHY??
 
 
@@ -1138,36 +1141,36 @@ class BootStrapLoader(LowLevel):
         """start BSL, download patch if desired and needed, adjust SP if desired"""
         sys.stderr.write("Invoking BSL...\n")
         sys.stderr.flush()
-        
+
         #for '30, invertTEST=0, else =1
         if bslreset:
             #detext if is z1?
-            self.bslReset(1)                        #Invoke the boot loader.
-        
-        
+            self.bslReset(1)                        #Invoke the bootloader.
+
+
         if(self.z1):
             ''' recover password from pic'''
-        
+
         self.txPasswd(self.passwd)                  #transmit password
 
         #Read actual bootstrap loader version.
         #sys.stderr.write("Reading BSL version ...\n")
         blkin = self.bslTxRx(self.BSL_RXBLK,        #Command: Read/Receive Block
-                          0x0ff0,                   #Start address
-                          16)                       #No. of bytes to read
+                             0x0ff0,                #Start address
+                             16)                    #No. of bytes to read
         dev_id, bslVerHi, bslVerLo = struct.unpack(">H8xBB4x", blkin[:-2]) #cut away checksum and extract data
-        self.dev_id=dev_id;
-        
-        
+        self.dev_id=dev_id
+
+
         if self.cpu is None:                        #cpy type forced?
-            if deviceids.has_key(dev_id):
+            if dev_id in deviceids:
                 self.cpu = deviceids[dev_id]        #try to autodectect CPU type
-                
+
                 if DEBUG:
                     sys.stderr.write("Autodetect successful: %04x -> %s\n" % (dev_id, self.cpu))
             else:
-                sys.stderr.write("Autodetect failed! Unkown ID: %04x. Trying to continue anyway.\n" % dev_id)
-                self.cpu = F1x                      #assume something and try anyway..
+                sys.stderr.write("Autodetect failed! Unknown ID: %04x. Trying to continue anyway.\n" % dev_id)
+                self.cpu = F1x                      #assume something and try anyway.
 
         sys.stderr.write("Current bootstrap loader version: %x.%x (Device ID: %04x)\n" % (bslVerHi, bslVerLo, dev_id))
         sys.stderr.flush()
@@ -1181,13 +1184,13 @@ class BootStrapLoader(LowLevel):
         if self.bslVer <= 0x0130 and adjsp:
             #only do this on BSL where it's needed to prevent
             #malfunction with F4xx devices/ newer ROM-BSLs
-            
+
             #Execute function within bootstrap loader
             #to prepare stack pointer for the following patch.
             #This function will lock the protected functions again.
             sys.stderr.write("Adjust SP. Load PC with 0x0C22 ...\n")
             self.bslTxRx(self.BSL_LOADPC,           #Command: Load PC
-                                0x0C22)             #Address to load into PC
+                         0x0C22)                    #Address to load into PC
             #Re-send password to re-gain access to protected functions.
             self.txPasswd(self.passwd)
 
@@ -1200,15 +1203,15 @@ class BootStrapLoader(LowLevel):
                 if DEBUG:
                     sys.stderr.write("Using built in BSL replacement for F4x devices\n")
                     sys.stderr.flush()
-                replacementBSL.loadTIText(cStringIO.StringIO(F4X_BSL))  #parse embedded BSL
+                replacementBSL.loadTIText(io.StringIO(F4X_BSL))  # parse embedded BSL
             else:
                 if DEBUG:
                     sys.stderr.write("Using built in BSL replacement for F1x devices\n")
                     sys.stderr.flush()
-                replacementBSL.loadTIText(cStringIO.StringIO(F1X_BSL))  #parse embedded BSL
-    
+                replacementBSL.loadTIText(io.StringIO(F1X_BSL))  #parse embedded BSL
+
         #now download the new BSL, if allowed and needed (version lower than the
-        #the replacement) or forced
+        #replacement) or forced
         if replacementBSL is not None:
             self.actionDownloadBSL(replacementBSL)
 
@@ -1227,8 +1230,8 @@ class BootStrapLoader(LowLevel):
                 sys.stderr.flush()
                 #Programming and verification is done in one pass.
                 #The patch file is only read and parsed once.
-                segments = Memory()                     #data to program
-                segments.loadTIText(cStringIO.StringIO(PATCH))  #parse embedded patch
+                segments = Memory()                      # data to program
+                segments.loadTIText(io.StringIO(PATCH))  # parse embedded patch
                 #program patch
                 self.programData(segments, self.ACTION_PROGRAM | self.ACTION_VERIFY)
                 self.patchLoaded = 1
@@ -1268,7 +1271,7 @@ class BootStrapLoader(LowLevel):
         self.txPasswd(self.passwd)
 
         #update version info
-        #verison only valid for the internal ones, but it also makes sure 
+        #verison only valid for the internal ones, but it also makes sure
         #that the patches are not applied if the user d/ls one
         self.bslVer = 0x0150
 
@@ -1279,7 +1282,7 @@ class BootStrapLoader(LowLevel):
         if self.data is not None:
             self.programData(self.data, self.ACTION_ERASE_CHECK)
         else:
-            raise BSLException, "cannot do erase check against data with not knowing the actual data"
+            raise BSLException("cannot do erase check against data with not knowing the actual data")
 
     def actionProgram(self):
         """program data into flash memory."""
@@ -1290,23 +1293,24 @@ class BootStrapLoader(LowLevel):
             sys.stderr.write("%i bytes programmed.\n" % self.byteCtr)
             sys.stderr.flush()
         else:
-            raise BSLException, "programming without data not possible"
+            raise BSLException("programming without data not possible")
+
     def actionFromweb(self):
         """Grab GoodFET firmware from the web, then flash it."""
-        print "Grabbing %x firmware." % self.dev_id;
-        print "%s" % firmware[self.dev_id];
+        print("Grabbing %x firmware." % self.dev_id)
+        print("%s" % firmware[self.dev_id])
         fn="/tmp/.goodfet.hex"
         os.system("curl %s >%s" % (firmware[self.dev_id],fn))
-        
-        fw=Memory(fn);
-        #fw.loadIhex(open(fn,"rb"));
-        
+
+        fw=Memory(fn)
+        #fw.loadIhex(open(fn,"rb"))
+
         sys.stderr.write("Program ...\n")
         sys.stderr.flush()
         self.programData(fw, self.ACTION_PROGRAM | self.ACTION_VERIFY)
         sys.stderr.write("%i bytes programmed.\n" % self.byteCtr)
         sys.stderr.flush()
-        
+
     def actionVerify(self):
         """Verify programmed data"""
         if self.data is not None:
@@ -1314,10 +1318,10 @@ class BootStrapLoader(LowLevel):
             sys.stderr.flush()
             self.programData(self.data, self.ACTION_VERIFY)
         else:
-            raise BSLException, "verify without data not possible"
+            raise BSLException("verify without data not possible")
 
     def actionReset(self):
-        """perform a reset, start user programm"""
+        """perform a reset, start user program"""
         sys.stderr.write("Reset device ...\n")
         sys.stderr.flush()
         self.bslReset(0) #only reset
@@ -1326,8 +1330,8 @@ class BootStrapLoader(LowLevel):
         """start program at specified address"""
         sys.stderr.write("Load PC with 0x%04x ...\n" % address)
         sys.stderr.flush()
-        self.bslTxRx(self.BSL_LOADPC, #Command: Load PC
-                            address)  #Address to load into PC
+        self.bslTxRx(self.BSL_LOADPC,  # Command: Load PC
+                     address)          # Address to load into PC
 
     #table with values from slaa089a.pdf
     bauratetable = {
@@ -1354,12 +1358,12 @@ class BootStrapLoader(LowLevel):
         try:
             baudconfigs = self.bauratetable[self.cpu]
         except KeyError:
-            raise ValueError, "unknown CPU type %s, can't switch baudrate" % self.cpu
+            raise ValueError("unknown CPU type %s, can't switch baudrate" % self.cpu)
         try:
             a,l = baudconfigs[baudrate]
         except KeyError:
-            raise ValueError, "baudrate not valid. valid values are %r" % baudconfigs.keys()
-        
+            raise ValueError("baudrate not valid. valid values are %r" % list(baudconfigs.keys()))
+
         sys.stderr.write("Changing baudrate to %d ...\n" % baudrate)
         sys.stderr.flush()
         self.bslTxRx(self.BSL_CHANGEBAUD,   #Command: change baudrate
@@ -1374,7 +1378,7 @@ class BootStrapLoader(LowLevel):
         ans = self.bslTxRx(self.BSL_TXVERSION, 0) #Command: receive version info
         #the following values are in big endian style!!!
         family_type, bsl_version = struct.unpack(">H8xH4x", ans[:-2]) #cut away checksum and extract data
-        print "Device Type: 0x%04x\nBSL version: 0x%04x\n" % (family_type, bsl_version)
+        print("Device Type: 0x%04x\nBSL version: 0x%04x\n" % (family_type, bsl_version))
 
     def actionWriteNewPassword(self):
         passwd = self.getNewPassword()
@@ -1388,25 +1392,25 @@ class BootStrapLoader(LowLevel):
 
     def picRecoverPassword(self):
         ''' recovers password from picrom'''
-        print 'recovering pic password',
-        p = ''
-        
+        print('recovering pic password', end=' ')
+        p = b''
+
         for i in range(0,32):
              c = self.readpicROM(i)
-             print c,
-             p = p + chr(c)
-             
-        print 'done'
+             print(c, end=' ')
+             p += bytes([c])
+
+        print('done')
         return p
-        
+
     def picWritePassword(self, password):
         ''' writes a new password to picrom'''
-        print 'writing new password',
+        print('writing new password', end=' ')
         for i in range(0,32):
-            c = ord(password[i])
-            print c,
+            c = password[i]
+            print(c, end=' ')
             self.writepicROM(i, c)
-        print 'done'
+        print('done')
 
 
 def usage():
@@ -1467,7 +1471,7 @@ General options:
   --swap-reset-test     Swap the RST and TEST pins (used for some BSL hardware)
   --telos-latch         Special twiddle in BSL reset for Telos hardware
   --telos-i2c           DTR/RTS map via an I2C switch to TCK/RST in Telos Rev.B
-  --telos               Implies options --invert-reset, --invert-test, 
+  --telos               Implies options --invert-reset, --invert-test,
                         --swap-reset-test, and --telos-latch
   --telosb              Implies options --swap-reset-test, --telos-i2c,
                         --no-BSL-download, and --speed=38400
@@ -1479,7 +1483,7 @@ General options:
   --no-BSL-download     Do not download replacement BSL (disable automatic)
   --force-BSL-download  Download replacement BSL even if not needed (the one
                         in the device would have the required features)
-  --slow                Add delays when operating the conrol pins. Useful if
+  --slow                Add delays when operating the control pins. Useful if
                         the pins/circuit has high capacitance.
 
 Program Flow Specifiers:
@@ -1493,7 +1497,7 @@ execution order. For the options "Epv" a file must be specified.
 Program flow specifiers default to "pvr" if a file is given.
 Don't forget to specify "e" or "eE" when programming flash!
 
-Data retreiving:
+Data retrieving:
   -u, --upload=addr     Upload a datablock (see also: -s).
   -s, --size=num        Size of the data block do upload. (Default is 2)
   -x, --hex             Show a hexadecimal display of the uploaded data.
@@ -1502,11 +1506,11 @@ Data retreiving:
                         to redirect the output into a file.
 
 Do before exit:
-  -g, --go=address      Start programm execution at specified address.
+  -g, --go=address      Start program execution at specified address.
                         This implies option --wait.
   -r, --reset           Reset connected MSP430. Starts application.
                         This is a normal device reset and will start
-                        the programm that is specified in the reset
+                        the program that is specified in the reset
                         vector. (see also -g)
   -w, --wait            Wait for <ENTER> before closing serial port.
 
@@ -1529,22 +1533,22 @@ class curry:
             kw.update(kwargs)
         else:
             kw = kwargs or self.kwargs
-        return apply(self.fun, self.pending + args, kw)
+        return self.fun(*self.pending + args, **kw)
 
     def __repr__(self):
         #first try if it a function
         try:
-            return "curry(%s, %r, %r)" % (self.fun.func_name, self.pending, self.kwargs)
+            return "curry(%s, %r, %r)" % (self.fun.__name__, self.pending, self.kwargs)
         except AttributeError:
             #fallback for callable classes
             return "curry(%s, %r, %r)" % (self.fun, self.pending, self.kwargs)
 
-def hexify(line, bytes, width=16):
-    return  '%04x  %s%s %s' % (
+def hexify(line, byte_data, width=16):
+    return '%04x  %s%s %s' % (
         line,
-        ('%02x '*len(bytes)) % tuple(bytes),
-        '   '* (width-len(bytes)),
-        ('%c'*len(bytes)) % tuple(map(lambda x: (x>=32 and x<127) and x or ord('.'), bytes))
+        ('%02x ' * len(byte_data)) % tuple(byte_data),
+        '   ' * (width - len(byte_data)),
+        ('%c' * len(byte_data)) % tuple([(32 <= x < 127) and x or ord('.') for x in byte_data])
         )
 
 #Main:
@@ -1571,24 +1575,24 @@ def main(itest=1):
     forceBSL    = 0
     dumpivt     = 0
     dumpinfo    = 0
-    
+
     bsl.invertRST = 1
     bsl.invertTEST = itest
-    
-    if comPort is None and os.environ.get("GOODFET")!=None:
-        glob_list = glob.glob(os.environ.get("GOODFET"));
+
+    if comPort is None and os.environ.get("GOODFET") is not None:
+        glob_list = glob.glob(os.environ.get("GOODFET"))
         if len(glob_list) > 0:
-            comPort = glob_list[0];
+            comPort = glob_list[0]
     if comPort is None:
-        glob_list = glob.glob("/dev/tty.usbserial*");
+        glob_list = glob.glob("/dev/tty.usbserial*")
         if len(glob_list) > 0:
-            comPort = glob_list[0];
+            comPort = glob_list[0]
     if comPort is None:
-        glob_list = glob.glob("/dev/ttyUSB*");
+        glob_list = glob.glob("/dev/ttyUSB*")
         if len(glob_list) > 0:
-            comPort = glob_list[0];
-    
-    
+            comPort = glob_list[0]
+
+
     sys.stderr.write("MSP430 Bootstrap Loader Version: %s\n" % VERSION)
 
     try:
@@ -1603,8 +1607,8 @@ def main(itest=1):
              "swap-reset-test", "telos-latch", "telos-i2c", "telos", "telosb",
              "tmote","no-BSL-download", "force-BSL-download", "slow",
              "dumpivt", "dumpinfo", "fromweb",
-        "goodfet30", "goodfet20", "goodfet10", "z1", "mainerase"
-        ]
+             "goodfet30", "goodfet20", "goodfet10", "z1", "mainerase"
+            ]
         )
     except getopt.GetoptError:
         # print help information and exit:
@@ -1626,9 +1630,9 @@ def main(itest=1):
         elif o in ("-w", "--wait"):
             wait = 1
         elif o in ("--dumpivt"):
-            dumpivt=1;
+            dumpivt=1
         elif o in ("--dumpinfo"):
-            dumpinfo=1;
+            dumpinfo=1
         elif o in ("-f", "--framesize"):
             try:
                 maxData = int(a)                    #try to convert decimal
@@ -1672,7 +1676,7 @@ def main(itest=1):
                 #todo.append(bsl.actionUnlockInfo)
                 #todo.append(bsl.writeCalibTables)
                 #todo.append(bsl.writeCalibTables2)
-                
+
                 #todo.append(bsl.actionWriteNewPassword)
                 pass
         elif o in ("--fromweb"):
@@ -1787,7 +1791,7 @@ def main(itest=1):
             bsl.slowmode = 1
 
     if len(args) == 0:
-        sys.stderr.write("Use -h for help\n");
+        sys.stderr.write("Use -h for help\n")
         sys.stderr.write("Use --fromweb to upgrade a GoodFET.\n")
     elif len(args) == 1:                            #a filename is given
         if not todo:                                #if there are no actions yet
@@ -1822,7 +1826,7 @@ def main(itest=1):
         reset = 0
 
     sys.stderr.flush()
-    
+
     #prepare data to download
     bsl.data = Memory()                             #prepare downloaded data
     if filetype is not None:                        #if the filetype is given...
@@ -1831,7 +1835,7 @@ def main(itest=1):
         if filename == '-':                         #get data from stdin
             file = sys.stdin
         else:
-            file = open(filename, "rb")             #or from a file
+            file = open(filename, "r")              #or from a file
         if filetype == 0:                           #select load function
             bsl.data.loadIHex(file)                 #intel hex
         elif filetype == 1:
@@ -1873,7 +1877,7 @@ def main(itest=1):
             sys.stderr.write("TODO list:\n")
             for f in todo:
                 try:
-                    sys.stderr.write("   %s\n" % f.func_name)
+                    sys.stderr.write("   %s\n" % f.__name__)
                 except AttributeError:
                     sys.stderr.write("   %r\n" % f)
         for f in todo: f()                          #work through todo list
@@ -1881,22 +1885,22 @@ def main(itest=1):
     if reset:                                       #reset device first if desired
         bsl.actionReset()
     if dumpivt:
-        bsl.txPasswd(); #default pass
-        data=bsl.uploadData(0xc00,1024);
-        hex="";
+        bsl.txPasswd()  # default pass
+        data=bsl.uploadData(0xc00,1024)
+        hex=""
         for c in data:
-            hex+=("%02x "%ord(c));
-        print hex;
+            hex+=("%02x " % c)
+        print(hex)
     if dumpinfo:
-        bsl.txPasswd(); #default pass
-        data=bsl.uploadData(0x1000,256);
-        hex="@1000\n";
+        bsl.txPasswd()  # default pass
+        data=bsl.uploadData(0x1000,256)
+        hex="@1000\n"
         for c in data:
-            hex+=("%02x "%ord(c));
-        hex+="\nq\n";
-        print hex;
-    
-    if goaddr is not None:                          #start user programm at specified address
+            hex+=("%02x " % c)
+        hex+="\nq\n"
+        print(hex)
+
+    if goaddr is not None:                          #start user program at specified address
         bsl.actionRun(goaddr)                       #load PC and execute
 
     #upload datablock and output
@@ -1912,7 +1916,7 @@ def main(itest=1):
         if hexoutput:                               #depending on output format
             m = 0
             while m < len(data):                    #print a hex display
-                print hexify(startaddr+m, map(ord,data[m:m+16]))
+                print(hexify(startaddr+m, list(map(ord,data[m:m+16]))))
                 m = m + 16
         else:
             sys.stdout.write(data)                  #binary output w/o newline!
@@ -1921,7 +1925,7 @@ def main(itest=1):
     if wait:                                        #wait at the end if desired
         sys.stderr.write("Press <ENTER> ...\n")     #display a prompt
         sys.stderr.flush()
-        raw_input()                                 #wait for newline
+        input()                                 #wait for newline
 
     bsl.comDone()           #Release serial communication port
 
@@ -1934,8 +1938,8 @@ if __name__ == '__main__':
         if DEBUG: raise     #show full trace in debug mode
         sys.stderr.write("user abort.\n")   #short messy in user mode
         sys.exit(1)         #set errorlevel for script usage
-    except Exception, msg:  #every Exception is caught and displayed
+    except Exception as msg:  #every Exception is caught and displayed
         if DEBUG: raise     #show full trace in debug mode
         #sys.stderr.write("\nAn error occurred:\n%s\n" % msg) #short messy in user mode
         #sys.exit(1)         #set errorlevel for script usage
-        main(0);
+        main(0)
