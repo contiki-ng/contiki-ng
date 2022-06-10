@@ -127,14 +127,13 @@ USER user
 ENV HOME                /home/user
 ENV CONTIKI_NG          ${HOME}/contiki-ng
 ENV COOJA               ${CONTIKI_NG}/tools/cooja
-ENV                     PATH="${HOME}:${PATH}"
+ENV                     PATH="${HOME}/.local/bin:${PATH}"
 ENV                     LC_ALL=C.UTF-8
 ENV                     LANG=C.UTF-8
 WORKDIR                 ${HOME}
 
-# Create Cooja shortcut  
-COPY files/* ${HOME}/
-RUN sudo chmod +x ${HOME}/cooja
+# Create Cooja shortcut
+COPY --chown=user:user files/cooja ${HOME}/.local/bin/cooja
 
 # Download, build and install Renode
 RUN git clone --quiet https://github.com/renode/renode.git \
