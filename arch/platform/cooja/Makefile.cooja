@@ -70,25 +70,14 @@ REDEFINE_PRINTF = 1
 
 ### Assuming simulator quickstart if no JNI library name set from Cooja
 ifndef LIBNAME
-QUICKSTART=1
-endif
-
-### Quickstart simulator
-ifdef QUICKSTART
-
-# Create COOJA JAR rule
-$(COOJA_DIR)/dist/cooja.jar:
-	@echo "Creating COOJA Java archive..."
-	cd $(COOJA_DIR) && ant jar
-
-# Quickstart rule
 ifneq ($(MAKECMDGOALS),clean)
-.PHONY: $(MAKECMDGOALS)
-.PRECIOUS: $(MAKECMDGOALS)
-$(MAKECMDGOALS): $(COOJA_DIR)/dist/cooja.jar
-	 $(JAVA) -mx512m -jar $< -quickstart='$(firstword $(MAKECMDGOALS))' -contiki='$(CONTIKI)'
-endif
 
+CURDIR := $(shell pwd)
+
+.PHONY: $(MAKECMDGOALS)
+$(MAKECMDGOALS):
+	$(Q)ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $(COOJA_DIR)/build.xml run_bigmem -Dargs="-quickstart=$(addprefix $(CURDIR)/,$(firstword $(MAKECMDGOALS))) -contiki=$(realpath $(CONTIKI)) -logdir=$(CURDIR)"
+endif
 endif ## QUICKSTART
 
 # No stack end symbol available, code does not work on 64-bit architectures.
