@@ -104,16 +104,17 @@ RUN pip -q install --upgrade pip
 
 # Sphinx is required for building the readthedocs API documentation.
 # Matplotlib is required for result visualization.
-RUN pip3 -q install --upgrade pip
-RUN pip3 -q install \
+# After that, install nrfutil, work around broken pc_ble_driver_py dependency,
+# and remove the pip cache.
+RUN pip3 -q install --upgrade pip && \
+    pip3 -q install \
       setuptools \
       sphinx_rtd_theme \
       sphinx \
-      matplotlib
-
-# Install nrfutil and work around broken pc_ble_driver_py dependency
-RUN pip3 -q install nrfutil && \
-  pip3 -q install --no-deps -t /usr/local/lib/python3.6/dist-packages --python-version 3.6 --ignore-requires-python --upgrade nrfutil
+      matplotlib && \
+    pip3 -q install nrfutil && \
+    pip3 -q install --no-deps -t /usr/local/lib/python3.6/dist-packages --python-version 3.6 --ignore-requires-python --upgrade nrfutil && \
+    rm -rf /root/.cache
 
 # Create user, add to groups dialout and sudo, and configure sudoers.
 RUN adduser --disabled-password --gecos '' user && \
