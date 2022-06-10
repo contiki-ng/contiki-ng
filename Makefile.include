@@ -55,6 +55,7 @@ BUILD_DIR_FULL = $(BUILD_DIR_TARGET_BOARD:/=)/$(BUILD_DIR_CONFIG)
 # Ditto if BUILD_DIR_CONFIG was empty
 BUILD_DIR_BOARD = $(BUILD_DIR_FULL:/=)
 OBJECTDIR = $(BUILD_DIR_BOARD)/obj
+DEPDIR = $(OBJECTDIR)/.deps
 
 CONTIKI_NG_TARGET_LIB = $(BUILD_DIR_BOARD)/contiki-ng-$(TARGET).a
 
@@ -146,8 +147,8 @@ endif # $(BOARD) not empty
 
 PLATFORM_ACTION ?= build
 
-# Provide way to create $(OBJECTDIR) if it has been removed by make clean
-$(OBJECTDIR):
+# Provide way to create directories that have been removed by make clean.
+$(OBJECTDIR) $(DEPDIR):
 	$(TRACE_MKDIR)
 	$(Q)mkdir -p $@
 
@@ -333,14 +334,6 @@ else
 CFLAGS += -DCONTIKI_VERSION_STRING=\"Contiki-NG\"
 endif
 
-### Automatic dependency generation
-
-ifneq ($(MAKECMDGOALS),clean)
--include ${addprefix $(OBJECTDIR)/,$(CONTIKI_SOURCEFILES:.c=.d) \
-                                   $(PROJECT_SOURCEFILES:.c=.d)}
--include ${addprefix $(OBJECTDIR)/,$(PROJECT_SOURCEFILES:.cpp=.d)}
-endif
-
 ### Harmonize filename of a .map file, if the platform's build system wants
 ### to create one
 CONTIKI_NG_PROJECT_MAP = $(BUILD_DIR_BOARD)/$(basename $(notdir $@)).map
@@ -358,21 +351,34 @@ distclean:
 	done
 	$(Q)rm -rf $(BUILD_DIR)
 
+### Automatic dependency generation, see
+### http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/#advanced
+
+DEPFLAGS ?= -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
+
+# PROJECT_SOURCEFILES can contain anything, perform one substitution for each
+# file type and filter out the results we want. Without the filter, DEPFILES
+# will contain cpp files from the first PROJECT_SOURCEFILES and c files from
+# the second PROJECT_SOURCEFILES.
+DEPFILES := ${filter %.d, $(CONTIKI_SOURCEFILES:%.c=$(DEPDIR)/%.d) \
+                          $(PROJECT_SOURCEFILES:%.c=$(DEPDIR)/%.d) \
+                          $(PROJECT_SOURCEFILES:%.cpp=$(DEPDIR)/%.d)}
+$(DEPFILES):
+include $(wildcard $(DEPFILES))
+
 # Include custom build rule Makefiles specified by platforms/CPUs.
 include $(MAKEFILES_CUSTOMRULES)
 
-### See http://make.paulandlesley.org/autodep.html#advanced
-
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_O
-$(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
+$(OBJECTDIR)/%.o: %.c | $(DEPDIR)
 	$(TRACE_CC)
-	$(Q)$(CCACHE) $(CC) $(CFLAGS) -MMD -MP -c $< -o $@
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 endif
 
 ifndef CUSTOM_RULE_CPP_TO_OBJECTDIR_O
-$(OBJECTDIR)/%.o: %.cpp | $(OBJECTDIR)
+$(OBJECTDIR)/%.o: %.cpp | $(DEPDIR)
 	$(TRACE_CXX)
-	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
 endif
 
 ifndef CUSTOM_RULE_S_TO_OBJECTDIR_O
