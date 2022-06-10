@@ -1,6 +1,6 @@
 /**
 \defgroup arch Hardware support
-CPU, device drivers and platform code
+CPU, device drivers, and platform code
 */
 
 /**
@@ -50,7 +50,7 @@ Supports only non-storing mode, one instance and one DAG.
 
 /**
 \defgroup lib Libraries and services
-A set of libraries and services used by the os and applications
+A set of libraries and services used by \os and applications
 */
 
 /**
@@ -75,7 +75,7 @@ Core system components such as processes and timers
 
 /**
  * \defgroup threads Threads and processes
-This module contains protothreads, multithreading and processes
+This module contains protothreads, multithreading, and processes
  * \ingroup sys
 */
 
