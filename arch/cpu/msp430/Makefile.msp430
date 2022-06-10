@@ -60,29 +60,6 @@ OBJCOPY  = msp430-objcopy
 STRIP    = msp430-strip
 BSL      = msp430-bsl
 
-# From version 4.6.x, mspgcc does not support generic MCU identifiers such as
-# msp430x1611 in contrast to msp430f1611
-ifndef CC_MCU
- ifndef MSPGCC_VERSION
-  MSPGCC_VERSION := ${shell $(CC) -dumpversion}
- endif
-endif
-ifndef CC_MCU
- ifneq (,$(findstring 4.4.,$(MSPGCC_VERSION)))
-  CC_MCU := ${subst msp430f,msp430x,$(MCU)}
- endif
-endif
-ifndef CC_MCU
- ifneq (,$(findstring 3.2.,$(MSPGCC_VERSION)))
-  CC_MCU := ${subst msp430f,msp430x,$(MCU)}
- endif
-endif
-ifndef CC_MCU
- CC_MCU := $(MCU)
-endif
-
-### Checks for compiler version to enable 20-bit support
-ifneq (,$(findstring 4.7.,$(shell $(CC) -dumpversion)))
 ifdef CPU_HAS_MSP430X
  ifeq ($(TARGET_MEMORY_MODEL),large)
   CFLAGS += -mmemory-model=$(TARGET_MEMORY_MODEL)
@@ -95,13 +72,12 @@ ifdef CPU_HAS_MSP430X
   LDFLAGS += -mmemory-model=$(TARGET_MEMORY_MODEL) -Wl,-gc-sections
  endif
 endif
-endif
 
 ifndef CFLAGSNO
-CFLAGSNO = -Wall -mmcu=$(CC_MCU) $(CFLAGSWERROR)
+CFLAGSNO = -Wall -mmcu=$(MCU) $(CFLAGSWERROR)
 endif
 CFLAGS  += -Os -fno-strict-aliasing -std=gnu99
-LDFLAGS += -mmcu=$(CC_MCU) -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP)
+LDFLAGS += -mmcu=$(MCU) -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP)
 
 ### These flags can reduce the code size and RAM usage with up to 10%
 SMALL ?= 1
