@@ -30,7 +30,7 @@ CFLAGS += -DCPU_CONF_PATH=\"$(DEVICE_OPN)-conf.h\"
 # GSDK 
 
 ## Device
-GSDK_ASM_SRCS += $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Source/GCC/startup_$(DEVICE_FAMILY_LOWER).S
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Source/startup_$(DEVICE_FAMILY_LOWER).c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Source/system_$(DEVICE_FAMILY_LOWER).c
 GSDK_INC_PATHS += $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Include
 GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/Device/SiliconLabs/$(DEVICE_FAMILY)/Source
@@ -88,6 +88,11 @@ GSDK_INC_PATHS += $(GSDK_ROOT)/platform/peripheral/inc
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/common/src/sl_slist.c
 GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/common/src
 GSDK_INC_PATHS += $(GSDK_ROOT)/platform/common/inc
+
+### toolchain
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/common/toolchain/src/sl_memory.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/common/toolchain/src
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/common/toolchain/inc
 
 ## service
 ### sleeptimer

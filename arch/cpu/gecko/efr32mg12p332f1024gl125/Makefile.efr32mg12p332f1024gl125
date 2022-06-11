@@ -5,7 +5,6 @@ RAIL_CPU := efr32xg12
 RAIL_FAMILY := efr32xg1x
 
 CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=softfp
-CFLAGS += -D__STACK_SIZE=0x1000
 
 LDFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=softfp
 

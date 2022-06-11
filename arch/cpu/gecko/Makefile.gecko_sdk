@@ -8,4 +8,4 @@ endif
 
 CMSIS_PATH = $(GSDK_ROOT)/platform/CMSIS
 
-EXTERNALDIRS += $(CMSIS_PATH)/Include
+EXTERNALDIRS += $(CMSIS_PATH)/Core/Include
