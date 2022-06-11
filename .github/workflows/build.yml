@@ -35,7 +35,7 @@ jobs:
 
     # Checks out the repo with full history
     - name: Checkout github repo (+ download lfs dependencies)
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
           fetch-depth: '0'
           submodules: 'recursive'
