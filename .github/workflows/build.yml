@@ -52,6 +52,12 @@ jobs:
         tools/docker/print-dockerhash.sh >> $GITHUB_ENV
         echo COOJA_COMMIT=$(git -C tools/cooja log -1 --oneline | cut -d" " -f1) >> $GITHUB_ENV
 
+    # Compressed cache size is ~1/3 of the docker image size.
+    - name: Cache Docker images
+      uses: ScribeMD/docker-cache@0.2.3
+      with:
+          key: docker-${{ runner.os }}-${{ env.DOCKER_IMG }}
+
     # Try to download the image from dockerhub. If it works, use it.
     #
     # If however it fails then we are most likely looking at a branch or pull
