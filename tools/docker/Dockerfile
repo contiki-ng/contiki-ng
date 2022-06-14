@@ -35,12 +35,9 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     mosquitto-clients \
     net-tools \
     openjdk-11-jdk \
-    python-dev \
     python3-dev \
-    python-pip \
     python3-pip \
     python3-setuptools \
-    python-serial \
     python3-serial \
     rlwrap \
     sudo \
@@ -99,8 +96,6 @@ RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Des
   dpkg -i /tmp/nrf-cli-tools/nRF-Command-Line-Tools_10_12_1_Linux-i386.deb && \
   ln -s /opt/SEGGER/JLink_V688a/libjlinkarm.so /opt/SEGGER/JLink_V688a/libjlinkarm_x86.so && \
   rm -rf nRFCommandLineTools10121Linuxi386.tar.gz /tmp/nrf-cli-tools
-
-RUN pip -q install --upgrade pip
 
 # Sphinx is required for building the readthedocs API documentation.
 # Matplotlib is required for result visualization.
