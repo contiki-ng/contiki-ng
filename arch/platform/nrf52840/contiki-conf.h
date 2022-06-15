@@ -50,9 +50,4 @@
 /* Include CPU-related configuration */
 #include "nrf52840-conf.h"
 /*---------------------------------------------------------------------------*/
-/** @} */
 #endif /* CONTIKI_CONF_H */
-/**
- * @}
- * @}
- */
