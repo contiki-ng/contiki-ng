@@ -59,6 +59,9 @@ cd "$module"
 commitfile=$(mktemp)
 echo -e "Update $module submodule\n\nCommits:" >> "$commitfile"
 git --no-pager log --oneline --no-decorate $old..$new >> "$commitfile"
+# Filter out merge commits, they reference the Cooja PR number
+# and create false references to the Contiki-NG PR/issue tracker.
+perl -pi -e 's|^([^M]+)Merge pull request #(.+)\n||sg' "$commitfile"
 cd -
 
 # Commit message created, make the commit and remove the temporary file.
