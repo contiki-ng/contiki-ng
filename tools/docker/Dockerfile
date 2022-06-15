@@ -1,4 +1,4 @@
-FROM i386/ubuntu:18.04
+FROM ubuntu:18.04
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -25,7 +25,8 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     iputils-tracepath \
     iputils-ping \
     less \
-    libcanberra-gtk-module:i386 \
+    lib32z1 \
+    libcanberra-gtk-module \
     libcoap-1-0-bin \
     libfreetype6-dev \
     libgtk2.0-0 \
@@ -55,10 +56,9 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
   && apt-get -qq clean
 
 # Install ARM toolchain
-RUN wget -nv https://github.com/Yagoor/gcc-arm-none-eabi/releases/download/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-i386-linux.tar.bz2 && \
-  tar xjf gcc-arm-none-eabi-10.3-2021.10-i386-linux.tar.bz2 -C /tmp/ && \
-  cp -f -r /tmp/gcc-arm-none-eabi-10.3-2021.10/* /usr/local/ && \
-  rm -rf /tmp/gcc-arm-none-eabi-10.3-2021.10 gcc-arm-none-eabi-10.3-2021.10-i386-linux.tar.bz2
+RUN wget -nv https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 && \
+  tar xjf gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 -C /usr/local --strip-components=1 --no-same-owner && \
+  rm -f gcc-arm-none-eabi-*-linux.tar.bz2
 
 # Install msp430 toolchain
 RUN wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 && \
@@ -89,13 +89,12 @@ RUN wget -nv https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/n
 ENV NRF52_SDK_ROOT /usr/nrf52-sdk
 
 # Install nRF Command Line tools
-RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-12-1/nRFCommandLineTools10121Linuxi386.tar.gz && \
+RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-12-1/nRFCommandLineTools10121Linuxamd64.tar.gz && \
   mkdir /tmp/nrf-cli-tools && \
-  tar xzf nRFCommandLineTools10121Linuxi386.tar.gz -C /tmp/nrf-cli-tools && \
-  dpkg -i /tmp/nrf-cli-tools/JLink_Linux_V688a_i386.deb && \
-  dpkg -i /tmp/nrf-cli-tools/nRF-Command-Line-Tools_10_12_1_Linux-i386.deb && \
-  ln -s /opt/SEGGER/JLink_V688a/libjlinkarm.so /opt/SEGGER/JLink_V688a/libjlinkarm_x86.so && \
-  rm -rf nRFCommandLineTools10121Linuxi386.tar.gz /tmp/nrf-cli-tools
+  tar xzf nRFCommandLineTools10121Linuxamd64.tar.gz -C /tmp/nrf-cli-tools && \
+  dpkg -i /tmp/nrf-cli-tools/JLink_Linux_V688a_x86_64.deb && \
+  dpkg -i /tmp/nrf-cli-tools/nRF-Command-Line-Tools_10_12_1_Linux-amd64.deb && \
+  rm -rf nRFCommandLineTools10121Linuxamd64.tar.gz /tmp/nrf-cli-tools
 
 # Sphinx is required for building the readthedocs API documentation.
 # Matplotlib is required for result visualization.
