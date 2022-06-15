@@ -133,7 +133,7 @@ COPY --chown=user:user files/cooja ${HOME}/.local/bin/cooja
 # Download, build and install Renode
 RUN git clone --quiet https://github.com/renode/renode.git \
   && cd ${HOME}/renode \
-  && git checkout v1.3 \
+  && git checkout v1.13.0 \
   && ./build.sh
 ENV PATH="${HOME}/renode:${PATH}"
 
