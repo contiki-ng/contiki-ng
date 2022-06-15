@@ -30,13 +30,19 @@
 # (cd <subrepo> && git checkout <branch/commit>)
 # git add <subrepo>
 # tools/git/update-submodule.sh <subrepo>
+#
+# Using the script inside other repositories can be done by disabling
+# the verification of the Contiki-NG repository, to update mspsim in Cooja,
+# run the script as:
+#
+# env NO_SAFETY=1 ../../tools/git/update-submodule.sh mspsim
 
 error() {
     echo "$*"
     exit 1
 }
 
-[ -f CODE_OF_CONDUCT.md ] || error "Run this script from top directory"
+[ ! -z "$NO_SAFETY" -o -f CODE_OF_CONDUCT.md ] || error "Run this script from top directory"
 [ -z "$1" ] && error "No submodule path specified"
 
 module=$1
