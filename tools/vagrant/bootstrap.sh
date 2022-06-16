@@ -49,7 +49,7 @@ rm nrf5_iot_sdk_3288530.zip
 
 echo "export NRF52_SDK_ROOT=/usr/nrf52-sdk" >> ${HOME}/.bashrc
 
-sudo usermod -aG dialout vagrant
+sudo usermod -aG dialout,plugdev,sudo vagrant
 
 # Environment variables
 echo "export CONTIKI_NG=${HOME}/contiki-ng" >> ${HOME}/.bashrc
