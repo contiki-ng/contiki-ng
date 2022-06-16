@@ -102,14 +102,14 @@ RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Des
 # Matplotlib is required for result visualization.
 # After that, install nrfutil, work around broken pc_ble_driver_py dependency,
 # and remove the pip cache.
-RUN pip3 -q install --upgrade pip && \
-    pip3 -q install \
+RUN python3 -m pip -q install --upgrade pip && \
+    python3 -m pip -q install \
       setuptools \
       sphinx_rtd_theme \
       sphinx \
       matplotlib && \
-    pip3 -q install nrfutil && \
-    pip3 -q install --no-deps -t /usr/local/lib/python3.6/dist-packages --python-version 3.6 --ignore-requires-python --upgrade nrfutil && \
+    python3 -m pip -q install nrfutil && \
+    python3 -m pip -q install --no-deps -t /usr/local/lib/python3.6/dist-packages --python-version 3.6 --ignore-requires-python --upgrade nrfutil && \
     rm -rf /root/.cache
 
 # Create user, add to groups dialout and sudo, and configure sudoers.
