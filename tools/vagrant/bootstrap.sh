@@ -17,10 +17,9 @@ sudo apt-get clean
 sudo python2 -m pip install intelhex sphinx_rtd_theme sphinx
 
 # Install ARM toolchain
-wget https://launchpad.net/gcc-arm-embedded/5.0/5-2015-q4-major/+download/gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2
-tar xjf gcc-arm-none-eabi-5_2-2015q4-20151219-linux.tar.bz2 -C /tmp/
-sudo cp -f -r /tmp/gcc-arm-none-eabi-5_2-2015q4/* /usr/local/
-rm -rf /tmp/gcc-arm-none-eabi-* gcc-arm-none-eabi-*-linux.tar.bz2
+wget -nv https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 && \
+sudo tar xjf gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 -C /usr/local --strip-components=1 --no-same-owner && \
+rm -f gcc-arm-none-eabi-*-linux.tar.bz2
 
 # Install msp430 toolchain
 wget http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2
