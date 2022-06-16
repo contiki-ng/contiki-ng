@@ -54,12 +54,13 @@ sudo usermod -aG dialout,plugdev,sudo vagrant
 # Environment variables
 echo "export CONTIKI_NG=${HOME}/contiki-ng" >> ${HOME}/.bashrc
 echo "export COOJA=${CONTIKI_NG}/tools/cooja" >> ${HOME}/.bashrc
-echo "export PATH=${HOME}:${PATH}" >> ${HOME}/.bashrc
+echo "export PATH=${HOME}/.local/bin:${PATH}" >> ${HOME}/.bashrc
 echo "export WORKDIR=${HOME}" >> ${HOME}/.bashrc
 source ${HOME}/.bashrc
 
 # Create Cooja shortcut
-echo "#!/bin/bash\nant -Dbasedir=${COOJA} -f ${COOJA}/build.xml run" > ${HOME}/cooja && chmod +x ${HOME}/cooja
+mkdir -p ${HOME}/.local/bin
+cp -a ${HOME}/contiki-ng/tools/docker/files/cooja ${HOME}/.local/bin
 
 # Docker
 curl -fsSL get.docker.com -o get-docker.sh
