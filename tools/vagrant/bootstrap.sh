@@ -23,9 +23,9 @@ sudo apt install -y --no-install-recommends \
        mosquitto-clients \
        npm \
        openjdk-11-jdk \
-       python-magic \
-       python-pip \
-       python-serial \
+       python3-magic \
+       python3-pip \
+       python3-serial \
        rlwrap \
        smitools \
        snmp \
@@ -38,7 +38,18 @@ sudo apt install -y --no-install-recommends \
        wget
 
 sudo apt-get clean
-sudo python2 -m pip install intelhex sphinx_rtd_theme sphinx
+
+# Sphinx is required for building the readthedocs API documentation.
+# Matplotlib is required for result visualization.
+# After that, install nrfutil, work around broken pc_ble_driver_py dependency,
+# and remove the pip cache.
+sudo -H python3 -m pip -q install --upgrade pip && \
+sudo -H python3 -m pip -q install \
+      setuptools \
+      sphinx_rtd_theme \
+      sphinx \
+      matplotlib && \
+sudo rm -rf /root/.cache
 
 # Install ARM toolchain
 wget -nv https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 && \
