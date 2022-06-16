@@ -6,12 +6,36 @@ sudo add-apt-repository --yes ppa:mosquitto-dev/mosquitto-ppa
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 77B7346A59027B33C10CAFE35E64E954262C4500
 sudo apt update
 sudo apt install -y --no-install-recommends \
-  libc6:i386 libstdc++6:i386 libncurses5:i386 libz1:i386 \
-  build-essential doxygen git wget unzip python-serial rlwrap npm \
-  default-jdk ant srecord python-pip iputils-tracepath uncrustify \
-  mosquitto mosquitto-clients valgrind libcoap-1-0-bin \
-  smitools snmp snmp-mibs-downloader \
-  python-magic linux-image-extra-virtual
+       libc6:i386 \
+       libstdc++6:i386 \
+       libncurses5:i386 \
+       libz1:i386 \
+       ant \
+       build-essential \
+       ccache \
+       doxygen \
+       gdb \
+       git \
+       iputils-tracepath \
+       libcoap-1-0-bin \
+       linux-image-extra-virtual \
+       mosquitto \
+       mosquitto-clients \
+       npm \
+       openjdk-11-jdk \
+       python-magic \
+       python-pip \
+       python-serial \
+       rlwrap \
+       smitools \
+       snmp \
+       snmp-mibs-downloader \
+       srecord \
+       sudo \
+       uncrustify \
+       unzip \
+       valgrind \
+       wget
 
 sudo apt-get clean
 sudo python2 -m pip install intelhex sphinx_rtd_theme sphinx
