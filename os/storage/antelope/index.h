@@ -28,8 +28,7 @@
  */
 
 /**
- * \file
- *	.
+ * \file index.h
  * \author
  * 	Nicolas Tsiftes <nvt@sics.se>
  */
