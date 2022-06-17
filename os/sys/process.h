@@ -80,7 +80,7 @@ typedef unsigned char process_num_events_t;
  *             not be posted.
  */
 #define PROCESS_ERR_FULL      1
-/* @} */
+/** @} */
 
 #define PROCESS_NONE          NULL
 

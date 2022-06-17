@@ -131,5 +131,4 @@ sys_ctrl_get_io_clock(void)
 }
 /**
  * @}
- * @}
  */

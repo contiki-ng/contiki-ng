@@ -166,10 +166,6 @@
  * \name LOWPAN_UDP encoding (works together with IPHC)
  * @{
  */
-/**
- * \name LOWPAN_UDP encoding (works together with IPHC)
- * @{
- */
 #define SICSLOWPAN_NHC_UDP_MASK                     0xF8
 #define SICSLOWPAN_NHC_UDP_ID                       0xF0
 #define SICSLOWPAN_NHC_UDP_CHECKSUMC                0x04

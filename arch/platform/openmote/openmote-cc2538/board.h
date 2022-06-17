@@ -90,6 +90,7 @@
 /** \name USB configuration
  *
  * The USB pullup is driven by PC0
+ * @{
  */
 #define USB_PULLUP_PORT          GPIO_C_NUM
 #define USB_PULLUP_PIN           0

@@ -90,9 +90,6 @@ void cooja_mtarch_yield(void);
 void cooja_mtarch_exec(struct cooja_mtarch_thread *thread);
 
 
-/** @} */
-
-
 #ifndef COOJA_MTARCH_STACKSIZE
 #define COOJA_MTARCH_STACKSIZE 1024
 #endif /* COOJA_MTARCH_STACKSIZE */
@@ -152,6 +149,4 @@ void cooja_mt_exec(struct cooja_mt_thread *thread);
  */
 void cooja_mt_yield(void);
 
-/** @} */
-/** @} */
 #endif /* MT_H_ */

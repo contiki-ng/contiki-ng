@@ -99,5 +99,4 @@ int uiplib_ipaddr_snprint(char *buffer, size_t size, const uip_ipaddr_t *addr);
 #endif /* UIPLIB_H_ */
 /**
  * @}
- * @}
  */

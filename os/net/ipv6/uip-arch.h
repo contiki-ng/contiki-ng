@@ -128,6 +128,5 @@ uint16_t uip_tcpchksum(void);
 uint16_t uip_udpchksum(void);
 
 /** @} */
-/** @} */
 
 #endif /* UIP_ARCH_H_ */

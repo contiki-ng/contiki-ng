@@ -147,6 +147,5 @@ void rpl_set_leaf_only(uint8_t value);
  * \return The value of the rpl_leaf_only flag
  */
 uint8_t rpl_get_leaf_only(void);
- /** @} */
 
 #endif /* RPL_H */

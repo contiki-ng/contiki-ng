@@ -112,6 +112,8 @@
 #define PACKETBUF_6LO_HC_UDP_PORTS         4 /* 8 bit */
 #define PACKETBUF_6LO_HC_UDP_CHKSUM        5 /* 16 bit */
 
+/** @} */
+
 /** \name Pointers in the sicslowpan and uip buffer
  *  @{
  */
@@ -547,6 +549,7 @@ const uint8_t llprefix[] = {0xfe, 0x80};
 /* TTL uncompression values */
 static const uint8_t ttl_values[] = {0, 1, 64, 255};
 
+/** @} */
 /*--------------------------------------------------------------------*/
 /** \name IPHC related functions
  * @{                                                                 */

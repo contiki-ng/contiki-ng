@@ -42,4 +42,3 @@ void bme280_arch_i2c_write_mem(uint8_t addr, uint8_t reg, uint8_t value);
 
 #endif
 /*---------------------------------------------------------------------------*/
-/** @} */
