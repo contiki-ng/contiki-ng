@@ -6,9 +6,11 @@ ENV DEBIAN_FRONTEND noninteractive
 USER root
 
 # Tools
-RUN sed -i -e 's#http://archive.ubuntu.com/ubuntu/#mirror://mirrors.ubuntu.com/mirrors.txt#' /etc/apt/sources.list && \
+RUN apt-get -qq update && \
+    apt-get -qq -y --no-install-recommends install ca-certificates > /dev/null && \
+    sed -i -e 's#http://archive.ubuntu.com/ubuntu/#mirror://mirrors.ubuntu.com/mirrors.txt#' /etc/apt/sources.list && \
     apt-get -qq update && \
-    apt-get -qq -y --no-install-recommends install gnupg ca-certificates software-properties-common > /dev/null
+    apt-get -qq -y --no-install-recommends install gnupg software-properties-common > /dev/null
 
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
   echo "deb http://download.mono-project.com/repo/ubuntu stable-bionic main" | tee /etc/apt/sources.list.d/mono-xamarin.list && \
@@ -100,14 +102,14 @@ RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Des
 # Matplotlib is required for result visualization.
 # After that, install nrfutil, work around broken pc_ble_driver_py dependency,
 # and remove the pip cache.
-RUN pip3 -q install --upgrade pip && \
-    pip3 -q install \
+RUN python3 -m pip -q install --upgrade pip && \
+    python3 -m pip -q install \
       setuptools \
       sphinx_rtd_theme \
       sphinx \
       matplotlib && \
-    pip3 -q install nrfutil && \
-    pip3 -q install --no-deps -t /usr/local/lib/python3.6/dist-packages --python-version 3.6 --ignore-requires-python --upgrade nrfutil && \
+    python3 -m pip -q install nrfutil && \
+    python3 -m pip -q install --no-deps -t /usr/local/lib/python3.6/dist-packages --python-version 3.6 --ignore-requires-python --upgrade nrfutil && \
     rm -rf /root/.cache
 
 # Create user, add to groups dialout and sudo, and configure sudoers.
