@@ -28,8 +28,7 @@
  */
 
 /**
- * \file
- *	.
+ * \file relation.h
  * \author
  * 	Nicolas Tsiftes <nvt@sics.se>
  */
