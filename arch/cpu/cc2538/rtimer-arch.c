@@ -61,12 +61,6 @@ rtimer_arch_init(void)
   return;
 }
 /*---------------------------------------------------------------------------*/
-/**
- * \brief Schedules an rtimer task to be triggered at time t
- * \param t The time when the task will need executed. This is an absolute
- *          time, in other words the task will be executed AT time \e t,
- *          not IN \e t ticks
- */
 void
 rtimer_arch_schedule(rtimer_clock_t t)
 {
