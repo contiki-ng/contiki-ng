@@ -80,7 +80,6 @@ typedef void (*sixp_sent_callback_t)(void *arg, uint16_t arg_len,
  * \param buf The pointer to a buffer pointing the head of 6top IE Content
  * \param len The lengh of 6top IE Content
  * \param src_addr The Source address of an incoming packet
- * \return 0 if , -1 on failure
  */
 void sixp_input(const uint8_t *buf, uint16_t len,
                 const linkaddr_t *src_addr);
