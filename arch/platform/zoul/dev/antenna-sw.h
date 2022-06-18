@@ -57,8 +57,6 @@
  * RF interface of the CC2538, or the Sub-1GHz RF interface of the CC1200.
  * The function is set to enable the Sub-1GHz as default,
  * it should be called from the contiki-main initialization process.
- *
- * \return ignored
  */
 void antenna_sw_config(void);
 
