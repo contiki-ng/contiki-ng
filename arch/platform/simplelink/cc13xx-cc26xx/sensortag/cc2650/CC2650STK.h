@@ -29,7 +29,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/** ============================================================================
+/**
  *  @file       CC2650STK.h
  *
  *  @brief      CC2650 SensorTag Board Specific header file.
@@ -39,7 +39,6 @@
  *  @code
  *  #include "CC2650STK.h"
  *  @endcode
- *  ============================================================================
  */
 #ifndef __CC2650STK_BOARD_H__
 #define __CC2650STK_BOARD_H__

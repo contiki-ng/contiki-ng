@@ -29,7 +29,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/** ============================================================================
+/**
  *  @file       CC1350STK.h
  *
  *  @brief      CC1350 SensorTag Board Specific header file.
@@ -39,7 +39,6 @@
  *  @code
  *  #include "CC1350STK.h"
  *  @endcode
- *  ============================================================================
  */
 #ifndef __CC1350STK_BOARD_H__
 #define __CC1350STK_BOARD_H__
