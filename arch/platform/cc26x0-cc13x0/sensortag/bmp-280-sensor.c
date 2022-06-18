@@ -175,8 +175,6 @@ init(void)
 /**
  * \brief Enable/disable measurements
  * \param enable 0: disable, enable otherwise
- *
- * @return      none
  */
 static void
 enable_sensor(bool enable)
