@@ -54,13 +54,19 @@ ble_addr_cpy_to(uint8_t *dst)
   }
 }
 /*---------------------------------------------------------------------------*/
-void
+int
 ble_addr_to_eui64(uint8_t *dst, uint8_t *src)
 {
+  if(!dst || !src) {
+    return -1;
+  }
+
   memcpy(dst, src, 3);
   dst[3] = 0xFF;
   dst[4] = 0xFE;
   memcpy(&dst[5], &src[3], 3);
+
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 void

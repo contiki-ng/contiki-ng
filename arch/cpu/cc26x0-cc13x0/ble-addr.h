@@ -64,8 +64,10 @@ void ble_addr_cpy_to(uint8_t *dst);
  * \param dst A pointer to the destination area where the EUI64 address is to be
  *            written
  * \param src A pointer to the BLE address that is to be copied
+ * \return  0 : Returned successfully
+ *         -1 : Returned with error
  */
-void ble_addr_to_eui64(uint8_t *dst, uint8_t *src);
+int ble_addr_to_eui64(uint8_t *dst, uint8_t *src);
 
 /*---------------------------------------------------------------------------*/
 /**
