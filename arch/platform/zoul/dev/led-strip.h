@@ -59,8 +59,6 @@
  * LEDs 3VDC-powered per strip
  * The function is set to power OFF the LEDs as default,
  * it should be called from the contiki-main initialization process.
- *
- * \return ignored
  */
 void led_strip_config(void);
 
