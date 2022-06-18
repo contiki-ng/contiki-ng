@@ -46,6 +46,7 @@
 #include "simple-energest.h"
 #include <stdio.h>
 #include <limits.h>
+#include <inttypes.h>
 
 /* Log configuration */
 #include "sys/log.h"
