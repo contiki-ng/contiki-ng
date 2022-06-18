@@ -73,7 +73,6 @@ bool sensor_common_write_reg(uint8_t addr, uint8_t *buf, uint8_t len);
  * \brief Fill a result buffer with dummy error data
  * \param buf Pointer to the buffer where to write the data
  * \param len Number of bytes to fill
- * \return bitmask of error flags
  */
 void sensor_common_set_error_data(uint8_t *buf, uint8_t len);
 /*---------------------------------------------------------------------------*/
