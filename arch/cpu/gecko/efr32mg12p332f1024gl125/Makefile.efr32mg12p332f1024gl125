@@ -11,3 +11,5 @@ LDFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=softfp
 include $(CONTIKI_CPU)/Makefile.gecko
 
 include $(CONTIKI)/$(CONTIKI_NG_CM4_DIR)/Makefile.cm4
+
+include $(CONTIKI_CPU)/Makefile.commander

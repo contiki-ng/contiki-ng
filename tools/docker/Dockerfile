@@ -14,6 +14,7 @@ USER root
 # lib32z1: 32-bit libz, probably used by some old 32-bit binary.
 # libcanberra-gtk-module: remove warning message from renode.
 # libcoap2-bin: used by regression tests.
+# libgl1-mesa-glx: required by Simplicity Commander
 # libxtst6: required for GraalVM/Java17 to run Cooja in GUI mode.
 # mosquitto: used by the regression tests.
 # mtr-tiny: used by the regression tests.
@@ -37,6 +38,7 @@ RUN apt-get -qq update && \
     lib32z1 \
     libcanberra-gtk-module \
     libcoap2-bin \
+    libgl1-mesa-glx \
     libpng-dev \
     libxtst6 \
     mosquitto \
@@ -101,6 +103,15 @@ RUN wget -nv https://github.com/renode/renode/releases/download/v${RENODE_VERSIO
   && apt-get -qq -y --no-install-recommends install ./renode_${RENODE_VERSION}_amd64.deb > /dev/null \
   && rm renode_${RENODE_VERSION}_amd64.deb \
   && apt-get -qq clean
+
+RUN wget -nv https://www.silabs.com/documents/public/software/SimplicityCommander-Linux.zip && \
+  unzip -q SimplicityCommander-Linux.zip && \
+  mkdir /opt/SimplicityCommander && \
+  tar xf SimplicityCommander-Linux/Commander_linux_x86_64_*.tar.bz \
+    -C /opt/SimplicityCommander --strip-components=1 --no-same-owner && \
+  rm -rf SimplicityCommander-Linux.zip SimplicityCommander-Linux
+
+ENV PATH="/opt/SimplicityCommander:${PATH}"
 
 # Sphinx is required for building the readthedocs API documentation.
 # RTD requirements are shared with .readthedocs.yaml for build consistency - check RTD build if modifying.
