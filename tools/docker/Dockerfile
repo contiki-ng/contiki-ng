@@ -8,7 +8,6 @@ USER root
 # Tools
 RUN apt-get -qq update && \
     apt-get -qq -y --no-install-recommends install ca-certificates > /dev/null && \
-    sed -i -e 's#http://archive.ubuntu.com/ubuntu/#mirror://mirrors.ubuntu.com/mirrors.txt#' /etc/apt/sources.list && \
     apt-get -qq update && \
     apt-get -qq -y --no-install-recommends install gnupg software-properties-common > /dev/null
 
