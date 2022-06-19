@@ -43,7 +43,7 @@ all: clean
 	@$(MAKE) summary
 
 doxygen:
-	-@$(MAKE) -C $(DOXYGEN_DIR) 2> $(DOXYGEN_ERR) > /dev/null
+	-@$(MAKE) -C $(DOXYGEN_DIR) 2> $(DOXYGEN_ERR)
 
 readthedocs:
 	-@$(MAKE) -C $(READTHEDOCS_DIR) 2> $(READTHEDOCS_ERR) > /dev/null
