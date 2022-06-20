@@ -114,10 +114,10 @@ static RF_Object rf_netstack;
 static RF_Object rf_ble;
 #endif
 
-static RF_CmdHandle cmd_rx_handle;
+static volatile RF_CmdHandle cmd_rx_handle;
 
-static bool rf_is_on;
-static bool rf_start_recalib_timer;
+static volatile bool rf_is_on;
+static volatile bool rf_start_recalib_timer;
 static volatile bool rx_buf_full;
 
 static rfc_CMD_SYNC_STOP_RAT_t netstack_cmd_stop_rat;
