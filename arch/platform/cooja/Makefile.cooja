@@ -75,7 +75,7 @@ ifneq ($(MAKECMDGOALS),clean)
 CURDIR := $(shell pwd)
 
 .PHONY: $(MAKECMDGOALS)
-$(MAKECMDGOALS):
+%.csc %.csc.gz:
 	$(Q)ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $(COOJA_DIR)/build.xml run_bigmem -Dargs="-quickstart=$(addprefix $(CURDIR)/,$(firstword $(MAKECMDGOALS))) -contiki=$(realpath $(CONTIKI)) -logdir=$(CURDIR)"
 endif
 endif ## QUICKSTART
