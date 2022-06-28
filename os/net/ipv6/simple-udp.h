@@ -29,7 +29,7 @@
  * This file is part of the Contiki operating system.
  */
 
-/** 
+/**
  * \file
  *         Header file for the simple-udp module.
  * \author
@@ -83,7 +83,7 @@ struct simple_udp_connection {
  * \param local_port The local UDP port in host byte order
  * \param remote_addr The remote IP address
  * \param remote_port The remote UDP port in host byte order
- * \param receive_callback A pointer to a function of to be called for incoming packets
+ * \param receive_callback A pointer to a function to be called for incoming packets
  * \retval 0   If no UDP connection could be allocated
  * \retval 1   If the connection was successfully allocated
  *

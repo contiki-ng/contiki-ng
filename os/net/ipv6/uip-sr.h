@@ -106,7 +106,7 @@ typedef struct uip_sr_node {
  * Tells how many nodes are currently stored in the graph
  *
  * \return The number of nodes
-*/
+ */
 int uip_sr_num_nodes(void);
 
 /**
@@ -115,7 +115,7 @@ int uip_sr_num_nodes(void);
  * \param graph The graph the link belongs to
  * \param child The IPv6 address of the child
  * \param parent The IPv6 address of the parent
-*/
+ */
 void uip_sr_expire_parent(const void *graph, const uip_ipaddr_t *child,
                           const uip_ipaddr_t *parent);
 
@@ -126,7 +126,7 @@ void uip_sr_expire_parent(const void *graph, const uip_ipaddr_t *child,
  * \param child The IPv6 address of the child
  * \param parent The IPv6 address of the parent
  * \param lifetime The link lifetime in seconds
-*/
+ */
 uip_sr_node_t *uip_sr_update_node(void *graph, const uip_ipaddr_t *child,
                                   const uip_ipaddr_t *parent,
                                   uint32_t lifetime);
@@ -135,7 +135,7 @@ uip_sr_node_t *uip_sr_update_node(void *graph, const uip_ipaddr_t *child,
  * Returns the head of the non-storing node list
  *
  * \return The head of the list
-*/
+ */
 uip_sr_node_t *uip_sr_node_head(void);
 
 /**
@@ -143,7 +143,7 @@ uip_sr_node_t *uip_sr_node_head(void);
  *
  * \param item The current element in the list
  * \return The next element of the list
-*/
+ */
 uip_sr_node_t *uip_sr_node_next(const uip_sr_node_t *item);
 
 /**
@@ -152,7 +152,7 @@ uip_sr_node_t *uip_sr_node_next(const uip_sr_node_t *item);
  * \param graph The graph where to look up for the node
  * \param addr The target address
  * \return A pointer to the node
-*/
+ */
 uip_sr_node_t *uip_sr_get_node(const void *graph, const uip_ipaddr_t *addr);
 
 /**
@@ -162,7 +162,7 @@ uip_sr_node_t *uip_sr_get_node(const void *graph, const uip_ipaddr_t *addr);
  * \param graph The graph where to look up for the node
  * \param addr The target IPv6 global address
  * \return 1 if the node is reachable, 0 otherwise
-*/
+ */
 int uip_sr_is_addr_reachable(const void *graph, const uip_ipaddr_t *addr);
 
 /**
@@ -170,17 +170,17 @@ int uip_sr_is_addr_reachable(const void *graph, const uip_ipaddr_t *addr);
  * and expire links accordingly)
  *
  * \param seconds The number of seconds elapsted since last call
-*/
+ */
 void uip_sr_periodic(unsigned seconds);
 
 /**
  * Initialize this module
-*/
+ */
 void uip_sr_init(void);
 
 /**
  * Deallocate all neighbors
-*/
+ */
 void uip_sr_free_all(void);
 
 /**
@@ -194,6 +194,6 @@ void uip_sr_free_all(void);
 */
 int uip_sr_link_snprint(char *buf, int buflen, const uip_sr_node_t *link);
 
- /** @} */
+/** @} */
 
 #endif /* UIP_SR_H */
