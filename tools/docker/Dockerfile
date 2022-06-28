@@ -100,16 +100,17 @@ RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Des
 
 # Sphinx is required for building the readthedocs API documentation.
 # Matplotlib is required for result visualization.
-# After that, install nrfutil, work around broken pc_ble_driver_py dependency,
-# and remove the pip cache.
+# Nrfutil 6.1.3 does not work with protobuf 4, so install latest 3.x
+# Keep the image size down by removing the pip cache when done.
 RUN python3 -m pip -q install --upgrade pip && \
     python3 -m pip -q install \
       setuptools \
       sphinx_rtd_theme \
       sphinx \
-      matplotlib && \
-    python3 -m pip -q install nrfutil && \
-    python3 -m pip -q install --no-deps -t /usr/local/lib/python3.6/dist-packages --python-version 3.6 --ignore-requires-python --upgrade nrfutil && \
+      matplotlib \
+      'protobuf<=4' && \
+    python3 -m pip -q install \
+      nrfutil && \
     rm -rf /root/.cache
 
 # Create user, add to groups dialout and sudo, and configure sudoers.
