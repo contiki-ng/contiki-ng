@@ -22,6 +22,11 @@ else
   ${error Invalid MAKE_CFS configuration: "$(MAKE_CFS)"}
 endif
 
+# No stack end symbol available, code does not work on 64-bit architectures.
+MODULES_SOURCES_EXCLUDES += stack-check.c
+# No Serial Peripheral Interface on Native.
+MODULES_SOURCES_EXCLUDES += spi.c
+
 ifeq ($(HOST_OS),Windows)
 CONTIKI_TARGET_SOURCEFILES += wpcap-drv.c wpcap.c
 TARGET_LIBFILES = /lib/w32api/libws2_32.a /lib/w32api/libiphlpapi.a
