@@ -40,6 +40,8 @@
 
 #include "tcp-socket.h"
 
+#if UIP_TCP
+
 #include <string.h>
 
 static void relisten(struct tcp_socket *s);
@@ -407,3 +409,4 @@ tcp_socket_queuelen(struct tcp_socket *s)
   return s->output_data_len;
 }
 /*---------------------------------------------------------------------------*/
+#endif /* UIP_TCP */
