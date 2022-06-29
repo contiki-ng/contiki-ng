@@ -45,6 +45,7 @@ ifeq ($(HOST_OS),Windows)
   LDFLAGS += -shared -Wl,--add-stdcall-alias -L/usr/lib/mingw
 else ifeq ($(HOST_OS),Darwin)
   JAVA_OS_NAME = darwin
+  CC = gcc
   CFLAGS += -fno-common -DHAVE_SNPRINTF
   LDFLAGS_WERROR = -Wl,-fatal_warnings
   LDFLAGS += -dynamiclib -fno-common -framework $(JAVA_FRAMEWORK)
@@ -52,11 +53,11 @@ else ifeq ($(HOST_OS),Darwin)
   OBJCOPY = true
 else
   JAVA_OS_NAME = linux
+  CC = gcc
   CFLAGS += -fPIC
   LDFLAGS += -shared -Wl,-zdefs -Wl,-Map=$(MAPFILE)
 endif
 
-CC ?= gcc
 LD = $(CC)
 # All .csc files contain calls to make with targets that are not the ones
 # Cooja need. Just disable the final copy so Cooja can share the build
