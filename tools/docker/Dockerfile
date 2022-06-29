@@ -19,7 +19,6 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
   apt-get -qq -y --no-install-recommends install \
     ant \
     build-essential \
-    ccache \
     gdb \
     git \
     gtk-sharp2 \
@@ -135,10 +134,15 @@ COPY --chown=user:user files/cooja ${HOME}/.local/bin/cooja
 # Doxygen 1.8.17 in Ubuntu 20.04 gives (false) warnings on mqtt.h.
 # Use a binary from the Doxygen homepage, static linking started with 1.9.3.
 # Remove the PDF manual and html directory to reduce image size.
+# Use the most recent version of ccache to ensure it supports the compiler
+# versions in the docker image.
 RUN wget -nv https://www.doxygen.nl/files/doxygen-1.9.4.linux.bin.tar.gz && \
     tar zxf doxygen-1.9.4.linux.bin.tar.gz -C ${HOME}/.local && \
     rm -rf ${HOME}/.local/doxygen-1.9.4/html ${HOME}/.local/doxygen-1.9.4/*.pdf doxygen-1.9.4.linux.bin.tar.gz && \
-    (cd ${HOME}/.local/bin && ln -s ../doxygen-1.9.4/bin/doxygen .)
+    (cd ${HOME}/.local/bin && ln -s ../doxygen-1.9.4/bin/doxygen .) && \
+    wget -nv https://github.com/ccache/ccache/releases/download/v4.6.1/ccache-4.6.1-linux-x86_64.tar.xz && \
+    tar xf ccache-4.6.1-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.6.1-linux-x86_64/ccache && \
+    rm ccache-4.6.1-linux-x86_64.tar.xz
 
 # Download, build and install Renode
 RUN git clone --quiet https://github.com/renode/renode.git \
