@@ -48,7 +48,7 @@ endif
 
 # Both ccfg-conf.c and startup_cc13xx_cc26xx_gcc.c is located locally in
 # the arch/cpu/cc13xx-cc26xx folder.
-CPU_START_SOURCEFILES += ccfg-conf.c startup_cc13xx_cc26xx_gcc.c
+CONTIKI_CPU_SOURCEFILES += ccfg-conf.c startup_cc13xx_cc26xx_gcc.c
 
 # CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += rtimer-arch.c    clock-arch.c
