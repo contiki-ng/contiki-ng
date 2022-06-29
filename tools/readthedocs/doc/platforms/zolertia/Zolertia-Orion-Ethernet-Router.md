@@ -1,3 +1,5 @@
+# Zolertia Orion Ethernet Router
+
 ![Zolertia Orion Ethernet Router][zolertia-orion-router]
 
 The Zolertia Orion Ethernet Router allows to create IoT applications out-of-the-box, connecting any IPv4/IPv6 service or application to 6LoWPAN wireless networks.
@@ -26,14 +28,12 @@ In a nutshell the Orion Router packs the following features:
 
 There are ready-to-use examples at `examples/zolertia/zoul/orion`, showing how to deploy an IP64 border router, and connect to services such as [IFTTT (If This Then That)](https://ifttt.com).
 
-Orion Technical documentation
-=============
+## Orion Technical documentation
 
 * [Datasheet](https://github.com/Zolertia/Resources/tree/master/Orion%20Ethernet%20Router/Hardware/Revision%20A/Datasheets)
 * [Schematics](https://github.com/Zolertia/Resources/tree/master/Orion%20Ethernet%20Router/Hardware/Revision%20A/Schematics)
 
-Orion Ethernet Router pin-out
-=============
+## Orion Ethernet Router pin-out
 
 ![Zolertia Orion Ethernet Router pin-out][zolertia-orion-pinout]
 

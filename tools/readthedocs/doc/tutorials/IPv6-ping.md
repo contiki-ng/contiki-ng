@@ -1,6 +1,8 @@
+# IPv6 ping
+
 We will continue here from our `hello-world` example (see [tutorial:hello-world]) with shell enabled (see [tutorial:shell]). We will look at IPv6 communication (see [doc:ipv6]). Note that it is possible to ping even a native node: when running it with sufficient permissions (e.g. `sudo`), native nodes start a `tun` interface and can be pinged. Here we look at pinging hardware nodes. Compile the project and upload it to both nodes (either by not specifying `MOTES` at all, which will upload to all, or by listing both tty devices e.g. with `MOTES=/dev/ttyUSB0 /dev/ttyUSB1`).
 
-This tutorial uses the default CSMA MAC protocol, for introduction using TSCH see a tutorial on how to [switch the hello-world example to TSCH](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Switching-to-TSCH).
+This tutorial uses the default CSMA MAC protocol, for introduction using TSCH see a tutorial on how to [switch the hello-world example to TSCH](/doc/tutorials/Switching-to-TSCH).
 
 Log in to one node (e.g. `make TARGET=zoul MOTES=/dev/ttyUSB0 login`) and get its link-local IPv6 address via the shell:
 ```
@@ -49,8 +51,8 @@ Node IPv6 neighbors:
 -- fe80::212:4b00:616:fc4 <-> 0012.4b00.0616.0fc4, router 0, state Reachable 
 ```
 
-[doc:ipv6]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-IPv6
-[doc:configuration]: https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki%E2%80%90NG-configuration-system
-[tutorial:hello-world]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Hello,-World!
-[tutorial:shell]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Shell
-[tutorial:logging]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Logging
+[doc:ipv6]: /doc/programming/IPv6
+[doc:configuration]: /doc/getting-started/The-Contiki-NG-configuration-system
+[tutorial:hello-world]: /doc/tutorials/Hello,-World!
+[tutorial:shell]: /doc/tutorials/Shell
+[tutorial:logging]: /doc/tutorials/Logging

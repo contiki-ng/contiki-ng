@@ -1,6 +1,8 @@
+# Vagrant
+
 This page shows you how to create a virtual machine image provisioned with all tools required to use the Contiki-NG ecosystem.
 
-# Instructions
+## Instructions
 
 * Install a virtualization platform such as [VirtualBox](https://www.virtualbox.org)
 * Install Vagrant from [www.vagrantup.com/downloads](https://www.vagrantup.com/downloads.html)
@@ -53,13 +55,13 @@ If you want to enable the VirtualBox GUI, edit the `tools/vagrant/Vagrantfile`, 
   # config.vm.provider "virtualbox" do |vb|
   #   # Display the VirtualBox GUI when booting the machine
   #   vb.gui = true
-  #
+  ##
   #   # Customize the amount of memory on the VM:
   #   vb.memory = "1024"
   # end
 ```
 
-# Provision a VM with a desktop environment
+## Provision a VM with a desktop environment
 This assumes that you have already completed the instructions above to provision a gui-less image.
 
 * Edit `tools/vagrant/Vagrantfile` and uncomment the following lines:
@@ -81,7 +83,7 @@ This will install VirtualBox guest additions, X and the Xfce desktop environment
 * Login using username 'vagrant' and password 'vagrant'
 * `sudo startx`
 
-# Making local modifications to your Vagrant image
+## Making local modifications to your Vagrant image
 
 You may wish to make local modifications to the Vagrant image, to e.g. add to the list of directories to be shared between your computer and the Contiki-NG Vagrant image. The easy way to do this is by modifying the `Vagrantfile` in the Contiki-NG tree, but this will cause git to flag the file as changed. Alternatively, you can exploit [how Vagrant loads Vagrantfiles](https://www.vagrantup.com/docs/vagrantfile/):
 
@@ -89,17 +91,17 @@ You may wish to make local modifications to the Vagrant image, to e.g. add to th
 
 Therefore, you can for example modify (or create) `~/.vagrant.d/Vagrantfile` and extend the VM's configuration therein.
 
-# Connecting USB devices to your vagrant guest image
+## Connecting USB devices to your vagrant guest image
 
 The instructions on how to achieve this largely depend on what virtualization environment you have chosen to use. For that reason, our setup will leave USB devices connected to your host OS. To connect a USB device to the vagrant image, you will have to use the recommended method for your virtualization environment.
 
-## An example for VirtualBox
+### An example for VirtualBox
 In all cases, start by installing the VirtualBox Extension Pack which will add USB support to VirtualBox.
 
-### VirtualBox: Adding USB devices manually
+#### VirtualBox: Adding USB devices manually
 Make sure the vagrant image is not running. If you have previously fired it up with `vagrant up`, shut it down with `vagrant halt`. Install the VirtualBox Extension Pack which will add USB support to VirtualBox. You then need to open the VirtualBox Manager, select your Vagrant VM and enable USB support for the guest. You can then connect/disconnect USB device as normal, or you can use filters that will allow USB devices to automatically connect to the vagrant image. When you are done re-boot your image.
 
-### VirtualBox: Adding USB devices by configuring the Vagrant image
+#### VirtualBox: Adding USB devices by configuring the Vagrant image
 You can configure the Vagrant image to enable USB support. Modify a `Vagrantfile` and add:
 
 ```

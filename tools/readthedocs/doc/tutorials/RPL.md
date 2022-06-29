@@ -1,3 +1,5 @@
+# RPL
+
 We continue here from the IPv6 ping example ([tutorial:ipv6-ping]). We will now look at the basics of the RPL (pronounced 'ripple') routing protocol ([doc:rpl]).
 
 To start with, we will build a stand-alone network with no connectivity to outside networks. The next tutorial ([tutorial:rpl-border-router]) will show you how add Internet connectivity with a border router.
@@ -149,6 +151,6 @@ Node > [INFO: RPL       ] sending a multicast-DIO with rank 285 to ff02::1a
 
 From this point onwards, other nodes may join through the newly joined node, forming a multi-hop mesh network.
 
-[doc:rpl]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-RPL
-[tutorial:rpl-border-router]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-RPL-border-router
-[tutorial:ipv6-ping]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-IPv6-ping
+[doc:rpl]: /doc/programming/RPL
+[tutorial:rpl-border-router]: /doc/tutorials/RPL-border-router
+[tutorial:ipv6-ping]: /doc/tutorials/IPv6-ping

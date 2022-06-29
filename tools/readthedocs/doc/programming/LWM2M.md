@@ -1,3 +1,5 @@
+# LWM2M
+
 ## OMA Lightweight M2M and IPSO Smart Objects
 
 OMA has defined a standard for IoT or M2M devices, building on CoAP (and DTLS). It defines bootstrap and device management, as well as an object model. On top of LWM2M, the IPSO Alliance has defined a set of IPSO Smart Objects that describe common sensors and actuators.
@@ -19,7 +21,7 @@ Using the LWM2M engine and the IPSO object support it is fairly easy to create a
 
 An example of a temperature sensor could look like:
 
-```c
+```
 IPSO_SENSOR(temp_sensor, 3303, read_temp_value,`
               `.max_range = 100000, /* 100 cel milli celcius */`
               `.min_range = -10000, /* -10 cel milli celcius */`
@@ -57,4 +59,4 @@ ipso_sensor_add(&temp_sensor);
 ```
 
 Read the LWM2M and IPSO object tutorial for instructions on how to test LWM2M at:
-[LWM2M and IPSO Object Tutorial](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-LWM2M-and-IPSO-Objects)
+[LWM2M and IPSO Object Tutorial](/doc/tutorials/LWM2M-and-IPSO-Objects)

@@ -1,4 +1,6 @@
-This tutorial will guide you through using TSCH and 6TiSCH (see [doc:tsch]). We will start from the `hello-world` example with the shell enabled (see [tutorial:shell]) and with MAC logs set to the maximum level (`LOG_CONF_LEVEL_MAC` set to `LOG_LEVEL_DBG`, see [tutorial:logging]). For existing examples using TSCH, see [Contiki-NG TSCH example applications](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-TSCH-example-applications).
+# TSCH and 6TiSCH
+
+This tutorial will guide you through using TSCH and 6TiSCH (see [doc:tsch]). We will start from the `hello-world` example with the shell enabled (see [tutorial:shell]) and with MAC logs set to the maximum level (`LOG_CONF_LEVEL_MAC` set to `LOG_LEVEL_DBG`, see [tutorial:logging]). For existing examples using TSCH, see [Contiki-NG TSCH example applications](/doc/programming/TSCH-example-applications).
 
 To enable TSCH, all you need to do is to set it as the MAC layer in the project Makefile:
 ```
@@ -66,11 +68,11 @@ TSCH status:
 
 With security enabled, all EBs are authenticated, and all data traffic is both encrypted and authenticated. To force a node to only join secure networks, set `TSCH_CONF_JOIN_SECURED_ONLY`.
 
-[doc:tsch]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-TSCH-and-6TiSCH
-[doc:tsch-logs]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation%3A-TSCH-and-6TiSCH/_edit#per-slot-logging
-[tutorial:shell]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Shell
-[tutorial:logging]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Logging
-[tutorial:ipv6-ping]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-IPv6-ping
-[tutorial:rpl]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-RPL
-[tutotiral:rpl-border-router]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-RPL-border-router
-[tutorial:ram-rom-usage]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-RAM-and-ROM-usage
+[doc:tsch]: /doc/programming/TSCH-and-6TiSCH
+[doc:tsch-logs]: /doc/programming/TSCH-and-6TiSCH
+[tutorial:shell]: /doc/tutorials/Shell
+[tutorial:logging]: /doc/tutorials/Logging
+[tutorial:ipv6-ping]: /doc/tutorials/IPv6-ping
+[tutorial:rpl]: /doc/tutorials/RPL
+[tutotiral:rpl-border-router]: /doc/tutorials/RPL-border-router
+[tutorial:ram-rom-usage]: /doc/tutorials/RAM-and-ROM-usage

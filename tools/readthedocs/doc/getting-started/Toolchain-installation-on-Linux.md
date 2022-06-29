@@ -1,3 +1,5 @@
+# Toolchain installation on Linux
+
 We recommend using the Contiki-NG Docker image for easy setup of a consistent development environment: [doc:docker].
 
 Alternatively, you can install the toolchains natively on your system.
@@ -54,11 +56,11 @@ If desired, instructions to compile MSP430 GCC 4.7.2 from source can be found [h
 
 ### Installing JN compiler
 See the JN page for instruction on setting up the JN compiler:
-[Set up JN516x](https://github.com/contiki-ng/contiki-ng/wiki/Platform-jn516x)
+[Set up JN516x](/doc/platforms/jn516x)
 
 ### Installing NRF sdk
 To get the NRF52dk platform to work you will need to add SDK and programming tools, see
-[Platform-nrf52dk](https://github.com/contiki-ng/contiki-ng/wiki/Platform-nrf52dk).
+[Platform-nrf52dk](/doc/platforms/nrf52dk).
 
 ### Install Java for the Cooja network simulator
 
@@ -133,4 +135,4 @@ $ git submodule update --init --recursive
 *Note*: we recommend cloning and then initializing the submodules rather than using `git clone --recursive`.
 The latter results in submodules that use absolute paths to the top-level git, rather than relative paths, which are more flexible for a number of reasons.
 
-[doc:docker]: https://github.com/contiki-ng/contiki-ng/wiki/Docker
+[doc:docker]: /doc/getting-started/Docker

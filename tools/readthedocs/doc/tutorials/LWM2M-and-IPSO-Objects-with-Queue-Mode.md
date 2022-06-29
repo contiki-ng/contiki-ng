@@ -1,6 +1,8 @@
+# LWM2M and IPSO Objects with Queue Mode
+
 This tutorial assumes you have first been through the main LWM2M tutorial [tutorial:lwm2m].
 
-# LWM2M with Queue Mode
+## LWM2M with Queue Mode
 Queue Mode is an energy saving strategy that LWM2M contains in its specification. It is based on allowing the client to sleep for long periods of time (the **sleep time**), where the server cannot make any requests. When the client wakes up, it sends a registration update message to inform the server, and it can receive requests. When a well-defined time has passed after the last received request (the **awake time**), it enters sleep mode again.
 
 Queue Mode is supported in the LWM2M's implementation. To enable it, the next flag should be enabled in the project-conf.h: 
@@ -57,4 +59,4 @@ Client awake time read: "time_in_ms"
 ```
 Once everything is set up, the user can change the awake/sleep times through the web application in `localhost:8080` and see that they are actually applied in the client's behavior.
 
-[tutorial:lwm2m]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-LWM2M-and-IPSO-Objects
+[tutorial:lwm2m]: /doc/tutorials/LWM2M-and-IPSO-Objects

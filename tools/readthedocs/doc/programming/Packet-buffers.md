@@ -1,7 +1,9 @@
+# Packet buffers
+
 This page, intended for protocol developers, describes the different types of buffers used in Contiki-NG.
 The focus is on the 6LoWPAN stack, but all information about Packetbuf and Queuebuf also applies to NullNet.
 
-# uIP buffer
+## uIP buffer
 
 At the network layer and above, packet payloads are stored in `uip_buf`.
 
@@ -18,7 +20,7 @@ Access rules for `uip_buf`:
 * only from 6LoWPAN, uIP, or above, but not from any layer below
 * only outside of interrupt context
 
-# Packetbuf
+## Packetbuf
 
 6LoWPAN will build the link-layer packets directly into the global `packetbuf`.
 In addition to the payload, `packetbuf` carries a number of attributes / meta-data (see `packetbuf.h`).
@@ -30,7 +32,7 @@ Access rules for `packetbuf`:
 * only from 6LoWPAN or below, but not from any layer above
 * only outside of interrupt context
 
-# Queuebuf
+## Queuebuf
 
 The `queuebuf` module provides a way to manage multiple packets at a time.
 The content of every `queuebuf` instance is basically the same as in the global `packetbuf`.

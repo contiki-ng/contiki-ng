@@ -1,4 +1,6 @@
-# Naming
+# Code style
+
+## Naming
 
 * File names are composed of lower-case characters and dashes. Like
   this: `simple-udp.c`
@@ -13,7 +15,7 @@
 * Configuration definitions begin with the module name and CONF_. Like
   this: `PROCESS_CONF_NUMEVENTS`
 
-# Formatting scripts
+## Formatting scripts
 
 The Contiki source tree contains scripts to assist with correct code formatting
 and we recommend [Uncrustify](http://uncrustify.sourceforge.net/) as the
@@ -50,7 +52,7 @@ This is _not_ a silver bullet and developer intervention is still required. Belo
 
 * ﻿﻿`asm("wfi");` becomes `asm ("wfi");`: A space gets added before the opening paren, because the `asm` keyword stops this from getting interpreted as a normal function call / macro invocation. This is only a problem with `asm`. For instance, ﻿﻿`foo("bar");` gets formatted correctly.
 
-# Example file
+## Example file
 
 Below is an example .c files that complies with the Contiki-NG code style:
 ```c

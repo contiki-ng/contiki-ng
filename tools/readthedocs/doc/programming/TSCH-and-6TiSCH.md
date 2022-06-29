@@ -1,4 +1,6 @@
-# Overview
+# TSCH and 6TiSCH
+
+## Overview
 
 Time Slotted Channel Hopping (TSCH) is a MAC layer of [IEEE 802.15.4-2015][ieee802.15.4-2015].
 [6TiSCH][ietf-6tisch-wg] is an IETF Working Group focused on IPv6 over TSCH.
@@ -14,16 +16,16 @@ This implementation is presented in depth and evaluated in our paper: [*TSCH and
 The scheduler Orchestra is detailed in [*Orchestra: Robust Mesh Networks Through Autonomously Scheduled TSCH*](http://www.simonduquennoy.net/papers/duquennoy15orchestra.pdf), ACM SenSys'15.
 
 More documentation on:
-* [Orchestra](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Orchestra)
-* [The 6top sub-layer](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-6TiSCH-6top-sub-layer)
+* [Orchestra](/doc/programming/Orchestra)
+* [The 6top sub-layer](/doc/programming/6TiSCH-6top-sub-layer)
 
-# Getting started
+## Getting started
 
-* [TSCH tutorial in Contiki-NG](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-TSCH-and-6TiSCH)
-* [Switching Contiki-NG applications to TSCH](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Switching-to-TSCH)
-* [Contiki-NG TSCH example applications](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-TSCH-example-applications)
+* [TSCH tutorial in Contiki-NG](/doc/tutorials/TSCH-and-6TiSCH)
+* [Switching Contiki-NG applications to TSCH](/doc/tutorials/Switching-to-TSCH)
+* [Contiki-NG TSCH example applications](/doc/programming/TSCH-example-applications)
 
-# Features
+## Features
 
 This implementation includes:
   * Standard IEEE 802.15.4-2015 frame version 2
@@ -42,7 +44,7 @@ This implementation includes:
   * Orchestra: an autonomous scheduler for TSCH+RPL networks
   * A drift compensation mechanism
 
-# Platforms
+## Platforms
 
 The implemenation has been tested on the following platforms:
   * NXP JN516x (`jn516x`)
@@ -64,7 +66,7 @@ four implementations it was tested against.
 
 This implementation can run with any network layer. In the IPv6+RPL case, `tsch-rpl.[ch]`, handles consistency between the RPL and TSCH topologies. However, some platforms (specifically, Tmote Sky) do not have sufficient ROM to support both TSCH and RPL, and others may require non-default parameters (reduced number of neighbors, routes, queue size) to fit in RAM.
 
-# Code structure
+## Code structure
 
 The IEEE 802.15.4e-2012 frame format is implemented in:
 * `os/net/mac/framer/frame802154.[ch]`: handling of frame version 2
@@ -93,7 +95,7 @@ rank -> join priority) as defined in the 6TiSCH minimal configuration.
 * `tsch-types.h`: the data types defined by TSCH.
 * `tsch-conf.h`: general configuration file for TSCH.
 
-# Using TSCH
+## Using TSCH
 
 A simple TSCH+RPL example is included under `examples/6tisch/simple-node`.
 To use TSCH, first make sure your platform supports it.
@@ -107,7 +109,7 @@ MAKE_MAC = MAKE_MAC_TSCH
 
 To configure TSCH further, see the macros in `.h` files under `os/net/mac/tsch/` and redefine your own in your `project-conf.h`.
 
-## Using TSCH with Security
+### Using TSCH with Security
 
 To include TSCH standard-compliant security, set the following:
 ```c
@@ -125,16 +127,16 @@ When associating, nodes with security included can join both secured or non-secu
 Set `TSCH_CONF_JOIN_SECURED_ONLY` to force joining secured networks only.
 Likewise, set `TSCH_JOIN_MY_PANID_ONLY` to force joining networks with a specific PANID only.
 
-## TSCH Scheduling
+### TSCH Scheduling
 
 By default (see `TSCH_SCHEDULE_WITH_6TISCH_MINIMAL`), our implementation runs a 6TiSCH minimal schedule, which emulates an always-on link on top of TSCH.
 The schedule consists in a single shared slot for all transmissions and receptions, in a slotframe of length `TSCH_SCHEDULE_DEFAULT_LENGTH`.
 
-As an alternative, we provide [Orchestra](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Orchestra), an autonomous scheduling solution for TSCH where nodes maintain their own schedule locally, solely based on their local RPL state.
+As an alternative, we provide [Orchestra](/doc/programming/Orchestra), an autonomous scheduling solution for TSCH where nodes maintain their own schedule locally, solely based on their local RPL state.
 
 Finally, one can also implement his own scheduler, centralized or distributed, based on the scheduling API provides in `os/net/mac/tsch/tsch-schedule.h`.
 
-## Configuring the association process
+### Configuring the association process
 
 When attempting to associate to a network, nodes scan channels at random until they receive an enhanced beacon (EB).
 The beaconing interval and the channel hopping sequence play a key role in how fast and efficient the association process is.
@@ -144,12 +146,12 @@ To fine-tune, experiment with the following defines:
 * `TSCH_CONF_DEFAULT_HOPPING_SEQUENCE`: The default hopping sequence (optionally, a coordinator could choose advertise a different sequence). Use a sequence with fewer different channels for faster association (but less frequency diversity).
 * `TSCH_CONF_JOIN_HOPPING_SEQUENCE`: Optionally, set a different hopping sequence for scanning. Only use this if you also implement your own mechanism to restrict EBs to a subset of frequencies (e.g. using a slotframe of length 4 with one slot for EBs would result in hopping over only 4 channels).
 
-# Porting TSCH to a new platform
+## Porting TSCH to a new platform
 
 Porting TSCH to a new platform requires a few new features in the radio driver, a number of timing-related configuration parameters.
 The easiest is probably to start from one of the existing port: `jn516x`, `sky`, `cc2538dk`, `zoul`, `openmote-cc2538`, `srf06-cc26xx`.
 
-## Radio features required for TSCH
+### Radio features required for TSCH
 
 The main new feature required for TSCH is the so-called *poll mode*, a new Rx mode for Contiki-NG radio drivers.
 In poll mode, radio interrupts are disabled, and the radio driver never calls upper layers.
@@ -167,7 +169,7 @@ TSCH will check when initializing (in `tsch_init`) that the radio driver support
 * optionally: get last packet RSSI with `RADIO_PARAM_LAST_RSSI`
 * optionally: get last packet LQI with `RADIO_PARAM_LAST_LQI`
 
-## Timing macros required for TSCH
+### Timing macros required for TSCH
 
 The following macros must be provided:
 * `US_TO_RTIMERTICKS(US)`: converts micro-seconds to rtimer ticks
@@ -180,7 +182,7 @@ The following macros must be provided:
 * optionally, `TSCH_CONF_DEFAULT_TIMESLOT_TIMING`: the default TSCH timeslot timing, useful i.e. for platforms
 slower or faster than 10ms timeslots (which are defined as `tsch_timeslot_timing_us_10000`).
 
-# Per-slot logging
+## Per-slot logging
 
 When setting the log level to `LOG_LEVEL_DBG`, or simply by directly enabling `TSCH_LOG_PER_SLOT`, one can get detailed logs. In fact, one (or two) line(s) for each slot in which a transmission (tx) or reception (rx) takes place. We detail the main types of logs here:
 ```
@@ -219,7 +221,7 @@ When communication goes wrong, you get something like:
 
 Which shows eight consecutive failed attempts (`st 2`, and transmission count increasing from 1 to 8).
 
-# Additional documentation
+## Additional documentation
 
 1. [IEEE 802.15.4-2015][ieee802.15.4-2015]
 2. [IETF 6TiSCH Working Group][ietf-6tisch-wg]

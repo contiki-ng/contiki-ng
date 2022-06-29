@@ -1,6 +1,12 @@
+# Zolertia RE Mote platform (revision A)
+
+![Zolertia RE-Mote development platform][remote-front]
+
 The RE-Mote is a hardware development platform to build real IoT (Internet of Things) applications and products, aimed to high skilled developers as well as Makers (Do-It-Yourself enthusiasts) and early beginners, providing an industry-ready and resilient hardware solution for most Smart Cities, Home Comfort, eHealth and Industrial applications.  The RE-Mote conciliates an ultra-low power consumption with a high performance design, meeting specifications of processing resources, security and resilient operation.
 
 The RE-Mote platform was designed jointly with universities and industrial partners from different countries in the context of RERUM <https://ict-rerum.eu> European Project.
+
+![Zolertia RE-Mote development platform][remote-back]
 
 The RE-Mote features a Zoul as its core module and it is bundled with the following features:
 
@@ -10,7 +16,7 @@ The RE-Mote features a Zoul as its core module and it is bundled with the follow
 * On-board RF switch to programatically select RF itnerfaces.  Above RF interfaces can be used alternatively over a single RP-SMA connector for external antenna, or simultaneously by using an UFl pigtail or soldering an internal ceramic chip antenna (available on request).
 * AES-128/256, SHA2 Hardware Encryption Engine.
 * ECC-128/256, RSA Hardware Acceleration Engine for Secure Key Exchange.
-* Power consumption down to 150nA using our shutdown mode.
+* Power consumption down to 170nA using our shutdown mode.
 * Programming over BSL without requiring to press any button to enter bootloader mode.
 * Built-in battery charger (500mA), Energy Harvesting and Solar Panels to be connected to standards LiPo batteries.
 * Power input with wide range 3.7-16VDC.
@@ -23,10 +29,18 @@ The RE-Mote features a Zoul as its core module and it is bundled with the follow
 * Small form-factor of 73x40 mm.
 * Available with enclosure for indoor use
 
-The changes from Revision A to this new Revision B are summarized in the [Wiki](https://github.com/Zolertia/Resources/wiki/RE-Mote:-Enhancements-from-Rev.A-to-Rev.B)
-
-The most prominent feature of the RE-Mote is its ultra low-power implementation, allowing a flexible and time/date-aware control of the platform operation modes by using its real-time clock (RTCC) and an ultra-low power PIC governing the battery manager.
+The most prominent feature of the RE-Mote is its ultra low-power implementation, allowing a flexible and time/date-aware control of the platform operation modes by introducing a real-time clock (RTCC), nanowatt external timer, ultra-low power PIC governing the battery manager, etc.
 
 The RE-Mote features an optional custom-made enclosure to fit most scenarios, allowing to easily connect sensors, actuators and rechargeable LiPo batteries.  Its on-board RP-SMA antenna eliminates the need to mechanize an external antenna, allowing to alternatively use either a sub-1GHz or 2.4GHz antenna, or a multiband one.  For dual band applications it is possible to use both sub-GHz and 2.4GHz interfaces simultaneously.
 
 The external WDT with battery monitor allows a robust and resilience operation for most critical applications.
+
+## Zoul pin-out
+
+![RE-Mote pin-out (front)][remote-pinout-front]
+![RE-Mote pin-out (back)][remote-pinout-back]
+
+[remote-front]: https://contiki-ng.github.io/images/remote-reva-front.png "Zolertia RE-Mote development platform"
+[remote-back]: https://contiki-ng.github.io/images/remote-reva-back.png "Zolertia RE-Mote development platform"
+[remote-pinout-front]: https://contiki-ng.github.io/images/remote-reva-pinout-front.png "RE-Mote pin-out (front)"
+[remote-pinout-back]: https://contiki-ng.github.io/images/remote-reva-pinout-back.png "RE-Mote pin-out (back)"

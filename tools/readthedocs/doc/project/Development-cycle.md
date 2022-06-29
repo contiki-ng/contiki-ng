@@ -1,3 +1,5 @@
+# Development cycle
+
 The Contiki-NG development cycle follows [Gitflow][gitflow].
 
 The `master` branch contains official releases only.
@@ -19,7 +21,7 @@ In case a *hot fix* (i.e. one that avoids a critical fault) is needed between re
 When the hot fix is ready, it is merged into `master` (in turned merged back to `develop`), and a new minor version is released.
 Changelogs are kept at [doc:releases].
 
-# Branches and tags at a glance
+## Branches and tags at a glance
 
 In summary, here is the meaning/naming convention used for the various tags and branches:
 * **Branch** `master`: Contains releases only.
@@ -29,6 +31,6 @@ In summary, here is the meaning/naming convention used for the various tags and 
 * *Tag* `develop/vX.Y`: Marks the point in branch `develop`'s git history where the `release-X.Y` branch was created. The tag message will be `Start of release branch for vX.Y`
 * *Tag* `old/vX.Y`: Tags a release version in the git history of the vanilla Contiki OS.
 
-[doc:contributing]: https://github.com/contiki-ng/contiki-ng/wiki/Contributing
-[doc:releases]: https://github.com/contiki-ng/contiki-ng/wiki/Releases
+[doc:contributing]: /doc/project/Contributing
+[doc:releases]: https://github.com/contiki-ng/contiki-ng/releases
 [gitflow]: https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow

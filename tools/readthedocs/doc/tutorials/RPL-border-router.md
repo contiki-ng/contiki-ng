@@ -1,3 +1,5 @@
+# RPL border router
+
 > _See [tutorial:cooja-border-router] instead if you want connect to a network of nodes simulated in Cooja._
 
 This tutorial assumes you have already run [tutorials:rpl].
@@ -108,6 +110,6 @@ MODULES += os/services/rpl-border-router
 Projects with this module can be compiled to either a native border router (use `TARGET=native`) or an embedded border router (any other target).
 If you take a closer look to `examples/rpl-border-router`, it basically uses the border router module, with a Web server on top for servicing the list of routes over HTTP.
 
-[tutorials:rpl]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-RPL
+[tutorials:rpl]: /doc/tutorials/RPL
 
-[tutorial:cooja-border-router]: https://github.com/contiki-ng/contiki-ng/wiki/Cooja:-simulating-a-border-router
+[tutorial:cooja-border-router]: /doc/tutorials/Cooja:-simulating-a-border-router

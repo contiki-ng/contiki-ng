@@ -1,4 +1,6 @@
-# What to contribute
+# Contributing
+
+## What to contribute
 
 We obviously welcome all bug fixes and general improvements! We
 welcome new features to the extent that they are of general interest
@@ -10,7 +12,7 @@ For features, protocols, or platforms that do not have their place in the
 main repository, we will be happy to add to the wiki a link to the
 contributor's repository.
 
-# How to contribute
+## How to contribute
 
 Contributions to Contiki-NG must be sent via a GitHub Pull Request (see [github:about-pull-requests]).
 In short, you first need to clone the repository, push the changes as a branch of your copy, and submit a pull request from there.
@@ -26,14 +28,14 @@ Please adhere to the following guidelines:
 * Write a descriptive pull request message. Explain the advantages and disadvantages of your proposed changes.
 * If your PR introduces changes that need reflected in some pages in the wiki, make sure to point out which wiki pages are affected as part of your PR message. Providing updated text for those pages is always welcome.
  
-# To which branch do I submit my PR?
+## To which branch do I submit my PR?
 
 In compliance with our Gitflow process [doc:development-cycle]:
 * If it is a new feature or a major change, always submit to `develop`.
 * If it is a bug fix or minor enhancement, `release-X.Y` if any, else `develop`.
 * If it is a hot fix (removes a critical fault that would crash the device or leak data), `release-X.Y` if any, else `master`.
 
-# Pull request merging policy
+## Pull request merging policy
 
 Pull requests (PRs) are reviewed by the [merge team](https://github.com/orgs/contiki-ng/teams/maintainers/members).
 It is up to the maintainers to decide if their review alone is sufficient for merging.
@@ -44,7 +46,7 @@ In most cases, one or two approvals is regarded as enough for merging.
 
 Passing all continuous integration tests is a strict requirement before merging.
 
-# GitHub Actions continuous integration
+## GitHub Actions continuous integration
 
 All pull requests to Contiki-NG are automatically executed through our GitHub Actions CI workflow.
 
@@ -57,7 +59,7 @@ If the test fails it is likely that something is wrong with your code.
 Please look carefully at the log and try to fix the problem in your branch.
 If you have good reasons to believe the problem is independent from your contribution, mention this in your pull request and open an issue.
 
-# New platforms
+## New platforms
 
 For new platforms we have the following requirements:
 * There must be at least one person willing and committed to maintain it.
@@ -67,7 +69,7 @@ For new platforms we have the following requirements:
 * The port must be accompanied with documentation as a wiki page (e.g. [doc:platform-zoul]).
 
 [github:about-pull-requests]: https://help.github.com/articles/about-pull-requests/
-[doc:code-style]: https://github.com/contiki-ng/contiki-ng/wiki/Code-style
-[doc:new-platforms]: https://github.com/contiki-ng/contiki-ng/wiki/Contributing#new-platforms
-[doc:platform-zoul]: https://github.com/contiki-ng/contiki-ng/wiki/Platform-zoul
-[doc:development-cycle]: https://github.com/contiki-ng/contiki-ng/wiki/Development-cycle
+[doc:code-style]: /doc/project/Code-style
+[doc:new-platforms]: #new-platforms
+[doc:platform-zoul]: /doc/platforms/zolertia/zoul
+[doc:development-cycle]: /doc/project/Development-cycle

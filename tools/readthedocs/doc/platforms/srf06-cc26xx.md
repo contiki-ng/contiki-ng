@@ -1,6 +1,8 @@
-# Important Note
+# cc26x0-cc13x0: TI cc26x0 and cc13x0 platforms
 
-### Before you proceed with reading this guide, make sure you have read and understood this section.
+## Important Note
+
+**Before you proceed with reading this guide, make sure you have read and understood this section.**
 
 This platform/CPU is in the process of being renamed:
 
@@ -15,7 +17,7 @@ This platform/CPU is in the process of being renamed:
 
 While reading the guide below, you may have to use a different platform name depending on the version of Contiki-NG that you are using. The name `srf06-cc26xx` will be obsoleted in Release v4.3.
 
-# Getting Started with Contiki for TI CC13x0/CC26x0
+## Getting Started
 
 This guide's aim is to help you start using Contiki for TI's CC13x0/CC26x0. The
 platform supports multiple boards:
@@ -28,7 +30,7 @@ platform supports multiple boards:
 * CC1310 LaunchPad (relevant drivers under `launchpad/cc1310`)
 * CC1350 LaunchPad (relevant drivers under `launchpad/cc1350`)
 
-The CPU code, common for all boards, can be found under `$(CONTIKI)/cpu/cc26x0-cc13x0` (or `$(CONTIKI)/cpu/cc26xx-cc13xx` - see [important note at the start of this guide][important-note].
+The CPU code, common for all boards, can be found under `$(CONTIKI)/cpu/cc26x0-cc13x0` (or `$(CONTIKI)/cpu/cc26xx-cc13xx` - see [important note at the start of this guide][#important-note].
 
 The port was developed and tested with CC2650s, but the intention is for it to
 work with the CC2630 as well. Thus, bug reports are welcome for both chips.
@@ -40,7 +42,7 @@ This port is only meant to work with 7x7mm chips. Contributions to add support f
 This guide assumes that you have basic understanding of how to use the command
 line and perform basic admin tasks on UNIX family OSs.
 
-# Port Features
+## Port Features
 
 The platform has the following key features:
 
@@ -70,7 +72,7 @@ In terms of hardware support, the following drivers have been implemented:
   * Buttons
   * External SPI flash
 
-# Requirements
+## Requirements
 
 To use the port you need:
 
@@ -82,17 +84,17 @@ To use the port you need:
   included [cc2538-bsl script](https://github.com/JelmerT/cc2538-bsl).
   Note that uploading over serial doesn't work for the Sensortag, you can use
   TI's SmartRF Flash Programmer in this case.
-* A toolchain to build firmware: If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-Linux) / [native mac OS](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-macOS)).
+* A toolchain to build firmware: If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](/doc/getting-started/Toolchain-installation-on-Linux) / [native mac OS](/doc/getting-started/Toolchain-installation-on-macOS)).
 * srecord (http://srecord.sourceforge.net/)
 * You may also need other drivers so that the SmartRF can communicate with your
 operating system and so that you can use the chip's UART for I/O. Please read
 the section ["Drivers" in the CC2538DK readme](https://github.com/contiki-os/contiki/tree/master/platform/cc2538dk#drivers).
 
 For additional help on how to set your system up, you may also find the guides below useful:
-* [Native toolchain installation (Linux)](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-Linux)
-* [Native toolchain installation (mac OS)](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-macOS)
+* [Native toolchain installation (Linux)](/doc/getting-started/Toolchain-installation-on-Linux)
+* [Native toolchain installation (mac OS)](/doc/getting-started/Toolchain-installation-on-macOS)
 
-# Examples
+## Examples
 
 The port comes with three examples:
 - A very basic example which demonstrates how to read sensors and how to use board peripherals. It also demonstrates how to send out BLE advertisements.
@@ -101,7 +103,7 @@ The port comes with three examples:
 
 More details about those three examples can be found in their respective READMEs.
 
-## Build your First Example
+### Build your First Example
 
 It is recommended to start with the `cc26xx-demo` example under `examples/platform-specific/cc26xx/`. This is a very simple example which will help you get familiar with the hardware and the environment.
 
@@ -128,7 +130,7 @@ For the `cc26xx-demo`, the included readme describes in detail what the example 
 
 To generate an assembly listing of the compiled firmware, run `make cc26xx-demo.lst`. This may be useful for debugging or optimizing your application code. To intersperse the C source code within the assembly listing, you must instruct the compiler to include debugging information by adding `CFLAGS += -g` to the project Makefile and rebuild by running `make clean cc26xx-demo.lst`.
 
-# How to Program your Device
+## How to Program your Device
 
 In general terms, there are two possible ways to program your device:
 * Over JTAG. This is always possible.
@@ -136,15 +138,15 @@ In general terms, there are two possible ways to program your device:
 
 The build process will output firmware in multiple formats, a `.bin` file, a `.elf` file and an Intel HEX file (`.hex`). The correct file to upload to your device depends on the tool you use to do the programming. More information in the corresponding subsection.
 
-## Over JTAG
+### Over JTAG
 This is always possible and you have two options in terms of what software to use:
 * TI's [SmartRF Flash Programmer][smart-rf-flashprog] (FLASH-PROGRAMMER-2). Windows only. You can use the `.bin` as well as the `.hex` file.
 * TI's [UniFlash](http://www.ti.com/tool/UNIFLASH). Linux, OS X and Windows. Use the `.bin`. It may also be possible to use the `.elf` or `.hex`, but at the time of writing this page this is not tested.
 
-## Using the ROM bootloader
+### Using the ROM bootloader
 Under some circumstances, the device can also be programmed through its ROM bootloader, using the `cc2538-bsl` script under tools. This is commonly done using the `.upload` make target (e.g. `make cc26xx-demo.upload`), which automatically invokes `cc2538-bsl` with the correct arguments.
 
-### Device enumeration over USB in Linux/OS X
+#### Device enumeration over USB in Linux/OS X
 Firstly, you need to make sure your device enumerates properly. If you are using a SmartRF06 Eval Board, make sure the "Enable UART" jumper is set.
 
 On Linux, the device will show up under `/dev` as `/dev/ttyUSB*` If not, on Linux, look for the device with `lsusb`:
@@ -162,7 +164,7 @@ echo 0403 a6d1 > /sys/bus/usb-serial/drivers/ftdi_sio/new_id
 
 On OS X, the device will show up as `/dev/tty.usbmodem<sequence of letters and numbers>` (e.g. `tty.usbmodemL1000191`)
 
-### Conditions to use the ROM bootloader.
+#### Conditions to use the ROM bootloader.
 
 On Linux and OS X, you can program your device via the chip's serial ROM boot loader. In order for this to work, the following conditions need to be met:
 
@@ -213,7 +215,7 @@ Some common causes why the device has not entered bootloader mode:
 
 For more information on the serial bootloader, see its README under the `tools/cc2538-bsl` directory.
 
-# Building deployment / production images
+## Building deployment / production images
 For deployment/production images, it is _strongly_ recommended to:
 
 * Disable the ROM bootloader by defining `ROM_BOOTLOADER_ENABLE` as 0. In doing so, it is impossible to enter bootloader mode unless one first erases the device's flash.
@@ -223,17 +225,17 @@ Both macros have default values set in `arch/cpu/cc26xx-cc13xx/cc13xx-cc26xx-con
 
 If you do not follow these guidelines, an individual with physical access to your device may be able to read out its flash contents. This could give them access to your IP and it could also lead to a compromise of e.g. keys used for encryption.
 
-# CC13x0/CC26x0 Border Router over UART
+## CC13x0/CC26x0 Border Router over UART
 
 The platform code can be used as a border router (SLIP over UART) by using the example under `examples/rpl-border-router`. The example is expected to work off-the-shelf, without any modifications required.
 
-# CC13x0/CC26x0 slip-radio with 6lbr
+## CC13x0/CC26x0 slip-radio with 6lbr
 
 The platform can also operate as a slip-radio over UART, to be used with [6lbr].
 
 Similar to the border router, the example is expected to work off-the-shelf, without any modifications required.
 
-# Filename conflicts between Contiki and CC26xxware
+## Filename conflicts between Contiki and CC26xxware
 
 There is a file called `timer.c` both in Contiki-NG as well as in CC26xxware. The
 way things are configured now, we don't use the latter. However, if you need to
@@ -241,9 +243,9 @@ start using it at some point, you will need to rename it:
 
 From `cpu/cc26xx/lib/cc26xxware/driverlib/timer.c` to `driverlib-timer.c`
 
-# Some Sensortag-specific notes
+## Some Sensortag-specific notes
 
-## UART usage (with or without the Debugger Devpack)
+### UART usage (with or without the Debugger Devpack)
 
 There are two ways to get debugging (printf etc) output from the Sensortag.
 
@@ -258,7 +260,7 @@ the jumper configuration on P408 as discussed in
 [this thread](https://e2e.ti.com/support/wireless_connectivity/f/158/p/411992/1483824#1483824)
 on E2E. For this to work, you need to set `BOARD_CONF_DEBUGGER_DEVPACK` to 0.
 
-## External flash on the sensortag
+### External flash on the sensortag
 If you are trying to use the cc26xx-web-demo on a sensortag and you are getting:
 ```
 CC26XX Web Demo Process
@@ -271,7 +273,7 @@ Could not open flash to load config
 Quote from: http://processors.wiki.ti.com/index.php/Debug_DevPack_User_Guide
 > The CC2650 on the SensorTag uses the same I/O pin for SPI SCLK signal and JTAG TDI signal. The current firmware version of the XDS110 does not support the 2-pin c-JTAG standard, so it needs to use TDI and TDO in addition to TCK and TMS (full 4-pin JTAG). Due to this shared resource, it is not possible to access the external serial flash while debugging the SensorTag with the Debug DevPack.
 
-# IEEE vs Sub-GHz operation
+## IEEE vs Sub-GHz operation
 
 The platform supports both modes of operation, provided the chip also has the
 respective capability. If you specify nothing, the platform will default to
@@ -280,7 +282,7 @@ need to add this line to your `project-conf.h`.
 
     #define CC13XX_CONF_PROP_MODE 0
 
-# Low Power Operation
+## Low Power Operation
 
 The platform takes advantage of the CC26x0's power saving features. In a
 nutshell, here is how things work:
@@ -336,4 +338,4 @@ The chip will come out of low power mode by one of the following events:
 
 [smart-rf-flashprog]: http://www.ti.com/tool/flash-programmer "SmartRF Flash Programmer"
 [6lbr]: http://cetic.github.io/6lbr/
-[important-note]: https://github.com/contiki-ng/contiki-ng/wiki/Platform-srf06-cc26xx#important-note "Important note at the start of this page"
+[important-note]: #important-note "Important note at the start of this page"

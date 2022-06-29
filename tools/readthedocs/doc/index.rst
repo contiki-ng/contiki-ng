@@ -1,17 +1,17 @@
-.. _wiki:
+Contiki-NG Documentation
+########################
 
-Contiki-NG Wiki
-###############
-
-.. include:: Home.md
+.. include:: /doc/Home.md
    :parser: myst_parser.sphinx_
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 5
+   :hidden:
 
-   getting-started/index.rst
-   programming/index.rst
-   tutorials/index.rst
-   platforms/index.rst
-   project/index.rst
+   /doc/getting-started/index.rst
+   /doc/programming/index.rst
+   /doc/tutorials/index.rst
+   /doc/platforms/index.rst
+   /doc/project/index.rst
+   /doxygen.rst
 

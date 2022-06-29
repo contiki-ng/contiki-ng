@@ -1,6 +1,8 @@
-A number of example applications for Contiki-NG are provided under `examples` in the root directory. In this tutorial, we will show how the `hello-world` example works. This classic programming example will just print "Hello, world" to the serial port periodically. Take a look at the `hello-world.c` file to see the source code. This example illustrates how processes are defined, and how to make sure that the operating system automatically starts a process after booting up. To find out how this example is implemented, see [doc:programming].
+# Hello, World!
 
-# Running the example as a native node
+A number of example applications for Contiki-NG are provided under `examples` in the root directory. In this tutorial, we will show how the `hello-world` example works. This classic programming example will just print "Hello, world" to the serial port periodically. Take a look at the `hello-world.c` file to see the source code. This example illustrates how processes are defined, and how to make sure that the operating system automatically starts a process after booting up.
+
+## Running the example as a native node
 
 Contiki-NG can be compiled as a native Unix process.
 This is useful for instance to implement the RPL native Border Router, and in general for testing: the networking stack of native nodes is reachable through a tun interface they create.
@@ -26,7 +28,7 @@ Hello, world
 Hello, world
 ```
 
-# Running the example on a real device
+## Running the example on a real device
 First, make sure the necessary toolchains are installed: For Linux see [doc:toolchain-installation-linux]. For Mac OS, see [doc:toolchain-installation-macos].
 
 If you're in a virtual machine, make sure to make the USB device visible inside the VM, through the device sharing options of your virtual machine software. Identify the USB port of your device by using `make TARGET=zoul motelist`. It might be for instance `/dev/ttyUSB0` or `/dev/ttyUSB1`.
@@ -52,12 +54,12 @@ Hello, world
 Hello, world
 ```
 
-# Running the example in Cooja
+## Running the example in Cooja
 
 Cooja is a very useful development tool, allowing fine-grained simulation/emulation of Contiki-NG networks.
 To run this, or any other example, in Cooja, follow: [tutorial:cooja].
 
-# Tips
+## Tips
 
 Note that you can use `savetarget` so save a given target and board, so you do no longer have to specify it every single time you call make (see doc:build-system):
 ```
@@ -115,11 +117,9 @@ To view more Make variables, edit ../../Makefile.include, rule 'viewconf'
 To view more C variables, edit ../../tools/viewconf.c
 ```
 
-[doc:toolchain-installation-linux]: https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-Linux
-[doc:toolchain-installation-macos]: https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-OS-X
-[doc:build-system]: https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki%E2%80%90NG-build-system
-[doc:programming]: https://github.com/contiki-ng/contiki-ng/wiki/Introduction-to-Contiki%E2%80%90NG-programming
-[doc:toolchain-installation]: https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation
-[tutorial:cooja]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Running-Contiki%E2%80%90NG-in-Cooja
-[tutorial:ping]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-IPv6-ping
-[tutorial:coap]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-CoAP
+[doc:toolchain-installation-linux]: /doc/getting-started/Toolchain-installation-on-Linux
+[doc:toolchain-installation-macos]: /doc/getting-started/Toolchain-installation-on-macOS
+[doc:build-system]: /doc/getting-started/The-Contiki-NG-build-system
+[tutorial:cooja]: /doc/tutorials/Running-Contiki-NG-in-Cooja
+[tutorial:ping]: /doc/tutorials/IPv6-ping
+[tutorial:coap]: /doc/tutorials/CoAP

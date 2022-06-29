@@ -1,11 +1,11 @@
-Contiki-NG for nRF5340 and nRF52840 SoCs (using nRF MDK)
-=================================
+# nrf: Nordic Semiconductor nRF5340 and nRF52840 (nRF MDK)
+
 This guide's aim is to help you with using Contiki-NG for Nordic Semiconductor's nRF5340 and nRF52840 SoCs (using nRF MDK). 
 
 This port supports the PCA10095 (nRF5340-DK), PCA10059 (nRF52840-DONGLE) and PCA10056 (nRF52840-DK) boards.
 
-Port Features
-=============
+## Port Features
+
 The following features have been implemented:
 * Support for the 802.15.4 mode of the radio, including IPv6 using 6LoWPAN
 * Support for both TSCH and CSMA
@@ -30,15 +30,15 @@ The port is organized as follows:
   * Cores:
     * nrf5340: application, network
 
-Prerequisites and Setup
-=======================
+## Prerequisites and Setup
+
 In order to compile for the nRF5340 and nRF52840 platforms you'll need:
 
 * An ARM compatible toolchain
 
 The toolchain used to build Contiki-NG is arm-gcc, also used by other arm-based Contiki-NG ports.
 
-If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-Linux) / [native mac OS](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-macOS)).
+If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](/doc/getting-started/Toolchain-installation-on-Linux.md) / [native mac OS](/doc/getting-started/Toolchain-installation-on-macOS.md))
 
 * GNU make
 
@@ -54,8 +54,8 @@ nrfutil is available on PyPy: https://pypi.org/project/nrfutil/
 
 A typical way to install this would be using pip: `pip3 install nrfutil`
 
-Getting Started
-===============
+## Getting Started
+
 Once all tools are installed it is recommended to start by compiling 
 and flashing `examples/hello-world` application. This allows to verify 
 that toolchain setup is correct.
@@ -68,12 +68,12 @@ If the compilation is completed without errors flash the board:
 
     make TARGET=nrf hello-world.upload
 
-Examples
-========
+## Examples
+
 This target supports all the common IPv6 examples available under the `examples/` folder.
 
-Compilation Options
-===================
+## Compilation Options
+
 The Contiki-NG TARGET name for this port is `nrf`, so in order to compile 
 an application you need to invoke GNU make as follows:
 
@@ -92,8 +92,8 @@ set on the compilation command line:
   The default board is `nrf5340/dk/application`
   Dongle images are built with a bootloader-specific linker file and should be flashed using the `.dfu-upload` target.
 
-Compilation Targets
-===================
+## Compilation Targets
+
 Invoking make solely with the `TARGET` variable set will build all
 applications in a given folder. A particular application can be built
 by invoking make with its name as a compilation target:
@@ -122,7 +122,7 @@ Notes when using the nRF dongle:
 * The serial output from the dongle can be accessed by attaching a USB to Serial converter to the pins described on the back of the board.
 * If `nrfutil` returns an error such as `LIBUSB_ERROR_ACCESS` when attempting to perform a DFU trigger the following udev rules might be required:
 ```
-# Set /dev/bus/usb/*/* as read-write for all users (0666) for Nordic Semiconductor devices
+## Set /dev/bus/usb/*/* as read-write for all users (0666) for Nordic Semiconductor devices
 SUBSYSTEM=="usb", ATTRS{idVendor}=="1915", MODE="0666"
 ``` 
 
@@ -130,13 +130,13 @@ To remove all build results invoke:
 
     make TARGET=nrf clean
 
-nRF5340
-===================
+### nRF5340
+
 The nRF5340 is a dual core SoC. It has two ARM Cortex M33 which are known as application and network core.
 
 For the time being we only support one core running the OS but the SoC has shared memory access that can be used for inter-core communication.
 
-Among the known limitations, the monst important one is that only the network core has access to the radio but the network core does not start by default, the application core must start it. The nrf5340 application core will compile with the `nullradio_driver`
+Among the known limitations, the most important one is that only the network core has access to the radio but the network core does not start by default, the application core must start it. The nrf5340 application core will compile with the `nullradio_driver`
 
 In order to start the network core there is a platform specific example, examples/platform-specific/nrf/start-network-core.
 
@@ -148,15 +148,15 @@ Once the application core contains this example. The hello-world can be uploaded
 
 The start-network-core will forward the UART, Buttons, LEDs. If extra GPIO's are needed in the network core, it must be forwarded in the start-network-core.
 
-Support
-=======
+## Support
+
 For bug reports or/and suggestions please open a github issue.
 
-License
-=======
+## License
+
 All files in the port are under BSD license. The nrfx is licensed on a separate terms.
 
-Resources
-=========
+## Resources
+
 * nRF documentation (http://infocenter.nordicsemi.com)
 * JLink Tools (https://www.segger.com/)

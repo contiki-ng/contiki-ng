@@ -1,3 +1,5 @@
+# CoAP
+
 This tutorial will show you how to set up a Contiki-NG node that runs a CoAP server (see [doc:coap]).
 
 We will need a CoAP client on the Unix side.
@@ -57,8 +59,8 @@ From your main process, activate your resources with `coap_activate_resource`.
 
 We have no tutorial for a Contiki-NG CoAP client yet, but we do provide an example firmware under `examples/coap/coap-example-client`.
 
-[tutorial:ping]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-IPv6-ping
-[doc:coap]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-CoAP
-[doc:docker]: https://github.com/contiki-ng/contiki-ng/wiki/Docker
-[doc:install-linux]: https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-Linux
-[doc:install-osx]: https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-OS-X
+[tutorial:ping]: /doc/tutorials/IPv6-ping
+[doc:coap]: /doc/programming/CoAP
+[doc:docker]: /doc/getting-started/Docker
+[doc:install-linux]: /doc/getting-started/Toolchain-installation-on-Linux
+[doc:install-osx]: /doc/getting-started/Toolchain-installation-on-macOS

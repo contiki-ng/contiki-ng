@@ -1,5 +1,5 @@
-Contiki-NG for nRF52 Development Kit
-=================================
+# nrf52dk: Nordic Semiconductor nRF52832
+
 This guide's aim is to help you with using Contiki-NG for 
 Nordic Semiconductor's nRF52 DK. 
 
@@ -14,8 +14,8 @@ docummentation [nRF52 Datasheet and SDK documentation].
 
 This port supports DK versions PCA10040 and PCA10036.
 
-Port Features
-=============
+## Port Features
+
 The following features have been implemented:
 * Support for IPv6 over BLE using Contiki-NG 6LoWPAN implementation
 * Contiki-NG system clock and rtimers (using 32kHz and 1MHz timers)
@@ -34,8 +34,8 @@ The port is organized as follows:
 * nRF52 Development Kit drivers are located in `arch/platform/nrf52dk` folder
 * Platform examples are located in `examples/platform-specific/nrf52dk` folder 
 
-Prerequisites and Setup
-=======================
+## Prerequisites and Setup
+
 In order to compile for the nRF52 DK platform you'll need:
 
 * nRF5 IOT SDK
@@ -53,7 +53,7 @@ In order to compile for the nRF52 DK platform you'll need:
 * An ARM compatible toolchain
 The toolchain used to build Contiki-NG is arm-gcc, also used by other arm-based Contiki-NG ports.
 
-If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-Linux) / [native mac OS](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-macOS)).
+If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](/doc/getting-started/Toolchain-installation-on-Linux) / [native mac OS](/doc/getting-started/Toolchain-installation-on-macOS)).
 
 * GNU make
 
@@ -89,8 +89,8 @@ If you use the docker image or the vagrant image, this will be pre-installed for
 To fully use the platform a BLE enabled router device is needed. Please refer
 to `Preqrequisites` section in `README-BLE-6LoWPAN.md` for details.
 
-Getting Started
-===============
+## Getting Started
+
 Once all tools are installed it is recommended to start by compiling 
 and flashing `examples/hello-word` application. This allows to verify 
 that toolchain setup is correct.
@@ -123,13 +123,13 @@ If device is functioning as expected you can test IPv6 connection
 to the device. Please refer to `README-BLE-6LoWPAN.md` on details how to do
 this.
 
-Examples
-========
+## Examples
+
 Examples specific for nRF52 DK can be found in `examples/platform-specific/nrf52dk` folder. Please 
 refer to README.md in respective examples for detailed description.
 
-Compilation Options
-===================
+## Compilation Options
+
 The Contiki-NG TARGET name for this port is `nrf52dk`, so in order to compile 
 an application you need to invoke GNU make as follows:
 
@@ -159,8 +159,8 @@ set on the compilation command line:
 * `NRF52_DK_REVISION={pca10040|pca10036}`
   Allows to specify DK revision. By default, pca10040 is used.
 
-Compilation Targets
-===================
+## Compilation Targets
+
 Invoking make solely with the `TARGET` variable set will build all
 applications in a given folder. A particular application can be built
 by invoking make with its name as a compilation target:
@@ -186,8 +186,8 @@ The device memory can be erased using:
 
 Note, that once the device is erased, the SoftDevice must be programmed again.
 
-Virtual COM and Real Time Transfer
-==================================
+## Virtual COM and Real Time Transfer
+
 By default, the nRF52 DK uses a Virtual COM port to output logs. Once
 the DK is plugged in a `/tty/ACM<n>` or `/ttyUSB<n>` device should appear in
 your filesystem. A terminal emulator, such as picocom or minicom, can be 
@@ -215,17 +215,17 @@ a JLlink gdb or commander must be connected to the target for the RTT to work.
 
 More details regarding RTT can be found at https://www.segger.com/jlink-rtt.html
 
-Support
-=======
+## Support
+
 For bug reports or/and suggestions please open a github issue.
 
-License
-=======
+## License
+
 All files in the port are under BSD license. nRF52 SDK and SoftDevice are
 licensed on a separate terms.
 
-Resources
-=========
+## Resources
+
 * nRF52 Datasheet and SDK documentation (http://infocenter.nordicsemi.com)
 * nRF52 SDK Downloads (https://developer.nordicsemi.com/)
 * JLink Tools (https://www.segger.com/)

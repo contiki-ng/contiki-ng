@@ -1,9 +1,11 @@
+# Docker
+
 We provide multiple Docker images for Contiki-NG hosted on DockerHub, as [`contiker/contiki-ng`](https://hub.docker.com/r/contiker/contiki-ng).
 
 The `Dockerfile` can be found in the Contiki-NG repository under `tools/docker`.
 As all Continuous Integration tests in Travis are run in a Docker container, it is easy to reproduce the testing environment locally via Docker.
 
-# Setup
+## Setup
 
 To get started, install Docker. On Ubuntu for instance (you'll need set up the repository; see [install-docker-ce] for details):
 ```bash
@@ -39,9 +41,9 @@ export CNG_PATH=<absolute-path-to-your-contiki-ng>
 alias contiker="docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 --mount type=bind,source=$CNG_PATH,destination=/home/user/contiki-ng -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev/bus/usb:/dev/bus/usb -ti contiker/contiki-ng"
 ```
 
-# Launching and Exiting
+## Launching and Exiting
 
-## Shell for new container
+### Shell for new container
 To start a bash inside a new container, simply type:
 ```bash
 $ contiker
@@ -49,7 +51,7 @@ $ contiker
 
 You will be under `/home/user/contiki-ng` in the container, which is mapped to your local copy of Contiki-NG.
 
-## Additional shell for existing container
+### Additional shell for existing container
 Typing `contiker` as above will launch a new container. Sometimes it is useful to have multiple terminal sessions within a single container, e.g., to run a tunslip6 on one terminal and other commands on another one. To achieve this, start by running:
 
 ```bash
@@ -61,10 +63,10 @@ This will present you with a list of container IDs. Select the ID of the contain
 $ docker exec -it <the ID> /bin/bash
 ```
 
-## Exit
+### Exit
 To exit a container, use `exit`.
 
-# Usage
+## Usage
 
 From the container, you can directly go to an example project and build it (see [tutorial:hello-world]).
 It is also possible to run CI tests, e.g.:
@@ -101,19 +103,19 @@ $ contiker bash -c "make -C tests/14-rpl-lite 01-rpl-up-route.testlog"
 ```
 The user has `sudo` rights with no password (obviously sandboxed in the container).
 
-[tutorial:hello-world]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Hello,-World!
+[tutorial:hello-world]: /doc/tutorials/Hello,-World!
 [install-docker-ce]: https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce
 
-# On Windows
-## Prerequisites
+## On Windows
+### Prerequisites
 * [VcXsrv][download-vcxsrv]
 * [Docker for Windows][install-windows-docker-ce]; enable "Shared Drives" feature with a drive where you have contiki-ng local repository.
 
-## Limitations
+### Limitations
 * Cannot use USB from a container as of writing (See: https://github.com/docker/for-win/issues/1018)
 * contiki-ng repository MUST NOT be one which is cloned within a WSL environment and accessed by a path under `%LOCALAPPDATA%`. See [this post](https://devblogs.microsoft.com/commandline/do-not-change-linux-files-using-windows-apps-and-tools/) for this limitation.
 
-## How to Run
+### How to Run
 1. Start VcXsrv (run `XLaunch.exe`)
 1. Open `cmd.exe` (you can use PowerShell if you want)
 1. Hit the following command (replace `/c/Users/foobar/contiki-ng` with a location of contiki-ng local repository in your environment)
@@ -134,7 +136,7 @@ $ docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 --mount type
 [download-vcxsrv]:https://sourceforge.net/projects/vcxsrv/
 [wsl.conf]:https://docs.microsoft.com/en-us/windows/wsl/wsl-config#set-wsl-launch-settings 
 
-# On macOS
+## On macOS
 
 There are two Docker solutions available: [Docker for Mac](https://docs.docker.com/docker-for-mac/) and [Docker Toolbox on macOS](https://docs.docker.com/toolbox/toolbox_install_mac/).
 Refer to [Docker for Mac vs. Docker Toolbox](https://docs.docker.com/docker-for-mac/docker-toolbox/) for general differences between the solutions.
@@ -142,7 +144,7 @@ Refer to [Docker for Mac vs. Docker Toolbox](https://docs.docker.com/docker-for-
 If you want to access USB devices from a Docker container, "Docker Toolbox on macOS" is the **only** choice as of writhing this.
 "Docker for Mac" doesn't support USB pass-through (https://docs.docker.com/docker-for-mac/faqs/#questions-about-dockerapp).
 
-## Without XQuartz
+### Without XQuartz
 If you don't need to run `cooja` with its GUI, the setup procedure becomes simple:
 
 1. install "Docker for Mac" or "Docker Toolbox on macOS"
@@ -151,7 +153,7 @@ If you don't need to run `cooja` with its GUI, the setup procedure becomes simpl
 
 `contiker` alias you need is slightly different depending on your Docker solution. Note you need `CNG_PATH` definition as mentioned above.
 
-### for "Docker for Mac"
+#### for "Docker for Mac"
 ```bash
 export CNG_PATH=<absolute-path-to-your-contiki-ng>
 alias contiker="docker run                                                           \
@@ -161,7 +163,7 @@ alias contiker="docker run                                                      
                -ti contiker/contiki-ng"
 ```
 
-### for "Docker Toolbox on macOS"
+#### for "Docker Toolbox on macOS"
 ```bash
 export CNG_PATH=<absolute-path-to-your-contiki-ng>
 alias contiker="docker run                                                           \
@@ -173,7 +175,7 @@ alias contiker="docker run                                                      
                -ti contiker/contiki-ng"
 ```
 
-## With XQuartz
+### With XQuartz
 
 In order to access the X server from a Docker container, you need to use `socat` because neither of the Docker solutions can handle Unix domain sockets properly.
 Note that your host-based firewall may block connections on TCP Port 6000.
@@ -191,7 +193,7 @@ Note that your host-based firewall may block connections on TCP Port 6000.
 
 Put the following lines into `~/.profile` or similar below the `CNG_PATH` definition.
 
-### for "Docker for Mac"
+#### for "Docker for Mac"
 ```bash
 export CNG_PATH=<absolute-path-to-your-contiki-ng>
 alias contiker="docker run --privileged \
@@ -201,7 +203,7 @@ alias contiker="docker run --privileged \
   -ti contiker/contiki-ng"
 ```
 
-### for "Docker Toolbox on macOS"
+#### for "Docker Toolbox on macOS"
 ```bash
 export CNG_PATH=<absolute-path-to-your-contiki-ng>
 alias contiker="docker run --privileged \
@@ -215,7 +217,7 @@ alias contiker="docker run --privileged \
 
 You need to enable USB devices in VirtualBox; start Virtualbox, and edit the settings for the machine running Docker to allow USB devices. You may want to download Oracle VM VirtualBox Extension Pack for USB 2.0 and USB 3.0 drivers.
 
-# Using a different docker image
+## Using a different docker image
 On occasion, changes to the Contiki-NG source code base require corresponding changes to the docker image, for example to include a new package dependency. This has caused issues in the past when we were distributing a single docker image based on the latest version of branch `develop`.
 
 As of release v4.5 (#1108), we host multiple docker container images on DockerHub, as [`contiker/contiki-ng`](https://hub.docker.com/r/contiker/contiki-ng). When a user wants to use a specific Contiki-NG version then they can download the corresponding correct docker image:
@@ -239,7 +241,7 @@ Note that in the general case NNNNNN and YYYYYYYY will be different.
 
 The configuration of each individual docker image can be viewed by inspecting the version of `tools/docker/Dockerfile` that was used to create the image.
 
-# Running out-of-tree-tests
+## Running out-of-tree-tests
 If you want to run the entire test suite inside docker, you will need to take additional steps in order for `out-of-tree-tests` to work.
 
 Firstly, you will need to clone the `contiki-ng/out-of-tree-tests` repository somewhere in your computer. Store the path of the clone in the `OUT_OF_TREE_TEST_PATH` environment variable.

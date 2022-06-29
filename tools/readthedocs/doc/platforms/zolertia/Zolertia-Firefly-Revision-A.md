@@ -1,3 +1,5 @@
+# Zolertia Firefly Revision A
+
 ![Zolertia Firefly Revision A breakout board][firefly-reva]
 
 The Firefly is a breakout board designed to inspire.
@@ -29,8 +31,7 @@ The most prominent changes respect to the previous Firefly release are:
 * RF matching improvements
 * Printed PCB USB A connector instead of Micro-USB connector
 
-Firefly pin-out
-=============
+## Firefly pin-out
 
 ![Firefly Revision A pin-out (front)][firefly-reva-pinout-front]
 

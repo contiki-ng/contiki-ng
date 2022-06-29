@@ -1,3 +1,5 @@
+# sky: Tmote Sky / TelosB
+
 This platform is Contiki's historical default platform. It is still in Contiki-NG, mostly for emulation purposes with MSPSim in Cooja.
 
 Key features:

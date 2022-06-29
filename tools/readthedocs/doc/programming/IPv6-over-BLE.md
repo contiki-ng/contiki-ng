@@ -1,4 +1,6 @@
-# Overview
+# IPv6 over BLE
+
+## Overview
 In 2015, the IETF released the [RFC 7668](https://tools.ietf.org/html/rfc7668) that specifies how IPv6 packets can be exchanged using BLE connections (IPv6 over BLE). This Contiki-NG extenstion implements [BLEach](http://www.iti.tugraz.at/BLEach), a fully open-source IPv6-over-BLE stack for Contiki-NG. Currently, BLEach can be used for IPv6-over-BLE node devices that act as a BLE slave device.
 
 It was developed by
@@ -7,7 +9,7 @@ It was developed by
 
 This IPv6-over-BLE stack is presented and evaluated in the paper: [BLEach: Exploiting the Full Potential of IPv6 over BLE in Constrained Embedded IoT Devices](https://wwwpub.zih.tu-dresden.de/~mzimmerl/pubs/spoerk17bleach.pdf), ACM SenSys'17.
 
-# Features
+## Features
 This implementation includes:
   * IPv6-over-BLE node implementation compliant to [RFC 7668][rfc7668]
   	* connect to a single IPv6-over-BLE border router
@@ -21,20 +23,20 @@ This implementation includes:
 
 It has been tested on the TI CC2650 SensorTag and the TI CC2650 LaunchPad hardware.
 
-# Modules
+## Modules
 BLEach comes with the following modules:
 
-## BLE radio
+### BLE radio
 The implementation of the BLE radio for the TI CC26xx platform is implemented in `arch/cpu/cc26xx-cc13xx/rf-core/ble-cc2650.c`
 and `arch/cpu/cc26xx-cc13xx/rf-core/ble-hal/*.[ch]`.
 These files contain all the hardware specific code for supporting BLE as a link layer.
 
 
-## BLE L2CAP layer
+### BLE L2CAP layer
 The L2CAP LE credit-based flow control support is implemented in `os/net/mac/ble/ble-l2cap.h` and `os/net/mac/ble/ble-l2cap.c`.
 Besides implementing rudimentary L2CAP support, this module handles fragmentation of large IPv6 packets.
 
-# Using BLEach
+## Using BLEach
 A simple IPv6-over-BLE UDP-client is included under `examples/ble/ipv6-client`.
 
 For IPv6-over-BLE support, IPv6 needs to be enabled and RPL needs to disabled in Contiki-NG:

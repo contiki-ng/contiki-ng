@@ -1,8 +1,10 @@
-# About CoAP
+# CoAP
+
+## About CoAP
 CoAP is an application-layer protocol similar to HTTP but is transported over UDP instead of TCP. CoAP is 
 defined in [RFC 7252]. It is implemented under `/os/net/app-layer/coap`. As CoAP is designed to be used over UDP it can not by itself use very large messages unless using block  transfer - this feature is specified in [RFC 7959]. Block transfer basically simulates TCP by fragmenting large data sets into multiple pieces and as CoAP supports confirmable messages (where messages are responded with an ACK) you can reliably transfer larger datasets than what can be fit in one single CoAP message. 
 
-# CoAP in Contiki-NG
+## CoAP in Contiki-NG
 The Contiki-NG CoAP implementation is based on the Erbium implementation by Mattias Kovatsch but have been refactored to make it easier to port. 
 
 ### Main parts of the CoAP implementation
@@ -24,26 +26,26 @@ The CoAP transport implementation hand over its incoming data to the CoAP stack 
 <img src="images/coap-transport.png" alt="coap-transport" width="400px">
 The default implementation of CoAP transport in Contiki-NG use uIP for incoming/outgoing UDP packets. The secure version with DTLS integration is shown in the illustration below.
 
-## Configuration
+### Configuration
 * Max size of CoAP messages is specified in `COAP_MAX_CHUNK_SIZE`, default 64.
 * Max number of open transactions (e.g. sending a confirmable packet that needs to get an ACK) `COAP_MAX_OPEN_TRANSACTIONS`, default 4.
 * Max number of observers, `COAP_MAX_OBSERVERS`, default 3 (or `COAP_MAX_OPEN_TRANSACTIONS` - 1)
 * Using DTLS for encryption - MAKE_WITH_DTLS=1 when building the code.
 
-# CoAPs - Secure CoAP
+## CoAPs - Secure CoAP
 The default implementation of CoAP transport in Contiki-NG support both secure and non-secure CoAP. If you use Secure CoAP the transport will instead of just putting the packets straight into or receive from uip6 - go via TinyDTLS. For coap_sento it will use `dtls_write` instead of `uip_udp_packet_sendto` and on the receive side it will send in data using `dtls_handle_message` rather than using `coap_receive`. Later TinyDTLS will call `input_from_peer` with unencrypted data which is sent into the CoAP implementation using `coap_receive`.
 
 <img src="images/coap-dtls.png" alt="coap-transport" width="800px">
 The integration of DTLS in CoAP.
 
-## Limitations
+### Limitations
 - Dedicated Observe buffers
 - Optimize message struct variable access (directly access struct without copying)
 - Observe client
 - Multiple If-Match ETags
 - (Message deduplication)
 
-## Changes 4.0 -> 4.1
+### Changes 4.0 -> 4.1
 - Refactored CoAP framework to remove the REST engine codebase and to make CoAP easier to port to other operating systems and enable running "standalone".
 - Added support for TinyDTLS (as a submodule)
 - `COAP_MAX_CHUNK_SIZE` is used instead of the old `REST_MAX_CHUNK_SIZE` as this is now a pure CoAP implementation 
@@ -55,8 +57,8 @@ Check out:
 * A CoAP tutorial: [tutorial:coap]
 * A [LWM2M][doc:lwm2m] (which builds on top of CoAP) tutorial: [tutorial:lwm2m]
 
-[tutorial:coap]:https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-CoAP
-[tutorial:lwm2m]:https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-LWM2M-and-IPSO-Objects
-[doc:lwm2m]:https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-LWM2M
+[tutorial:coap]:/doc/tutorials/CoAP
+[tutorial:lwm2m]:/doc/tutorials/LWM2M-and-IPSO-Objects
+[doc:lwm2m]:/doc/programming/LWM2M
 [RFC 7252]: https://tools.ietf.org/html/rfc7252
 [RFC 7959]: https://tools.ietf.org/html/rfc72959

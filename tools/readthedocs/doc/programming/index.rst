@@ -1,7 +1,7 @@
-.. _documentation:
+.. _programming:
 
-Documentation
-#############
+Programming Contiki-NG
+######################
 
 .. toctree::
    :maxdepth: 0

@@ -1,3 +1,5 @@
+# Cooja: simulating a border router
+
 > _See [tutorial:rpl-border-router] instead if you want connect to a network of real (hardware) nodes._
 
 This tutorial will show you how to simulate a RPL border router in Cooja and use it to allow communications between emulated nodes inside Cooja and processes running in the "outside world".
@@ -64,5 +66,5 @@ Try this out by replacing the `border-router` node in Cooja with a `slip-radio` 
 Attach the "Serial Socket" to the `slip-radio` node.
 Then run the native border router on the host side, with `make TARGET=native connect-router-cooja`.
 
-[tutorial:cooja-getting-started]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Running-Contiki%E2%80%90NG-in-Cooja
-[tutorial:rpl-border-router]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial%3A-RPL-border-router
+[tutorial:cooja-getting-started]: /doc/tutorials/Running-Contiki-NG-in-Cooja
+[tutorial:rpl-border-router]: /doc/tutorials/RPL-border-router

@@ -1,7 +1,9 @@
+# SNMP
 
-# Documentation: SNMP
 
-## SNMP in Contiki-NG
+## Documentation: SNMP
+
+### SNMP in Contiki-NG
 
 The SNMP implementation in Contiki-NG was designed to have a small code footprint, have well defined modules and be easy to use.
 
@@ -14,10 +16,10 @@ The SNMP implementation in Contiki-NG was designed to have a small code footprin
  - ```snmp-oid.{c,h}``` Contains the oid. It is responsible for encoding an oid from the struct into a buffer or vice versa.
  - ```snmp.{c,h}``` Contains the contiki process and the udp handler function.
 
-## Versions
+### Versions
 The current implementation of the SNMP engine only supports versions 1 and 2c of the protocol. The implementation only supports SNMP GET requests.
 
-## Usage
+### Usage
 The SNMP module was implemented to be extremely easy to use without knowing the internals. The first step is to enable the module in the Makefile.
 ```
 MODULES += os/net/app-layer/snmp
@@ -59,7 +61,7 @@ PROCESS_THREAD(snmp_server_process, ev, data)
 ```
 
 
-## Todo
+### Todo
 - Add a define to enable or disable a certain version
 - Add more BER types
 - Add a way to enable or disable BER types to reduce code footprint

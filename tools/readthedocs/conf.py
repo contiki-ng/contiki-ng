@@ -40,8 +40,16 @@ release = u''
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'api-doc'
+    'api-doc',
+    'myst_parser'
 ]
+
+# MyST configuration
+myst_enable_extensions = [
+    "linkify",
+]
+
+myst_heading_anchors = 3
 
 # api-doc configuration
 api_doc_doxygen_src_dir = '../doxygen'
@@ -76,7 +84,6 @@ exclude_patterns = [u'_build', 'Thumbs.db', '.DS_Store']
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -88,7 +95,11 @@ html_theme = 'sphinx_rtd_theme'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'titles_only': False,
+    'collapse_navigation': False,
+    'navigation_depth': 6
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -105,6 +116,7 @@ html_theme = 'sphinx_rtd_theme'
 #
 # html_sidebars = {}
 
+html_logo = "doc/images/contiki_logo.png"
 
 # -- Options for HTMLHelp output ---------------------------------------------
 

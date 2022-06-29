@@ -1,3 +1,5 @@
+# MQTT
+
 This tutorial will help you understand and get started with Contiki-NG's MQTT client functionality. To achieve this, the tutorial will use:
 
 * The `mqtt-client` example under `examples/mqtt-client`.
@@ -7,9 +9,9 @@ The tutorial assumes you have basic understanding of [MQTT][mqtt-3-1] (also see 
 
 Firstly, make sure you have mosquitto correctly set up on your system by following [the wiki guide](https://github.com/contiki-ng/contiki-ng/wiki#setting-up-contiki-ng) that corresponds to your system.
 
-# On your Linux / OS X device
+## On your Linux / OS X device
 
-## Run your mosquitto broker
+### Run your mosquitto broker
 ```
 $ mosquitto -v
 1524857657: mosquitto version 1.3.4 (build date 2014-10-21 21:42:35+0100) starting
@@ -18,7 +20,7 @@ $ mosquitto -v
 1524857657: Opening ipv4 listen socket on port 1883.
 ```
 
-## Subscribe to an MQTT topic and publish to it
+### Subscribe to an MQTT topic and publish to it
 
 Open a new terminal window and run:
 ```
@@ -33,7 +35,7 @@ On the terminal window where you ran the MQTT broker. You should see information
 1524857760: Sending CONNACK to mosqsub/5439-IT000519.l (0)
 1524857760: Received SUBSCRIBE from mosqsub/5439-IT000519.l
 1524857760: 	# (QoS 0)
-1524857760: mosqsub/5439-IT000519.l 0 #
+1524857760: mosqsub/5439-IT000519.l 0 ##
 1524857760: Sending SUBACK to mosqsub/5439-IT000519.l
 ```
 
@@ -58,7 +60,7 @@ See how the broker has received the message and sent it over to subscribers. The
 Test publish message
 ```
 
-## Build and run the mqtt-client for platform native
+### Build and run the mqtt-client for platform native
 Open a new terminal window (or use the one where you earlier ran `mosquitto_pub`), navigate to `examples/mqtt-client` and build the example for platform native by running `make TARGET=native`.
 
 Run the example:
@@ -102,14 +104,14 @@ Switch to the mosquitto broker console. The broker's debugging output will show 
 1524858419: Received PUBLISH from d:contiki-ng:mqtt-client:010203060708 (d0, q0, r0, m0, 'iot-2/evt/status/fmt/json', ... (97 bytes))
 1524858419: Sending PUBLISH to mosqsub/5439-IT000519.l (d0, q0, r0, m0, 'iot-2/evt/status/fmt/json', ... (97 bytes))
 ```
-# Run on an embedded device
+## Run on an embedded device
 You can run the same example on various embedded platforms too, such as zoul- or CC26x0/CC13x0-based ones. The example will work off-the-shelf for those platforms.
 
 Firstly, you will need establish network communication between your 6LoWPAN mesh and the device that hosts your mosquitto MQTT broker. You will need a border router to achieve this, see the [corresponding guide][tutorial:rpl-br] if uncertain how to achieve this.
 
 Build the example for your device and program your device with the corresponding firmware. Once the device has connected to the mesh network, it will try to connect with an MQTT broker running at address `fd00::1`. If you have correctly set up your border router, your device should already have an interface with this address. Once the MQTT connection has been established, the device will start publishing periodically, in a fashion similar to what is shown above.
 
-# Control your device using MQTT subscriptions
+## Control your device using MQTT subscriptions
 This functionality only supports MQTT QoS 0.
 
 The MQTT client will also subscribe to topic `iot-2/cmd/leds/fmt/json`.
@@ -127,7 +129,7 @@ If your device has leds, the red one will blink! If you built the example with l
 [DBG : mqtt-client] Pub Handler: topic='iot-2/cmd/leds/fmt/json' (len=23), chunk_len=1
 ```
 
-# Use with the IBM Watson IoT platform
+## Use with the IBM Watson IoT platform
 The example is written such that it will also work with the [Watson IoT platform](https://www.ibm.com/watson/). Firstly you will need to make sure your device can communicate with the IPv4 Internet. To achieve this, you will likely need to set up NAT64 [as per this guide][nat64].
 
 You will then need to configure the example such that it attempts to use the Watson functionality. Edit the example's `project-conf.h` and delete the definition of `MQTT_CLIENT_CONF_BROKER_IP_ADDR`.
@@ -140,7 +142,7 @@ You will then need to configure the example such that it attempts to use the Wat
 By default, the example will attempt to use the quickstart service. In this mode of operation, the device will _not_ subscribe to any topic. It is possible to get the device to use the full version of the IoT platform, but at the time of writing this guide this can only be done by changing the example's source code. Note that you will need to configure your Organisation / Registered device on Watson such that TLS is optional. Note that your device's authentication token will be transported in cleartext!
 
 [mqtt-3-1]: http://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/mqtt-v3r1.html
-[doc:mqtt]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-MQTT
-[tutorial:rpl-br]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-RPL-border-router
+[doc:mqtt]: /doc/programming/MQTT
+[tutorial:rpl-br]: /doc/tutorials/RPL-border-router
 [mosquitto]: https://mosquitto.org/
-[nat64]: https://github.com/contiki-ng/contiki-ng/wiki/NAT64-for-Contiki%E2%80%90NG
+[nat64]: /doc/getting-started/NAT64-for-Contiki-NG

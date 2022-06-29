@@ -1,10 +1,12 @@
+# Coffee
+
 Coffee is a minimalistic, yet fully functional file system that operates with the peculiar characteristics of flash memories and EEPROM [[Tsiftes et al. '09](http://ieeexplore.ieee.org/abstract/document/5211918/)]. One of the design principles of Coffee is that its implementation size must be very small in order to be enabled by default in sensor devices running Contiki-NG. To fulfill this goal, Coffee is designed to make the file structure simple by using extents, leading to a significantly reduced need for storing metadata in RAM.
 
 Flash memory make file modifications more complicated to handle than magnetic disks do. The common trait of flash memories is that bits can be toggled from 1 to 0, but not toggled back from 0 to 1 without doing an expensive erase operation on a large number of bits. To accommodate file modifications, Coffee introduces a file structure called a micro log. When file data is first about to be overwritten, Coffee creates a new invisible file that is linked to the original file. The invisible file is a small log structure within a regular file, belonging to the original file and containing the most recently written data in the logical file. Although this concept is similar to log structuring [[Rosenblum & Ousterhout '91](https://dl.acm.org/citation.cfm?id=121137)], a popular technique in flash file systems, Coffee's micro logs differs from log structuring because it requires very little metadata in RAM, and allows optimization on a per-file basis. When the micro log eventually fills up, Coffee transparently merges the content of the original file and the micro log into a new file, and deletes the two former files.
 
 Coffee can be programmed by using the CFS Programming Interface, along with some Coffee-specific extensions. We describe the details of the programming interface below, as well as explain some special characteristics of Coffee that programmers should take into account.
 
-# The CFS Programming Interface
+## The CFS Programming Interface
 
 Applications access file systems by using the Contiki-NG File System (CFS) API. Each file system implements basic functions for reading and writing files, and extracting directory contents in a manner similar to the POSIX file API. The API is intentionally simple to keep the implementation size small, but the functionality covers the most common
 uses of a file system. The table below lists the available functions, which are declared in `os/storage/cfs/cfs.h`.
@@ -22,7 +24,7 @@ uses of a file system. The table below lists the available functions, which are 
 |`int cfs_readdir(struct cfs_dir *dirp, struct cfs_dirent *dirent)` | Read a directory entry.             |
 |`void cfs_closedir(struct cfs_dir *dirp)`                          | Close an open directory.            |
 
-## Opening and Closing Files
+### Opening and Closing Files
 
 Every open file is represented by a unique file descriptor. The file descriptor is of type `int` and is provided as an argument to all CFS functions that deal with a file.
 
@@ -32,7 +34,7 @@ When an open file is no longer needed, the application should close it by using 
 
 Files can be removed in CFS-POSIX and Coffee by calling `cfs_remove()`, which takes the name of the file as a parameter. `cfs_remove()` returns 0 if the file was removed, or -1 if the file could not be removed or is nonexistent.
 
-## Using Files
+### Using Files
 
 After opening a file and thereby obtaining a file descriptor for it, the file can be used according to the flags that the were specified to `cfs_open()`. `cfs_read()` fills `buf` with at most `len` bytes, starting from the current position in the file that is stored in the file descriptor. It returns the amount of bytes read, or -1 if an error occurs.
 
@@ -60,7 +62,7 @@ if(fd >= 0) {
 }
 ```
 
-## Listing Directory Contents
+### Listing Directory Contents
 
 Applications can retrieve directory contents by using a combination of three functions. `cfs_opendir()` opens the directory `name` and fills in an opaque handle pointed to by `dirp`. The contents of this handle is unspecified and is only for use internally by Coffee. If `cfs_opendir()` fails to open the directory, the function returns -1. Upon a successful directory opening, `cfs_opendir()` return 0. A directory that has been opened must be closed after being used by calling `cfs_closedir()` with the `dirp` handle supplied as an argument.
 
@@ -88,7 +90,7 @@ if(cfs_opendir(&dir, "/") == 0) {
 }
 ```
 
-## Coffee extensions of CFS
+### Coffee extensions of CFS
 
 Coffee extends the CFS API with three functions that are shown below. These functions are declared in
 `os/storage/cfs/cfs-coffee.h`.
@@ -105,7 +107,7 @@ Coffee extends the CFS API with three functions that are shown below. These func
 
 The function to use for tuning a micro log is called `cfs_coffee_configure_log()`. Its two parameters determine how large the log should be (`log_size`), and how large each log entry should be (`log_entry_size`.) Finding the optimal values is a question of examing the I/O access pattern of the calling application before deploying it. If this function is not called, Coffee uses a default micro log size, as well as a default log entry size which is likely to match the page size of the storage device. Like `cfs_coffee_reserve()`, `cfs_coffee_configure_log()` must be called before the file has been created.
 
-## Files
+### Files
 
 As we mentioned, Coffee files have the physical layout of an extent, possibly coupled with a micro log. Each ordinary file consists of a header and a data area, whereas each micro log file substitutes a log index table and a log entry table with the data area. Micro logs are handled transparently by Coffee so that programs are presented with the logical contents of a file directly through the `cfs_write()` and `cfs_read()` functions. All types of files in Coffee have a preset maximum size that is defined in a number of platform-defined pages.
 
@@ -134,17 +136,17 @@ struct file_desc {
 Another characteristic of Coffee that occurs when opening a file for the first time is that its end of file position must be found. Coffee does not store this data in the header, since the end of file position is often highly volatile, and flash devices do not allow repeated modifications in the same flash memory address. Coffee uses a brute force scan backwards from the end of the extent to find the first non-null byte. This induces a semantic consequence on files in which the last written byte was a 0: it will not be accounted for when reopening the file after a system start. Coffee will cache the end of file position in the `struct file` object though, which removes the problem in files that are cached and reopened. In order to avoid this problem, we recommend that the program ensures that the last written
 byte is always non-null, or that the program appends the null values if it can determine that they are missing.
 
-## Garbage Collection
+### Garbage Collection
 
 Removing a file from a Coffee file system is a two-step process with the first step being initiated by the external user, and the second step being initiated automatically by Coffee. The first step is the ordinary call to `cfs_remove()` with the filename supplied as an argument. In most Coffee ports, this does not remove the file extent physically from the storage device&mdash;it just marks it as obsolete and thereby eligible for garbage collection. An obsolete file is invisible to external users, but occupies the same space as the file did when it was allocated.
 
 Coffee initiates the garbage collection step when a new file reservation request cannot be granted. The garbage collector operates sequentially over the storage device, which is divided into an array of sectors. For each sector it checks if the sector contains at least one obsolete page and no active pages. If the check succeeds, Coffee erases the sector. There is a possibility that obsolete pages spans more sectors than the one being erased, but in that case Coffee splits the remaining pages into isolated pages that belong to no file. The isolated pages are treated in the same way as obsolete pages when they are processed by the garbage collector.
 
-## The Root Directory
+### The Root Directory
 
 Coffee has a flat directory structure that is obtained implicitly by scanning for the ordinary file extents. When calling `cfs_opendir()` on the only directory, also known as the root directory, Coffee is accepts either "/" or "." as the directory name. In each iteration with `cfs_readdir()`, Coffee uses a quick skip algorithm that is able to jump over large spaces of free memory. The iterative process may take a longer time, however, if there are many small files&mdash;either allocated or marked as obsolete&mdash;in the file system.
 
-## Porting Coffee
+### Porting Coffee
 
 The Coffee implementation in `os/storage/cfs/cfs-coffee.c` is purely implementation-independent. It relies on a set of macro definitions to point to the platform-dependent configuration values and I/O functions. Each platform using Coffee has a `cfs-coffee-arch.h` that defines the Coffee macros, which are listed in the table below.
 

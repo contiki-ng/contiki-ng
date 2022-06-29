@@ -1,3 +1,5 @@
+# The Contiki‐NG build system
+
 The Contiki-NG build system is designed to compile a full system image to a variety of hardware platforms. The resulting binary includes both the application code and the Contiki-NG Operating System code.
 
 A simple example project Makefile can be found in `examples/hello-world/`:
@@ -11,7 +13,7 @@ After defining the project name and Contiki-NG path, the common makefile is simp
 
 To compile the hello-world application for a different platform, use the flag `TARGET`, e.g. with `TARGET=zoul`. On some platforms, an additional `BOARD` is necessary to further specify the target.
 
-# Build system output structure
+## Build system output structure
 The build system will generate a number of files that will be placed in a number of locations. This guide uses the `hello-world` example as a use-case, but the output will be the same for all other examples.
 
 The build system will always put the final build output file (firmware) in the example's `.` directory. This is the firmware to use to programme your device (embedded targets) or to execute (native paltform). For the hello-world example, this will be called `hello-world.$(TARGET)` (e.g. `hello-world.native` or `hello-world.zoul`.
@@ -27,12 +29,12 @@ With the above sub-directory structure in mind, the build system will output fil
 * All compilation output files (`.o`) and dependency files (`.d`) will be placed under the `obj/` dir.
 * All link and post-processing out files (e.g. `hello-world.elf`, `hello-world.hex`, `hello-world.bin`) will be placed in `build/$(TARGET)/[ $(BOARD) ]/[ $(BUILD_DIR_CONFIG) ]`. In the same directory, you will often also file a `.map` file. Lastly, this directory will also always host a copy of the `hello-world.$(TARGET)` file.
 
-# Cleaning
+## Cleaning
 To clean built artifacts, use:
 * `clean`: Removes all build output files for `TARGET`, including the entire `build/$(TARGET)` dir. There is currently no way to only clean files built for a specific `BOARD`.
 * `distclean`: Cleans all build output files for all Contiki-NG targets and also deletes the entire `build/` directory. It basically invokes `make TARGET=xyz clean` for all Contiki-NG supported platforms and once this has finished it then force-removes the `build/` directory.
 
-# More options
+## More options
 
 The following `make` target are provided:
 * `viewconf`: shows the value of important Make and C constants, for inspection of the Contiki-NG configuration
@@ -51,11 +53,11 @@ The following `make` target are provided:
 * `motelist-all`: prints a list of connected devices
 * `usage` and `help`: show a brief help
 
-# Makefiles used in the Contiki-NG build system
+## Makefiles used in the Contiki-NG build system
 
 The Contiki-NG build system is composed of a number of Makefiles. These are:
 
-* `Makefile`: the project's makefile, located in the project directory.  This Makefile can define the `MODULES` variable, a list of modules that should be included. It can also configure the Contiki-NG networking stack (see [doc:configuration]), as well as any other standard Makefile rules and flags.
+* `Makefile`: the project's makefile, located in the project directory.  This Makefile can define the `MODULES` variable, a list of modules that should be included. It can also configure the Contiki-NG networking stack (see [The Contiki-NG configuration system](The-Contiki-NG-configuration-system.md)), as well as any other standard Makefile rules and flags.
 * Top-level Makefiles, located in Contiki-NG's source tree's root:
   * `Makefile.include`: the system-wide makefile. When make is run, `Makefile.include` includes the `Makefile.$(TARGET)` as well as all makefiles for the modules in the `MODULES` list (which is specified by the project's Makefile).
   * `Makefile.help`: Contains definitions of the `help` and `usage` targets.
@@ -65,5 +67,3 @@ The Contiki-NG build system is composed of a number of Makefiles. These are:
 * `Makefile.$(TARGET)` (where `$(TARGET)` is the name of the platform): rules for the specific platform, located in the platform's subdirectory in `arch/platform`. It contains the list of C files (`CONTIKI_TARGET_SOURCEFILES`) that the platform adds to the Contiki-NG system. The `Makefile.$(TARGET)` also includes the `Makefile.$(CPU)` from the `arch/cpu/$(CPU)/` directory.
 * `Makefile.$(CPU)` (where `$(CPU)` is the name of the CPU/MCU): rules for the CPU architecture, located in the CPU architecture's subdirectory in `arch/cpu/`.
 * `Makefile.$(MODULE)` (where `$(MODULE)` is the name of a module in the `os` directory): optional, module-specific makefile rules.
-
-[doc:configuration]: https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki-NG-configuration-system

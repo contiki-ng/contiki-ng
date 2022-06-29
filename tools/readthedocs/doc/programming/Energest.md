@@ -1,3 +1,5 @@
+# Energest
+
 > See also: getting started with the Simple Energest system service at [tutorial:simple-energest]
 
 The [Energest](https://dl.acm.org/citation.cfm?id=1278979) module can be used to implement lightweight, software-based energy estimation approach for resource-constrained IoT devices. By tracking the time various hardware components such as the radio is turned on, and by knowing the power consumption of the component, it is possible to estimate the energy consumption.
@@ -63,7 +65,7 @@ An application can provide additional Energest types by defining `ENERGEST_CONF_
 
 ## Platform configuration for Energest
 
-By default, the Energest module will use the [the Rtimer Library](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Timers#the-rtimer-library) clock as time source but a platform might provide a different time source. The example below configures the Energest module to use the Contiki-NG system clock. Note that if the time source has too low resolution, it might not be able to track quick mode changes that happens faster than a few clock ticks.
+By default, the Energest module will use the [the Rtimer Library](Timers.md#the-rtimer-library) clock as time source but a platform might provide a different time source. The example below configures the Energest module to use the Contiki-NG system clock. Note that if the time source has too low resolution, it might not be able to track quick mode changes that happens faster than a few clock ticks.
 
 ```c
 #define ENERGEST_CONF_CURRENT_TIME clock_time
@@ -77,5 +79,5 @@ For an example how to use the Contiki-NG system service called use Simple Energe
 
 If need more features than the Simple Energest can provide, see [tutorial:energest] for an example how to directly use Energest from an application.
 
-[tutorial:simple-energest]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Energy-monitoring
-[tutorial:energest]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Energy-monitoring
+[tutorial:simple-energest]: /doc/tutorials/Energy-monitoring
+[tutorial:energest]: /doc/tutorials/Energy-monitoring

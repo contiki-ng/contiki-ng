@@ -1,3 +1,5 @@
+# Zolertia Firefly
+
 ![Zolertia Firefly breakout board][firefly]
 
 The Firefly is a breakout board designed to inspire.

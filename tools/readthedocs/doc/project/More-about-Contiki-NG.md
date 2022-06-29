@@ -1,3 +1,5 @@
+# More about Contiki‐NG
+
 In 2017, Contiki-NG started as a fork of the Contiki operating system with the following goals:
 * Focus on dependable (reliable and secure), standard-based IPv6 communication;
 * Focus on modern IoT platforms, e.g. ARM Cortex M3 and other 32-bit MCUs;
@@ -8,7 +10,7 @@ In 2017, Contiki-NG started as a fork of the Contiki operating system with the f
 The first version is Contiki-NG 4.0.
 A detailed changelog is available at [doc:releases].
 
-# Getting Around
+## Getting Around
 If you are coming from Contiki, this is what you need to know:
 * Documentation and tutorials are available at [doc:home]. We still use Doxygen, but most of the content has moved to the wiki. Only code APIs are left as doxygen documentation, available at [doxygen]
 * The former directory `core` is renamed `os`. `apps` are moved to `os`. The top-level `dev`, `cpu` and `platform` are under a new top-level directory `arch`.
@@ -18,6 +20,6 @@ If you are coming from Contiki, this is what you need to know:
 
 [doxygen]: https://contiki-ng.github.io/ngdoc/modules.html
 [doc:home]: https://github.com/contiki-ng/contiki-ng/wiki
-[doc:configuration-system]: https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki%E2%80%90NG-configuration-system
-[doc:build-system]: https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki%E2%80%90NG-build-system
-[doc:releases]: https://github.com/contiki-ng/contiki-ng/wiki/Releases
+[doc:configuration-system]: /doc/getting-started/The-Contiki-NG-configuration-system
+[doc:build-system]: /doc/getting-started/The-Contiki-NG-build-system
+[doc:releases]: https://github.com/contiki-ng/contiki-ng/releases

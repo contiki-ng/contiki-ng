@@ -1,6 +1,8 @@
+# LWM2M and IPSO Objects
+
 To make an application with LWM2M and IPSO Objects functionality you can start from the example: `examples/lwm2m-ipso-objects/example-ipso-objects.c`. You will also need a LWM2M server. You can run a Leshan LWM2M server on your computer, or you can use one that is publicly available.
 
-# Example IPSO objects LWM2M client
+## Example IPSO objects LWM2M client
 Firstly, make sure that the `example-ipso-objects` example is configured with the correct server address. 
 By default, the example will assume the LWM2M server's address is `fd00::1`.
 
@@ -9,7 +11,7 @@ In most cases you will not need to change this address (details later on in this
 #define LWM2M_SERVER_ADDRESS "coap://[fd00::1]"
 ```
 
-## For platform native
+### For platform native
 You can now build this example for the native platform and run it:
 ```bash
 $ make TARGET=native
@@ -20,7 +22,7 @@ When this process starts, it will create a virtual tunnel interface `tun0`. It w
 
 If you run the Leshan LWM2M server on the same computer things should just work. If you run the Leshan server in some other computer, or if you use a public server, then you will need to set the correct server address in the `example-ipso-objects` example as described above.
 
-## For a wireless embedded device
+### For a wireless embedded device
 You can also use this example on most Contiki-NG wireless embedded platforms, for instance on the TI Sensortag, as follows:
 ```bash
 $ make TARGET=cc26x0-cc13x0 BOARD=sensortag/cc2650 example-ipso-objects
@@ -34,10 +36,10 @@ If you are running the LWM2M server on the same computer where you have the bord
 
 Another option is to set up a globally routable IPv6 network so that you can register with any IPv6 enabled LWM2M server.
 
-# LWM2M Server
+## LWM2M Server
 In all of the above scenarios, you will also need a LWM2M server. You can run one on your own computer or use one that is publicly available
 
-## On your computer
+### On your computer
 Make sure that your LWM2M server is started and is listening on the address assigned to the `tun0` interface (the tun interface corresponding to the 6LoWPAN network). This will have been created by either the native LWM2M client process or by `tunslip6`). To setup and run a Leshan LWM2M server on your computer try this:
 ```bash
 $ wget https://hudson.eclipse.org/leshan/job/leshan/lastSuccessfulBuild/artifact/leshan-server-demo.jar
@@ -56,7 +58,7 @@ In the typical scenario discussed above, `<tun0 IPv6 address>` will be `fd00::1`
 To access the demo server go to http://localhost:8080 and you should see the registration page of the Leshan server.
 If everything is set up correctly, your device should show up on the Leshan server's device list.
 
-## Registering with global LWM2M server via NAT64
+### Registering with global LWM2M server via NAT64
 If you like to register with the demo server at Eclipse you can change the registration address in the code to the NAT64 format. Note: this requires your 6LoWPAN border router to have a NAT64 running on the same network (so that the IPv6 address is converted into an IPv4 address). You can use the Jool NAT64 for that (see [doc:ip64]).
 
 ```c
@@ -66,7 +68,7 @@ If you like to register with the demo server at Eclipse you can change the regis
 When you run a successful registration here you should see your device at the URL:
 http://leshan.eclipse.org
 
-# LWM2M with DTLS (pre-shared keys)
+## LWM2M with DTLS (pre-shared keys)
 
 Contiki-NG's LWM2M implementation supports DTLS, to secure the communication with the registration server in LWM2M.
 First some small changes in the configuration are needed.
@@ -97,7 +99,7 @@ configure the same security Identity and keys in the Leshan server. Remember to 
 
 Note: if you do not know the endpoint name you can run in non-secure mode first to see the name of the endpoint.
 
-## Bootstrapping
+### Bootstrapping
 This tutorial describe how to setup a LWM2M client registering to a server with all security keys (or none)
 configured beforehand. LWM2M also offers a bootstrap option where the node first contacts a local server, and from there, obtain the server to actually register with. When bootstrapping the bootstrap server can also set the security keys that should be used for the other server connection.
 To enable bootstrapping in the Contiki-NG LWM2M client, set the following flag:
@@ -105,7 +107,7 @@ To enable bootstrapping in the Contiki-NG LWM2M client, set the following flag:
 #define REGISTER_WITH_LWM2M_BOOTSTRAP_SERVER 1
 ```
 
-## References
+### References
 Here are some references to used standards and LWM2M servers.
 
 * [OMA LWM2M](http://technical.openmobilealliance.org/Technical/technical-information/release-program/current-releases/oma-lightweightm2m-v1-0)
@@ -113,5 +115,5 @@ Here are some references to used standards and LWM2M servers.
 * [Wakaama LWM2M Server](https://github.com/eclipse/wakaama)
 * [Leshan LWM2M Server](https://github.com/eclipse/leshan)
 
-[tutorial:rpl-br]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-RPL-border-router
-[doc:ip64]: https://github.com/contiki-ng/contiki-ng/wiki/NAT64-for-Contiki%E2%80%90NG
+[tutorial:rpl-br]: /doc/tutorials/RPL-border-router
+[doc:ip64]: /doc/getting-started/NAT64-for-Contiki-NG

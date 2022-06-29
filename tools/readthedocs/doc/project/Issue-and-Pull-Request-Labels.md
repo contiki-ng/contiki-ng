@@ -1,3 +1,5 @@
+# Issue and Pull Request Labels
+
 Contiki-NG makes use of github labels for issues and pull requests.
 
 Contributors cannot set labels, those are set by the maintainer team. This page briefly lists and explains the meaning of labels.

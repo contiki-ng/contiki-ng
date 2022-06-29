@@ -1,3 +1,5 @@
+# Logging
+
 Contiki-NG provides per-module, per-level logging, documented here: [doc:logging].
 
 First, we will customize the configuration of the `hello-world` example. As described in [doc:configuration], create a file called `project-conf.h` in the project directory. In this file, define a number of log levels, such as:
@@ -41,8 +43,8 @@ You will see in [tutorial:shell] that it is also possible to change the log leve
 
 For interpretation of the log messages, see respective module's documentation or the Contiki-NG source code. For instance, TSCH log output is described in [doc:tsch-logs].
 
-[doc:configuration]: https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki%E2%80%90NG-configuration-system
-[doc:logging]: https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki%E2%80%90NG-logging-system
-[tutorial:hello-world]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Hello,-World!
-[tutorial:shell]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Shell
-[doc:tsch-logs]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-TSCH-and-6TiSCH#per-slot-logging
+[doc:configuration]: /doc/getting-started/The-Contiki-NG-configuration-system
+[doc:logging]: /doc/getting-started/The-Contiki-NG-logging-system
+[tutorial:hello-world]: /doc/tutorials/Hello,-World!
+[tutorial:shell]: /doc/tutorials/Shell
+[doc:tsch-logs]: /doc/programming/TSCH-and-6TiSCH

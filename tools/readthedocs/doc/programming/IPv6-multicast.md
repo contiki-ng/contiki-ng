@@ -1,3 +1,5 @@
+# IPv6 multicast
+
 Contiki-NG's IPv6 stack supports multicast. We currently support the following modes:
 
 * 'Multicast Protocol for Low-Power and Lossy Networks' (MPL)
@@ -31,8 +33,8 @@ Contiki-NG's IPv6 stack supports multicast. We currently support the following m
 
 More engines can (and hopefully will) be added in the future.
 
-The Big Gotcha
-==============
+## The Big Gotcha
+
 Currently we only support traffic originating and destined inside a single 6LoWPAN.
 To be able to send multicast traffic from the internet to 6LoWPAN nodes or the other
 way round, we need border routers or other gateway devices to be able to achieve
@@ -44,14 +46,14 @@ the following:
 
 These are currently not implemented and are in the ToDo list. Contributions welcome.
 
-Where to Start
-==============
-The best place in `examples/multicast`.
+## Where to Start
+
+The best place is `examples/multicast`.
 
 There is a cooja example demonstrating basic functionality.
 
-How to Use
-==========
+## How to Use
+
 Look in `os/net/ipv6/multicast/uip-mcast6-engines.h` for a list of supported
 multicast engines.
 
@@ -71,8 +73,8 @@ You also need to make sure the multicast code gets built. Your example's
 MODULES += os/net/ipv6/multicast
 ```
 
-How to extend
-=============
+## How to extend
+
 Let's assume you want to write an engine called foo.
 The multicast API defines a multicast engine driver in a fashion similar to
 the various NETSTACK layer drivers. This API defines functions for basic

@@ -1,16 +1,20 @@
-Zolertia Zoul core module
-============================================
+# zoul: Zolertia Zoul platforms: Firefly, RE-mote and Orion
 
-Zolertia Zoul Platforms Documentation
-=====================================
-* https://github.com/contiki-ng/contiki-ng/wiki/Platform-Zolertia-Firefly
-* https://github.com/contiki-ng/contiki-ng/wiki/Platform-Zolertia-Firefly-Revision-A
-* https://github.com/contiki-ng/contiki-ng/wiki/Zolertia-Orion-Ethernet-Router
-* https://github.com/contiki-ng/contiki-ng/wiki/Zolertia-RE-Mote-platform-(revision-A)
-* https://github.com/contiki-ng/contiki-ng/wiki/Zolertia-RE-Mote-platform-(revision-B)
+## Zoul Platforms
 
-Zolertia Zoul Module
-=====================================
+```{eval-rst}
+.. toctree::
+   :maxdepth: 1
+   :titlesonly:
+
+   Zolertia-Firefly-Revision-A.md
+   Zolertia-RE-Mote-platform-(revision-A).md
+   Zolertia-Firefly.md
+   Zolertia-Orion-Ethernet-Router.md
+   Zolertia-RE-Mote-platform-(revision-B).md
+```
+
+## Zolertia Zoul Module
 ![Zolertia Zoul Module][zoul]
 
 The Zoul is a core module developed by Zolertia to target most IoT applications,
@@ -32,14 +36,14 @@ goodies:
 
 The Zoul will be CE/FCC certified (2016) to allow a fast integration and short time to market for new products and solutions.
 
-Zoul pin-out
-=============
+### Zoul pin-out
+
 
 ![Zoul pin-out (front)][zoul-pinout-front]
 ![Zoul pin-out (back)][zoul-pinout-back]
 
-Port Features
-=============
+### Port Features
+
 The Zoul has the following key features:
 
  * Deep Sleep support with RAM retention for ultra-low energy consumption.
@@ -74,8 +78,8 @@ In terms of hardware support, the following drivers have been implemented for th
 
 There is a Zoul powering the RE-Mote and Firefly platforms, check out its specific README files for more information about on-board features.
 
-Requirements
-============
+### Requirements
+
 To start using Contiki-NG, the following is required:
 
  * A zoul-based board (RE-Mote, firefly)
@@ -83,14 +87,14 @@ To start using Contiki-NG, the following is required:
  * Drivers so that your OS can communicate with your hardware.
  * Software to upload images to the CC2538.
 
-Toolchain Installation
--------------------
+### Toolchain Installation
+
 The toolchain used to build Contiki-NG is arm-gcc, also used by other arm-based Contiki-NG ports.
 
-If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-Linux) / [native mac OS](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-macOS)).
+If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](/doc/getting-started/Toolchain-installation-on-Linux) / [native mac OS](/doc/getting-started/Toolchain-installation-on-macOS)).
 
-Drivers
--------
+### Drivers
+
 Depending on your Zoul flavour, there are different options.  As today the RE-Mote and Firefly platforms host a Zoul with a  CP2104 USB-to-serial converter, governed by a low-power PIC to handle resetting and flashing the Zoul over USB, without having to press any button or use external tools.
 
 The driver is available at <https://www.silabs.com/products/mcu/Pages/USBtoUARTBridgeVCPDrivers.aspx>
@@ -101,8 +105,8 @@ For windows users, if using the USB 2.0 interface (via CDC-ACM driver), there is
 
 `zolertia-zoul-cdc-acm`
 
-Software to Program the Nodes
------------------------------
+### Software to Program the Nodes
+
 The Zoul can be programmed via the jtag interface or via the serial boot loader on the chip.
 
 Both the RE-Mote and Firefly has a mini JTAG 10-pin male header, compatible with the `SmartRF06` development board, which can be used to flash and debug the platforms.  Alternatively one could use the `JLink` programmer with a 20-to-10 pin converter like the following: <https://www.olimex.com/Products/ARM/JTAG/ARM-JTAG-20-10/>.
@@ -124,8 +128,8 @@ Instructions to flash for different OS are given below.
 
 The file with a `.zoul` extension is a copy of the `.elf` file.
 
-Build your First Examples
--------------------------
+### Build your First Examples
+
 For a review of `make` targets and in particular the selection of `TARGET` and `BOARD`, see [doc:build-system].
 You can try the examples under `examples/platform-specific/zoul`.
 
@@ -136,8 +140,7 @@ The `PORT` argument could be used to specify in which port the device is connect
 
 To enable printing debug output to your console, use the `make login` to get the information over the USB programming/debugging port, or alternatively use `make serialview` to also add a timestamp in each print.
 
-Node IEEE and IPv6 Addresses
------------------------------
+### Node IEEE and IPv6 Addresses
 
 Nodes will generally autoconfigure their IPv6 address based on their IEEE address. The IEEE address can be read directly from the CC2538 Info Page, or it can be hard-coded. Additionally, the user may specify a 2-byte value at build time, which will be used as the IEEE address' 2 LSBs.
 
@@ -156,8 +159,8 @@ This will result in the 2 last bytes of the IEEE address getting set to 0x79 0xA
 
 Note: Some early production devices do not have am IEEE address written on the Info Page. If your device is in this category, define `IEEE_ADDR_CONF_HARDCODED` to 1 and specify `NODEID` to differentiate between devices.
 
-Low-Power Modes
----------------
+### Low-Power Modes
+
 The CC2538 port supports power modes for low energy consumption. The SoC will enter a low power mode as part of the main loop when there are no more events to service.
 
 LPM support can be disabled in its entirety by setting `LPM_CONF_ENABLE` to 0 in `contiki-conf.h` or `project-conf.h`.
@@ -184,11 +187,11 @@ The configuration directive `LPM_CONF_MAX_PM` sets a hard upper boundary. For in
 
 When setting `LPM_CONF_MAX_PM` to 0 or 1, the entire SRAM will be available. Crucially, when value 2 is used the linker will automatically stop using the SoC's SRAM non-retention area, resulting in a total available RAM of 16kB instead of 32kB.
 
-### Shutdown Mode
+#### Shutdown Mode
 The RE-Mote has a built-in shutdown mode which effectively reduces the power consumption down to 150nA.  Check its specific README file for more information.
 
-Build headless nodes
---------------------
+### Build headless nodes
+
 It is possible to turn off all character I/O for nodes not connected to a PC. Doing this will entirely disable the UART as well as the USB controller, preserving energy in the long term. The define used to achieve this is (1: Quiet, 0: Normal output):
 
     #define CC2538_CONF_QUIET      0
@@ -199,14 +202,14 @@ Setting this define to 1 will automatically set the following to 0:
 * `UART_CONF_ENABLE`
 * `STARTUP_CONF_VERBOSE`
 
-Code Size Optimizations
------------------------
+### Code Size Optimizations
+
 The build system currently uses optimization level `-Os`, which is controlled indirectly through the value of the `SMALL` make variable. This value can be overridden by example makefiles, or it can be changed directly in `platform/zoul/Makefile.zoul`.
 
 Historically, the `-Os` flag has caused problems with some toolchains. If you are using one of the toolchains documented in this README, you should be able to use it without issues. If for whatever reason you do come across problems, try setting `SMALL=0` or replacing `-Os` with `-O2` in `cpu/cc2538/Makefile.cc2538`.
 
-More Reading
-============
+### More Reading
+
 1. [Zolertia website][zolertia-site]
 2. [Zolertia Wiki page][zolertia-wiki]
 3. [CC2538 System-on-Chip Solution][cc2538]
@@ -214,8 +217,8 @@ More Reading
 5. [Zolertia Hackster channel][hackster]
 6. [IoT in five days open source and online book][IoT5days]
 
-Maintainers
-===========
+### Maintainers
+
 The Zoul and derived platforms (as well as the Z1 mote) are maintained by Zolertia.
 Main contributor: Antonio Lignan <alinan@zolertia.com> <antonio.lignan@gmail.com>
 
@@ -232,4 +235,4 @@ Main contributor: Antonio Lignan <alinan@zolertia.com> <antonio.lignan@gmail.com
 [zoul-pinout-front]: https://contiki-ng.github.io/images/zoul-pinout-front.png "Zoul pin-out (front)"
 [zoul-pinout-back]: https://contiki-ng.github.io/images/zoul-pinout-back.png "Zoul pin-out (back)"
 [IoT5days]: https://github.com/alignan/IPv6-WSN-book "IoT in Five days online book"
-[doc:build-system]: https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki%E2%80%90NG-build-system
+[doc:build-system]: /doc/getting-started/The-Contiki-NG-build-system

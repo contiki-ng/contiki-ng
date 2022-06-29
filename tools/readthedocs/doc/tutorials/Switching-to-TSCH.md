@@ -1,6 +1,8 @@
-By default, Contiki-NG examples use the CSMA always-on MAC protocol. This tutorial lists the steps necessary to upgrade an example application to the [TSCH](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-TSCH-and-6TiSCH) MAC protocol.
+# Switching to TSCH
 
-We assume that you are familiar with the basics on Contiki-NG application development, having followed the [Hello world](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Hello,-World!) and [Contiki-NG shell](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Shell) tutorials. This tutorial is an alternative version of the [IPv6 ping](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-IPv6-ping) tutorial that uses CSMA instead of TSCH.
+By default, Contiki-NG examples use the CSMA always-on MAC protocol. This tutorial lists the steps necessary to upgrade an example application to the [TSCH](/doc/programming/TSCH-and-6TiSCH) MAC protocol.
+
+We assume that you are familiar with the basics on Contiki-NG application development, having followed the [Hello world](/doc/tutorials/Hello,-World!) and [Contiki-NG shell](/doc/tutorials/Shell) tutorials. This tutorial is an alternative version of the [IPv6 ping](/doc/tutorials/IPv6-ping) tutorial that uses CSMA instead of TSCH.
 
 ## Configuration
 
@@ -107,7 +109,7 @@ make: *** [../../arch/cpu/arm/cortex-m/Makefile.cortex-m:26: build/simplelink/la
 rm hello-world.o build/simplelink/launchpad/cc1310/obj/startup_cc13xx_cc26xx_gcc.o
 ```
 
-There are several quick ways how to significantly reduce memory usage. Here they are listed in order of preference; for more detailed coverage, see [this tutorial](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-RAM-and-ROM-usage).
+There are several quick ways how to significantly reduce memory usage. Here they are listed in order of preference; for more detailed coverage, see [this tutorial](/doc/tutorials/RAM-and-ROM-usage).
 
 1) Reduce IP buffer size. By default, up to 1280 bytes long packets (IPv6 MTU) are supported, as required by the IPv6 protocol specification. In low-power wireless networks, this is usually an overkill. If you are confident that the devices will never generate more than a couple hundred bytes long IPv6 packets, reduce `UIP_CONF_BUFFER_SIZE`. For example, add to `project-conf.h`:
 ```
@@ -122,11 +124,11 @@ There are several quick ways how to significantly reduce memory usage. Here they
 #define QUEUEBUF_CONF_NUM 4
 ```
 
-For more https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-RAM-and-ROM-usage
+For more /doc/tutorials/RAM-and-ROM-usage
 
 ## See also 
 
-* [Contiki-NG TSCH example applications](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-TSCH-example-applications)
-* [Contiki-NG hello world tutorial](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Hello,-World!)
-* [Contiki-NG shell tutorial](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Shell)
-* [IPv6 ping tutorial](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-IPv6-ping)
+* [Contiki-NG TSCH example applications](/doc/programming/TSCH-example-applications)
+* [Contiki-NG hello world tutorial](/doc/tutorials/Hello,-World!)
+* [Contiki-NG shell tutorial](/doc/tutorials/Shell)
+* [IPv6 ping tutorial](/doc/tutorials/IPv6-ping)

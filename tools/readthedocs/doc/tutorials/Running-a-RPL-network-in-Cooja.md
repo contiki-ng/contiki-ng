@@ -1,3 +1,5 @@
+# Running a RPL network in Cooja
+
 This tutorial assumes you already know the Cooja basics (see [tutorial:cooja]).
 
 We will create a simulation involving RPL and UDP communication.
@@ -26,4 +28,4 @@ Blue boxes show packet transmissions.
 Green boxes are receptions.
 Red boxes are collisions. Here we see plenty of them because nodes are in the interference range of one another (gray in the Network view).
 
-[tutorial:cooja]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Running-Contiki%E2%80%90NG-in-Cooja
+[tutorial:cooja]: /doc/tutorials/Running-Contiki-NG-in-Cooja

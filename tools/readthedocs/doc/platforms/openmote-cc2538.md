@@ -1,5 +1,5 @@
-The OpenMote platform
-=====================
+# openmote-cc2538: OpenMote cc2538
+
 The OpenMote platform is based on TI's CC2538 SoC (System on Chip), featuring an ARM Cortex-M3 running at 16/32 MHz and with 32 kbytes of RAM and 256/512 kbytes of FLASH.
 
 The OpenMote platform supports two boards:
@@ -26,8 +26,8 @@ It has the following key features:
   * PWM
   * Built-in core temperature and battery sensor
 
-Requirements
-============
+## Requirements
+
 To start using Contiki-NG with the OpenMote-CC2538, the following is required:
 
  * An OpenMote-CC2538 board with a OpenUSB, OpenBase or OpenBattery carrier boards.
@@ -35,14 +35,14 @@ To start using Contiki-NG with the OpenMote-CC2538, the following is required:
  * Drivers so that your OS can communicate with your hardware.
  * Software to upload images to the CC2538.
 
-Toolchain Installation
-----------------------
+## Toolchain Installation
+
 The toolchain used to build Contiki-NG is arm-gcc, also used by other arm-based Contiki-NG ports.
 
-If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-Linux) / [native mac OS](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-macOS)).
+If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](/doc/getting-started/Toolchain-installation-on-Linux) / [native mac OS](/doc/getting-started/Toolchain-installation-on-macOS)).
 
-Software to Program the Nodes
------------------------------
+## Software to Program the Nodes
+
 The OpenMote-CC2538 can be programmed via the jtag interface or via the serial boot loader on the chip.
 
 The OpenMote-CC2538 has a mini JTAG 10-pin male header, compatible with the `SmartRF06` development board, which can be used to flash and debug the platforms. Alternatively one could use the `JLink` programmer with a 20-to-10 pin converter like the following: <https://www.olimex.com/Products/ARM/JTAG/ARM-JTAG-20-10/>.
@@ -62,8 +62,8 @@ Instructions to flash for different OS are given below.
 * On OSX:
     * The `cc2538-bsl.py` script in `tools/cc2538-bsl/` is the only option. No extra software needs to be installed.
 
-Build your First Examples
--------------------------
+## Build your First Examples
+
 One can start with the platform-independent `examples/hello-world`.
 For a review of `make` targets see [doc:build-system].
 
@@ -81,8 +81,8 @@ The `PORT` argument could be used to specify in which port the device is connect
 
 To enable printing debug output to your console, use the `make login` to get the information over the USB programming/debugging port, or alternatively use `make serialview` to also add a timestamp in each print.
 
-Node IEEE and IPv6 Addresses
------------------------------
+## Node IEEE and IPv6 Addresses
+
 
 Nodes will generally autoconfigure their IPv6 address based on their IEEE address. The IEEE address can be read directly from the CC2538 Info Page, or it can be hard-coded. Additionally, the user may specify a 2-byte value at build time, which will be used as the IEEE address' 2 LSBs.
 
@@ -101,8 +101,8 @@ This will result in the 2 last bytes of the IEEE address getting set to 0x79 0xA
 
 Note: Some early production devices do not have am IEEE address written on the Info Page. For those devices, using value 0 above will result in a Rime address of all 0xFFs. If your device is in this category, define `IEEE_ADDR_CONF_HARDCODED` to 1 and specify `NODEID` to differentiate between devices.
 
-Low-Power Modes
----------------
+## Low-Power Modes
+
 The CC2538 port supports power modes for low energy consumption. The SoC will enter a low power mode as part of the main loop when there are no more events to service.
 
 LPM support can be disabled in its entirety by setting `LPM_CONF_ENABLE` to 0 in `contiki-conf.h` or `project-conf.h`.
@@ -129,8 +129,8 @@ The configuration directive `LPM_CONF_MAX_PM` sets a hard upper boundary. For in
 
 When setting `LPM_CONF_MAX_PM` to 0 or 1, the entire SRAM will be available. Crucially, when value 2 is used the linker will automatically stop using the SoC's SRAM non-retention area, resulting in a total available RAM of 16 kbytes instead of 32 kbytes.
 
-Build headless nodes
---------------------
+## Build headless nodes
+
 It is possible to turn off all character I/O for nodes not connected to a PC. Doing this will entirely disable the UART as well as the USB controller, preserving energy in the long term. The define used to achieve this is (1: Quiet, 0: Normal output):
 
     #define CC2538_CONF_QUIET      0
@@ -141,16 +141,16 @@ Setting this define to 1 will automatically set the following to 0:
 * `UART_CONF_ENABLE`
 * `STARTUP_CONF_VERBOSE`
 
-Code Size Optimisations
------------------------
+## Code Size Optimisations
+
 The build system currently uses optimization level `-Os`, which is controlled indirectly through the value of the `SMALL` make variable. This value can be overridden by example makefiles, or it can be changed directly in `platform/openmote-cc2538/Makefile.openmote-cc2538`.
 
 Historically, the `-Os` flag has caused problems with some toolchains. If you are using one of the toolchains documented in this README, you should be able to use it without issues. If for whatever reason you do come across problems, try setting `SMALL=0` or replacing `-Os` with `-O2` in `cpu/cc2538/Makefile.cc2538`.
 
-Maintainers
-===========
+## Maintainers
+
 The original OpenMote-CC2538 was developed by OpenMote Technologies. Main contributor: Pere Tuset <peretuset@openmote.com>
 
 Suipport for OpenMote B was developed by Anders Wallberg (@wallb)
 
-[doc:build-system]: https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki%E2%80%90NG-build-system
+[doc:build-system]: /doc/getting-started/The-Contiki-NG-build-system

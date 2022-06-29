@@ -1,6 +1,8 @@
-Contiki-NG is an operating system for resource-constrained devices in the Internet of Things. Contiki-NG contains an RFC-compliant, low-power IPv6 communication stack, enabling Internet connectivity. The system runs on a variety of platforms based on energy-efficient architectures such as the ARM Cortex-M3/M4 and the Texas Instruments MSP430. The code footprint is on the order of a 100 kB, and the memory usage can be configured to be as low as 10 kB. The source code is available as open source with a [3-clause BSD license](https://github.com/contiki-ng/contiki-ng/wiki/License).
+# Home
 
-More about Contiki-NG at [doc:more-about-contiki-ng].
+Contiki-NG is an operating system for resource-constrained devices in the Internet of Things. Contiki-NG contains an RFC-compliant, low-power IPv6 communication stack, enabling Internet connectivity. The system runs on a variety of platforms based on energy-efficient architectures such as the ARM Cortex-M3/M4 and the Texas Instruments MSP430. The code footprint is on the order of a 100 kB, and the memory usage can be configured to be as low as 10 kB. The source code is available as open source with a [3-clause BSD license](/doc/project/License).
+
+[More about Contiki-NG](/doc/project/More-about-Contiki-NG.md).
 
 Online presence:
 * GitHub repository: https://github.com/contiki-ng/contiki-ng
@@ -13,7 +15,7 @@ Online presence:
 
 Also feel free to download our [cheat sheet](https://contiki-ng.github.io/resources/contiki-ng-cheat-sheet.pdf)!
 
-# Citing Contiki-NG in Academic Manuscripts
+## Citing Contiki-NG in Academic Manuscripts
 
 If you are publishing academic work and you wish to cite Contiki-NG, here is how to do so:
 
@@ -35,104 +37,103 @@ BibTeX:
     }
 
 
-# Documentation
+## Documentation
 
-## Setting up Contiki-NG
+### Setting up Contiki-NG
 
-* [Docker image](https://github.com/contiki-ng/contiki-ng/wiki/Docker)
-* [Vagrant image](https://github.com/contiki-ng/contiki-ng/wiki/Vagrant)
-* [Native toolchain installation (Linux)](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-Linux)
-* [Native toolchain installation (macOS)](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-macOS)
-* [IP64 setup with Jool](https://github.com/contiki-ng/contiki-ng/wiki/NAT64-for-Contiki%E2%80%90NG)
-* [The Contiki-NG build system](https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki%E2%80%90NG-build-system)
-* [The Contiki-NG configuration system](https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki%E2%80%90NG-configuration-system)
-* [The Contiki-NG logging system](https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki%E2%80%90NG-logging-system)
+* [Docker image](/doc/getting-started/Docker.md)
+* [Vagrant image](/doc/getting-started/Vagrant.md)
+* [Native toolchain installation (Linux)](/doc/getting-started/Toolchain-installation-on-Linux.md)
+* [Native toolchain installation (macOS)](/doc/getting-started/Toolchain-installation-on-macOS.md)
+* [IP64 setup with Jool](/doc/getting-started/NAT64-for-Contiki-NG.md)
+* [The Contiki-NG build system](/doc/getting-started/The-Contiki-NG-build-system.md)
+* [The Contiki-NG configuration system](/doc/getting-started/The-Contiki-NG-configuration-system.md)
+* [The Contiki-NG logging system](/doc/getting-started/The-Contiki-NG-logging-system.md)
 
-## Programming Contiki-NG
+### Programming Contiki-NG
 
-* [Repository structure](https://github.com/contiki-ng/contiki-ng/wiki/Repository-structure)
-* [Multitasking and scheduling](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Multitasking-and-scheduling)
-* [Processes and events](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Processes-and-events)
-* [Synchronization primitives](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Synchronization-primitives)
-* [Timers](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Timers)
-* [Memory management](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Memory-management)
-* [Packet buffers](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Packet-buffers)
-* [Energy monitoring with Energest](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Energest)
-* [UDP communication](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-UDP-communication)
-* [IPv6-less networking with NullNet](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-NullNet)
-* [A guide on porting Contiki-NG to new platforms](https://github.com/contiki-ng/contiki-ng/wiki/Porting-Contiki%E2%80%90NG-to-new-platforms)
-* API documentation (partial): https://contiki-ng.readthedocs.io
+* [Repository structure](/doc/programming/Repository-structure.md)
+* [Multitasking and scheduling](/doc/programming/Multitasking-and-scheduling.md)
+* [Processes and events](/doc/programming/Processes-and-events.md)
+* [Synchronization primitives](/doc/programming/Synchronization-primitives.md)
+* [Timers](/doc/programming/Timers.md)
+* [Memory management](/doc/programming/Memory-management.md)
+* [Packet buffers](/doc/programming/Packet-buffers.md)
+* [Energy monitoring with Energest](/doc/programming/Energest.md)
+* [UDP communication](/doc/programming/UDP-communication.md)
+* [IPv6-less networking with NullNet](/doc/programming/NullNet.md)
+* [A guide on porting Contiki-NG to new platforms](/doc/programming/Porting-Contiki-NG-to-new-platforms.md)
+* [API Documentation](/doxygen.rst)
 
-## Key networking modules and services
+### Key networking modules and services
 
-* [IPv6 networking stack](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-IPv6)
-* [IPv6 multicast](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-IPv6-multicast)
-* [The RPL routing protocol](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-RPL)
-* [CoAP and CoAPs](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-CoAP)
-* [OMA LWM2M](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-LWM2M)
-* [TSCH and 6TiSCH](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-TSCH-and-6TiSCH)
-* [6TiSCH 6top sublayer](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-6TiSCH-6top-sub-layer)
-* [6TiSCH scheduler Orchestra](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Orchestra)
-* [IPv6 over BLE with BLEach](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-IPv6-over-BLE)
-* [Communication security](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Communication-Security)
-* [SNMP](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-SNMP)
+* [IPv6 networking stack](/doc/programming/IPv6.md)
+* [IPv6 multicast](/doc/programming/IPv6-multicast.md)
+* [The RPL routing protocol](/doc/programming/RPL.md)
+* [CoAP and CoAPs](/doc/programming/CoAP.md)
+* [OMA LWM2M](/doc/programming/LWM2M.md)
+* [TSCH and 6TiSCH](/doc/programming/TSCH-and-6TiSCH.md)
+* [6TiSCH 6top sublayer](/doc/programming/6TiSCH-6top-sub-layer.md)
+* [6TiSCH scheduler Orchestra](/doc/programming/Orchestra.md)
+* [IPv6 over BLE with BLEach](/doc/programming/IPv6-over-BLE.md)
+* [Communication security](/doc/programming/Communication-Security.md)
+* [SNMP](/doc/programming/SNMP.md)
 
-## Storage systems
-* [Coffee File System](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Coffee)
-* [Antelope database management system](https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Antelope)
+### Storage systems
+* [Coffee File System](/doc/programming/Coffee.md)
+* [Antelope database management system](/doc/programming/Antelope.md)
 
-## The Contiki-NG platforms
+### The Contiki-NG platforms
 
-* [cc2538dk: TI cc2538 development kit](https://github.com/contiki-ng/contiki-ng/wiki/Platform-cc2538dk)
-* [cc26x0-cc13x0 / srf06-cc26xx: TI cc26x0 and cc13x0 platforms](https://github.com/contiki-ng/contiki-ng/wiki/Platform-srf06-cc26xx)
-* [cooja: Cooja native motes platform](https://github.com/contiki-ng/contiki-ng/wiki/Platform-cooja)
-* [jn516x: NXP jn516x series](https://github.com/contiki-ng/contiki-ng/wiki/Platform-jn516x)
-* [native: Contiki-NG as a native process](https://github.com/contiki-ng/contiki-ng/wiki/Platform-native)
-* [nrf52840: Nordic Semiconductor nRF52840](https://github.com/contiki-ng/contiki-ng/wiki/Platform-nrf52840)
-* [nrf: Nordic Semiconductor nRF5340 and nRF52840 (using nRF MDK)](https://github.com/contiki-ng/contiki-ng/wiki/Platform-nrf)
-* [nrf52dk: Nordic Semiconductor nRF52 development kit](https://github.com/contiki-ng/contiki-ng/wiki/Platform-nrf52dk)
-* [openmote-cc2538: OpenMote cc2538](https://github.com/contiki-ng/contiki-ng/wiki/Platform-openmote-cc2538)
-* [simplelink: TI SimpleLink MCU Platform](https://github.com/contiki-ng/contiki-ng/wiki/Platform-simplelink)
-* [sky: Tmote Sky / TelosB](https://github.com/contiki-ng/contiki-ng/wiki/Platform-sky)
-* [zoul: Zolertia Zoul platforms: Firefly, RE-mote and Orion](https://github.com/contiki-ng/contiki-ng/wiki/Platform-zoul)
-# Tutorials
+* [cc2538dk: TI cc2538 development kit](/doc/platforms/cc2538dk.md)
+* [cc26x0-cc13x0 / srf06-cc26xx: TI cc26x0 and cc13x0 platforms](/doc/platforms/srf06-cc26xx.md)
+* [cooja: Cooja native motes platform](/doc/platforms/cooja.md)
+* [jn516x: NXP jn516x series](/doc/platforms/jn516x.md)
+* [native: Contiki-NG as a native process](/doc/platforms/native.md)
+* [nrf52840: Nordic Semiconductor nRF52840](/doc/platforms/nrf52840.md)
+* [nrf: Nordic Semiconductor nRF5340 and nRF52840 (using nRF MDK)](/doc/platforms/nrf.md)
+* [nrf52dk: Nordic Semiconductor nRF52 development kit](/doc/platforms/nrf52dk.md)
+* [openmote-cc2538: OpenMote cc2538](/doc/platforms/openmote-cc2538.md)
+* [simplelink: TI SimpleLink MCU Platform](/doc/platforms/simplelink.md)
+* [sky: Tmote Sky / TelosB](/doc/platforms/sky.md)
+* [zoul: Zolertia Zoul platforms: Firefly, RE-mote and Orion](/doc/platforms/zolertia/zoul.md)
+
+## Tutorials
 
 Basics:
-* [Hello, World!](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Hello,-World!)
-* [Logging](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Logging)
-* [NG shell](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Shell)
-* [RAM and ROM usage](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-RAM-and-ROM-usage)
-* [Simple energy usage estimation](https://github.com/contiki-ng/contiki-ng/wiki/Instrumenting-Contiki-NG-applications-with-energy-usage-estimation)
-* [Custom Energest application](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Energy-monitoring)
-* [Timers and events](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Timers-and-events)
+* [Hello, World!](/doc/tutorials/Hello,-World!.md)
+* [Logging](/doc/tutorials/Logging.md)
+* [NG shell](/doc/tutorials/Shell.md)
+* [RAM and ROM usage](/doc/tutorials/RAM-and-ROM-usage.md)
+* [Simple energy usage estimation](/doc/tutorials/Instrumenting-Contiki-NG-applications-with-energy-usage-estimation.md)
+* [Custom Energest application](/doc/tutorials/Energy-monitoring.md)
+* [Timers and events](/doc/tutorials/Timers-and-events.md)
 
 Networking:
-* [IPv6 ping](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-IPv6-ping)
-* [RPL basics](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-RPL)
-* [RPL with border router](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-RPL-border-router)
-* [TSCH and 6TiSCH](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-TSCH-and-6TiSCH)
-* [Switching from CSMA to TSCH](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Switching-to-TSCH)
-* [CoAP](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-CoAP)
-* [LWM2M, IPSO objects, and NAT64](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-LWM2M-and-IPSO-Objects)
-* [LWM2M Queue Mode](https://github.com/contiki-ng/contiki-ng/wiki/LWM2M-and-IPSO-Objects-with-Queue-Mode)
-* [MQTT](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-MQTT)
+* [IPv6 ping](/doc/tutorials/IPv6-ping.md)
+* [RPL basics](/doc/tutorials/RPL.md)
+* [RPL with border router](/doc/tutorials/RPL-border-router.md)
+* [TSCH and 6TiSCH](/doc/tutorials/TSCH-and-6TiSCH.md)
+* [Switching from CSMA to TSCH](/doc/tutorials/Switching-to-TSCH.md)
+* [CoAP](/doc/tutorials/CoAP.md)
+* [LWM2M, IPSO objects, and NAT64](/doc/tutorials/LWM2M-and-IPSO-Objects.md)
+* [LWM2M Queue Mode](/doc/tutorials/LWM2M-and-IPSO-Objects-with-Queue-Mode.md)
+* [MQTT](/doc/tutorials/MQTT.md)
 
 Simulation:
-* [Cooja: getting started](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Running-Contiki%E2%80%90NG-in-Cooja)
-* [Cooja: simulating a RPL network](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-running-a-RPL-network-in-Cooja)
-* [Cooja: simulating a RPL network with a border router](https://github.com/contiki-ng/contiki-ng/wiki/Cooja:-simulating-a-border-router)
-* [Running Contiki-NG in Renode](https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Running-Contiki%E2%80%90NG-in-Renode)
+* [Cooja: getting started](/doc/tutorials/Running-Contiki-NG-in-Cooja.md)
+* [Cooja: simulating a RPL network](/doc/tutorials/Running-a-RPL-network-in-Cooja.md)
+* [Cooja: simulating a RPL network with a border router](/doc/tutorials/Cooja:-simulating-a-border-router.md)
+* [Running Contiki-NG in Renode](/doc/tutorials/Running-Contiki-NG-in-Renode.md)
 
-# Organization, etc.
+## Organization, etc.
 
-* [Organization](https://github.com/contiki-ng/contiki-ng/wiki/Organization)
-* [Contributing](https://github.com/contiki-ng/contiki-ng/wiki/Contributing)
-* [Code style](https://github.com/contiki-ng/contiki-ng/wiki/Code-style)
-* [Development cycle](https://github.com/contiki-ng/contiki-ng/wiki/Development-cycle)
-* [Releases](https://github.com/contiki-ng/contiki-ng/releases)
-* [Roadmap](https://github.com/contiki-ng/contiki-ng/wiki/Roadmap)
-* [Issue and PR labels](https://github.com/contiki-ng/contiki-ng/wiki/Issue-and-Pull-Request-Labels)
-* [Where to report issues, ask questions, etc.?](https://github.com/contiki-ng/contiki-ng/wiki/Where-to-report-issues,-ask-questions,-etc.%3F)
-* [Logo](https://github.com/contiki-ng/contiki-ng/wiki/Logo)
-
-[doc:more-about-contiki-ng]: https://github.com/contiki-ng/contiki-ng/wiki/More-about-Contiki%E2%80%90NG
+* [Organization](/doc/project/Organization.md)
+* [Contributing](/doc/project/Contributing.md)
+* [Code style](/doc/project/Code-style.md)
+* [Development cycle](/doc/project/Development-cycle.md)
+* [Releases](https://github.com/contiki-ng/contiki-ng/releases.md)
+* [Roadmap](/doc/project/Roadmap.md)
+* [Issue and PR labels](/doc/project/Issue-and-Pull-Request-Labels.md)
+* [Where to report issues, ask questions, etc.?](/doc/project/Where-to-report-issues,-ask-questions,-etc.%3F.md)
+* [Logo](/doc/project/Logo.md)

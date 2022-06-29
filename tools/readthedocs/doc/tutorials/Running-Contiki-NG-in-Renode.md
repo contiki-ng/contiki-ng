@@ -1,14 +1,16 @@
+# Running Contiki‐NG in Renode
+
 [Renode](http://renode.io) is a virtual development tool for multinode embedded networks (both wired and wireless) enabling a scalable workflow for building effective, tested and secure IoT systems, created by [Antmicro](http://antmicro.com/blog/2017/08/renode-press-release/).
 It can easily be used to run, debug and test your Contiki-NG applications without any changes in the code itself, as if you were running on real hardware - but with more possibilities.
 
 Renode has been used by various entities including Antmicro and RISE SICS for Contiki-NG development.
 
-Renode is readily available in the Contiki-NG [Docker image](https://github.com/contiki-ng/contiki-ng/wiki/Docker).
+Renode is readily available in the Contiki-NG [Docker image](/doc/getting-started/Docker).
 If you prefer a native install of Renode, follow the instructions from the [Renode project README](https://github.com/renode/renode/blob/master/README.rst#installation).
 
-# Starting Renode
+## Starting Renode
 
-## Running from the Contiki-NG tree
+### Running from the Contiki-NG tree
 
 To start an example that is provided directly in the Contiki-NG tree, go to
 `/examples/rpl-udp` and run `make renode TARGET=cc2538dk`. This will
@@ -20,7 +22,7 @@ If you want to supply a different script, just use:
 
     $ make renode TARGET=cc2538dk SCRIPT=<SCRIPT_NAME>
 
-## Running Renode from an arbitrary location
+### Running Renode from an arbitrary location
 
 To start Renode just use the `renode` command.
 You will see "the Monitor" - the CLI for Renode.
@@ -45,7 +47,7 @@ Please keep in mind that changing the `$bin` variable will affect all
 subsequent machines. However, you can change it many times in one
 script.
 
-# Using Renode
+## Using Renode
 
 When starting Renode with `rpl-udp.resc`, first the Renode terminal window will open, followed by one window for each node in the simulation:
 ![Renode](https://contiki-ng.github.io/images/renode-1.png)

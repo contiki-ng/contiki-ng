@@ -1,3 +1,5 @@
+# Timers and events
+
 This tutorial will show how to make use of timers in Contiki-NG. It will also give a basic into to events. For more extensive documentation on these aspects, see [doc:timers].
 
 ## The etimer
@@ -86,4 +88,4 @@ RTimer callback called
 RTimer callback called
 ```
 
-[doc:timers]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Timers
+[doc:timers]: /doc/programming/Timers

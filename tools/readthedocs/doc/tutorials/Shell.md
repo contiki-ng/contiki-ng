@@ -1,3 +1,5 @@
+# Shell
+
 Contiki-NG provides a shell that enables interactive IPv6 host inspection and maintenance. 
 
 To enable the shell in your project, simply add it to the module list in your Makefile:
@@ -64,6 +66,6 @@ If you can see device output, but nothing happens after hitting the return key, 
 
 The Contiki-NG shell does not echo received keystrokes back. If you want to see what you are typing, as you are typing it, then enable the "local echo" option in your terminal emulator software. This is something that most (all?) terminal emulators support.
 
-[tutorial:hello-world]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Hello,-World!
-[tutorial:logging]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Logging
-[tutorial:ipv6-ping]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-IPv6-ping
+[tutorial:hello-world]: /doc/tutorials/Hello,-World!
+[tutorial:logging]: /doc/tutorials/Logging
+[tutorial:ipv6-ping]: /doc/tutorials/IPv6-ping

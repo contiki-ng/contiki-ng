@@ -4,8 +4,8 @@ Platforms
 #########
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 4
    :glob:
 
    *
-
+   zolertia/zoul.md

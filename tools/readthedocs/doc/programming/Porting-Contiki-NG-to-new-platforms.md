@@ -1,3 +1,5 @@
+# Porting Contiki‐NG to new platforms
+
 This page provides a basic guide on how to port Contiki-NG to a new hardware device. The guide assumes that your device is an IoT-type device with the following characteristics:
 
 * A microcontroller (e.g. Arm Cortex, msp430- or avr-based), plus on-chip peripherals (such as UART, SPI, I2C, DMA...).
@@ -6,7 +8,7 @@ This page provides a basic guide on how to port Contiki-NG to a new hardware dev
 
 This guide assumes that you understand the basics of the C programming language and of GNU make. It also assumes that you have already familiarised yourself with the basics of the Contiki-NG build system ([doc:build-system]), especially the concepts of `TARGET`, `BOARD` and `MODULES`.
 
-# Port Contiki-NG to your board and MCU
+## Port Contiki-NG to your board and MCU
 In a nutshell, creating a Contiki-NG port involves the following steps:
 
 * [Adding support for your CPU](#cpu-code). Simply speaking, this means adding support for everything that happens _inside_ your device's main chip. If your CPU is already supported, you can skip to the next step.
@@ -19,7 +21,7 @@ In a nutshell, creating a Contiki-NG port involves the following steps:
 * [Adding some compile tests](#add-travis-tests) for your port.
 * [Creating API docs and guides](#add-documentation).
 
-## CPU code
+### CPU code
 If your CPU is already supported by Contiki-NG, skip to the "[Platform code](#platform-code)" section of this guide.
 
 If not, let's assume that your MCU is called `my-new-mcu`.
@@ -31,18 +33,18 @@ If not, let's assume that your MCU is called `my-new-mcu`.
   * `my-new-mcu-def.h`: This is where you will put MCU-specific macros that users should _not_ modify. One such example is the `typedef` for `clock_time_t` and the number of software clock ticks per second `CLOCK_CONF_SECOND`
   * `doxygen-group.txt`: This is where you will define where your CPU code's documentation will be located in the API doc structure. See for example [`arch/cpu/cc2538/doxygen-group.txt`](https://github.com/contiki-ng/contiki-ng/tree/develop/arch/cpu/cc2538/doxygen-group.txt).
 
-### Configure the build system
+#### Configure the build system
 In all cases, your `Makefile.my-new-mcu` will need to specify your CPU-dependent source files that you will implement later. These are specified by appending to the `CONTIKI_SOURCEFILES` make variable. For example, after you have developed your CPU code, you are likely to end up with something like this:
 
 ```Makefile
-### CPU-dependent source files
+#### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += soc.c clock.c rtimer-arch.c uart.c watchdog.c
 
 DEBUG_IO_SOURCEFILES += dbg-printf.c dbg-snprintf.c dbg-sprintf.c strformat.c
 
 USB_SOURCEFILES += usb-core.c cdc-acm.c usb-arch.c usb-serial.c cdc-acm-descriptors.c
 
-### This is what will actually instruct the system to build all of the above
+#### This is what will actually instruct the system to build all of the above
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(DEBUG_IO_SOURCEFILES)
 CONTIKI_SOURCEFILES += $(USB_SOURCEFILES)
 
@@ -62,7 +64,7 @@ If your MCU is _not_ cortex-based, you have additional work to do. You will at l
 
 Generally-speaking, a `Makefile.my-new-mcu` will be very different for different MCUs and its impossible to provide an exhaustive guide of what needs to go in it, this largely depends on your requirements. As a rule of thumb, try to re-use existing build infrastructure where possible and consult existing CPU Makefiles for ideas and common practices. Do get in touch with questions if in doubt!
 
-### Develop MCU drivers
+#### Develop MCU drivers
 Contiki-NG provides its own platform-independent `main()` function (implemented in [`os/contiki-main.c`](https://github.com/contiki-ng/contiki-ng/tree/develop/os/contiki-main.c)). Depending on your CPU architecture/toolchain etc, you will need to specify that this function needs to be called at the end of your firmware's entry point / CPU initialisation code.
 
 You will then need to implement drivers to underpin the Contiki-NG timer infrastructure. As a bare minimum, you will need to provide:
@@ -87,10 +89,10 @@ The following steps really depend on your priorities. On most cases and dependin
 * A driver for your MCU's internal RNG, if it has one (API in [`os/lib/random.h`](https://github.com/contiki-ng/contiki-ng/tree/develop/os/lib/random.h)).
 * Drivers that will allow you to use external peripherals, for example SPI, I2C, ADC. A HAL is defined for SPI ([`os/dev/spi.h`](https://github.com/contiki-ng/contiki-ng/blob/develop/os/dev/spi.h)), but not for the rest (yet!).
 
-### Interrupt handlers
+#### Interrupt handlers
 If you are developing CPU code, you will almost certainly be required to implement hardware interrupt handlers. While doing so, please pay special attention to the fact that some Contiki-NG system and library functions are _not_ safe to run within an interrupt context. More details in [doc:multitasking-and-scheduling]. 
 
-## Platform code
+### Platform code
 If you are reading this, your CPU is either already supported by Contiki-NG, or you have already started adding support as per the instructions in the "[CPU code](#cpu-code)" section of this guide.
 
 Let's assume that your platform is called `my-platform` and that it is powered by a new CPU called `my-new-mcu`, for which you are adding support at the same time.
@@ -103,7 +105,7 @@ Let's assume that your platform is called `my-platform` and that it is powered b
   * `my-platform-def.h` (optionally): This is where you will put platform-specific macros that users should _not_ modify (for example, LED pin mappings).
   * `doxygen-group.txt`: This is where you will define where your platform code's documentation will be located in the API doc structure. See for example [`arch/platform/nrf52dk/doxygen-group.txt`](https://github.com/contiki-ng/contiki-ng/tree/develop/arch/platform/nrf52dk/doxygen-group.txt).
 
-### Prepare the configuration system
+#### Prepare the configuration system
 Open `contiki-conf.h` and:
 
 * Paste the boilerplate that includes example-specific configuration files at the top:
@@ -143,7 +145,7 @@ In the end, your `contiki-conf.h` should look something like this:
 #endif /* CONTIKI_CONF_H */
 ```
 
-### Configure the build system
+#### Configure the build system
 Edit your `Makefile.my-platform`. As a minimum, you will need to:
 
 * Add to the `CLEAN` variable, so that your port's firmware images will get cleaned when you run `make clean`.
@@ -176,7 +178,7 @@ MODULES += arch/dev/cc1200
 
 As before, these are merely the basics to get you started. You will almost certainly want to add more content to your `Makefile.my-platform`, depending on your requirements. Before adding things, always think if there is something already in place that you can re-use. Also think whether adding something to the CPU Makefile is a more sane choice.
 
-### Provide startup, main loop and low-power functions
+#### Provide startup, main loop and low-power functions
 Contiki-NG has a platform-independent `main()` routine. The first thing you need to do is provide implementations for platform-specific functions that will be called by `main()` as part Contiki-NG's startup sequence. You will need to provide three functions, commonly in `platform.c`:
 
 * `platform_init_stage_one()`
@@ -193,7 +195,7 @@ One platform that defines its own main loop is the [jn516x](https://github.com/c
 
 Lastly, the main loop will periodically try to put your device to a low-power state. This is achieved by calling `platform_idle()`, which is one more function that you will need to provide an implementation for (once again in `platform.c`).
 
-### Develop platform drivers
+#### Develop platform drivers
 At this stage, you can choose to start implementing drivers for your other peripherals, such as:
 * LEDs, in a file commonly called `leds-arch.c` (see the HAL/API under [`os/dev/leds.h`](https://github.com/contiki-ng/contiki-ng/tree/develop/os/dev/leds.h))
 * Buttons, in a file commonly called `board-buttons.c` (see the HAL/API under [`os/dev/button-hal.h`](https://github.com/contiki-ng/contiki-ng/blob/develop/os/dev/button-hal.h))
@@ -201,7 +203,7 @@ At this stage, you can choose to start implementing drivers for your other perip
 * External storage (e.g. SPI flash). Have a look at a generic driver available under [`arch/dev/ext-flash`](https://github.com/contiki-ng/contiki-ng/tree/develop/arch/dev/ext-flash), it may prove suitable for your needs.
 * Displays (e.g. LCD displays)
 
-### Add support for similar board variants
+#### Add support for similar board variants
 Imagine that you are adding support for two very similar, but not quite identical devices. For example, imagine that you are porting Contiki-NG for two devices. Both devices have the same CPU and the same LED and button configuration, but:
 
 * One device has a USB connector and is primarily meant to be used as a border router or slip radio. Let's assume this is called `usb-board`.
@@ -216,7 +218,7 @@ The best way to support this is by creating two subdirectories under `arch/platf
 
 Then edit your platform's top-level `Makefile.my-platform` and add this line:
 ```Makefile
-### Include the board dir if one exists
+#### Include the board dir if one exists
 -include $(PLATFORM_ROOT_DIR)/$(BOARD)/Makefile.$(BOARD)
 ```
 
@@ -229,12 +231,12 @@ Following our example above, here is what you should put where:
 
 As a final comment, imagine that you have a number of different boards, featuring partially overlapping sets of peripherals. In this scenario, one approach is to create a directory called `common` under your `arch/platform/my-platform`. You can place all peripheral drivers in this directory and then pick and choose what to compile for each board using the `CONTIKI_SOURCEFILES` make variable within each individual board's `$(BOARD)/Makefile.$(board)`. For an example of this approach, see [`arch/platform/srf06-cc26xx`](https://github.com/contiki-ng/contiki-ng/tree/develop/arch/platform/srf06-cc26xx).
 
-## Create some examples
+### Create some examples
 You will likely want your users to be able to use some of the existing Contiki-NG platform-independent examples on your device. For those examples, either make sure they run off-the-shelf, or extend them accordingly. If you want an existing example to do something slightly different on your hardware, _do not_ create a copy of the entire example in a separate directory. It is always better to change the examples so it can provide for platform-specific extensions. For some ideas of how this can be achieved, see the [`mqtt-client`](https://github.com/contiki-ng/contiki-ng/tree/develop/examples/mqtt-client), [`sensniff`](https://github.com/contiki-ng/contiki-ng/tree/develop/examples/sensniff) and [`slip-radio`](https://github.com/contiki-ng/contiki-ng/tree/develop/examples/slip-radio) examples.
 
 You will also likely want your users to use examples the fully expose your platform's features (e.g. sensors). Under `examples/platform-specific`, create a sub-directory with the same name as your target's name and create such examples therein. Examples in this location are expected to contain any amount of platform-specific code.
 
-## Add Travis tests
+### Add Travis tests
 As part of this step, you will want to achieve two things:
 
 * Compile-test existing examples for your platform
@@ -250,7 +252,7 @@ For example, assume that you have developed multiple board variants (eg. `board-
 
 You then need to add the following lines (not all need to be added to the same `Makefile`/travis job):
 
-```Makefile
+```
 hello-world/my-platform \
 rpl-udp/my-platform \
 rpl-border-router/my-platform:BOARD=board-b \
@@ -263,7 +265,7 @@ platform-specific/my-platform/advanced-example/my-platform:BOARD=board-b \
 You do not need to add tests for every single example/board combination, apply common sense in terms of what tests will be sufficient to cover your entire platform/CPU code base. Test what _you_ consider to be the most key examples for your platform.
 
 If you are uncertain in terms of which `Makefile` to add your tests to, don't hesitate to get in touch.
-## Add documentation
+### Add documentation
 If you are not planning to release the port then this section is of little relevance. However, if you _are_ planning to release your port and especially if you wish for it to be considered for upstream merge, you will be expected to provide the following:
 
 * A basic how-to page on the wiki, similar to those listed under [The Contiki-NG platforms][wiki-platforms]. Make sure to name long-term maintainers.
@@ -272,18 +274,18 @@ If you are not planning to release the port then this section is of little relev
 
 If you are planning to contribute your port for inclusion, please also make sure to read "New platforms" in the [Contributing page][wiki-contributing].
 
-# Some common good practice
+## Some common good practice
 
-## Observe the code style convention
+### Observe the code style convention
 If you are planning to contribute your port for inclusion, make sure you observe the code style and naming convention described in the [respective wiki page][wiki-code-style]. 
 
-## Avoid code duplication
+### Avoid code duplication
 Try to avoid code duplication as much as possible. If a source file already exists that does what you need, try to compile it in-place instead of creating a copy of it. If the original source file does almost, but not quite, what you need to do, it is better to recommend modifications to the original file, instead of creating a copy. This is true for platform drivers, but also for examples. In the latter case, Contiki-NG provides mechanisms to write cross-platform examples that only require minor extensions to use on new devices. Before copying an entire example directory, make sure your goal cannot be achieved by extending an existing one.
 
-## Is it a CPU thing, or is it a platform thing?
+### Is it a CPU thing, or is it a platform thing?
 Try to put the correct code module / configuration macro / Make code at the correct location. For example, if you introduce a user configuration macro that is likely to be applicable to all boards using the same CPU, put this macro in the respective file in your CPU directory, instead of the platform directory. In the long term, this will prevent duplication and make code easier to maintain.
 
-## Do not add platform code in platform-independent files
+### Do not add platform code in platform-independent files
 Do _not_ wrap platform-specific code inside `#if` blocks in platform-independent code files (files under `os` and `examples`). Imagine for example the following snippet:
 
 ```C
@@ -302,14 +304,14 @@ platform_independent_function(void)
 
 Even though we have some examples of this coding practice in the current code base, the practice is _strongly_ discouraged. The preferred way to achieve the same goal is situation-dependent; if you absolutely need to make a change of this nature and you are stuck as to how to achieve this in a portable fashion, don't hesitate to get in touch for advice.
 
-# Support
+## Support
 Feel free to ask your porting questions in the "Developers" room on [gitter](https://gitter.im/contiki-ng).
 
-[tutorial:hello-world]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Hello,-World!
-[tutorial:shell]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Shell
-[wiki-platforms]: https://github.com/contiki-ng/contiki-ng/wiki#the-contiki-ng-platforms
-[wiki-code-style]: https://github.com/contiki-ng/contiki-ng/wiki/Code-style
-[wiki-contributing]: https://github.com/contiki-ng/contiki-ng/wiki/Contributing#new-platforms
-[doc:tsch]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-TSCH-and-6TiSCH#porting-tsch-to-a-new-platform
-[doc:build-system]: https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki%E2%80%90NG-build-system
-[doc:multitasking-and-scheduling]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Multitasking-and-scheduling#writing-interrupt-handlers
+[tutorial:hello-world]: /doc/tutorials/Hello,-World!
+[tutorial:shell]: /doc/tutorials/Shell
+[wiki-platforms]: /doc/platforms/index.rst
+[wiki-code-style]: /doc/project/Code-style
+[wiki-contributing]: /doc/project/Contributing
+[doc:tsch]: TSCH-and-6TiSCH.md#porting-tsch-to-a-new-platform
+[doc:build-system]: /doc/getting-started/The-Contiki-NG-build-system
+[doc:multitasking-and-scheduling]: Multitasking-and-scheduling.md#writing-interrupt-handlers

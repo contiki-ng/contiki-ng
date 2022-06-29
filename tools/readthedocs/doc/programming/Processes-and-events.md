@@ -1,6 +1,8 @@
+# Processes and events
+
 Applications in Contiki-NG are typically written by using the _Process_ abstraction. Processes are built on top of a lightweight threading library called [Protothreads](http://dl.acm.org/citation.cfm?id=1182811).
 
-# Process Definition
+## Process Definition
 
 A process is first declared at the top of a source file. The `PROCESS()` macro takes two arguments: one is the variable with which we identify the process, and the other is the name of the process. On the second line, we tell Contiki-NG that this process should be automatically started directly after the system has booted up. Multiple processes can be specified here by separating them with commas. If the `AUTOSTART_PROCESSES()` line does not include an existing process, then that process has to be started manually by using the `process_start()` function.
 
@@ -29,13 +31,13 @@ The `PROCESS_THREAD()` macro first takes the identifier of the processes specifi
 
 For our basic process implementation, we do not have to be concerned with any event handling, as we are only executing a single statement before implicitly exiting the process by letting it reach the `PROCESS_END()` call.
 
-# Events and Scheduling
+## Events and Scheduling
 
 Contiki-NG is built on an event-based execution model, where processes typically perform chunks of work before telling the scheduler that they are waiting for an event, and thereby suspend execution. Such events can be the expiration of a timer, an incoming network packet, or a serial line message being delivered.
 
 Processes are scheduled _cooperatively_, which means that each process is responsible for voluntarily yielding control back to the operating system without executing for too long. Hence, the application developer must make sure that long-running operations are split into multiple process schedulings, allowing such operations to resume at the point where they last stopped.
 
-## Waiting for events
+### Waiting for events
 
 By calling `PROCESS_WAIT_EVENT_UNTIL()` in the area separated by the `PROCESS_BEGIN()` and `PROCESS_END()` calls, one can yield control to the scheduler, and only resume execution when an event is delivered. A condition is given as an argument to `PROCESS_WAIT_EVENT_UNTIL()`, and this condition must be fulfilled for the processes to continue execution after the call to `PROCESS_WAIT_EVENT_UNTIL()`. If the condition is not fulfilled, the process yields control back to the OS until a new event is delivered.
 
@@ -59,7 +61,7 @@ PROCESS_THREAD(test, ev, data)
 
 ```
 
-## Pausing and yielding
+### Pausing and yielding
 
 To voluntarily release control the scheduler, one can call `PROCESS_PAUSE()`, as in the example below. The scheduler will then deliver any queued events, and then immediately schedule the paused process.
 
@@ -80,7 +82,7 @@ PROCESS_THREAD(test_proc, ev, data)
 By contrast, `PROCESS_YIELD()` will yield control back to the scheduler without expecting to be scheduled again shortly thereafter. Instead, it will wait for an incoming event, similar to `PROCESS_WAIT_EVENT_UNTIL()`, but without a required condition argument. A process that has yielded can be polled by an external process or module by calling `process_poll()`.
 To poll a process declared with the variable `test_proc`, one can call `process_poll(&test_proc);`. The polled process will be scheduled immediately, and a `PROCESS_EVENT_POLL` event will be delivered to it.
 
-## Stopping processes
+### Stopping processes
 
 A process can be stopped in three ways:
 1. The process implicitly exits by allowing the `PROCESS_END()` statement to be reached and executed.
@@ -89,7 +91,7 @@ A process can be stopped in three ways:
 
 After stopping a process, it can be restarted  from the beginning by calling `process_start()`.
 
-## System-defined Events
+### System-defined Events
 
 Contiki-NG uses a based of system-defined events for common operations, as listed below.
 
@@ -107,7 +109,7 @@ Contiki-NG uses a based of system-defined events for common operations, as liste
 |PROCESS_EVENT_COM             | 0x89 | Unused.                                                |
 |PROCESS_EVENT_MAX             | 0x8a | The maximum number of the system-defined events.       |
 
-## User-defined Events
+### User-defined Events
 
 One can also specify new events that are not covered in the system-defined events. The event variable should be defined and declared with an appropriate scope, so that all expected users of the event can access it. The basic case is to have it used only within a single module, and then it can be defined as `static` at the top of the module.
 

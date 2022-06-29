@@ -1,3 +1,5 @@
+# Timers
+
 Contiki-NG provides a set of timer libraries that are used both by applications and by the OS itself. The timer libraries contain functionality for checking if a time period has passed, waking up the system from low power mode at scheduled times, and real-time tasks scheduling.
 
 All the timers build on the `clock` module, in charge of basic system time:

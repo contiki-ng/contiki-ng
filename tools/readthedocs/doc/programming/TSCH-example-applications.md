@@ -1,3 +1,5 @@
+# TSCH example applications
+
 The TSCH and 6TiSCH example applications can be found under `examples/6tisch/`.
 
 They are:

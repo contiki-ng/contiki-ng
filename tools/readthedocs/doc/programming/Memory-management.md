@@ -1,7 +1,9 @@
+# Memory management
+
 Contiki-NG supports both static and dynamic memory allocations. In embedded systems, memory allocations have traditionally restricted to static sizes because static memory is free from leaks and fragmentation. Static memory is nevertheless cumbersome to handle when the memory requirements change during run-time. Such changes may occur in a web server keeping track of connections or a virtual machine supporting dynamic programming languages.
 When being restricted to static memory, programmers have to guess the maximum usage of a resource and over-allocate a memory block to be safe from memory exhaustion. To mitigate such issues, we provide two different types of memory allocators in addition static memory: the semi-dynamic _MEMB_ module and the dynamic _HeapMem_ module.
 
-# MEMB: Memory Blocks
+## MEMB: Memory Blocks
 
 The MEMB library, declared in `os/lib/memb.h`, provides a set of memory block management functions.  Memory blocks are allocated as an array of objects of constant size and are placed in static memory. The API is shown below:
 
@@ -66,7 +68,7 @@ close_connection(struct connection *conn)
 }
 ```
 
-# Heap Memory (HeapMem)
+## Heap Memory (HeapMem)
 
 The standard C library provides a set of functions for allocating and freeing memory in the heap memory space. For different compiler toolchains, it is unclear how well the default heap memory module will perform in a resource-constrained execution environment. Allocation and deallocation patterns on objects of varying sizes may more be problematic in some malloc implementations. For this reason, Contiki-NG includes a heap memory module that has been used on a variety of hardware platforms and with different applications. The HeapMem module has an API that is similar to that of standard C. To avoid name collisions, the function names in HeapMem are `heapmem_alloc()`, `heapmem_realloc()`, and `heapmem_free()` instead of `malloc()`, `realloc()`, and `free()`. The API is shown in the table below.
 

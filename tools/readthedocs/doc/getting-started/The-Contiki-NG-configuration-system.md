@@ -1,13 +1,15 @@
+# The Contiki‐NG configuration system
+
 Contiki-NG has plenty of configuration knobs, to tailor the system to the needs of any given project and platform. Most of the configuration is done via `.h` files. Some configuration (netstack configuration, module inclusion) is done via the project `Makefile`.
 
-# Modules
+## Modules
 Projects can include their own modules, that is, sub-directories of the top-level `os`, via the Makefile variable `MODULES`. For instance, `MODULES = os/net/app-layer/coap` includes the CoAP protocol. To understand the order of inclusion of Makefiles, see [doc:build-system].
 
 The networking stack has two main layers: the MAC (Medium Access Control) layer and the NET (Network) layer. These are also configured from the project Makefile, as described next.
 
 Note: whenever adding or modifying a module, networking stack, or editing the Makefile in general, do not forget to clean your build artifacts with `make distclean`.
 
-# Network Stack: MAC Layer
+## Network Stack: MAC Layer
 To select a MAC layer, set the Make variable `MAKE_MAC` with one of the following values:
 * `MAKE_MAC_NULLMAC`: A MAC layer that does nothing. No packet transmission nor reception.
 * `MAKE_MAC_CSMA` (default): The IEEE 802.15.4 non-beacon-enabled mode, which uses CSMA on always-on radios.
@@ -17,7 +19,7 @@ To select a MAC layer, set the Make variable `MAKE_MAC` with one of the followin
 
 Regardless of the flag above, the `.h` file can specify their own implementation of the MAC via the flag `NETSTACK_CONF_MAC`. This enables alternative implementations of NullMAC, CSMA or TSCH. When `MAKE_MAC_OTHER` is set, `NETSTACK_CONF_MAC` is mandatory.
 
-# Network Stack: NET Layer
+## Network Stack: NET Layer
 To select a NET layer, set the Make variable `MAKE_NET` with one of the following values:
 * `MAKE_NET_NULLNET`: A NET layer that does nothing. Packets are relayed up/down the stack, unmodified. See [doc:nullnet]
 * `MAKE_NET_IPV6` (default): The uIP low-power IPv6 stack, with 6LoWPAN and RPL. By default, RPL is enabled and more specifically the RPL-lite version. The next subsection details routing protocol configuration
@@ -25,13 +27,13 @@ To select a NET layer, set the Make variable `MAKE_NET` with one of the followin
 
 Regardless of the flag above, the `.h` file can specify their own implementation of the NET via the flag `NETSTACK_CONF_NETWORK`. This enables alternative implementations of NullNet or IPv6. When `MAKE_NET_OTHER` is set, `NETSTACK_CONF_NETWORK` is mandatory.
 
-# Routing protocol
+## Routing protocol
 In the IPv6 case, you can select one of the three routing configurations by setting `MAKE_ROUTING` as:
 * `MAKE_ROUTING_NULLROUTING`: No routing protocol.
 * `MAKE_ROUTING_RPL_LITE` (default): The RPL-Lite implementation of RPL (see [doc:rpl]).
 * `MAKE_ROUTING_RPL_CLASSIC`: The RPL-Classic implementation of RPL (see [doc:rpl]).
 
-# System configuration
+## System configuration
 All other configuration parameters are set from the `.h` files. To set project-specific configurations, create a `project-conf.h` file inside the project directory. For instance, to enable TCP, set `#define UIP_CONF_TCP 1`. A list of commonly used configuration flags is shown in `os/contiki-default-conf.h`. After adding a `project-conf.h`, make sure to clean all build artifacts with `make distclean`.
 
 There are a number of different `.h` files included in the following order:
@@ -90,8 +92,8 @@ To view more Make variables, edit ../../Makefile.include, rule 'viewconf'
 To view more C variables, edit ../../tools/viewconf/viewconf.c
 ```
 
-[doc:build-system]: https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki%E2%80%90NG-build-system
-[doc:6tisch]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-TSCH-and-6TiSCH
-[doc:ipv6]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-IPv6
-[doc:rpl]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-RPL
-[doc:nullnet]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-NullNet
+[doc:build-system]: The-Contiki-NG-build-system.md
+[doc:6tisch]: /doc/programming/TSCH-and-6TiSCH
+[doc:ipv6]: /doc/programming/IPv6
+[doc:rpl]: /doc/programming/RPL
+[doc:nullnet]: /doc/programming/NullNet

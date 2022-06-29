@@ -1,3 +1,5 @@
+# Synchronization primitives
+
 Contiki-NG code can be categorised based on the context within which it is being executed:
 * Code always running outside an interrupt context; let's call this the "main" (or "main thread") context,
 * Code that (always or sometimes) runs inside an interrupt context.
@@ -8,7 +10,7 @@ Things are more complicated when a shared resource can be accessed from within a
 
 More details about Contiki-NG's multitasking model, process scheduler and contexts in [doc:multitasking].
 
-# Global Interrupt Manipulation
+## Global Interrupt Manipulation
 Contiki-NG provides an API that allows enabling/disabling/restoring the global interrupt. Disabling the global interrupt should be avoided where possible, and in any case should only ever be done for very brief periods of time.
 
 To disable the global interrupt, use the function below:
@@ -23,18 +25,18 @@ The return value of this function indicates the state of the global interrupt be
 void int_master_status_set(int_master_status_t status);
 ```
 
-# Data Memory Barriers
+## Data Memory Barriers
 Contiki-NG provides an API for the insertion of compiler/CPU memory barriers (`memory_barrier()`), which can then be used to implement critical sections. It is the CPU code developer's responsibility to implement insertion of memory barriers.
 
-# Critical sections
+## Critical sections
 Contiki-NG provides platform/CPU-independent functions for entering / exiting critical code sections. These functions rely on the implementation of the global interrupt manipulation API above.
 
-# Mutexes
+## Mutexes
 Contiki-NG features a platform-independent API for the manipulation of mutexes.
 
 Mutexes can be implemented using CPU-specific synchronisation instructions, which is for example done for all supported Cortex-M3/M4-based CPUs. Where a CPU-specific implementation is not provided, the library will fall back to a default implementation which manipulates a mutex within a critical section and which therefore relies on disabling the global interrupt for a brief period.
 
-# Atomic compare-and-swap
+## Atomic compare-and-swap
 Contiki-NG provides an API for atomic compare-and-swap (CAS) operations on 8-bit variables. Atomic 8-bit CAS can be implemented using CPU-specific synchronisation instructions in a fashion very similar to mutexes. Where a CPU-specific implementation is not provided, the library will fall back to a default implementation which performs the CAS operation within a critical section and which therefore relies on disabling the global interrupt for a brief period.
 
-[doc:multitasking]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Multitasking-and-scheduling
+[doc:multitasking]: /doc/programming/Multitasking-and-scheduling

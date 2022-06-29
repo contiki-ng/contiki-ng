@@ -1,4 +1,4 @@
-# Getting Started with Contiki-NG for TI SimpleLink MCU Platform
+# simplelink: TI SimpleLink MCU Platform
 
 The objective of this wiki is to provide extensive self-help resources
 including technical collateral and information for developing and running
@@ -43,7 +43,7 @@ This guide assumes that you have basic understanding of how to use the command
 line and perform basic admin tasks on UNIX family OSs.
 
 
-# Port Features
+## Port Features
 
 The platform has the following key features:
 
@@ -81,7 +81,7 @@ In terms of hardware support, the following drivers have been implemented:
     * UART connectivity over the XDS100v3 backchannel
 
 
-# Requirements
+## Requirements
 
 To use the port you need:
 
@@ -95,12 +95,12 @@ To use the port you need:
 
 * A toolchain to build firmware:
 
-    * If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-Linux) / [native mac OS](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-macOS)).
+    * If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](/doc/getting-started/Toolchain-installation-on-Linux) / [native mac OS](/doc/getting-started/Toolchain-installation-on-macOS)).
 
     * TI's [Code Composer Studio][ccs] can be used to build and debug
       Contiki-NG applications for the SimpleLink platform, which is especially
       useful when developing on Windows. Refer to [Set up Contiki-NG in Code
-      Composer Studio](#set-up-contiki-ng-in-Code-Composer-Studio) for more
+      Composer Studio](#set-up-contiki-ng-in-code-composer-studio) for more
       details.
 
 * The *SRecord* package for manipulating EPROM load files.
@@ -116,13 +116,11 @@ To use the port you need:
 For additional help on how to set your system up, you may also find the guides
 below useful:
 
-* [Native toolchain installation
-  (Linux)](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-Linux)
-* [Native toolchain installation (OS
-  X)](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-OS-X)
+* [Native toolchain installation (Linux)](/doc/getting-started/Toolchain-installation-on-Linux)
+* [Native toolchain installation (macOS)](/doc/getting-started/Toolchain-installation-on-macOS)
 
 
-# Examples
+## Examples
 
 To build an example with the SimpleLink platform, you need to set
 `TARGET=simplelink`. In addition, you need to set the `BOARD` variable to the
@@ -164,7 +162,7 @@ However, any of the platform-agnostic examples can be used. More details about
 examples can be found in their respective READMEs.
 
 
-# How to Program your Device
+## How to Program your Device
 
 In general terms, there are two possible ways to program your device:
 
@@ -173,7 +171,7 @@ In general terms, there are two possible ways to program your device:
   is possible.
 
 
-## Over JTAG
+### Over JTAG
 
 The build process will output firmware in multiple formats: a `*.bin` file, a
 `*.elf` file and an Intel HEX file (`*.hex`). The correct file to upload to
@@ -189,7 +187,7 @@ use:
   `*.elf` and `*.hex`.
 
 
-## Using the ROM bootloader
+### Using the ROM bootloader
 
 Under some circumstances, the device can also be programmed through its ROM
 bootloader, using the [`cc2538-bsl`][cc2538-bsl] script under tools. This is
@@ -199,7 +197,7 @@ correct arguments.
 
 This is currently only supported for the `x0` devices of the family (cc26x0, cc13x0), but not for the newer `x2` devices (e.g. cc1312r1 or cc1352p1).
 
-### Device Enumeration
+#### Device Enumeration
 
 LaunchPads and Sensortags use an XDS110 debugger, while the SmartRF06 EB uses
 an XDS100v3 debugger. If you are using a SmartRF06 EB, make sure the "Enable
@@ -243,7 +241,7 @@ Before kernel version 3.12:
 and numbers>` (e.g. `tty.usbmodemL1000191`)
 
 
-### Conditions to use the ROM bootloader
+#### Conditions to use the ROM bootloader
 
 On Linux and OS X, you can program your device via the chip's serial ROM
 bootloader. In order for this to work, the following conditions need to be
@@ -322,7 +320,7 @@ For more information on the serial bootloader, see its README under the
 `tools/cc2538-bsl` directory.
 
 
-# Building Deployment / Production Images
+## Building Deployment / Production Images
 
 For deployment/production images, it is *strongly* recommended to:
 
@@ -343,13 +341,13 @@ access to your IP and it could also lead to a compromise of e.g. keys used for
 encryption.
 
 
-# Border Router over UART
+## Border Router over UART
 
 The platform code can be used as a border router (SLIP over UART) via the `rpl-border-router` example. This example is expected to work
 off-the-shelf, without any modifications required.
 
 
-# slip-radio with 6lbr
+## slip-radio with 6lbr
 
 The platform can also operate as a slip-radio over UART, to be used with
 [6lbr][6lbr].
@@ -358,7 +356,7 @@ Similar to the border router, the example is expected to work off-the-shelf,
 without any modifications required.
 
 
-# 2.4 GHz vs Sub-1 GHz operation
+## 2.4 GHz vs Sub-1 GHz operation
 
 The platform supports both modes of operation, provided the chip also has the
 relevant capability. 2.4 GHz mode is sometimes called IEEE mode while Sub-1
@@ -376,7 +374,7 @@ set `RF_CONF_MODE` to the relevant `RF_MODE_*` in your application's
     #define RF_CONF_MODE    RF_MODE_SUB_1_GHZ
 
 
-# Low-Power Operation
+## Low-Power Operation
 
 The platform takes advantage of the Power driver, which is part of TI Drivers.
 In a nutshell, other TI Drivers will acquire and release certain power
@@ -393,7 +391,7 @@ module for this platform, the value of `ENERGEST_TYPE_DEEP_LPM` will always be
 zero; this is expected behaviour. All time spent by the CPU in any low-power mode
 will be captured under `ENERGEST_TYPE_LPM`.
 
-# SimpleLink Software Environment
+## SimpleLink Software Environment
 
 The SimpleLink software environment is a collection of drivers (TI Drivers)
 and plugins, which are common across different SimpleLink device families. At
@@ -419,7 +417,7 @@ provides a Core SDK, which is a SimpleLink SDK common for all CC13xx and
 CC26xx devices. The Core SDK is provided as a `git` submodule.
 
 
-## Override Core SDK
+### Override Core SDK
 
 By default, the Core SDK will be used by the build system when building.
 However, you can override the Core SDK with a locally installed SimpleLink SDK
@@ -445,7 +443,7 @@ SimpleLink CC26x2 SDK, then you must use a CC26x2 device, such as the CC26x2R1
 LaunchPad.
 
 
-## Configure TI Drivers
+### Configure TI Drivers
 
 Some of the TI drivers are partially integrated with the Contiki-NG
 environment, and therefore has to be initialized by the Contiki-NG run-time if
@@ -498,7 +496,7 @@ objects in memory.
 Any other TI Driver, except for the RF driver, can be used as normal.
 
 
-## SimpleLink Support
+### SimpleLink Support
 
 Any issues regarding TI software from the SimpleLink SDK, or any issues
 regarding the software implementation of this platform, please post to the
@@ -509,7 +507,7 @@ to the software implementation of this platform, please post an issue to the
 Contiki-NG repository.
 
 
-# Set up Contiki-NG in Code Composer Studio
+## Set up Contiki-NG in Code Composer Studio
 
 Before anything else, make sure you have cloned out the Contiki-NG repository
 and at least checked out the `coresdk_cc13xx_cc26xx` and `CMSIS` submodules.

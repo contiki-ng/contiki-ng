@@ -1,3 +1,5 @@
+# Organization
+
 Contiki-NG has a group of [maintainers], a subset of which constitutes the [board].
 The maintainers are in charge of commenting on issues, keeping documentation up-to-date, reviewing and merging pull requests as per the guidelines in [doc:contributing].
 The board, in addition, takes care of general management aspects such as organizational decisions, future directions, etc.
@@ -9,4 +11,4 @@ The board can be dissolved whenever a majority of maintainers decide so -- they 
 
 [board]: https://github.com/orgs/contiki-ng/teams/board/members
 [maintainers]: https://github.com/orgs/contiki-ng/teams/maintainers/members
-[doc:contributing]: https://github.com/contiki-ng/contiki-ng/wiki/Contributing
+[doc:contributing]: /doc/project/Contributing

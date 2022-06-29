@@ -1,3 +1,5 @@
+# Toolchain installation on macOS
+
 We recommend using the Contiki-NG Docker image for easy setup of a consistent development environment: [doc:docker].
 
 Alternatively, you can install the toolchains natively on your system.
@@ -44,7 +46,7 @@ $ brew tap contiki-ng/contiki-ng-arm
 $ brew install contiki-ng-arm-gcc-bin
 ```
 
-This will automatically install the same version as the one currently installed in the [docker image](https://github.com/contiki-ng/contiki-ng/wiki/Docker) and used by our travis CI tests.
+This will automatically install the same version as the one currently installed in the [docker image](/doc/getting-started/Docker) and used by our travis CI tests.
 
 The formula itself is hosted under [contiki-ng/homebrew-contiki-ng-arm](https://github.com/contiki-ng/homebrew-contiki-ng-arm)
 
@@ -67,13 +69,13 @@ The best way to achieve this on OS X is through homebrew, using a formula provid
 
 ### Installing JN compiler
 Untested on OS X, but start by reading the JN page for instruction on setting up the JN compiler:
-[Set up JN516x](https://github.com/contiki-ng/contiki-ng/wiki/Platform-jn516x)
+[Set up JN516x](/doc/platforms/jn516x)
 
 ### Installing NRF sdk
 To get the NRF52dk platform to work you will need two things:
 
 * The ARM GCC toolchain (If you have installed it by following the steps above, you don't need to do anything extra).
-* The Nordic SDK, see [Platform-nrf52dk](https://github.com/contiki-ng/contiki-ng/wiki/Platform-nrf52dk).
+* The Nordic SDK, see [Platform-nrf52dk](/doc/platforms/nrf52dk).
 
 ### Install Java JDK for the Cooja network simulator
 Nothing exciting here, just download and install Java for OSX. You will need the JDK 8, not just the runtime. 
@@ -135,5 +137,5 @@ $ git submodule update --init --recursive
 *Note*: we recommend cloning and then initializing the submodules rather than using `git clone --recursive`.
 The latter results in submodules that use absolute paths to the top-level git, rather than relative paths, which are more flexible for a number of reasons.
 
-[doc:docker]: https://github.com/contiki-ng/contiki-ng/wiki/Docker
+[doc:docker]: /doc/getting-started/Docker
 [libcoap]: https://libcoap.net/

@@ -1,6 +1,8 @@
+# RAM and ROM usage
+
 We will use the example `hello-world` again here (see [tutorial:hello-world]), with target `zoul`.
 
-# Binary file inspection
+## Binary file inspection
 
 First, build the example:
 ```
@@ -63,7 +65,7 @@ obj_zoul/sicslowpan.o:00000001 00001752 t input
 
 These two functions are from the `sicslowpan` module. Such troubleshooting can help identify where log levels need to be reduced, or what features should be removed.
 
-# Saving RAM and ROM
+## Saving RAM and ROM
 
 As you enable more features or edit your configuration files, you might saturate your memory. The linker will then fail to produce a final firmware, and issue a message like:
 ```
@@ -136,6 +138,6 @@ If you need to save ROM, you can consider the following:
 
 There are many other parameters that affect RAM/ROM usage. You can inspect `os/contiki-default-conf.h` as well as platform-specific `contiki-conf.h` files for inspiration. Or use `.flashprof` and `.ramprof` to identify the hotspots.
 
-[doc:configuration]: https://github.com/contiki-ng/contiki-ng/wiki/The-Contiki%E2%80%90NG-configuration-system
-[tutorial:hello-world]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Hello,-World!
-[platform:remote]: https://github.com/contiki-ng/contiki-ng/wiki/Zolertia-RE-Mote-platform-(revision-B)
+[doc:configuration]: /doc/getting-started/The-Contiki-NG-configuration-system
+[tutorial:hello-world]: /doc/tutorials/Hello,-World!
+[platform:remote]: /doc/platforms/zolertia/Zolertia-RE-Mote-platform-(revision-B)

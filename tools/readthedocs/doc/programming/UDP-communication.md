@@ -1,3 +1,5 @@
+# UDP communication
+
 This page documents how to send and receive raw UDP datagrams with Contiki-NG.
 We focus on the module `simple-udp`.
 The API of this module is detailed at [doxygen:simple-udp].

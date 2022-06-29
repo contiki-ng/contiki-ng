@@ -1,6 +1,8 @@
+# Multitasking and scheduling
+
 Contiki-NG adopts the original Contiki's event-driven model with a cooperative multitasking style. Support for preemptive multithreading has been removed, which makes Contiki-NG strictly non-preemptive.
 
-# Processes and Events
+## Processes and Events
 Applications in Contiki-NG are typically written by using the _Process_ abstraction. Processes are built on top of a lightweight threading library called [Protothreads](http://dl.acm.org/citation.cfm?id=1182811).
 
 In a typical execution scenario, a process (or protothread) will idle until it receives an event. Upon event reception, the process will consume it by performing a corresponding chunk of work and it will then suspend its own execution until it receives the next event. Some example events are:
@@ -16,7 +18,7 @@ Since the Contiki-NG scheduler is cooperative, it will never force a context swi
 
 More information on how to implement processes and events can be found in [doc:processes].
 
-# The Contiki-NG Scheduler and Event Dispatch
+## The Contiki-NG Scheduler and Event Dispatch
 
 The Contiki-NG model uses two types of events: Asynchronous and Synchronous.
 
@@ -27,7 +29,7 @@ Contiki-NG also supports a polling mechanism. A _poll_ is a specific type of hig
 
 The kernel will schedule all polled processes before, as well as in-between asynchronous event dispatches. In the case of a broadcast event, polling will also happen between the dispatch of the event to two consecutive processes.
 
-# Interrupts and contexts
+## Interrupts and contexts
 The non-preemptive, cooperative nature of the Contiki-NG multitasking model means that a process will never get interrupted unexpectedly by the scheduler. However, the execution of a process can (and very often will) get interrupted unexpectedly by hardware interrupt handlers. An interrupt handler itself can be pre-empted by the handler of an interrupt of a higher priority.
 
 With this in mind, Contiki-NG code can be categorised based on the context within which it is being executed:
@@ -37,14 +39,14 @@ With this in mind, Contiki-NG code can be categorised based on the context withi
 
 Code that always runs in the main context is much simpler to implement, for example functions do not need to be re-entrant.
 
-## Access to Shared Resources
+### Access to Shared Resources
 Synchronising access to shared resources heavily depends on which parts of the code access them.
 
 When a shared resource is only ever accessed from within the main thread context, developers do not need to rely on any synchronization primitives since read/write operations to the resource will not be unexpectedly interrupted by the scheduler.
 
 Things are more complicated when a shared resource can be accessed from within as well as from outside an interrupt context. In this case, developers need to make sure that the state of the resource remains consistent. To this end, Contiki-NG provides some fundamental synchronization primitives (such as mutexes and critical sections) documented in detail in [doc:synch-primitives] as well as in the [online API documentation](https://contiki-ng.readthedocs.io/).
 
-## Writing interrupt handlers
+### Writing interrupt handlers
 With all of the above in mind, extra care needs to be taken when developing code that may run inside an interrupt context. Interrupt handler developers need to keep in mind that the following Contiki-NG system and library functions are *not* safe to run within an interrupt context:
 
 * Posting events: `process_post()` and `process_post_synch()` are not safe to call within an interrupt context. Where an interrupt handler needs to result in a process being scheduled, it should use the polling mechanism instead by calling `process_poll()`.
@@ -59,5 +61,5 @@ With all of the above in mind, extra care needs to be taken when developing code
 * Neighbour table manipulation: All functions in `nbr.[hc]`
 * Watchdog timers should never be refreshed within an interrupt context: Calling `watchdog_periodic()` from inside an interrupt could result in a situation whereby a device never recovers from a firmware crash because its WDT is being refreshed frequently enough within an interrupt.
 
-[doc:processes]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Processes-and-events
-[doc:synch-primitives]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Synchronization-primitives
+[doc:processes]: /doc/programming/Processes-and-events
+[doc:synch-primitives]: /doc/programming/Synchronization-primitives

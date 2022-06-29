@@ -1,3 +1,5 @@
+# Energy monitoring
+
 > For getting started with Energest, see [doc:simple-energest]
 
 This tutorial will show how to use the Energest module in Contiki-NG for energy monitoring. For more extensive documentation, see [doc:energest].
@@ -81,5 +83,5 @@ Energest:
 
 The output above shows that the CPU is sleeping for most of the time but the radio is kept always on in this example application.
 
-[doc:energest]: https://github.com/contiki-ng/contiki-ng/wiki/Documentation:-Energest
-[doc:simple-energest]: https://github.com/contiki-ng/contiki-ng/wiki/Instrumenting-Contiki-NG-applications-with-energy-usage-estimation
+[doc:energest]: /doc/programming/Energest
+[doc:simple-energest]: /doc/tutorials/Instrumenting-Contiki-NG-applications-with-energy-usage-estimation
