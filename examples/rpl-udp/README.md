@@ -10,7 +10,7 @@ back to the originator.
 The `.csc` files show example networks in the Cooja simulator, for sky motes and
 for cooja motes.
 
-For this example a "renode" make target is available, to run a two node
+For this example a "renode" make target is available, to run a 3 node
 emulation in the Renode framework. For further instructions on installing and
 using Renode please refer to [Contiki-NG wiki][1].
 
