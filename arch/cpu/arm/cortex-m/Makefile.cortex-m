@@ -17,6 +17,9 @@ CONTIKI_ARM_DIRS += cortex-m
 ### Build syscalls for newlib
 MODULES += os/lib/newlib
 
+LD_START_GROUP = -Wl,--start-group
+LD_END_GROUP = -Wl,--end-group
+
 LDFLAGS += -T $(LDSCRIPT)
 LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
 # The next line might be trying to avoid
@@ -29,6 +32,6 @@ CPU_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CPU_START_SOURCEFILES
 
 ### Resolve any potential circular dependencies between the linked libraries
 ### See: https://stackoverflow.com/questions/5651869/gcc-what-are-the-start-group-and-end-group-command-line-options/5651895
-TARGET_LIBFLAGS := -Wl,--start-group $(TARGET_LIBFILES) -Wl,--end-group
+TARGET_LIBFLAGS := $(LD_START_GROUP) $(TARGET_LIBFILES) $(LD_END_GROUP)
 
 include $(CONTIKI)/$(CONTIKI_NG_ARM_DIR)/Makefile.arm
