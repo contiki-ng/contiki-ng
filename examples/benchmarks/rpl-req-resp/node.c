@@ -52,6 +52,19 @@
 #define UDP_PORT 8214
 #define SEND_INTERVAL (CLOCK_SECOND)
 
+/* Builds that are known to be failing */
+#if CONTIKI_TARGET_SIMPLELINK
+#if CONTIKI_BOARD_LAUNCHPAD_CC1310 \
+  || CONTIKI_BOARD_LAUNCHPAD_CC1350 \
+  || CONTIKI_BOARD_LAUNCHPAD_CC2650 \
+  || CONTIKI_BOARD_SENSORTAG_CC1350 \
+  || CONTIKI_BOARD_SENSORTAG_CC2650 \
+  || CONTIKI_BOARD_SRF06_CC13X0 \
+  || CONTIKI_BOARD_SRF06_CC26X0
+#error "This board and target combination cannot be built due to size limitations"
+#endif
+#endif
+
 static struct simple_udp_connection udp_conn;
 
 /*---------------------------------------------------------------------------*/
