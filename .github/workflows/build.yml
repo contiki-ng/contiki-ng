@@ -107,12 +107,27 @@ jobs:
         # Set up docker mount
         echo DOCKER_ARGS=-v `pwd`/$OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests >> $GITHUB_ENV
 
+    # The docker image contains ccache, but the ccache action uses the ccache
+    # outside docker for statistics, so install the same ccache version.
+    # Install in /usr/bin so the ccache action gets the expected environment.
+    - name: install ccache
+      run: |
+        wget -nv https://github.com/ccache/ccache/releases/download/v4.6.1/ccache-4.6.1-linux-x86_64.tar.xz
+        sudo tar xf ccache-4.6.1-linux-x86_64.tar.xz -C /usr/bin --strip-components=1 --no-same-owner ccache-4.6.1-linux-x86_64/ccache
+        rm -f ccache-4.6.1-linux-x86_64.tar.xz
+
+    - name: ccache
+      uses: hendrikmuhs/ccache-action@v1.2.2
+      with:
+        key: compilation-${{ matrix.test }}
+        max-size: 250M
+
     # Fire up the container and run corresponding tests
     - name: Execute tests
       run: |
         # Set permissions for Docker mount
         sudo chown -R 1000:1000 .
         # Run test
-        docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 -e GITHUB_JOB -e GITHUB_REF -e GITHUB_SHA -e GITHUB_REPOSITORY -e GITHUB_REPOSITORY_OWNER -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e GITHUB_RETENTION_DAYS -e GITHUB_ACTOR -e GITHUB_WORKFLOW -e GITHUB_HEAD_REF -e GITHUB_BASE_REF -e GITHUB_EVENT_NAME -e GITHUB_SERVER_URL -e GITHUB_API_URL -e GITHUB_GRAPHQL_URL -e GITHUB_WORKSPACE -e GITHUB_ACTION -e GITHUB_EVENT_PATH -e GITHUB_ACTION_REPOSITORY -e GITHUB_ACTION_REF -e GITHUB_PATH -e GITHUB_ENV -e RUNNER_OS -e RUNNER_TOOL_CACHE -e RUNNER_TEMP -e RUNNER_WORKSPACE -e ACTIONS_RUNTIME_URL -e ACTIONS_RUNTIME_TOKEN -e ACTIONS_CACHE_URL -e GITHUB_ACTIONS=true -e CI=true -e RELSTR=citest $DOCKER_ARGS -v `pwd`:/home/user/contiki-ng $DOCKER_IMG bash --login -c "make -C tests/??-${{ matrix.test }};"
+        docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 -e GITHUB_JOB -e GITHUB_REF -e GITHUB_SHA -e GITHUB_REPOSITORY -e GITHUB_REPOSITORY_OWNER -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e GITHUB_RETENTION_DAYS -e GITHUB_ACTOR -e GITHUB_WORKFLOW -e GITHUB_HEAD_REF -e GITHUB_BASE_REF -e GITHUB_EVENT_NAME -e GITHUB_SERVER_URL -e GITHUB_API_URL -e GITHUB_GRAPHQL_URL -e GITHUB_WORKSPACE -e GITHUB_ACTION -e GITHUB_EVENT_PATH -e GITHUB_ACTION_REPOSITORY -e GITHUB_ACTION_REF -e GITHUB_PATH -e GITHUB_ENV -e RUNNER_OS -e RUNNER_TOOL_CACHE -e RUNNER_TEMP -e RUNNER_WORKSPACE -e ACTIONS_RUNTIME_URL -e ACTIONS_RUNTIME_TOKEN -e ACTIONS_CACHE_URL -e GITHUB_ACTIONS=true -e CI=true -e RELSTR=citest $DOCKER_ARGS -v `pwd`:/home/user/contiki-ng -v $GITHUB_WORKSPACE/.ccache:/home/user/.ccache $DOCKER_IMG bash --login -c "make -C tests/??-${{ matrix.test }};"
         # Check outcome of the test
         ./tests/check-test.sh `pwd`/tests/??-${{ matrix.test }}
