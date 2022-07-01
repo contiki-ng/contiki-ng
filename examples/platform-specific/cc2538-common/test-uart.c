@@ -88,7 +88,7 @@ PROCESS_THREAD(cc2538_uart_demo_process, ev, data)
 
   while(1) {
     PROCESS_WAIT_UNTIL(etimer_expired(&et));
-    sprintf(string, "sending string %u.\n", ++count);
+    sprintf(string, "sending string %" PRIu16 ".\n", ++count);
     uart1_send_bytes((uint8_t *)string, sizeof(string) - 1);
     etimer_reset(&et);
     printf("string is being sent\n");

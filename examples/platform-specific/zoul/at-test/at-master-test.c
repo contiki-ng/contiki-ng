@@ -387,7 +387,7 @@ at_cmd_read_callback(struct at_cmd *cmd, uint8_t len, char *data)
   }
 
   config_gpio(port, pin, HWTEST_GPIO_INPUT);
-  snprintf(read_result, 5, "0x%02X",
+  snprintf(read_result, 5, "0x%02" PRIX16,
            (uint16_t)GPIO_READ_PIN(GPIO_PORT_TO_BASE(port), pin));
   AT_RESPONSE(read_result);
   AT_RESPONSE(AT_DEFAULT_RESPONSE_OK);
