@@ -64,8 +64,6 @@ TARGET_UPPERCASE := ${strip ${shell echo $(TARGET) | sed y!$(LOWERCASE)!$(UPPERC
 CFLAGS += -DCONTIKI=1 -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
 CFLAGS += -DCONTIKI_TARGET_STRING=\"$(TARGET)\"
 
-CFLAGS += -Wno-unused-const-variable
-
 LDFLAGS_WERROR ?= -Wl,--fatal-warnings
 
 ifeq ($(WERROR),1)
