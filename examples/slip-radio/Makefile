@@ -5,6 +5,9 @@ all: $(CONTIKI_PROJECT)
 PLATFORMS_EXCLUDE = native nrf52dk
 BOARDS_EXCLUDE = nrf52840/dongle
 
+# The sky directory overrides the architecture putchar().
+CONTIKI_SOURCES_EXCLUDES_SKY += uart1-putchar.c
+
 CONTIKI=../..
 include $(CONTIKI)/Makefile.identify-target
 
