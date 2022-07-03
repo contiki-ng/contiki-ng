@@ -13,5 +13,6 @@ Contiki-NG Documentation
    /doc/tutorials/index.rst
    /doc/platforms/index.rst
    /doc/project/index.rst
+   /examples.rst
    /doxygen.rst
 

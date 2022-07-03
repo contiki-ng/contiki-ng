@@ -1,7 +1,7 @@
 .. _project:
 
-Organization, etc.
-##################
+Organization
+############
 
 .. toctree::
    :maxdepth: 0
