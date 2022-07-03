@@ -1,3 +1,5 @@
+# 6tisch/custom-schedule
+
 This example shows how to manually add cells in the TSCH schedule.
 
 The intention of this example is instead to serve a starting point for those

@@ -1,5 +1,7 @@
-CC13xx/CC26xx Base Demo
-=======================
+# platform-specific/cc26x0-cc13x0/base-demo
+
+## CC13xx/CC26xx Base Demo
+
 This example demonstrates basic functionality for the various CC13xx/CC26xx
 boards supported by Contiki-NG.
 

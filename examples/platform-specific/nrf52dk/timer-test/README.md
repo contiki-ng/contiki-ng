@@ -1,5 +1,7 @@
-Timers test
-===========
+# platform-specific/nrf52dk/timer-test
+
+## Timers test
+
 Timers test is an application allows for testing clocks implementation for nRF52 DK. 
 The results of different tests are output to the console.
 

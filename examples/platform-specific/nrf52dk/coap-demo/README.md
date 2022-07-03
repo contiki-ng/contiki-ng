@@ -1,5 +1,7 @@
-A CoAP demo for nRF52 DK
-========================
+# platform-specific/nrf52dk/coap-demo
+
+## A CoAP demo for nRF52 DK
+
 This demo contains two applications: coap-server and coap-client which are similar to 
 [Coap Observable Server] and [Coap Observer Client] examples provided by the nRF5 IoT SDK.
 
@@ -9,8 +11,8 @@ to the device and assign a routable IPv6 address.
 For details how to do this please refer to sections 'Establishing an IPv6 connection'
 and 'Distributing routable IPv6 prefix' in `platform/nrf52dk/README-BLE-6LoWPAN.md`.
 
-CoAP Server
-===========
+## CoAP Server
+
 The server exposes the following resources:
 
 	host
@@ -38,8 +40,8 @@ to erase the device and flash SoftDevice before flashing CoAP application, i.e.,
 
 Please refer to the *Testing* and *Python Example* sections of [Coap Observable Server] tutorial for detailed description how to query the Coap Server using a PC.
 
-CoAP Client
-===========
+## CoAP Client
+
 CoAP client compliments the CoAP server application. When Button 1 on the DK is pressed the the 
 client subscribes to `lights/led3` resource. If successful the LED 4 will blink briefly. From this moment
 any change of the `lights/led3` resource will be automatically reflected by the client's LED 3. 
@@ -57,7 +59,7 @@ details.
 	
 Please refer to the *Testing* and *Python Server Example* sections of [Coap Observer Client] tutorial for detailed description how to use CoAP client demo with a PC.
 
-Resources
-=========
+## Resources
+
 [Coap Observable Server] http://developer.nordicsemi.com/nRF5_IoT_SDK/doc/0.9.0/html/a00054.html
 [Coap Observer Client] http://developer.nordicsemi.com/nRF5_IoT_SDK/doc/0.9.0/html/a00051.html

@@ -1,5 +1,7 @@
-MQTT Demo
-=========
+# platform-specific/nrf52dk/mqtt-demo
+
+## MQTT Demo
+
 The MQTT client can be used to:
 
 * Publish sensor readings to an MQTT broker.
@@ -17,8 +19,8 @@ IPv6 address.
 For details how to do this please refer to sections 'Establishing an IPv6 connection'
 and 'Distributing routable IPv6 prefix' in `platform/nrf52dk/README-BLE-6LoWPAN.md`.
 
-Broker setup
-------------
+### Broker setup
+
 By default the example will attempt to publish readings to an MQTT broker
 running on the IPv6 address specified as `MQTT_DEMO_BROKER_IP_ADDR` in
 `project-conf.h`. This functionality was tested successfully with
@@ -31,16 +33,16 @@ commands:
 	killall mosquitto
 	mosquitto -p 1883 -v
 
-Publishing
-----------
+### Publishing
+
 The publish messages include sensor readings but also some other information,
 such as device uptime in seconds and a message sequence number. The demo will
 publish to topic `iot-2/evt/status/fmt/json`. The device will connect using
 client-id `d:quickstart:cc2538:<device-id>`, where `<device-id>` gets
 constructed from the device's IEEE address.
 
-Subscribing
------------
+### Subscribing
+
 You can also subscribe to topics and receive commands, but this will only
 work if you use "Org ID" != 'quickstart'. To achieve this, you will need to
 change 'Org ID' (`DEFAULT_ORG_ID`). In this scenario, the device will subscribe
@@ -63,8 +65,8 @@ format, they are in fact not. This was done in order to avoid linking a json
 parser into the firmware. This comment only applies to parsing incoming
 messages, outgoing publish messages use proper json payload.
 
-IBM Quickstart Service
-----------------------
+### IBM Quickstart Service
+
 It is also possible to publish to IBM's quickstart service. To do so, you need
 to undefine `MQTT_DEMO_BROKER_IP_ADDR`.
 

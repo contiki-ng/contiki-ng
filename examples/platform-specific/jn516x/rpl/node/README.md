@@ -1,3 +1,5 @@
+# platform-specific/jn516x/rpl/node
+
 A RPL node. Will act as basic node by default, but can be configured at startup
 using the user button and following instructions from the log output. Every press
 of a button toggles the mode as 6ln and 6dr. After 10s with no button press,
