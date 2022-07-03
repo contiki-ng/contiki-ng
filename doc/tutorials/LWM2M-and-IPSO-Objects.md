@@ -95,7 +95,7 @@ $ make TARGET=zoul BOARD=firefly-reva MAKE_WITH_DTLS=1 MAKE_COAP_DTLS_KEYSTORE=M
 If you did not already setup a Leshan server and a 6LoWPAN border-router, do that (description above) and
 configure the same security Identity and keys in the Leshan server. Remember to take note of the registration endpoint so that you can get the correct name on that in the security configuration in Leshan. If you are using a Zolertia firefly it might look like the following:
 
-<img src="images/leshan-security.png" alt="Security configuration.">
+![Security configuration.](images/leshan-security.png)
 
 Note: if you do not know the endpoint name you can run in non-secure mode first to see the name of the endpoint.
 

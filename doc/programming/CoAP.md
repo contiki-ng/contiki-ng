@@ -22,8 +22,7 @@ The CoAP transport implementation hand over its incoming data to the CoAP stack 
 
 * CoAP Timer - a timer API that provides timers for timeouts (retransmissions, etc) for the CoAP implementation. The default implementation is in `coap-timer-default.c` (using etimer to implement the timer).
 
-
-<img src="images/coap-transport.png" alt="coap-transport" width="400px">
+![coap-transport](images/coap-transport.png)
 The default implementation of CoAP transport in Contiki-NG use uIP for incoming/outgoing UDP packets. The secure version with DTLS integration is shown in the illustration below.
 
 ### Configuration
@@ -35,7 +34,7 @@ The default implementation of CoAP transport in Contiki-NG use uIP for incoming/
 ## CoAPs - Secure CoAP
 The default implementation of CoAP transport in Contiki-NG support both secure and non-secure CoAP. If you use Secure CoAP the transport will instead of just putting the packets straight into or receive from uip6 - go via TinyDTLS. For coap_sento it will use `dtls_write` instead of `uip_udp_packet_sendto` and on the receive side it will send in data using `dtls_handle_message` rather than using `coap_receive`. Later TinyDTLS will call `input_from_peer` with unencrypted data which is sent into the CoAP implementation using `coap_receive`.
 
-<img src="images/coap-dtls.png" alt="coap-transport" width="800px">
+![coap-transport](images/coap-dtls.png)
 The integration of DTLS in CoAP.
 
 ### Limitations

@@ -4,7 +4,7 @@
 
 OMA has defined a standard for IoT or M2M devices, building on CoAP (and DTLS). It defines bootstrap and device management, as well as an object model. On top of LWM2M, the IPSO Alliance has defined a set of IPSO Smart Objects that describe common sensors and actuators.
 
-<img src="images/lwm2m-object-model.png" alt="LWM2M illustration" width="400px">
+![LWM2M illustration](images/lwm2m-object-model.png)
 
 Each object in LWM2M has a 16-bit object id that is unique and each object can have one or multiple instances. Each of the instances also have a 16-bit id that is set when creating the instance. Each of
 the instances have a number of resources defined by the object's type (object id). Resources also have a 16-bit id that is unique - each resource is of a specific type and OMA allow ints, floats, string and opaque byte arrays. OMA LWM2M defines a set of objects such as security object with security related information, server object that describe LWM2M servers - both these are typically written during the bootstrap process. Then there are objects for access control, firmware upgrade, network/connection monitoring and other management related things.
@@ -12,7 +12,7 @@ the instances have a number of resources defined by the object's type (object id
 ### LWM2M in Contiki-NG
 In the Contik-NG we have developed a OMA LWM2M implementation on top of Erbium CoAP engine. It supports bootstrapping and works with both [Leshan](https://www.eclipse.org/leshan/) and [Wakaama LWM2M](https://www.eclipse.org/wakaama/) servers. The current implementation supports TLV and JSON data format for the objects.
 
-<img src="images/lwm2m-modules.png" alt="LWM2M illustration" width="400px">
+![LWM2M illustration](images/lwm2m-modules.png)
 
 The illustration show the LWM2M data object to the right and the implementation modules to the left. The object instance data is resource values. These can either be constants or the can be variables or callbacks if there is processing needed to create the value (sensor reading, etc). There are callbacks for all the LWM2M operations: read, write and execute.
 
