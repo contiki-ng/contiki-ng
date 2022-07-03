@@ -105,8 +105,10 @@ RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Des
 RUN python3 -m pip -q install --upgrade pip && \
     python3 -m pip -q install \
       setuptools \
-      sphinx_rtd_theme \
-      sphinx \
+      'sphinx_rtd_theme==1.0.0' \
+      'myst-parser==0.18.0' \
+      'linkify-it-py==2.0.0' \
+      'sphinx==5.0.2' \
       matplotlib \
       'protobuf<=4' && \
     python3 -m pip -q install \
