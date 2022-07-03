@@ -100,7 +100,7 @@ CLEAN += *.firmware *.ihex
 ### Compilation rules
 
 %-stripped.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CCACHE) $(CC) $(CFLAGS) -c $< -o $@
 	$(STRIP) --strip-unneeded -g -x $@
 
 %-stripped.o: %.o
