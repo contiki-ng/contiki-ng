@@ -1,3 +1,5 @@
+:github_url: https://github.com/contiki-ng/contiki-ng/blob/develop/tools/readthedocs/doxygen.rst
+
 API documentation
 =================
 

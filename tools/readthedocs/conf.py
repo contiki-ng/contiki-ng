@@ -15,6 +15,7 @@
 #
 import os
 import sys
+from pathlib import Path
 sys.path.insert(0, os.path.abspath('.'))
 
 
@@ -41,7 +42,8 @@ release = u''
 # ones.
 extensions = [
     'api-doc',
-    'myst_parser'
+    'myst_parser',
+    'external_content'
 ]
 
 # MyST configuration
@@ -56,6 +58,22 @@ api_doc_doxygen_src_dir = '../doxygen'
 api_doc_doxygen_out_dir = 'html'
 api_doc_doxygen_suppress_out = True
 api_doc_doxygen_build = True
+
+# external_content configuration
+
+CONTIKI_BASE = Path(__file__).resolve().parents[2]
+
+external_content_contents = [
+    (CONTIKI_BASE, "doc"),
+    (CONTIKI_BASE, "examples/**/*.rst"),
+    (CONTIKI_BASE, "examples/**/*.md"),
+    (CONTIKI_BASE, "examples/**/*.png"),
+]
+
+external_content_keep = [
+    "*",
+    "**/*"
+]
 
 # Add any paths that contain templates here, relative to this directory.
 #templates_path = ['_templates']
@@ -101,6 +119,14 @@ html_theme_options = {
     'navigation_depth': 6
 }
 
+html_context = {
+  "display_github": True, 
+  "github_user": "contiki-ng",
+  "github_repo": "contiki-ng",
+  "github_version": "develop",
+  "conf_py_path": "/"
+}
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
@@ -116,7 +142,7 @@ html_theme_options = {
 #
 # html_sidebars = {}
 
-html_logo = "doc/images/contiki_logo.png"
+html_logo = "contiki_logo.png"
 
 # -- Options for HTMLHelp output ---------------------------------------------
 

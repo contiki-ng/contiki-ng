@@ -9,11 +9,12 @@
 SPHINX = sphinx-build
 SPHINX_CONF_DIR = .
 SPHINX_OUT_DIR = _build
+SPHINX_EXTERNAL_DIRS = doc examples
 
 all: readthedocs
 
 clean:
-	rm -rf $(SPHINX_OUT_DIR)
+	rm -rf $(SPHINX_OUT_DIR) $(SPHINX_EXTERNAL_DIRS)
 
 readthedocs:
 	$(SPHINX) -b html $(SPHINX_CONF_DIR) $(SPHINX_OUT_DIR)
