@@ -411,36 +411,6 @@ $(OBJECTDIR)/%.e: %.cpp | $(OBJECTDIR)
 	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) -E $< -o $@
 endif
 
-ifndef CUSTOM_RULE_C_TO_O
-%.o: %.c
-	$(TRACE_CC)
-	$(Q)$(CCACHE) $(CC) $(CFLAGS) -c $< -o $@
-endif
-
-ifndef CUSTOM_RULE_CPP_TO_O
-%.o: %.cpp
-	$(TRACE_CXX)
-	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) -c $< -o $@
-endif
-
-ifndef CUSTOM_RULE_C_TO_S
-%.s: %.c
-	$(TRACE_CC)
-	$(Q)$(CCACHE) $(CC) $(CFLAGS) -S $< -o $@
-endif
-
-ifndef CUSTOM_RULE_C_TO_E
-%.e: %.c
-	$(TRACE_CC)
-	$(Q)$(CCACHE) $(CC) $(CFLAGS) -E $< -o $@
-endif
-
-ifndef CUSTOM_RULE_CPP_TO_E
-%.e: %.cpp
-	$(TRACE_CXX)
-	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) -E $< -o $@
-endif
-
 ifndef AROPTS
   AROPTS = rc
 endif
