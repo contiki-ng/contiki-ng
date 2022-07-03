@@ -1,4 +1,4 @@
-# Home
+# Contiki-NG Documentation
 
 Contiki-NG is an operating system for resource-constrained devices in the Internet of Things. Contiki-NG contains an RFC-compliant, low-power IPv6 communication stack, enabling Internet connectivity. The system runs on a variety of platforms based on energy-efficient architectures such as the ARM Cortex-M3/M4 and the Texas Instruments MSP430. The code footprint is on the order of a 100 kB, and the memory usage can be configured to be as low as 10 kB. The source code is available as open source with a [3-clause BSD license](/doc/project/License).
 
@@ -14,28 +14,6 @@ Online presence:
 * Nightly testbed runs: https://contiki-ng.github.io/testbed
 
 Also feel free to download our [cheat sheet](https://contiki-ng.github.io/resources/contiki-ng-cheat-sheet.pdf)!
-
-## Citing Contiki-NG in Academic Manuscripts
-
-If you are publishing academic work and you wish to cite Contiki-NG, here is how to do so:
-
-Text:
-> George Oikonomou, Simon Duquennoy, Atis Elsts, Joakim Eriksson, Yasuyuki Tanaka, Nicolas Tsiftes, "The Contiki-NG open source operating system for next generation IoT devices", SoftwareX, 18, 2022, https://doi.org/10.1016/j.softx.2022.101089.
-
-BibTeX:
-
-    @article{Contiki-NG,
-      title = {The {Contiki-NG} open source operating system for next generation {IoT} devices},
-      author = {George Oikonomou and Simon Duquennoy and Atis Elsts and Joakim Eriksson and Yasuyuki Tanaka and Nicolas Tsiftes},
-      journal = {SoftwareX},
-      volume = {18},
-      pages = {101089},
-      year = {2022},
-      issn = {2352-7110},
-      doi = {https://doi.org/10.1016/j.softx.2022.101089},
-      keywords = {Contiki-NG, Internet of Things, Resource-Constrained Devices},
-    }
-
 
 ## Documentation
 
@@ -132,8 +110,30 @@ Simulation:
 * [Contributing](/doc/project/Contributing.md)
 * [Code style](/doc/project/Code-style.md)
 * [Development cycle](/doc/project/Development-cycle.md)
-* [Releases](https://github.com/contiki-ng/contiki-ng/releases.md)
+* [Releases](https://github.com/contiki-ng/contiki-ng/releases)
 * [Roadmap](/doc/project/Roadmap.md)
 * [Issue and PR labels](/doc/project/Issue-and-Pull-Request-Labels.md)
 * [Where to report issues, ask questions, etc.?](/doc/project/Where-to-report-issues,-ask-questions,-etc.%3F.md)
 * [Logo](/doc/project/Logo.md)
+
+
+## Citing Contiki-NG in Academic Manuscripts
+
+If you are publishing academic work and you wish to cite Contiki-NG, here is how to do so:
+
+Text:
+> George Oikonomou, Simon Duquennoy, Atis Elsts, Joakim Eriksson, Yasuyuki Tanaka, Nicolas Tsiftes, "The Contiki-NG open source operating system for next generation IoT devices", SoftwareX, 18, 2022, https://doi.org/10.1016/j.softx.2022.101089.
+
+BibTeX:
+
+    @article{Contiki-NG,
+      title = {The {Contiki-NG} open source operating system for next generation {IoT} devices},
+      author = {George Oikonomou and Simon Duquennoy and Atis Elsts and Joakim Eriksson and Yasuyuki Tanaka and Nicolas Tsiftes},
+      journal = {SoftwareX},
+      volume = {18},
+      pages = {101089},
+      year = {2022},
+      issn = {2352-7110},
+      doi = {https://doi.org/10.1016/j.softx.2022.101089},
+      keywords = {Contiki-NG, Internet of Things, Resource-Constrained Devices},
+    }

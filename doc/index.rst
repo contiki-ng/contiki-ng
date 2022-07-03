@@ -1,5 +1,3 @@
-Contiki-NG Documentation
-########################
 
 .. include:: /doc/Home.md
    :parser: myst_parser.sphinx_
