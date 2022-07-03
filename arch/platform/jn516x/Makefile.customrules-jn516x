@@ -9,14 +9,14 @@ ABS_APPLIBS = $(addsuffix _$(JENNIC_CHIP_FAMILY).a,$(addprefix $(COMPONENTS_BASE
 
 ifneq ($(wildcard $(SDK_BASE_DIR)/Components/Library/*),)
 # The SDK is fully installed, proceed to linking
-$(BUILD_DIR_BOARD)/%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB) $(ABS_APPLIBS)
+$(BUILD_DIR_BOARD)/%.$(TARGET): $(OBJECTDIR)/%.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB) $(ABS_APPLIBS)
 	@echo  ${filter %.a,$^}
 	$(Q)$(CC) -Wl,--gc-sections $(LDFLAGS) -T$(LINKCMD) -o $@ -Wl,--start-group \
 	  ${filter-out %.a,$^} ${filter %.a,$^} \
 	  $(ALLLIBS) -Wl,--end-group
 else
 # The SDK does not include libraries, only build objects and libraries, skip linking
-$(BUILD_DIR_BOARD)/%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
+$(BUILD_DIR_BOARD)/%.$(TARGET): $(OBJECTDIR)/%.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
 	@echo Creating empty $@
 	touch $@
 endif
