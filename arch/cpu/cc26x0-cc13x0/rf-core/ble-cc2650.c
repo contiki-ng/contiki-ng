@@ -211,10 +211,18 @@ set_value(radio_param_t param, radio_value_t value)
     }
     return RADIO_RESULT_OK;
   case RADIO_PARAM_BLE_CONN_UPDATE:
-    if(value) {
-      return ble_hal.connection_update(0, connection_interval, connection_latency, connection_timeout);
-    } else {
+    if(!value) {
       return RADIO_RESULT_INVALID_VALUE;
+    }
+    switch(ble_hal.connection_update(0, connection_interval, connection_latency, connection_timeout)) {
+    case BLE_RESULT_OK:
+      return RADIO_RESULT_OK;
+    case BLE_RESULT_NOT_SUPPORTED:
+      return RADIO_RESULT_NOT_SUPPORTED;
+    case BLE_RESULT_INVALID_PARAM:
+      return RADIO_RESULT_INVALID_VALUE;
+    case BLE_RESULT_ERROR:
+      return RADIO_RESULT_ERROR;
     }
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
