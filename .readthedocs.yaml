@@ -8,9 +8,11 @@ build:
   os: ubuntu-20.04
   tools:
     python: "3.8"
-  apt_packages:
-    - make
-    - doxygen
+  jobs:
+    post_install:
+      - wget -nv https://www.doxygen.nl/files/doxygen-1.9.4.linux.bin.tar.gz
+      - tar zxf doxygen-1.9.4.linux.bin.tar.gz doxygen-1.9.4/bin/doxygen --strip-components 2 --one-top-level=tools/doxygen
+      - rm doxygen-1.9.4.linux.bin.tar.gz
 
 python:
   install:
