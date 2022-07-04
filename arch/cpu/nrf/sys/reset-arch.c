@@ -63,7 +63,7 @@ reset_debug(void)
 
   reason = nrfx_reset_reason_get();
 
-  LOG_DBG("Reason: %ld\n", reason);
+  LOG_DBG("Reason: %" PRId32 "\n", reason);
 }
 /*---------------------------------------------------------------------------*/
 /**
