@@ -34,7 +34,7 @@ $ dos2unix contiki-ng/tools/vagrant/bootstrap.sh
 ```
 * Install Contiki-NG toolchain. From the Vagrant shell:
 ```bash
-$ sudo ./contiki-ng/tools/vagrant/bootstrap.sh
+$ ./contiki-ng/tools/vagrant/bootstrap.sh
 ```
 * Exit the SSH session
 
