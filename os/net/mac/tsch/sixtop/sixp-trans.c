@@ -343,7 +343,7 @@ sixp_trans_get_mode(sixp_trans_t *trans)
   assert(trans != NULL);
   if(trans == NULL) {
     LOG_ERR("6P-trans: sixp_trans_get_mode() fails because trans is NULL\n");
-    return SIXP_TRANS_STATE_UNAVAILABLE;
+    return SIXP_TRANS_MODE_UNAVAILABLE;
   }
   return trans->mode;
 }
