@@ -99,10 +99,10 @@ soc_print_info(void)
   uint8_t rev = soc_get_rev();
   uint32_t features = soc_get_features();
 
-  LOG_DBG("CC2538: ID: 0x%04lx, rev.: PG%d.%d, Flash: %lu KiB, "
-          "SRAM: %lu KiB, AES/SHA: %u, ECC/RSA: %u\n"
-          "System clock: %lu Hz\n"
-          "I/O clock: %lu Hz\n"
+  LOG_DBG("CC2538: ID: 0x%04" PRIx32 ", rev.: PG%d.%d, Flash: %" PRIu32 " KiB, "
+          "SRAM: %" PRIu32 " KiB, AES/SHA: %u, ECC/RSA: %u\n"
+          "System clock: %" PRIu32 " Hz\n"
+          "I/O clock: %" PRIu32 " Hz\n"
           "Reset cause: %s\n",
           rom_util_get_chip_id(),
           rev >> 4, rev & 0x0f,
