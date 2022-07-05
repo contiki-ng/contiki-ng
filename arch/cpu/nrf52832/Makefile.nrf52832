@@ -182,7 +182,7 @@ $(NRFLIB): $(OBJECTS)
 # Assemble files
 $(OBJECT_DIRECTORY)/%.o: %.s
 	$(TRACE_CC)
-	$(Q)$(CC) $(ASMFLAGS) $(addprefix -I$(NRF52_SDK_ROOT)/, $(INC_PATHS)) -c -o $@ $<
+	$(Q)$(CCACHE) $(CC) $(ASMFLAGS) $(addprefix -I$(NRF52_SDK_ROOT)/, $(INC_PATHS)) -c -o $@ $<
 
 include $(CONTIKI)/$(CONTIKI_NG_CM4_DIR)/Makefile.cm4
 

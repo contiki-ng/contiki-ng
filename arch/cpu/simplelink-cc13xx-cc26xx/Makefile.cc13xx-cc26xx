@@ -130,13 +130,13 @@ FORCE:
 # Always re-build ieee-addr.o in case the command line passes a new NODEID
 $(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) -c $< -o $@
 
 # Always re-build ccfg-conf.c so any changes to CCFG configuration
 # always applies
 $(OBJECTDIR)/ccfg-conf.o: ccfg-conf.c FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) -c $< -o $@
 
 ################################################################################
 ### Sub-family Makefile

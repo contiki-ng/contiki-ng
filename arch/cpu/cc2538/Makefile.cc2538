@@ -39,7 +39,7 @@ FORCE:
 
 $(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) -c $< -o $@
 
 ### This rule is used to generate the correct linker script
 LDGENFLAGS += $(CFLAGS)
@@ -50,6 +50,6 @@ LDGENFLAGS += -x c -P -E
 # NB: Assumes LDSCRIPT was not overridden and is in $(OBJECTDIR)
 $(LDSCRIPT): $(SOURCE_LDSCRIPT) FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
-	$(Q)$(CC) $(LDGENFLAGS) $< | grep -v '^\s*#\s*pragma\>' > $@
+	$(Q)$(CCACHE) $(CC) $(LDGENFLAGS) $< | grep -v '^\s*#\s*pragma\>' > $@
 
 include $(CONTIKI)/$(CONTIKI_NG_CM3_DIR)/Makefile.cm3

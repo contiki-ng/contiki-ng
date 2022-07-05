@@ -1,7 +1,7 @@
 CUSTOM_RULE_C_TO_OBJECTDIR_O = 1
 $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
 	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 
 CUSTOM_RULE_LINK = 1
 ALLLIBS = $(addprefix -l,$(LDLIBS)) $(addprefix -l,$(LDSTACKLIBS)) $(addprefix -l,$(LDMYLIBS))
