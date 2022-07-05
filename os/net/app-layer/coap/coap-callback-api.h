@@ -61,12 +61,12 @@ struct coap_callback_request_state {
 };
 
 /**
- * \brief Send a CoAP request to a remote endpoint
- * \param callback_state The callback state to handle the CoAP request
- * \param endpoint The destination endpoint
- * \param request The request to be sent
- * \param callback callback to execute when the response arrives or the timeout expires
- * \return 1 if there is a transaction available to send, 0 otherwise
+ * \brief Send a CoAP request to a remote endpoint.
+ * \param callback_state The callback state to handle the CoAP request.
+ * \param endpoint The destination endpoint.
+ * \param request The request to be sent.
+ * \param callback callback to execute when the response arrives or the timeout expires.
+ * \return 1 if there is a transaction available to send, 0 otherwise.
  */
 int coap_send_request(coap_callback_request_state_t *callback_state, coap_endpoint_t *endpoint,
                        coap_message_t *request,

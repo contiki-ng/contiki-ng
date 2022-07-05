@@ -79,9 +79,11 @@
 #define LOG_DBG_COAP_STRING(text, len)  LOG_COAP_STRING(LOG_LEVEL_DBG, text, len)
 
 /**
- * \brief Logs a CoAP string that has a length but might not be 0-terminated.
- * \param text The CoAP string
- * \param len  The number of characters in the CoAP string
+ * \brief Logs a CoAP string that has a length specified, but might
+ * not be zero-terminated.
+ *
+ * \param text The CoAP string.
+ * \param len  The number of characters in the CoAP string.
  */
 void coap_log_string(const char *text, size_t len);
 
