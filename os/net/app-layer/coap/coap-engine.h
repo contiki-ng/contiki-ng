@@ -156,7 +156,7 @@ struct coap_periodic_resource_s {
 void coap_activate_resource(coap_resource_t *resource, const char *path);
 /*---------------------------------------------------------------------------*/
 /**
- * \brief      Returns the first of registered CoAP resources.
+ * \brief      Returns the first of the registered CoAP resources.
  * \return     The first registered CoAP resource or NULL if none exists.
  */
 coap_resource_t *coap_get_first_resource(void);
