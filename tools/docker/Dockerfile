@@ -99,21 +99,20 @@ RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Des
   rm -rf nRFCommandLineTools10121Linuxamd64.tar.gz /tmp/nrf-cli-tools
 
 # Sphinx is required for building the readthedocs API documentation.
+# RTD requirements are shared with .readthedocs.yaml for build consistency - check RTD build if modifying.
 # Matplotlib is required for result visualization.
 # Nrfutil 6.1.3 does not work with protobuf 4, so install latest 3.x
 # Keep the image size down by removing the pip cache when done.
+COPY files/rtd_requirements.txt /tmp
 RUN python3 -m pip -q install --upgrade pip && \
     python3 -m pip -q install \
       setuptools \
-      'sphinx_rtd_theme==1.0.0' \
-      'myst-parser==0.18.0' \
-      'linkify-it-py==2.0.0' \
-      'sphinx==5.0.2' \
       matplotlib \
       'protobuf<=4' && \
     python3 -m pip -q install \
       nrfutil && \
-    rm -rf /root/.cache
+    python3 -m pip -q install -r /tmp/rtd_requirements.txt && \
+    rm -rf /root/.cache /tmp/rtd_requirements.txt
 
 # Create user, add to groups dialout and sudo, and configure sudoers.
 RUN adduser --disabled-password --gecos '' user && \
