@@ -1,3 +1,5 @@
+# platform-specific/jn516x/tsch/uart1-test-node
+
 This example is a simple TSCH node used to test uart1 functionality of a JN516x on a node.
 Note: uart0 is usually configured as serial port for flashing the JN516x and for logging and debug output. 
 

@@ -1,0 +1,6 @@
+# Requirements for building Sphinx documentation on readthedocs and inside docker
+# Shared by tools/docker/Dockerfile and .readthedocs.yaml
+sphinx==5.0.2
+sphinx_rtd_theme==1.0.0
+myst_parser==0.18.0
+linkify-it-py==2.0.0

@@ -1,3 +1,5 @@
+# 6tisch/channel-selection-demo
+
 Demonstration of TSCH adaptive channel selection based on background noise RSSI metric.
 TSCH stats must be enabled for the adaptive selection functionality to compile and work.
 

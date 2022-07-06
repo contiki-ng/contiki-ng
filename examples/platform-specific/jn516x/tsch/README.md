@@ -1,3 +1,5 @@
+# platform-specific/jn516x/tsch
+
 Examples for tsch on jn516x
 
 simple-sensor-network: This example shows a simple sensor network consisting of node(s),an rpl-border-router and a host connected to

@@ -1,4 +1,6 @@
-# RGB LED Example
+# dev/rgb-led
+
+## RGB LED Example
 This example demonstrates and tests the functionality of the RGB LED driver.
 You can use it to:
 
@@ -8,7 +10,7 @@ features this part.
 
 This example assumes a device with an RGB LED.
 
-# Supported devices
+## Supported devices
 This example is expected to work off-the-shelf on the following boards:
 
 * All Zoul-based devices

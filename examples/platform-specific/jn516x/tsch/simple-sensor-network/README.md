@@ -1,3 +1,5 @@
+# platform-specific/jn516x/tsch/simple-sensor-network
+
 This example shows a simple sensor network consisting of node(s),an rpl-border-router and a host connected to
 the IPv6 network. The nodes (see also node/README.md) regularly transmit simulated sensor data to the host.
 The host visualises the received data. 

@@ -17,6 +17,8 @@ Makefile.target
 Makefile.*.defines
 tools/doxygen/html
 tools/readthedocs/_build
+tools/readthedocs/doc
+tools/readthedocs/examples
 patches-*
 tools/serial-io/tunslip6
 tools/serial-io/serialdump
@@ -54,6 +56,10 @@ COOJA.testlog
 !Makefile.cc26x0-cc13x0
 !Makefile.zoul
 !Makefile.nrf
+
+# do not ignore images in documentation
+!tools/readthedocs/**/*.png
+!doc/**/*.png
 
 # other nRF52 build artifacts
 *.jlink
