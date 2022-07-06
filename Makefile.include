@@ -13,6 +13,12 @@ endif
 # of attempted matches from the implicit rules for SCCS.
 MAKEFLAGS += --no-builtin-rules
 
+# Despite --no-builtin-rules, make insists on "remaking" the included
+# Makefiles, so disable that with these empty rules. This saves 200+ lines
+# of rule matching on "make -d TARGET=native" on hello-world.
+Makefile: ;
+Makefile.%: ;
+
 ### Include a helper Makefile that creates variables for all Contiki-NG path
 ### locations.
 include $(CONTIKI)/Makefile.dir-variables
