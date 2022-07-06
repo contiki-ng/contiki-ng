@@ -127,7 +127,7 @@ at_register(struct at_cmd *cmd, struct process *app_process,
             const char *cmd_hdr, const uint8_t hdr_len,
             const uint8_t cmd_max_len, at_event_callback_t event_callback)
 {
-  if((hdr_len < 1) || (cmd_max_len < 1) || (!strncmp(cmd_hdr, "AT", 2) == 0) ||
+  if((hdr_len < 1) || (cmd_max_len < 1) || (strncmp(cmd_hdr, "AT", 2) != 0) ||
      (event_callback == NULL)) {
     PRINTF("AT: Invalid argument\n");
     return AT_STATUS_INVALID_ARGS_ERROR;
