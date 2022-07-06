@@ -49,7 +49,8 @@
 typedef enum {
   DISK_STATUS_INIT     = 0x01, /**< Device initialized and ready to work */
   DISK_STATUS_DISK     = 0x02, /**< Medium present in the drive */
-  DISK_STATUS_WRITABLE = 0x04  /**< Writable medium */
+  DISK_STATUS_WRITABLE = 0x04, /**< Writable medium */
+  DISK_STATUS_ERROR    = 0x08  /**< Device error */
 } disk_status_t;
 
 /** Generic disk I/O control commands. */
