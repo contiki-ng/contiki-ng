@@ -54,7 +54,7 @@
 /**
  * \brief 6P Transaction Data Structure (for internal use)
  */
-typedef struct sixp_trans {
+struct sixp_trans {
   struct sixp_trans *next;
   const sixtop_sf_t *sf;
   linkaddr_t peer_addr;
@@ -68,7 +68,7 @@ typedef struct sixp_trans {
     uint16_t arg_len;
   } callback;
   struct ctimer timer;
-} sixp_trans_t;
+};
 
 static void handle_trans_timeout(void *ptr);
 static void process_trans(void *ptr);
