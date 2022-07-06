@@ -56,14 +56,6 @@
  */
 
 /**
- * @brief The MIB resource handler typedef
- *
- * @param varbind The varbind that is being changed
- * @param oid The oid from the resource
- */
-typedef void (*snmp_mib_resource_handler_t)(snmp_varbind_t *varbind, snmp_oid_t *oid);
-
-/**
  * @brief The MIB Resource struct
  */
 typedef struct snmp_mib_resource_s snmp_mib_resource_t;
