@@ -3,6 +3,16 @@
 # Set CONTIKI to the directory where Makefile.include resides.
 CONTIKI := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 
+# Give an error message when using an old version of GNU Make.
+MAKE_MAJOR_VERSION := $(word 1,$(subst ., ,$(MAKE_VERSION)))
+ifeq ($(shell test $(MAKE_MAJOR_VERSION) -lt 4; echo $$?),0)
+  $(error GNU Make version 4.0 or newer is required)
+endif
+
+# Only use rules from the Makefiles. This eliminates a lot
+# of attempted matches from the implicit rules for SCCS.
+MAKEFLAGS += --no-builtin-rules
+
 ### Include a helper Makefile that creates variables for all Contiki-NG path
 ### locations.
 include $(CONTIKI)/Makefile.dir-variables
@@ -555,11 +565,6 @@ include $(CONTIKI)/Makefile.gcc
 # Don't treat $(BUILD_DIR_BOARD)/%.$(TARGET) and $(TARGET) as intermediate
 # files because for many platforms they are in fact the primary target.
 .PRECIOUS: $(BUILD_DIR_BOARD)/%.$(TARGET) %.$(TARGET)
-
-# Cancel the predefined implict rule for compiling and linking
-# a single C source into a binary to force GNU make to consider
-# the match-anything rule below instead.
-%: %.c
 
 ifeq ($(PLATFORM_ACTION),skip)
 # Skip this target.
