@@ -736,19 +736,9 @@ mqtt_prop_register(struct mqtt_prop_list **prop_list,
                    mqtt_msg_type_t msg,
                    mqtt_vhdr_prop_t prop_id, ...)
 {
-#if MQTT_PROP_USE_MEMB
-  struct mqtt_prop_out_property *prop;
-#endif
-  va_list args;
-  uint32_t prop_len;
-
-  va_start(args, prop_id);
-
   /* check that the property is compatible with the message? */
-
   if(!prop_list) {
     DBG("MQTT - Error encoding prop %i on msg %i; list NULL\n", prop_id, msg);
-    va_end(args);
     return 1;
   }
 
@@ -756,7 +746,7 @@ mqtt_prop_register(struct mqtt_prop_list **prop_list,
   DBG("MQTT - prop list->list %p\n", (*prop_list)->props);
 
 #if MQTT_PROP_USE_MEMB
-  prop = (struct mqtt_prop_out_property *)memb_alloc(&props_mem);
+  struct mqtt_prop_out_property *prop = memb_alloc(&props_mem);
 #endif
 
   if(!prop) {
@@ -767,7 +757,11 @@ mqtt_prop_register(struct mqtt_prop_list **prop_list,
 
   DBG("MQTT - Allocated prop %p\n", prop);
 
-  prop_len = mqtt_prop_encode(&prop, prop_id, args);
+  va_list args;
+
+  va_start(args, prop_id);
+
+  uint32_t prop_len = mqtt_prop_encode(&prop, prop_id, args);
 
   if(prop) {
     DBG("MQTT - Adding prop %p to prop_list %p\n", prop, *prop_list);
