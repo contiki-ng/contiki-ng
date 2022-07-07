@@ -1,7 +1,19 @@
 # This Makefile can be used to identify the selected TARGET used for a
 # specific build. It can be included by example Makefiles that need to take
 # decisions based on TARGET. It is also automatically included by the
-# top-level Makefile.include.
+# top-level Makefile.include. This Makefile also contains basic validation
+# of some TARGET-related variables so a faulty make invocation immediately
+# stops with a readable error message.
+
+# Build will fail with strange error messages if $(TARGET)/$(BOARD)
+# contains trailing whitespace.
+ifneq ($(TARGET), $(strip $(TARGET)))
+  $(error Target name '$(TARGET)' contains trailing whitespace)
+endif
+
+ifneq ($(BOARD), $(strip $(BOARD)))
+  $(error Board name '$(BOARD)' contains trailing whitespace)
+endif
 
 ifeq ($(TARGET),)
   -include Makefile.target
