@@ -697,7 +697,7 @@ advertising_rx(ble_adv_param_t *param)
       LOG_INFO("connection created: conn_int: %4u, latency: %3u, channel_map: %8llX\n",
                c_param->interval, c_param->latency, c_param->channel_map);
 
-      LOG_DBG("access address: 0x%08lX\n", c_param->access_address);
+      LOG_DBG("access address: 0x%08" PRIX32 "\n", c_param->access_address);
       LOG_DBG("crc0: 0x%02X\n", c_param->crc_init_0);
       LOG_DBG("crc1: 0x%02X\n", c_param->crc_init_1);
       LOG_DBG("crc2: 0x%02X\n", c_param->crc_init_2);
