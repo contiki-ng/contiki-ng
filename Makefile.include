@@ -200,6 +200,9 @@ MAKE_NET ?= MAKE_NET_IPV6
 ifeq ($(MAKE_NET),MAKE_NET_NULLNET)
   CFLAGS += -DNETSTACK_CONF_WITH_NULLNET=1
   MODULES += $(CONTIKI_NG_NET_DIR)/nullnet
+  # SLIP uses the rxbuf defined in uIP.
+  MODULES_SOURCES_EXCLUDES += slip.c
+  CONTIKI_SOURCES_EXCLUDES_NATIVE += tun6-net.c
 endif
 
 ifeq ($(MAKE_NET),MAKE_NET_IPV6)
@@ -241,7 +244,6 @@ endif
 MODULEDIRS = $(MODULES_REL) ${addprefix $(CONTIKI)/, $(MODULES)}
 UNIQUEMODULES = $(call uniq,$(MODULEDIRS))
 MODULES_SOURCES = ${foreach d, $(UNIQUEMODULES), ${subst ${d}/,,${wildcard $(d)/*.c}}}
-CONTIKI_SOURCEFILES += $(filter-out $(MODULES_SOURCES_EXCLUDES), $(MODULES_SOURCES))
 
 # Include module-specific makefiles
 MODULES_INCLUDES = ${wildcard ${foreach d, $(UNIQUEMODULES), $(d)/Makefile.${notdir $(d)}}}
@@ -332,8 +334,17 @@ endif
 ### to create one
 CONTIKI_NG_PROJECT_MAP = $(BUILD_DIR_BOARD)/$(basename $(notdir $@)).map
 
-CONTIKI_OBJECTFILES += ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
-PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFILES)}}
+# At this stage, all source files for the build have been defined, so
+# define the corresponding object files.
+#
+# The logic is that the general build system adds source files with wildcards,
+# and architectures/applications can specify exclusions to that through
+# variables ending with _EXCLUDES and _EXCLUDES_$(TARGET_UPPERCASE).
+CONTIKI_SOURCEFILES += $(filter-out $(MODULES_SOURCES_EXCLUDES) $(MODULES_SOURCES_EXCLUDES_$(TARGET_UPPERCASE)), $(MODULES_SOURCES))
+CONTIKI_FILTERED_SOURCEFILES = $(filter-out $(CONTIKI_SOURCES_EXCLUDES) $(CONTIKI_SOURCES_EXCLUDES_$(TARGET_UPPERCASE)), $(CONTIKI_SOURCEFILES))
+CONTIKI_OBJECTFILES += ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_FILTERED_SOURCEFILES)}}
+PROJECT_FILTERED_SOURCEFILES = $(filter-out $(PROJECT_SOURCES_EXCLUDES) $(PROJECT_SOURCES_EXCLUDES_$(TARGET_UPPERCASE)), $(PROJECT_SOURCEFILES))
+PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_FILTERED_SOURCEFILES)}}
 
 .PHONY: all clean distclean usage help targets boards savetarget savedefines viewconf
 
