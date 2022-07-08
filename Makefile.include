@@ -92,19 +92,21 @@ endef
 
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
-### Include target makefile (TODO Unsafe?)
-
+# Identify if the target makefile is in-tree, or from $(TARGETDIRS).
 target_makefile := $(wildcard $(CONTIKI_NG_RELOC_PLATFORM_DIR)/$(TARGET)/Makefile.$(TARGET) \
                    $(foreach TDIR, $(TARGETDIRS), $(TDIR)/$(TARGET)/Makefile.$(TARGET)))
 
-# Check if the target makefile exists, and create the object directory if necessary.
+# Ensure there is exactly one target makefile found.
 ifeq ($(strip $(target_makefile)),)
   ${error The target platform "$(TARGET)" does not exist (maybe it was misspelled?)}
-else
-  ifneq (1, ${words $(target_makefile)})
-    ${error More than one TARGET Makefile found: $(target_makefile)}
-  endif
-  include $(target_makefile)
+endif
+ifneq (1, ${words $(target_makefile)})
+  ${error More than one TARGET Makefile found: $(target_makefile)}
+endif
+
+# Include the target makefile.
+include $(target_makefile)
+ifneq ($(MAKECMDGOALS),clean)
   ifeq (, $(shell which $(CC)))
     $(error Target "$(TARGET)" compiler "$(CC)" cannot be found)
   endif
