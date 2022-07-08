@@ -159,8 +159,8 @@ ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
 ASMFLAGS += -DBLE_STACK_SUPPORT_REQD
 
 C_SOURCE_FILE_NAMES = $(notdir $(C_SOURCE_FILES))
+CONTIKI_SOURCEFILES += $(C_SOURCE_FILE_NAMES)
 C_PATHS = $(call remduplicates, $(dir $(C_SOURCE_FILES) ) )
-C_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(C_SOURCE_FILE_NAMES:.c=.o) )
 
 ASM_SOURCE_FILE_NAMES = $(notdir $(ASM_SOURCE_FILES))
 ASM_PATHS = $(call remduplicates, $(dir $(ASM_SOURCE_FILES) ))
@@ -169,15 +169,7 @@ ASM_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(ASM_SOURCE_FILE_NAMES:.s=.o) )
 vpath %.c $(C_PATHS)
 vpath %.s $(ASM_PATHS)
 
-OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
-
-NRFLIB = $(BUILD_DIR_BOARD)/nrf52832.a
-
-TARGET_LIBS = $(NRFLIB) $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/lib/ble_6lowpan.a
-
-$(NRFLIB): $(OBJECTS)
-	$(TRACE_AR)
-	$(Q)$(AR) $(AROPTS) $@ $^
+TARGET_LIBS = $(ASM_OBJECTS) $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/lib/ble_6lowpan.a
 
 # Assemble files
 $(OBJECT_DIRECTORY)/%.o: %.s
