@@ -44,6 +44,9 @@ ifneq (, $(shell which ccache))
   CCACHE ?= ccache
 endif
 
+# Command converting lowercase to uppercase, and "-" and "/" to "_".
+UPPERCASE_CMD = tr '[:lower:][\-/]' '[:upper:][__]'
+
 JAVA = java
 
 BUILD_DIR = build
@@ -58,9 +61,7 @@ DEPDIR = $(OBJECTDIR)/.deps
 
 CONTIKI_NG_TARGET_LIB = $(BUILD_DIR_BOARD)/contiki-ng-$(TARGET).a
 
-LOWERCASE = -abcdefghijklmnopqrstuvwxyz/
-UPPERCASE = _ABCDEFGHIJKLMNOPQRSTUVWXYZ_
-TARGET_UPPERCASE := ${strip ${shell echo $(TARGET) | sed y!$(LOWERCASE)!$(UPPERCASE)!}}
+TARGET_UPPERCASE := ${shell echo $(TARGET) | $(UPPERCASE_CMD)}
 CFLAGS += -DCONTIKI=1 -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
 CFLAGS += -DCONTIKI_TARGET_STRING=\"$(TARGET)\"
 
@@ -149,7 +150,7 @@ $(OBJECTDIR) $(DEPDIR):
 	$(Q)mkdir -p $@
 
 ifneq ($(BOARD),)
-  TARGET_BOARD_UPPERCASE := ${strip ${shell echo $(BOARD) | sed y!$(LOWERCASE)!$(UPPERCASE)!}}
+  TARGET_BOARD_UPPERCASE := ${shell echo $(BOARD) | $(UPPERCASE_CMD)}
   CFLAGS += -DCONTIKI_BOARD_$(TARGET_BOARD_UPPERCASE)=1
   CFLAGS += -DCONTIKI_BOARD_STRING=\"$(BOARD)\"
 endif
