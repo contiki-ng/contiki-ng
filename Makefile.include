@@ -75,8 +75,6 @@ BUILD_DIR_BOARD = $(BUILD_DIR_FULL:/=)
 OBJECTDIR = $(BUILD_DIR_BOARD)/obj
 DEPDIR = $(OBJECTDIR)/.deps
 
-CONTIKI_NG_TARGET_LIB = $(BUILD_DIR_BOARD)/contiki-ng-$(TARGET).a
-
 TARGET_UPPERCASE := ${shell echo $(TARGET) | $(UPPERCASE_CMD)}
 CFLAGS += -DCONTIKI=1 -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
 CFLAGS += -DCONTIKI_TARGET_STRING=\"$(TARGET)\"
@@ -445,12 +443,6 @@ ifndef AROPTS
   AROPTS = rc
 endif
 
-ifndef CUSTOM_RULE_ALLOBJS_TO_TARGETLIB
-$(CONTIKI_NG_TARGET_LIB): $(CONTIKI_OBJECTFILES)
-	$(TRACE_AR)
-	$(Q)$(AR) $(AROPTS) $@ $^
-endif
-
 ifndef LD
   LD = $(CC)
 endif
@@ -467,7 +459,7 @@ TARGET_LIBEXTRAS = $(LD_START_GROUP) $(TARGET_LIBFILES) $(LD_END_GROUP)
 # a compatibility line for link rule so we can have a single rule that
 # outputs to LIBNAME on all platforms.
 $(BUILD_DIR_BOARD)/%.$(TARGET): LIBNAME ?= $@
-$(BUILD_DIR_BOARD)/%.$(TARGET): $(OBJECTDIR)/%.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
+$(BUILD_DIR_BOARD)/%.$(TARGET): $(OBJECTDIR)/%.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_OBJECTFILES)
 ifdef REDEFINE_PRINTF
 	@echo Redefining printf,sprintf,vsnprintf,etc.
 	$(Q)$(foreach OBJ,$^, $(OBJCOPY) --redefine-syms $(CONTIKI)/arch/platform/$(TARGET)/redefine.syms $(OBJ); )
