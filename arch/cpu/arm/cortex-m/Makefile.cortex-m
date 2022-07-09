@@ -17,9 +17,6 @@ CONTIKI_ARM_DIRS += cortex-m
 ### Build syscalls for newlib
 MODULES += os/lib/newlib
 
-LD_START_GROUP = -Wl,--start-group
-LD_END_GROUP = -Wl,--end-group
-
 LDFLAGS += -T $(LDSCRIPT)
 LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
 # The next line might be trying to avoid
