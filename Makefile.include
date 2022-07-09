@@ -459,13 +459,13 @@ TARGET_LIBEXTRAS = $(LD_START_GROUP) $(TARGET_LIBFILES) $(LD_END_GROUP)
 # a compatibility line for link rule so we can have a single rule that
 # outputs to LIBNAME on all platforms.
 $(BUILD_DIR_BOARD)/%.$(TARGET): LIBNAME ?= $@
-$(BUILD_DIR_BOARD)/%.$(TARGET): $(OBJECTDIR)/%.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_OBJECTFILES)
+$(BUILD_DIR_BOARD)/%.$(TARGET): $(OBJECTDIR)/%.o $(LDSCRIPT) $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_OBJECTFILES)
 ifdef REDEFINE_PRINTF
 	@echo Redefining printf,sprintf,vsnprintf,etc.
 	$(Q)$(foreach OBJ,$^, $(OBJCOPY) --redefine-syms $(CONTIKI)/arch/platform/$(TARGET)/redefine.syms $(OBJ); )
 endif
 	$(TRACE_LD)
-	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} \
+	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out $(LDSCRIPT) %.a,$^} \
 	    ${filter %.a,$^} $(TARGET_LIBEXTRAS) -o $(LIBNAME)
 endif
 
