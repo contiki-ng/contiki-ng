@@ -548,10 +548,6 @@ endif
 ### Include Makefile.gcc for GCC specific definitions and actions
 include $(CONTIKI)/Makefile.gcc
 
-# Don't treat $(BUILD_DIR_BOARD)/%.$(TARGET) and $(TARGET) as intermediate
-# files because for many platforms they are in fact the primary target.
-.PRECIOUS: $(BUILD_DIR_BOARD)/%.$(TARGET) %.$(TARGET)
-
 ifeq ($(PLATFORM_ACTION),skip)
 # Skip this target.
 $(CONTIKI_PROJECT):

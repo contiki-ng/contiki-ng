@@ -208,8 +208,6 @@ MAKEFILES_CUSTOMRULES += $(CONTIKI_NG_RELOC_PLATFORM_DIR)/jn516x/Makefile.custom
 
 .PHONY: all clean
 
-.PRECIOUS: %.elf
-
 %.d: clean
 
 %.nm: %.$(TARGET)
