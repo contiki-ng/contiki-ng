@@ -128,6 +128,6 @@ MTYPE_OBJ = $(LIBNAME:.cooja=.o)
 
 PROJECT_OBJECTFILES += $(MTYPE_OBJ)
 
-$(MTYPE_OBJ): platform.c | $(OBJECTDIR)
+$(MTYPE_OBJ): platform.c | $(DEPDIR)
 	$(TRACE_CC)
 	$(Q)$(CCACHE) $(CC) $(CFLAGS) -c $< -o $@

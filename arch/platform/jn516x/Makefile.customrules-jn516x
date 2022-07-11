@@ -1,5 +1,5 @@
 CUSTOM_RULE_C_TO_OBJECTDIR_O = 1
-$(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
+$(OBJECTDIR)/%.o: %.c | $(DEPDIR)
 	$(TRACE_CC)
 	$(Q)$(CCACHE) $(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 

@@ -58,7 +58,7 @@ endif
 BSL = $(CONTIKI_NG_TOOLS_DIR)/cc2538-bsl/cc2538-bsl.py
 
 ### Always re-build ieee-addr.o in case the command line passes a new NODEID
-$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
+$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(DEPDIR)
 	$(TRACE_CC)
 	$(Q)$(CCACHE) $(CC) $(CFLAGS) -c $< -o $@
 

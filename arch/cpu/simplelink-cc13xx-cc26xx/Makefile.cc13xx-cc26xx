@@ -128,7 +128,7 @@ LD_END_GROUP = -Wl,--end-group
 ### Specialized build targets
 
 # Always re-build ieee-addr.o in case the command line passes a new NODEID
-$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
+$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(DEPDIR)
 	$(TRACE_CC)
 	$(Q)$(CCACHE) $(CC) $(CFLAGS) -c $< -o $@
 
