@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# Use nearby mirrors.
-sudo sed -i -e 's#http://archive.ubuntu.com/ubuntu#mirror://mirrors.ubuntu.com/mirrors.txt#' /etc/apt/sources.list
-
 # Install i386 binary support on x64 system and required tools
 sudo dpkg --add-architecture i386
 sudo add-apt-repository --yes ppa:mosquitto-dev/mosquitto-ppa
