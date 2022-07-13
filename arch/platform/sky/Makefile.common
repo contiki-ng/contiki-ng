@@ -1,6 +1,4 @@
-# $Id: Makefile.common,v 1.3 2010/08/24 16:24:11 joxe Exp $
-
-ARCH=spi-legacy.c ds2411.c xmem.c i2c.c sensors.c cfs-coffee.c \
+ARCH=spi-legacy.c ds2411.c xmem.c i2c.c sensors.c \
      cc2420.c cc2420-arch.c cc2420-arch-sfd.c \
      sky-sensors.c uip-ipchksum.c \
      uart1.c slip_uart1.c uart1-putchar.c platform.c
