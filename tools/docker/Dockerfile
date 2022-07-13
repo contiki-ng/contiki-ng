@@ -23,7 +23,6 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     gdb \
     git \
     gtk-sharp2 \
-    iputils-tracepath \
     iputils-ping \
     less \
     lib32z1 \
@@ -36,6 +35,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     mono-complete \
     mosquitto \
     mosquitto-clients \
+    mtr-tiny \
     net-tools \
     openjdk-11-jdk \
     python3-dev \
