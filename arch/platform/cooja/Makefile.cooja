@@ -54,7 +54,7 @@ else ifeq ($(HOST_OS),Darwin)
 else
   JAVA_OS_NAME = linux
   CC = gcc
-  CFLAGS += -fPIC
+  CFLAGS += -fPIC -fcommon
   LDFLAGS += -shared -Wl,-zdefs -Wl,-Map=$(MAPFILE)
 endif
 
