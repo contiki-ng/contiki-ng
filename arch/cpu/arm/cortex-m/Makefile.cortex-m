@@ -28,8 +28,4 @@ LDFLAGS += -Wl,--no-warn-mismatch
 
 OBJCOPY_FLAGS += --gap-fill 0xff
 
-### Resolve any potential circular dependencies between the linked libraries
-### See: https://stackoverflow.com/questions/5651869/gcc-what-are-the-start-group-and-end-group-command-line-options/5651895
-TARGET_LIBFLAGS := $(LD_START_GROUP) $(TARGET_LIBFILES) $(LD_END_GROUP)
-
 include $(CONTIKI)/$(CONTIKI_NG_ARM_DIR)/Makefile.arm
