@@ -58,4 +58,8 @@ sprintf(char *str, const char *format, ...)
   va_end(ap);
   return res;
 }
+
+#if defined(CONTIKI_TARGET_COOJA) && !defined(__APPLE__)
+extern int __wrap_sprintf(char *str, const char *format, ...) __attribute__((nonnull, nothrow, alias("sprintf")));
+#endif
 /*---------------------------------------------------------------------------*/

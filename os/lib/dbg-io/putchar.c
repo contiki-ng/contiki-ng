@@ -41,4 +41,8 @@ putchar(int c)
   dbg_putchar(c);
   return c;
 }
+
+#if defined(CONTIKI_TARGET_COOJA) && !defined(__APPLE__)
+extern int __wrap_putchar(int c) __attribute__((alias("putchar")));
+#endif
 /*---------------------------------------------------------------------------*/
