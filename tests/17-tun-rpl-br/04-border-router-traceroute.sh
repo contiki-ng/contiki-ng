@@ -35,7 +35,7 @@ echo "Running Traceroute"
 traceroute6 $IPADDR -m 5 | tee $BASENAME.scriptlog
 # Fetch traceroute6 status code (not $? because this is piped)
 STATUS=${PIPESTATUS[0]}
-HOPS=`wc $BASENAME.scriptlog -l | cut -f 1 -d ' '`
+HOPS=`grep -v traceroute $BASENAME.scriptlog | wc -l`
 
 echo "Closing simulation and tunslip6"
 sleep 1
