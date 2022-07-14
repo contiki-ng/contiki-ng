@@ -169,7 +169,7 @@ ASM_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(ASM_SOURCE_FILE_NAMES:.s=.o) )
 vpath %.c $(C_PATHS)
 vpath %.s $(ASM_PATHS)
 
-TARGET_LIBS = $(ASM_OBJECTS) $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/lib/ble_6lowpan.a
+CONTIKI_OBJECTFILES += $(ASM_OBJECTS) $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/lib/ble_6lowpan.a
 
 # Assemble files
 $(OBJECT_DIRECTORY)/%.o: %.s
