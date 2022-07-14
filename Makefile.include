@@ -467,6 +467,9 @@ endif
 	$(TRACE_LD)
 	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out $(LDSCRIPT) %.a,$^} \
 	    ${filter %.a,$^} $(TARGET_LIBEXTRAS) -o $(LIBNAME)
+ifdef BINARY_SIZE_LOGFILE
+	$(Q)$(SIZE) $(LIBNAME) | grep $(BUILD_DIR_BOARD) >> $(BINARY_SIZE_LOGFILE)
+endif
 endif
 
 %.$(TARGET): $(BUILD_DIR_BOARD)/%.$(TARGET)
