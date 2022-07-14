@@ -89,13 +89,11 @@ else
   echo "==== $MOSQ_SUB_ERR ====" ; cat $MOSQ_SUB_ERR;
 
   printf "%-32s TEST FAIL\n" "$TEST_NAME" | tee $CLIENT_TESTLOG;
+  rm -f make.log make.err $CLIENT_LOG $CLIENT_ERR $MOSQ_SUB_LOG $MOSQ_SUB_ERR mosquitto.conf
+  exit 1
 fi
 
-rm make.log
-rm make.err
-rm $CLIENT_LOG $CLIENT_ERR
-rm $MOSQ_SUB_LOG $MOSQ_SUB_ERR
-rm mosquitto.conf
+rm -f make.log make.err $CLIENT_LOG $CLIENT_ERR $MOSQ_SUB_LOG $MOSQ_SUB_ERR mosquitto.conf
 
 # We do not want Make to stop -> Return 0
 # The Makefile will check if a log contains FAIL at the end

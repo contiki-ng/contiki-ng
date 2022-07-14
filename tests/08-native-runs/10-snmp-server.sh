@@ -33,12 +33,11 @@ test_handler () {
     echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
     
     printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
+    rm -f make.log make.err node.log node.err
+    exit 1
   fi
 
-  rm make.log
-  rm make.err
-  rm node.log
-  rm node.err
+  rm -f make.log make.err node.log node.err
 }
 
 # v1

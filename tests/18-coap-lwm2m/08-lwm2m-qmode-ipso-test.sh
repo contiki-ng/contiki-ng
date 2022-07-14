@@ -55,6 +55,8 @@ else
   echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
 
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
+  rm -f make.log make.err node.log node.err leshan.log leshan.err
+  exit 1
 fi
 
 rm -f make.log make.err node.log node.err leshan.log leshan.err
