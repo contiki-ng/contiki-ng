@@ -1,3 +1,7 @@
+CURDIR := $(abspath $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
+# FIXME: Uncomment the next line after the cortex-m customrules are removed.
+# BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
+
 EXAMPLESDIR=../../examples
 TOOLSDIR=../../tools
 
