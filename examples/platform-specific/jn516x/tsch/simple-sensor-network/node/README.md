@@ -1,3 +1,5 @@
+# platform-specific/jn516x/tsch/simple-sensor-network/node
+
 Node is part of Simple-Sensor-Network
 When node is connected to border-router (TSCH), it will wait to be addressed by a host
 on port 8185. 

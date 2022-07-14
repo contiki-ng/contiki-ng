@@ -1,5 +1,7 @@
-CC26xx Web Demo Readme
-======================
+# platform-specific/cc26x0-cc13x0/cc26x0-web-demo
+
+## CC26xx Web Demo Readme
+
 This demo project combines a number of web-based applications aiming to
 demonstrate the CC26xx capability. The applications are:
 
@@ -27,8 +29,8 @@ defines in `project-conf.h`. For instance, to disable the CoAP functionality,
 set `#define CC26XX_WEB_DEMO_CONF_COAP_SERVER 0`. The web server cannot be
 disabled, all other aforementioned applications can.
 
-Network UART (net-uart)
------------------------
+### Network UART (net-uart)
+
 This example only makes sense if you are using the Srf or if you have taken
 the sensortag out of its case and you have it connected over JTAG to the Srf.
 
@@ -48,8 +50,8 @@ any other string would, but instead it will configure the example to send to a
 different remote address. This new IPv6 address is not persistent across
 device reboots.
 
-6lbr Client
------------
+### 6lbr Client
+
 This will periodically send a UDP packet to your 6lbr, containing network
 information, which will be used by 6lbr to construct a network graph. To see
 this in action, fire up a browser and navigate to the 6lbr web page. The
@@ -58,8 +60,8 @@ tab, as per the image below.
 
 ![6lbr](img/6lbr-web.png)
 
-CoAP Server
------------
+### CoAP Server
+
 For this functionality to work, you will need to install a CoAP client.
 You can achieve this by following the guides on how to set up your system
 [in the wiki](https://github.com/contiki-ng/contiki-ng/wiki#setting-up-contiki-ng).
@@ -99,8 +101,8 @@ the CoAP engine will return 4.03 forbidden. The values of `name` and `interval`
 persist across BLE on/off cycles, so you only have to set them once. The values
 do _not_ persist through device powercycles.
 
-HTTPD
------
+### HTTPD
+
 Back on the 6lbr page, hit the 'web' link corresponding to your device. This
 will take you to a web page served by the CC26xx. The HTTPD serves two pages:
 
@@ -110,8 +112,8 @@ will take you to a web page served by the CC26xx. The HTTPD serves two pages:
 In the navigation bar at the top there is also a third link, which will take
 you directly to your device's page on IBM's quickstart service.
 
-IBM Quickstart / MQTT Client
-----------------------------
+### IBM Quickstart / MQTT Client
+
 The MQTT client can be used to:
 
 * Publish sensor readings to an MQTT broker.
@@ -178,8 +180,8 @@ Bear in mind that, even though the topic suggests that messages are of json
 format, they are in fact not. This was done in order to avoid linking a json
 parser into the firmware.
 
-IBM Watson IoT Platform
-----------------------------
+### IBM Watson IoT Platform
+
 To use IBM Watson IoT Platform, you have to go to SECURITY tab of Device page to select "TLS Optional". This step is critical. If you don't do this, you need to use TLS for connection and default cc26x0-web-demo won't work.
 
 ![IBM Watson IoT Platform TLS Optional Configuration](img/ibm-watson-iot-platform-tls-optional.png)

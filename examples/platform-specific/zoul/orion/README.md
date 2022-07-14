@@ -1,10 +1,12 @@
-RE-Mote IP64 README file
-========================
+# platform-specific/zoul/orion
+
+## RE-Mote IP64 README file
+
 
 This example shows how to use the Zolertia's Orion Ethernet router, based on the Zoul and ENC28J60 modules, with active POE support.
 
-IP64 router
------------------
+### IP64 router
+
 The router packs a built-in webserver and optionally can run on 2.4GHz or with the Sub-1GHz radio interface.  In the `project-conf.h` file you can alternatively enable one or another as follows:
 
 * RF 2.4GHz (cc2538 built-in)
@@ -30,8 +32,8 @@ make TARGET=zoul BOARD=orion ip64-router.upload
 
 As default we enable the `DHCP` support for autoconfiguration.  Just connect to a DHCP-enabled device to obtain an IPv4 IP address and that's it!.
 
-HTTP client examples
------------------
+### HTTP client examples
+
 
 There are available 2 examples ready to use using the `http-socket` library:
 

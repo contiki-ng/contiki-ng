@@ -1,5 +1,7 @@
-MQTT Client Example
-===================
+# mqtt-client
+
+## MQTT Client Example
+
 The MQTT client can be used to:
 
 * Publish sensor readings to an MQTT broker.
@@ -20,8 +22,8 @@ platform.
 To enable Watson mode, define `MQTT_CLIENT_CONF_WITH_IBM_WATSON` as 1 in the
 example's `project-conf.h`.
 
-Publishing
-----------
+### Publishing
+
 By default the example will attempt to publish readings to an MQTT broker
 running on the IPv6 address specified as `MQTT_CLIENT_CONF_BROKER_IP_ADDR` in
 `project-conf.h`. This functionality was tested successfully with
@@ -35,8 +37,8 @@ client-id `d:<org-id>:mqtt-client:<device-id>`, where `<device-id>` gets
 constructed from the device's IEEE address. `<org-id>` can be controlled
 through the `MQTT_CLIENT_CONF_ORG_ID` define.
 
-Subscribing
------------
+### Subscribing
+
 You can also subscribe to topics and receive commands, but this will only
 work if you use "Org ID" != 'quickstart'. To achieve this, you will need to
 change `MQTT_CLIENT_CONF_ORG_ID` in `project-conf.h`. In this scenario, the
@@ -59,8 +61,8 @@ format, they are in fact not. This was done in order to avoid linking a json
 parser into the firmware. This comment only applies to parsing incoming
 messages, outgoing publish messages use proper json payload.
 
-IBM Quickstart Service
-----------------------
+### IBM Quickstart Service
+
 It is also possible to publish to IBM's quickstart service. To do so, you need
 to enable this mode by setting `MQTT_CLIENT_CONF_WITH_IBM_WATSON` to 1 in
 `project-conf.h`.

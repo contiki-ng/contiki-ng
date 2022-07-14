@@ -1,3 +1,5 @@
+# libs/ipv6-uipbuf
+
 This example is meant to showcase the capabilities of uipbuf. It currently
 focuses only on UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS, which lets an application
 set a custom max number of MAC transmissions. Optionally, this information

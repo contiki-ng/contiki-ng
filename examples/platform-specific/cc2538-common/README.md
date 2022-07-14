@@ -1,5 +1,6 @@
-README file for CC2538 common examples
-=========
+# platform-specific/cc2538-common
+
+## README file for CC2538 common examples
 
 The `cc2538-commmon` groups examples common to all cc2538-based platforms.
 The examples in this folder are known to work on:

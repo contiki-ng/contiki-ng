@@ -1,6 +1,7 @@
 # Doxyfile configuration variables
 export doclatex	:= NO
 export docroot	:= ../..
+export PATH     := .:$(PATH)
 
 .PHONY: clean html
 
