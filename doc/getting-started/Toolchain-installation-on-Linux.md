@@ -66,19 +66,9 @@ To get the NRF52dk platform to work you will need to add SDK and programming too
 
 ```bash
 $ sudo apt install default-jdk ant
-```
-
-Cooja needs to have the environment variable `JAVA_HOME` set to work with native Contiki nodes.
-
-```bash
 $ update-alternatives --config java
 There is only one alternative in link group java (providing /usr/bin/java): /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
 Nothing to configure.
-```
-
-Set `JAVA_HOME` with the path found above in `.profile`:
-```bash
-$ echo 'export JAVA_HOME="/usr/lib/jvm/default-java"' >> ~/.profile
 ```
 
 ### Install JTAG software for CC2538 (optional)
