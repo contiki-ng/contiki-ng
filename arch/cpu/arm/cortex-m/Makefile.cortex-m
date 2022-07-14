@@ -1,20 +1,27 @@
-CMSIS_PATH = CMSIS/CMSIS
+MAKEFILES_CUSTOMRULES += $(CONTIKI_NG_RELOC_CPU_DIR)/arm/cortex-m/Makefile.customrules-cortex-m
 
-CMSIS_ROOT = $(CONTIKI)/$(CONTIKI_NG_ARM_DIR)/$(CMSIS_PATH)
-ifeq (,$(wildcard $(CMSIS_ROOT)/*))
-    $(warning $(CMSIS_ROOT) does not exist or is empty.)
-    $(warning Did you run 'git submodule update --init' ?)
-    $(error "")
+ifndef CMSIS_PATH
+    CMSIS_PATH = CMSIS/CMSIS
+
+    CMSIS_ROOT = $(CONTIKI)/$(CONTIKI_NG_ARM_DIR)/$(CMSIS_PATH)
+    ifeq (,$(wildcard $(CMSIS_ROOT)/*))
+        $(warning $(CMSIS_ROOT) does not exist or is empty.)
+        $(warning Did you run 'git submodule update --init' ?)
+        $(error "")
+    endif
+    CONTIKI_ARM_DIRS += $(CMSIS_PATH)/Core/Include
 endif
 
-CONTIKI_ARM_DIRS += cortex-m $(CMSIS_PATH)/Core/Include
+CONTIKI_ARM_DIRS += cortex-m
 
 ### Build syscalls for newlib
 MODULES += os/lib/newlib
 
 LDFLAGS += -T $(LDSCRIPT)
 LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
-LDFLAGS += -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP),--cref,--no-warn-mismatch
+# The next line might be trying to avoid
+# https://sourceware.org/bugzilla/show_bug.cgi?id=28910
+LDFLAGS += -Wl,--no-warn-mismatch
 
 OBJCOPY_FLAGS += --gap-fill 0xff
 
@@ -23,15 +30,5 @@ CPU_STARTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CPU_START_SOURCEFILES
 ### Resolve any potential circular dependencies between the linked libraries
 ### See: https://stackoverflow.com/questions/5651869/gcc-what-are-the-start-group-and-end-group-command-line-options/5651895
 TARGET_LIBFLAGS := -Wl,--start-group $(TARGET_LIBFILES) -Wl,--end-group
-
-CUSTOM_RULE_LINK = 1
-
-OUT_ELF = $(BUILD_DIR_BOARD)/%.elf
-
-.SECONDEXPANSION:
-
-$(OUT_ELF): $(CPU_STARTFILES) $$(CONTIKI_OBJECTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(LDSCRIPT) $(TARGET_LIBS)
-	$(TRACE_LD)
-	$(Q)$(LD) $(LDFLAGS) ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} $(TARGET_LIBFLAGS) -o $@
 
 include $(CONTIKI)/$(CONTIKI_NG_ARM_DIR)/Makefile.arm

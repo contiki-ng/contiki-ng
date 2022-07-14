@@ -25,7 +25,9 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-all: cooja summary
+SHELL := /bin/bash
+
+all: summary
 
 TESTS=$(wildcard ??-*.csc)
 TESTLOGS=$(sort $(patsubst %.csc,%.testlog,$(TESTS)))
@@ -37,23 +39,27 @@ RUNCOUNT ?= 1
 
 CONTIKI ?= ../..
 
+Q ?= @
+
+.PHONY: all clean tests
 tests: $(TESTLOGS)
 
-summary: clean tests
-ifeq ($(TESTS),)
-	@echo No tests > summary
-else
-	@cat $(TESTLOGS) > summary
-endif
+# Last line of rule checks for existence of the file summary to decide if
+# the test succeeded. Based on that, some output is echoed followed by using
+# the right exit code.
+summary: clean
+	@$(MAKE) tests
 	@echo "========== Summary =========="
-	@cat summary
+	@([ ! -f summary ] && echo "All tests OK" && touch summary) || \
+          (echo "Failures:" && cat summary && false)
 
-%.testlog: %.csc cooja
-	@$(CONTIKI)/tests/simexec.sh "$<" "$(CONTIKI)" "$(basename $@)" $(BASESEED) $(RUNCOUNT)
+# Perform a bash loop of $(RUNCOUNT) iterations.
+# Successful simulations do nothing, failures appends test+seed to summary.
+%.testlog: %.csc
+	@for (( SEED=$(BASESEED); SEED < $$(( $(BASESEED) + $(RUNCOUNT) )); SEED++ )); do \
+          ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $(CONTIKI)/tools/cooja/build.xml run_bigmem -Dargs="-nogui=$(realpath $<) -contiki=$(realpath $(CONTIKI)) -logdir=$(dir $(realpath $<)) -random-seed=$$SEED" || \
+            echo "TEST FAIL: $< seed $$SEED" >> summary; \
+         done
 
 clean:
-	@rm -f *.*log report summary
-
-cooja: $(CONTIKI)/tools/cooja/dist/cooja.jar
-$(CONTIKI)/tools/cooja/dist/cooja.jar:
-	(cd $(CONTIKI)/tools/cooja; ant jar)
+	$(Q)rm -f *.*log report summary

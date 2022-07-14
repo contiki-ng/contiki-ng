@@ -84,6 +84,7 @@
 /** \name USB configuration
  *
  * The USB pullup for D+ is not included in this platform
+ * @{
  */
 #ifdef USB_PULLUP_PORT
 #undef USB_PULLUP_PORT

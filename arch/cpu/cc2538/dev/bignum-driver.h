@@ -455,8 +455,3 @@ uint8_t bignum_divide_get_result(uint32_t *buffer,
 /** @} */
 
 #endif /* BIGNUM_DRIVER_H_ */
-
-/**
- * @}
- * @}
- */

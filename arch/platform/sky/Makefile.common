@@ -10,20 +10,10 @@ ifndef CONTIKI_TARGET_MAIN
 CONTIKI_TARGET_MAIN = contiki-main.c
 endif
 
-ifdef IAR
-CFLAGS += -D__MSP430F1611__=1 -e --vla -Ohz --multiplier=16s --core=430 --double=32
-CFLAGSNO = --dlib_config "$(IAR_PATH)/LIB/DLIB/dl430fn.h" $(CFLAGSWERROR)
-endif
-
 CONTIKI_TARGET_SOURCEFILES += $(ARCH) $(UIPDRIVERS)
 
 MCU=msp430f1611
 include $(CONTIKI_NG_RELOC_CPU_DIR)/msp430/Makefile.msp430
-
-ifdef IAR
-LDFLAGSNO += -xm "$(IAR_PATH)/lib/dlib/dl430fn.r43" -f "$(IAR_PATH)/config/lnk430f1611.xcl"
-LDFLAGS += $(LDFLAGSNO) -Felf -yn
-endif # IAR
 
 NUMPAR=20
 

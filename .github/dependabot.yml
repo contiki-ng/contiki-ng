@@ -1,0 +1,8 @@
+version: 2
+updates:
+# list of package ecosystems - what should we add?
+- package-ecosystem: github-actions
+  directory: "/"
+  schedule:
+    interval: "daily"
+  target-branch: "develop"

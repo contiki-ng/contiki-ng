@@ -48,7 +48,7 @@ static void *mac_sent_callback_arg;
 /* NBR_TABLE_CONF_CAN_ACCEPT_NEW is set to rpl_nbr_can_accept_new() */
 bool
 reject_if_full(const linkaddr_t *new, const linkaddr_t *candidate_for_removal,
-                       nbr_table_reason_t reason, void *data)
+                       nbr_table_reason_t reason, const void *data)
 {
   return candidate_for_removal == NULL;
 }
@@ -57,7 +57,7 @@ void
 test_print_report(const unit_test_t *utp)
 {
   printf("=check-me= ");
-  if(utp->result == unit_test_failure) {
+  if(utp->passed == false) {
     printf("FAILED   - %s: exit at L%u\n", utp->descr, utp->exit_line);
   } else {
     printf("SUCCEEDED - %s\n", utp->descr);

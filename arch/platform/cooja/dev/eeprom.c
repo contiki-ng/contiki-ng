@@ -35,52 +35,55 @@
 
 const struct simInterface eeprom_interface;
 
-#define EEPROM_BUF_SIZE 1024 /* Configure EEPROM size here and in ContikiEeprom.java */
+/* Configure EEPROM size here and in ContikiEEPROM.java */
+#define EEPROM_BUF_SIZE 1024
 
 unsigned char simEEPROMData[EEPROM_BUF_SIZE];
 char simEEPROMChanged = 0;
 int simEEPROMRead = 0;
 int simEEPROMWritten = 0;
 
-void 
-eeprom_init(void) 
+bool
+eeprom_init(void)
 {
+  return true;
 }
 
-void
-eeprom_read(eeprom_addr_t addr, unsigned char *buf, int len)
+bool
+eeprom_read(eeprom_addr_t addr, unsigned char *buf, size_t len)
 {
-    if (addr >= EEPROM_BUF_SIZE) {
-        return;
-    }
-    
-    if(addr + len >= EEPROM_BUF_SIZE) {
-		len = EEPROM_BUF_SIZE - addr;
-	}
+  if(addr >= EEPROM_BUF_SIZE) {
+      return false;
+  }
 
-	memcpy(buf, &simEEPROMData[addr], len);
-	
-    simEEPROMChanged = 1;
-    simEEPROMRead += len;
+  if(addr + len >= EEPROM_BUF_SIZE) {
+     len = EEPROM_BUF_SIZE - addr;
+  }
+
+  memcpy(buf, &simEEPROMData[addr], len);
+
+  simEEPROMChanged = 1;
+  simEEPROMRead += len;
+
+  return true;
 }
 
-void
-eeprom_write(eeprom_addr_t addr, unsigned char *buf, int len)
-{    
-    if (addr >= EEPROM_BUF_SIZE) {
-        return;
-    }
+bool
+eeprom_write(eeprom_addr_t addr, const unsigned char *buf, size_t len)
+{
+  if(addr >= EEPROM_BUF_SIZE) {
+    return false;
+  }
 
-    if(addr + len >= EEPROM_BUF_SIZE) {
-		len = EEPROM_BUF_SIZE - addr;
-	}
-    
-    
-    memcpy(&simEEPROMData[addr], buf, len);
-    
-    simEEPROMChanged = 1;
-    simEEPROMWritten += len;
-    
+  if(addr + len >= EEPROM_BUF_SIZE) {
+    len = EEPROM_BUF_SIZE - addr;
+  }
+
+  memcpy(&simEEPROMData[addr], buf, len);
+  simEEPROMChanged = 1;
+  simEEPROMWritten += len;
+
+  return true;
 }
 
 /*-----------------------------------------------------------------------------------*/

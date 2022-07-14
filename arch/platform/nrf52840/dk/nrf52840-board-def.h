@@ -63,7 +63,7 @@
 #define LEDS_CONF_COUNT                         4
 
 #define LEDS_CONF_GREEN     1
-
+/** @} */
 /**
  * \name Button configurations
  *

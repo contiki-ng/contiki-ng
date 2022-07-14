@@ -60,6 +60,7 @@
 #ifndef BOARD_CONF_SENSORS_DISABLE
 #define BOARD_CONF_SENSORS_DISABLE          0
 #endif
+/** @} */
 /*---------------------------------------------------------------------------*/
 /**
  * \name Watchdog Configuration.

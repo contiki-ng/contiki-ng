@@ -42,7 +42,7 @@ void
 test_print_report(const unit_test_t *utp)
 {
   printf("=check-me= ");
-  if(utp->result == unit_test_failure) {
+  if(utp->passed == false) {
     printf("FAILED   - %s: exit at L%u\n", utp->descr, utp->exit_line);
   } else {
     printf("SUCCEEDED - %s\n", utp->descr);

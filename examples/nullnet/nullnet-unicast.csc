@@ -2,7 +2,6 @@
 <simconf>
   <project EXPORT="discard">[APPS_DIR]/mrm</project>
   <project EXPORT="discard">[APPS_DIR]/mspsim</project>
-  <project EXPORT="discard">[APPS_DIR]/avrora</project>
   <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <simulation>
@@ -24,7 +23,7 @@
       <identifier>mtype634</identifier>
       <description>Cooja Mote Type #1</description>
       <source>[CONTIKI_DIR]/examples/nullnet/nullnet-unicast.c</source>
-      <commands>make nullnet-unicast.cooja TARGET=cooja</commands>
+      <commands>make -j$(CPUS) nullnet-unicast.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

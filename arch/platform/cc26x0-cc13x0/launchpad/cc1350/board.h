@@ -121,6 +121,7 @@
 
 #define EXT_FLASH_PROGRAM_PAGE_SIZE 256
 #define EXT_FLASH_ERASE_SECTOR_SIZE 4096
+/** @} */
 /*---------------------------------------------------------------------------*/
 /**
  * \brief I2C IOID mappings

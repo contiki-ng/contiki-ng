@@ -114,9 +114,10 @@ static RF_Object rf_netstack;
 static RF_Object rf_ble;
 #endif
 
-static RF_CmdHandle cmd_rx_handle;
+static volatile RF_CmdHandle cmd_rx_handle;
 
-static bool rf_is_on;
+static volatile bool rf_is_on;
+static volatile bool rf_start_recalib_timer;
 static volatile bool rx_buf_full;
 
 static rfc_CMD_SYNC_STOP_RAT_t netstack_cmd_stop_rat;
@@ -248,8 +249,6 @@ rf_yield(void)
 #endif
 
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
-
-  etimer_stop(&synth_recal_timer);
   rf_is_on = false;
 
   return RF_RESULT_OK;
@@ -618,12 +617,11 @@ netstack_sched_rx(bool start)
   }
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
+  rf_is_on = true;
 
   if(start) {
-    rf_is_on = true;
-    if(!radio_mode->poll_mode) {
-      process_poll(&rf_sched_process);
-    }
+    rf_start_recalib_timer = true;
+    process_poll(&rf_sched_process);
   }
 
   return RF_RESULT_OK;
@@ -844,11 +842,13 @@ PROCESS_THREAD(rf_sched_process, ev, data)
                         (ev == PROCESS_EVENT_TIMER));
 
     /* start the synth re-calibration timer once. */
-    if(rf_is_on) {
-      rf_is_on = false;
-      clock_time_t interval = synth_recal_interval();
-      LOG_INFO("Starting synth re-calibration timer, next timeout %lu\n", interval);
-      etimer_set(&synth_recal_timer, interval);
+    if(rf_start_recalib_timer) {
+      rf_start_recalib_timer = false;
+      if(rf_is_on) {
+        clock_time_t interval = synth_recal_interval();
+        LOG_INFO("Starting synth re-calibration timer, next timeout %lu\n", interval);
+        etimer_set(&synth_recal_timer, interval);
+      }
     }
 
     if(ev == PROCESS_EVENT_POLL) {
@@ -883,11 +883,13 @@ PROCESS_THREAD(rf_sched_process, ev, data)
     /* Scheduling CMD_FS will re-calibrate the synth. */
     if((ev == PROCESS_EVENT_TIMER) &&
        etimer_expired(&synth_recal_timer)) {
-      clock_time_t interval = synth_recal_interval();
-      LOG_DBG("Re-calibrate synth, next interval %lu\n", interval);
+      if(rf_is_on) {
+        clock_time_t interval = synth_recal_interval();
+        LOG_DBG("Re-calibrate synth, next interval %lu\n", interval);
 
-      netstack_sched_fs();
-      etimer_set(&synth_recal_timer, interval);
+        netstack_sched_fs();
+        etimer_set(&synth_recal_timer, interval);
+      }
     }
   }
   PROCESS_END();

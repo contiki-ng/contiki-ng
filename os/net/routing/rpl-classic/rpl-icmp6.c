@@ -358,9 +358,14 @@ dio_input(void)
       goto discard;
     }
 
-    LOG_DBG("Incoming DIO (option, length) = (%u, %u)\n", subopt_type, len - 2);
+    LOG_DBG("Incoming DIO (option, length) = (%u, %u)\n",
+            subopt_type, len);
 
     switch(subopt_type) {
+      case RPL_OPTION_PAD1:
+      case RPL_OPTION_PADN:
+        LOG_DBG("PAD %u bytes\n", len);
+        break;
       case RPL_OPTION_DAG_METRIC_CONTAINER:
         if(len < 6) {
           LOG_WARN("Invalid DAG MC, len = %d\n", len);
@@ -744,6 +749,19 @@ dao_input_storing(void)
       case RPL_OPTION_TARGET:
         /* Handle the target option. */
         prefixlen = buffer[i + 3];
+        if(prefixlen == 0) {
+          /* Ignore option targets with a prefix length of 0. */
+          break;
+        }
+        if(prefixlen > 128) {
+          LOG_ERR("Too large target prefix length %d\n", prefixlen);
+          return;
+        }
+        if(i + 4 + ((prefixlen + 7) / CHAR_BIT) > buffer_length) {
+          LOG_ERR("Insufficient space to copy RPL Target of %d bits\n",
+                  prefixlen);
+          return;
+        }
         memset(&prefix, 0, sizeof(prefix));
         memcpy(&prefix, buffer + i + 4, (prefixlen + 7) / CHAR_BIT);
         break;
@@ -981,6 +999,19 @@ dao_input_nonstoring(void)
       case RPL_OPTION_TARGET:
         /* Handle the target option. */
         prefixlen = buffer[i + 3];
+        if(prefixlen == 0) {
+          /* Ignore option targets with a prefix length of 0. */
+          break;
+        }
+        if(prefixlen > 128) {
+          LOG_ERR("Too large target prefix length %d\n", prefixlen);
+          return;
+        }
+        if(i + 4 + ((prefixlen + 7) / CHAR_BIT) > buffer_length) {
+          LOG_ERR("Insufficient space to copy RPL Target of %d bits\n",
+                  prefixlen);
+          return;
+        }
         memset(&prefix, 0, sizeof(prefix));
         memcpy(&prefix, buffer + i + 4, (prefixlen + 7) / CHAR_BIT);
         break;

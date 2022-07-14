@@ -53,12 +53,7 @@ typedef enum {
   NBR_TABLE_REASON_SIXTOP,
 } nbr_table_reason_t;
 
-/* Neighbor table size */
-#ifdef NBR_TABLE_CONF_MAX_NEIGHBORS
 #define NBR_TABLE_MAX_NEIGHBORS NBR_TABLE_CONF_MAX_NEIGHBORS
-#else /* NBR_TABLE_CONF_MAX_NEIGHBORS */
-#define NBR_TABLE_MAX_NEIGHBORS 8
-#endif /* NBR_TABLE_CONF_MAX_NEIGHBORS */
 
 #ifdef NBR_TABLE_CONF_GC_GET_WORST
 #define NBR_TABLE_GC_GET_WORST NBR_TABLE_CONF_GC_GET_WORST
@@ -72,9 +67,11 @@ typedef enum {
 #define NBR_TABLE_CAN_ACCEPT_NEW nbr_table_can_accept_new
 #endif /* NBR_TABLE_CONF_CAN_ACCEPT_NEW */
 
-const linkaddr_t *NBR_TABLE_GC_GET_WORST(const linkaddr_t *lladdr1, const linkaddr_t *lladdr2);
-bool NBR_TABLE_CAN_ACCEPT_NEW(const linkaddr_t *new, const linkaddr_t *candidate_for_removal,
-                              nbr_table_reason_t reason, void *data);
+const linkaddr_t *NBR_TABLE_GC_GET_WORST(const linkaddr_t *lladdr1,
+                                         const linkaddr_t *lladdr2);
+bool NBR_TABLE_CAN_ACCEPT_NEW(const linkaddr_t *new,
+                              const linkaddr_t *candidate_for_removal,
+                              nbr_table_reason_t reason, const void *data);
 
 /* An item in a neighbor table */
 typedef void nbr_table_item_t;
@@ -114,36 +111,43 @@ typedef struct nbr_table_key {
 /** \name Neighbor tables: register and loop through table elements */
 /** @{ */
 int nbr_table_register(nbr_table_t *table, nbr_table_callback *callback);
-int nbr_table_is_registered(nbr_table_t *table);
-nbr_table_item_t *nbr_table_head(nbr_table_t *table);
-nbr_table_item_t *nbr_table_next(nbr_table_t *table, nbr_table_item_t *item);
+int nbr_table_is_registered(const nbr_table_t *table);
+nbr_table_item_t *nbr_table_head(const nbr_table_t *table);
+nbr_table_item_t *nbr_table_next(const nbr_table_t *table,
+                                 nbr_table_item_t *item);
 /** @} */
 
 /** \name Neighbor tables: add and get data */
 /** @{ */
-nbr_table_item_t *nbr_table_add_lladdr(nbr_table_t *table, const linkaddr_t *lladdr, nbr_table_reason_t reason, void *data);
-nbr_table_item_t *nbr_table_get_from_lladdr(nbr_table_t *table, const linkaddr_t *lladdr);
+nbr_table_item_t *nbr_table_add_lladdr(const nbr_table_t *table,
+                                       const linkaddr_t *lladdr,
+                                       nbr_table_reason_t reason,
+                                       const void *data);
+nbr_table_item_t *nbr_table_get_from_lladdr(const nbr_table_t *table,
+                                            const linkaddr_t *lladdr);
 /** @} */
 
 /** \name Neighbor tables: set flags (unused, locked, unlocked) */
 /** @{ */
-int nbr_table_remove(nbr_table_t *table, nbr_table_item_t *item);
-int nbr_table_lock(nbr_table_t *table, nbr_table_item_t *item);
-int nbr_table_unlock(nbr_table_t *table, nbr_table_item_t *item);
+int nbr_table_remove(const nbr_table_t *table, const nbr_table_item_t *item);
+int nbr_table_lock(const nbr_table_t *table, const nbr_table_item_t *item);
+int nbr_table_unlock(const nbr_table_t *table, const nbr_table_item_t *item);
 /** @} */
 
 /** \name Neighbor tables: address manipulation */
 /** @{ */
-linkaddr_t *nbr_table_get_lladdr(nbr_table_t *table, const nbr_table_item_t *item);
+linkaddr_t *nbr_table_get_lladdr(const nbr_table_t *table,
+                                 const nbr_table_item_t *item);
 /** @} */
 
 /** \name Neighbor tables: other */
 /** @{ */
 void nbr_table_clear(void);
-bool nbr_table_entry_is_allowed(nbr_table_t *table, const linkaddr_t *lladdr,
-                                nbr_table_reason_t reason, void *data);
+bool nbr_table_entry_is_allowed(const nbr_table_t *table,
+                                const linkaddr_t *lladdr,
+                                nbr_table_reason_t reason, const void *data);
 nbr_table_key_t *nbr_table_key_head(void);
-nbr_table_key_t *nbr_table_key_next(nbr_table_key_t *key);
+nbr_table_key_t *nbr_table_key_next(const nbr_table_key_t *key);
 int nbr_table_count_entries(void);
 
 /** @} */

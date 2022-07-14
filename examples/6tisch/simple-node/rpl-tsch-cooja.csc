@@ -2,10 +2,8 @@
 <simconf>
   <project EXPORT="discard">[APPS_DIR]/mrm</project>
   <project EXPORT="discard">[APPS_DIR]/mspsim</project>
-  <project EXPORT="discard">[APPS_DIR]/avrora</project>
   <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
-  <project EXPORT="discard">[APPS_DIR]/radiologger-headless</project>
   <simulation>
     <title>RPL+TSCH</title>
     <randomseed>123456</randomseed>
@@ -26,7 +24,7 @@
       <description>RPL/TSCH Node</description>
       <source>[CONTIKI_DIR]/examples/6tisch/simple-node/node.c</source>
       <commands>make TARGET=cooja clean
-      make TARGET=cooja node.cooja</commands>
+      make -j$(CPUS) TARGET=cooja node.cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

@@ -2,11 +2,9 @@
 <simconf>
   <project EXPORT="discard">[APPS_DIR]/mrm</project>
   <project EXPORT="discard">[APPS_DIR]/mspsim</project>
-  <project EXPORT="discard">[APPS_DIR]/avrora</project>
   <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <project EXPORT="discard">[APPS_DIR]/serial2pty</project>
-  <project EXPORT="discard">[APPS_DIR]/radiologger-headless</project>
   <simulation>
     <title>My simulation</title>
     <randomseed>123456</randomseed>
@@ -26,7 +24,8 @@
       <identifier>mtype301</identifier>
       <description>Sender</description>
       <source>[CONFIG_DIR]/code/sender-node.c</source>
-      <commands>make -j sender-node.cooja TARGET=cooja</commands>
+      <commands>make clean TARGET=cooja
+make -j$(CPUS) sender-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -50,7 +49,7 @@
       <identifier>mtype820</identifier>
       <description>RPL root</description>
       <source>[CONFIG_DIR]/code/root-node.c</source>
-      <commands>make -j root-node.cooja TARGET=cooja</commands>
+      <commands>make -j$(CPUS) root-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -74,7 +73,7 @@
       <identifier>mtype306</identifier>
       <description>Receiver</description>
       <source>[CONFIG_DIR]/code/receiver-node.c</source>
-      <commands>make -j receiver-node.cooja TARGET=cooja</commands>
+      <commands>make -j$(CPUS) receiver-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

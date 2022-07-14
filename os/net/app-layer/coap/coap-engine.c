@@ -388,8 +388,6 @@ coap_engine_init(void)
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Makes a resource available under the given URI path
- * \param resource A pointer to a resource implementation
- * \param path The URI path string for this resource
  *
  * The resource implementation must be imported first using the
  * extern keyword. The build system takes care of compiling every

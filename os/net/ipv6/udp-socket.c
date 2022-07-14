@@ -100,7 +100,7 @@ udp_socket_bind(struct udp_socket *c,
 /*---------------------------------------------------------------------------*/
 int
 udp_socket_connect(struct udp_socket *c,
-                   uip_ipaddr_t *remote_addr,
+                   const uip_ipaddr_t *remote_addr,
                    uint16_t remote_port)
 {
   if(c == NULL || c->udp_conn == NULL) {
@@ -193,4 +193,3 @@ PROCESS_THREAD(udp_socket_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-/** @} */

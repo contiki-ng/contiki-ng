@@ -241,9 +241,19 @@ set_dao_lifetime_timer(rpl_instance_t *instance)
      time has been configured */
   if(instance->default_lifetime != RPL_INFINITE_LIFETIME) {
     clock_time_t expiration_time;
-    expiration_time = (clock_time_t)instance->default_lifetime *
-      (clock_time_t)instance->lifetime_unit *
-      CLOCK_SECOND / 2;
+
+    /*
+     * If the lifetime is 0, we simply set the expiration time to
+     * half a second to get an interval that corresponds to a
+     * lifetime of 1 and a lifetime unit of 1.
+     */
+    if(instance->default_lifetime == 0 || instance->lifetime_unit == 0) {
+      expiration_time = CLOCK_SECOND / 2;
+    } else {
+      expiration_time = (clock_time_t)instance->default_lifetime *
+        (clock_time_t)instance->lifetime_unit * CLOCK_SECOND / 2;
+    }
+
     /* make the time for the re registration be betwen 1/2 - 3/4 of lifetime */
     expiration_time = expiration_time + (random_rand() % (expiration_time / 2));
     LOG_DBG("Scheduling DAO lifetime timer %u ticks in the future\n",

@@ -116,6 +116,7 @@
  *
  * The USB pullup is to be enabled by an external resistor, as it is not mapped
  * to a GPIO.
+ * @{
  */
 #ifdef USB_PULLUP_PORT
 #undef USB_PULLUP_PORT

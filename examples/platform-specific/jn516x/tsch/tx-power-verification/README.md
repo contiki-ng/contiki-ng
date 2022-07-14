@@ -1,3 +1,5 @@
+# platform-specific/jn516x/tsch/tx-power-verification
+
 The tx-power-control example can be used to check the link between a node and an rpl-border-router.
 After a link is established, the following coap rresources are exposed:
 

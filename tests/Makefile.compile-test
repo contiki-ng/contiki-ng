@@ -25,7 +25,28 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 
-all: clean summary
+all: clean
+	@$(MAKE) summary
+
+ifdef NUMCORES
+  # User wants a certain number, respect that.
+  CPUS := $(NUMCORES)
+else ifneq (, $(shell which nproc))
+  # Query the machine for the number of processors.
+  CPUS := $(shell nproc)
+else
+  # Default to something suitable for a mid-range laptop.
+  CPUS := 8
+endif
+
+# Make tests quiet unless running in CI or user specifies something else.
+ifndef CI
+  V ?= 1
+  Q ?= @
+  MAKEOPTIONS ?= V=$(V) Q=$(Q)
+endif
+PRINT_DIR ?= --no-print-directory
+MAKEOPTIONS += $(PRINT_DIR) WERROR=1
 
 # The stuff below is some GNU make magic to automatically make make
 # give each compile test a number, prefixed with a 0 if the number is
@@ -39,9 +60,9 @@ get_target_vars = $(wordlist 2,15,$(subst :, ,$1))
 
 define dooneexample
 @echo -n Building example $(3): $(1) $(4) for target $(2)
-@((cd $(EXAMPLESDIR)/$(1); \
- $(MAKE) $(4) TARGET=$(2) clean && make -j $(4) TARGET=$(2) WERROR=1) > \
-      /dev/null 2>make.err && \
+@((cd $(EXAMPLESDIR)/$(1) && \
+   $(MAKE) $(4) TARGET=$(2) $(MAKEOPTIONS) clean && \
+   make -j$(CPUS) $(4) TARGET=$(2) $(MAKEOPTIONS)) 2>make.err && \
  (echo " -> OK" && printf "%-75s %-40s %-20s TEST OK\n" "$(1)" "$(4)" "$(2)" > $(3)-$(subst /,-,$(1))$(2).testlog) || \
  (echo " -> FAIL" && printf "%-75s %-40s %-20s TEST FAIL\n" "$(1)" "$(4)" "$(2)" > $(3)-$(subst /,-,$(1))$(2).testlog ; cat make.err))
 @rm -f make.err
@@ -53,16 +74,23 @@ $(call dooneexample,$(dir $(call get_target,${1})),$(notdir $(call get_target,${
 endef
 #end of GNU make magic
 
-examples:
+examples: | $(EXAMPLESDIR)
 	$(foreach ex, $(EXAMPLES), $(call doexample, ${ex}))
+
+$(EXAMPLESDIR):
+	@echo "Could not find examples directory $(EXAMPLESDIR).\n"
+	@echo "If this failure is when running 19-out-of-tree-builds, clone"
+	@echo "https://github.com/contiki-ng/out-of-tree-tests into"
+	@echo "$(EXAMPLESDIR) and run the test again.\n"
+	@false
 
 summary: examples
 	@cat *.testlog > summary
 	@echo "========== Summary =========="
 	@cat summary
 
-clean:
+clean: | $(EXAMPLESDIR)
 	@rm -f *.testlog summary
 	@$(foreach example, $(EXAMPLES), \
            $(foreach target, $(EXAMPLESTARGETS), \
-             (cd $(EXAMPLESDIR)/$(example); $(MAKE) TARGET=$(target) clean);))
+             (cd $(EXAMPLESDIR)/$(example) && $(MAKE) TARGET=$(target) clean);))

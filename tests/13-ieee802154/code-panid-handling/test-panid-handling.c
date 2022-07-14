@@ -115,7 +115,7 @@ void
 test_print_report(const unit_test_t *utp)
 {
   printf("=check-me= ");
-  if(utp->result == unit_test_failure) {
+  if(utp->passed == false) {
     printf("FAILED   - %s: at test index %d\n", utp->descr, utp->exit_line);
   } else {
     printf("SUCEEDED - %s\n", utp->descr);
@@ -268,7 +268,7 @@ UNIT_TEST(panid_frame_ver_0b00)
                    num_of_tests);
 
   UNIT_TEST_END();
-  utp->exit_line = index;
+  unit_test_ptr->exit_line = index;
 }
 
 UNIT_TEST(panid_frame_ver_0b01)
@@ -284,7 +284,7 @@ UNIT_TEST(panid_frame_ver_0b01)
                    num_of_tests);
 
   UNIT_TEST_END();
-  utp->exit_line = index;
+  unit_test_ptr->exit_line = index;
 }
 
 UNIT_TEST(panid_frame_ver_0b10)
@@ -300,7 +300,7 @@ UNIT_TEST(panid_frame_ver_0b10)
                    num_of_tests);
 
   UNIT_TEST_END();
-  utp->exit_line = index;
+  unit_test_ptr->exit_line = index;
 }
 
 PROCESS_THREAD(test_process, ev, data)

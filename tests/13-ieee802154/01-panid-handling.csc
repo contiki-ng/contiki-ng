@@ -2,10 +2,8 @@
 <simconf>
   <project EXPORT="discard">[APPS_DIR]/mrm</project>
   <project EXPORT="discard">[APPS_DIR]/mspsim</project>
-  <project EXPORT="discard">[APPS_DIR]/avrora</project>
   <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
-  <project EXPORT="discard">[APPS_DIR]/radiologger-headless</project>
   <simulation>
     <title>My simulation</title>
     <randomseed>123456</randomseed>
@@ -25,7 +23,8 @@
       <identifier>mtype740</identifier>
       <description>Cooja Mote Type #1</description>
       <source>[CONFIG_DIR]/code-panid-handling/test-panid-handling.c</source>
-      <commands>make -j test-panid-handling.cooja TARGET=cooja</commands>
+      <commands>make clean TARGET=cooja
+make -j$(CPUS) test-panid-handling.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

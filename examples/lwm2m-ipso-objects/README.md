@@ -1,5 +1,6 @@
-LWM2M with IPSO Objects Example
-============================================
+# lwm2m-ipso-objects
+
+## LWM2M with IPSO Objects Example
 
 This is an OMA LWM2M example implementing IPSO Objects.
 It can connect to a Leshan server out-of-the-box.

@@ -87,5 +87,4 @@ ecc_curve_info_t nist_p_192 = {
 
 /**
  * @}
- * @}
  */

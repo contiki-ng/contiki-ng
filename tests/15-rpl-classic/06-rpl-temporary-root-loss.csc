@@ -2,7 +2,6 @@
 <simconf>
   <project EXPORT="discard">[APPS_DIR]/mrm</project>
   <project EXPORT="discard">[APPS_DIR]/mspsim</project>
-  <project EXPORT="discard">[APPS_DIR]/avrora</project>
   <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
   <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <simulation>
@@ -25,7 +24,7 @@
       <description>Sender</description>
       <source>[CONFIG_DIR]/code/sender-node.c</source>
       <commands>make clean TARGET=cooja
-make -j sender-node.cooja TARGET=cooja</commands>
+make -j$(CPUS) sender-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -50,7 +49,7 @@ make -j sender-node.cooja TARGET=cooja</commands>
       <description>RPL root</description>
       <source>[CONFIG_DIR]/code/root-node.c</source>
       <commands>make clean TARGET=cooja
-make -j root-node.cooja TARGET=cooja</commands>
+make -j$(CPUS) root-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -75,7 +74,7 @@ make -j root-node.cooja TARGET=cooja</commands>
       <description>Receiver</description>
       <source>[CONFIG_DIR]/code/receiver-node.c</source>
       <commands>make clean TARGET=cooja
-make -j receiver-node.cooja TARGET=cooja</commands>
+make -j$(CPUS) receiver-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

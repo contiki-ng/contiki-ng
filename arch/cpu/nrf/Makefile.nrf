@@ -86,7 +86,7 @@ endif
 
 %.upload: $(OUT_HEX)
 ifeq (, $(shell which $(NRFJPROG)))
-	@echo "ERROR: Could not find nrfjprog, please install it first"
+	$(error Could not find nrfjprog "$(NRFJPROG)", please install it)
 else
 	$(NRFJPROG) $(NRFJPROG_OPTIONS) $(NRFJPROG_FLAGS) --sectorerase --program $<
 	$(NRFJPROG) $(NRFJPROG_OPTIONS) $(NRFJPROG_FLAGS) --reset
@@ -114,7 +114,7 @@ nrf-upload-sequence: $(foreach SNR, $(NRF_SNRS), nrf-upload-snr.$(SNR))
 
 %.upload-all: $(OUT_HEX)
 ifeq (, $(shell which $(NRFJPROG)))
-	@echo "ERROR: Could not find nrfjprog, please install it first"
+	$(error Could not find nrfjprog "$(NRFJPROG)", please install it)
 else
 	$(MAKE) HEX_FILE=$< -j $(NUMPAR) nrf-upload-sequence
 endif
@@ -125,7 +125,7 @@ DFU_FLAGS = -p $(PORT)
 
 %.dfu-upload: $(OUT_HEX)
 ifeq (, $(shell which $(NRFUTIL)))
-	@echo "ERROR: Could not find nrfutil, please install it first"
+	$(error Could not find nrfutil "$(NRFUTIL)", please install it first)
 else
 	$(NRFUTIL) pkg generate --hw-version 52 --sd-req 0x00 --debug-mode --application $< $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip
 	$(NRFUTIL) dfu usb-serial $(DFU_FLAGS) -pkg $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip

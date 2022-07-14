@@ -243,7 +243,12 @@ void rtimer_run_next(void);
 void rtimer_arch_init(void);
 
 /**
- * Schedule the call to `rtimer_run_next` at the time t.
+ * \brief Schedules an rtimer task to be triggered at time t
+ * \param t The time when the task will need executed.
+ *
+ * \e t is an absolute time, in other words the task will be executed AT
+ * time \e t, not IN \e t rtimer ticks.
+ *
  */
 void rtimer_arch_schedule(rtimer_clock_t t);
 

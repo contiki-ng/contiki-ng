@@ -75,10 +75,10 @@ int timestamp = 0, flowcontrol=0, showprogress=0, flowcontrol_xonxoff=0;
 
 int ssystem(const char *fmt, ...)
      __attribute__((__format__ (__printf__, 1, 2)));
-void write_to_serial(int outfd, void *inbuf, int len);
+void write_to_serial(void *inbuf, int len);
 
-void slip_send(int fd, unsigned char c);
-void slip_send_char(int fd, unsigned char c);
+void slip_send(unsigned char c);
+void slip_send_char(unsigned char c);
 
 #define PROGRESS(s) if(showprogress) fprintf(stderr, s)
 
@@ -253,13 +253,13 @@ serial_to_tun(FILE *inslip, int outfd)
 		 addr.s6_addr[2], addr.s6_addr[3],
 		 addr.s6_addr[4], addr.s6_addr[5],
 		 addr.s6_addr[6], addr.s6_addr[7]);
-	  slip_send(slipfd, '!');
-	  slip_send(slipfd, 'P');
+	  slip_send('!');
+	  slip_send('P');
 	  for(i = 0; i < 8; i++) {
 	    /* need to call the slip_send_char for stuffing */
-	    slip_send_char(slipfd, addr.s6_addr[i]);
+	    slip_send_char(addr.s6_addr[i]);
 	  }
-	  slip_send(slipfd, SLIP_END);
+	  slip_send(SLIP_END);
         }
 #define DEBUG_LINE_MARKER '\r'
       } else if(uip.inbuf[0] == DEBUG_LINE_MARKER) {
@@ -363,44 +363,44 @@ serial_to_tun(FILE *inslip, int outfd)
 }
 
 unsigned char slip_buf[2000];
-int slip_end, slip_begin;
+unsigned int slip_end, slip_begin;
 
 void
-slip_send_char(int fd, unsigned char c)
+slip_send_char(unsigned char c)
 {
   switch(c) {
   case SLIP_END:
-    slip_send(fd, SLIP_ESC);
-    slip_send(fd, SLIP_ESC_END);
+    slip_send(SLIP_ESC);
+    slip_send(SLIP_ESC_END);
     break;
   case SLIP_ESC:
-    slip_send(fd, SLIP_ESC);
-    slip_send(fd, SLIP_ESC_ESC);
+    slip_send(SLIP_ESC);
+    slip_send(SLIP_ESC_ESC);
     break;
   case XON:
     if(flowcontrol_xonxoff) {
-      slip_send(fd, SLIP_ESC);
-      slip_send(fd, SLIP_ESC_XON);
+      slip_send(SLIP_ESC);
+      slip_send(SLIP_ESC_XON);
     } else {
-      slip_send(fd, c);
+      slip_send(c);
     }
     break;
   case XOFF:
     if(flowcontrol_xonxoff) {
-      slip_send(fd, SLIP_ESC);
-      slip_send(fd, SLIP_ESC_XOFF);
+      slip_send(SLIP_ESC);
+      slip_send(SLIP_ESC_XOFF);
     } else {
-      slip_send(fd, c);
+      slip_send(c);
     }
     break;
   default:
-    slip_send(fd, c);
+    slip_send(c);
     break;
   }
 }
 
 void
-slip_send(int fd, unsigned char c)
+slip_send(unsigned char c)
 {
   if(slip_end >= sizeof(slip_buf)) {
     err(1, "slip_send overflow");
@@ -439,7 +439,7 @@ slip_flushbuf(int fd)
 }
 
 void
-write_to_serial(int outfd, void *inbuf, int len)
+write_to_serial(void *inbuf, int len)
 {
   u_int8_t *p = inbuf;
   int i;
@@ -466,40 +466,40 @@ write_to_serial(int outfd, void *inbuf, int len)
   /* It would be ``nice'' to send a SLIP_END here but it's not
    * really necessary.
    */
-  /* slip_send(outfd, SLIP_END); */
+  /* slip_send(SLIP_END); */
 
   for(i = 0; i < len; i++) {
     switch(p[i]) {
     case SLIP_END:
-      slip_send(outfd, SLIP_ESC);
-      slip_send(outfd, SLIP_ESC_END);
+      slip_send(SLIP_ESC);
+      slip_send(SLIP_ESC_END);
       break;
     case SLIP_ESC:
-      slip_send(outfd, SLIP_ESC);
-      slip_send(outfd, SLIP_ESC_ESC);
+      slip_send(SLIP_ESC);
+      slip_send(SLIP_ESC_ESC);
       break;
     case XON:
       if(flowcontrol_xonxoff) {
-        slip_send(outfd, SLIP_ESC);
-        slip_send(outfd, SLIP_ESC_XON);
+        slip_send(SLIP_ESC);
+        slip_send(SLIP_ESC_XON);
       } else {
-        slip_send(outfd, p[i]);
+        slip_send(p[i]);
       }
       break;
     case XOFF:
       if(flowcontrol_xonxoff) {
-        slip_send(outfd, SLIP_ESC);
-        slip_send(outfd, SLIP_ESC_XOFF);
+        slip_send(SLIP_ESC);
+        slip_send(SLIP_ESC_XOFF);
       } else {
-        slip_send(outfd, p[i]);
+        slip_send(p[i]);
       }
       break;
     default:
-      slip_send(outfd, p[i]);
+      slip_send(p[i]);
       break;
     }
   }
-  slip_send(outfd, SLIP_END);
+  slip_send(SLIP_END);
   PROGRESS("t");
 }
 
@@ -508,7 +508,7 @@ write_to_serial(int outfd, void *inbuf, int len)
  * Read from tun, write to slip.
  */
 int
-tun_to_serial(int infd, int outfd)
+tun_to_serial(int infd)
 {
   struct {
     unsigned char inbuf[2000];
@@ -523,10 +523,10 @@ tun_to_serial(int infd, int outfd)
   if(size <= UTUN_HEADER_LEN) err(1, "tun_to_serial: read too small");
 
   size -= UTUN_HEADER_LEN;
-  write_to_serial(outfd, uip.inbuf + UTUN_HEADER_LEN, size);
+  write_to_serial(uip.inbuf + UTUN_HEADER_LEN, size);
 #undef UTUN_HEADER_LEN
 #else
-  write_to_serial(outfd, uip.inbuf, size);
+  write_to_serial(uip.inbuf, size);
 #endif
   return size;
 }
@@ -1044,8 +1044,8 @@ exit(1);
       }
 
       if(connect(slipfd, p->ai_addr, p->ai_addrlen) == -1) {
-        close(slipfd);
         perror("client: connect");
+        close(slipfd);
         continue;
       }
       break;
@@ -1090,7 +1090,7 @@ exit(1);
     fprintf(stderr, "********SLIP started on ``/dev/%s''\n", siodev);
     stty_telos(slipfd);
   }
-  slip_send(slipfd, SLIP_END);
+  slip_send(SLIP_END);
   inslip = fdopen(slipfd, "r");
   if(inslip == NULL) err(1, "main: fdopen");
 
@@ -1114,11 +1114,11 @@ exit(1);
 
     if(got_sigalarm && ipa_enable) {
       /* Send "?IPA". */
-      slip_send(slipfd, '?');
-      slip_send(slipfd, 'I');
-      slip_send(slipfd, 'P');
-      slip_send(slipfd, 'A');
-      slip_send(slipfd, SLIP_END);
+      slip_send('?');
+      slip_send('I');
+      slip_send('P');
+      slip_send('A');
+      slip_send(SLIP_END);
       got_sigalarm = 0;
     }
 
@@ -1160,7 +1160,7 @@ exit(1);
       }
       if(delaymsec==0) {
         if(slip_empty() && FD_ISSET(tunfd, &rset)) {
-          tun_to_serial(tunfd, slipfd);
+          tun_to_serial(tunfd);
           slip_flushbuf(slipfd);
           if(ipa_enable) sigalarm_reset();
           if(basedelay) {

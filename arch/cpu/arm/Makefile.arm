@@ -34,6 +34,9 @@ ASFLAGS += -c
 
 LDFLAGS += -mthumb -mabi=aapcs -mlittle-endian
 
+# Disallow undefined symbols in object files.
+LDFLAGS += -Wl,-zdefs
+
 OBJDUMP_FLAGS += --disassemble --source --disassembler-options=force-thumb
 
 ### Caller can override the default compiler optimization levels
@@ -69,6 +72,7 @@ OUT_HEX = $(BUILD_DIR_BOARD)/%.hex
 OUT_I16HEX = $(BUILD_DIR_BOARD)/%.i16hex
 OUT_BIN = $(BUILD_DIR_BOARD)/%.bin
 OUT_LST = $(BUILD_DIR_BOARD)/%.lst
+OUT_ELF = $(BUILD_DIR_BOARD)/%.elf
 
 ### Don't treat the following files as intermediate
 .PRECIOUS: $(OUT_ELF) $(OUT_HEX) $(OUT_BIN)

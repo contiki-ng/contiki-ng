@@ -166,8 +166,7 @@ rpl_ext_header_srh_update(void)
 static int
 count_matching_bytes(const void *p1, const void *p2, size_t n)
 {
-  int i = 0;
-  for(i = 0; i < n; i++) {
+  for(size_t i = 0; i < n; i++) {
     if(((uint8_t *)p1)[i] != ((uint8_t *)p2)[i]) {
       return i;
     }

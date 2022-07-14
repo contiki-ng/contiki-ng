@@ -1,3 +1,5 @@
+# 6tisch/timesync-demo
+
 This is a demonstration of application-level time synchronization using TSCH.
 
 In a TSCH network, all nodes are synchronized to a global time counter maintained

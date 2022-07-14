@@ -3,7 +3,8 @@ TESTLOGS=$(sort $(patsubst %.sh,%.testlog,$(TESTS)))
 
 CONTIKI=../..
 
-all: clean summary
+all: clean
+	@$(MAKE) summary
 
 summary: $(TESTLOGS)
 	@cat *.testlog > summary
@@ -12,7 +13,7 @@ summary: $(TESTLOGS)
 
 %.testlog: %.sh
 	@echo "========== Running script test $(basename $@).sh =========="
-	@bash "$(basename $@).sh" "$(CONTIKI)"
+	@./"$(basename $@).sh" "$(realpath $(CONTIKI))"
 
 clean:
 	@rm -f *.*log report summary
