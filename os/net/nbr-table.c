@@ -313,12 +313,14 @@ nbr_table_allocate(nbr_table_reason_t reason, const void *data,
     if(to_be_removed_lladdr == NULL) {
       /* No candidate for GC, allocation fails */
       return NULL;
-    } else {
-      nbr_table_key_t *to_be_removed = key_from_index(index_from_lladdr(to_be_removed_lladdr));
-      /* Reuse to_be_removed item's spot */
-      remove_key(to_be_removed, false);
-      return to_be_removed;
     }
+    nbr_table_key_t *to_be_removed = key_from_index(index_from_lladdr(to_be_removed_lladdr));
+    if(to_be_removed == NULL) {
+      return NULL;
+    }
+    /* Reuse to_be_removed item's spot */
+    remove_key(to_be_removed, false);
+    return to_be_removed;
   }
 }
 /*---------------------------------------------------------------------------*/
