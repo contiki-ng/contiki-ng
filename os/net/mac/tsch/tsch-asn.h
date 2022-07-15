@@ -39,8 +39,8 @@
  *         Simon Duquennoy <simonduq@sics.se>
 */
 
-#ifndef __TSCH_ASN_H__
-#define __TSCH_ASN_H__
+#ifndef TSCH_ASN_H_
+#define TSCH_ASN_H_
 
 /************ Types ***********/
 
@@ -95,5 +95,5 @@ struct tsch_asn_divisor_t {
    + (uint16_t)((asn).ms1b * (div).asn_ms1b_remainder % (div).val)) \
   % (div).val
 
-#endif /* __TSCH_ASN_H__ */
+#endif /* TSCH_ASN_H_ */
 /** @} */

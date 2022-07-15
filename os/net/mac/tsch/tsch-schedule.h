@@ -37,8 +37,8 @@
  *	TSCH scheduling engine
 */
 
-#ifndef __TSCH_SCHEDULE_H__
-#define __TSCH_SCHEDULE_H__
+#ifndef TSCH_SCHEDULE_H_
+#define TSCH_SCHEDULE_H_
 
 /********** Includes **********/
 
@@ -162,5 +162,5 @@ struct tsch_slotframe *tsch_schedule_slotframe_head(void);
  */
 struct tsch_slotframe *tsch_schedule_slotframe_next(struct tsch_slotframe *sf);
 
-#endif /* __TSCH_SCHEDULE_H__ */
+#endif /* TSCH_SCHEDULE_H_ */
 /** @} */

@@ -29,8 +29,8 @@
  * This file is part of the Contiki operating system.
  *
  */
-#ifndef __IP64_DHCPC_H__
-#define __IP64_DHCPC_H__
+#ifndef IP64_DHCPC_H_
+#define IP64_DHCPC_H_
 
 struct ip64_dhcpc_state {
   struct pt pt;
@@ -59,4 +59,4 @@ void ip64_dhcpc_appcall(process_event_t ev, void *data);
 void ip64_dhcpc_configured(const struct ip64_dhcpc_state *s);
 void ip64_dhcpc_unconfigured(const struct ip64_dhcpc_state *s);
 
-#endif /* __IP64_DHCPC_H__ */
+#endif /* IP64_DHCPC_H_ */

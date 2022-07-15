@@ -41,8 +41,8 @@ frequency hopping for enhanced reliability.
 *	Main API declarations for TSCH.
 */
 
-#ifndef __TSCH_H__
-#define __TSCH_H__
+#ifndef TSCH_H_
+#define TSCH_H_
 
 /********** Includes **********/
 
@@ -262,5 +262,5 @@ uint64_t tsch_get_network_uptime_ticks(void);
   */
 void tsch_disassociate(void);
 
-#endif /* __TSCH_H__ */
+#endif /* TSCH_H_ */
 /** @} */

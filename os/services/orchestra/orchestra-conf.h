@@ -35,8 +35,8 @@
  * \author Simon Duquennoy <simonduq@sics.se>
  */
 
-#ifndef __ORCHESTRA_CONF_H__
-#define __ORCHESTRA_CONF_H__
+#ifndef ORCHESTRA_CONF_H_
+#define ORCHESTRA_CONF_H_
 
 #ifdef ORCHESTRA_CONF_RULES
 #define ORCHESTRA_RULES ORCHESTRA_CONF_RULES
@@ -163,4 +163,4 @@
 #define ORCHESTRA_EB_MAX_CHANNEL_OFFSET 1
 #endif
 
-#endif /* __ORCHESTRA_CONF_H__ */
+#endif /* ORCHESTRA_CONF_H_ */

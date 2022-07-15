@@ -43,8 +43,8 @@
 /** \addtogroup log
 * @{ */
 
-#ifndef __LOG_CONF_H__
-#define __LOG_CONF_H__
+#ifndef LOG_CONF_H_
+#define LOG_CONF_H_
 
 /* Log only the last 16 bytes of link-layer and IPv6 addresses (or, if)
  * the deployment module is enabled, the node IDs */
@@ -157,7 +157,7 @@
 #define LOG_CONF_LEVEL_MAIN                        LOG_LEVEL_INFO
 #endif /* LOG_CONF_LEVEL_MAIN */
 
-#endif /* __LOG_CONF_H__ */
+#endif /* LOG_CONF_H_ */
 
 /** @} */
 /** @} */

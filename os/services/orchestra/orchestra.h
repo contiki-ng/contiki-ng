@@ -35,8 +35,8 @@
  * \author Simon Duquennoy <simonduq@sics.se>
  */
 
-#ifndef __ORCHESTRA_H__
-#define __ORCHESTRA_H__
+#ifndef ORCHESTRA_H_
+#define ORCHESTRA_H_
 
 #include "net/mac/tsch/tsch.h"
 #include "orchestra-conf.h"
@@ -80,4 +80,4 @@ void orchestra_callback_root_node_updated(const linkaddr_t *root, uint8_t is_add
 /* Returns nonzero if the root slotframe should be used to transmit to the specific address */
 uint8_t orchestra_is_root_schedule_active(const linkaddr_t *addr);
 
-#endif /* __ORCHESTRA_H__ */
+#endif /* ORCHESTRA_H_ */

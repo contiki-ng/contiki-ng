@@ -48,8 +48,8 @@
  *
  */
 
-#ifndef __LOG_H__
-#define __LOG_H__
+#ifndef LOG_H_
+#define LOG_H_
 
 #include <stdio.h>
 #include "net/linkaddr.h"
@@ -302,7 +302,7 @@ int log_get_level(const char *module);
 */
 const char *log_level_to_str(int level);
 
-#endif /* __LOG_H__ */
+#endif /* LOG_H_ */
 
 /** @} */
 /** @} */

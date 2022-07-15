@@ -37,8 +37,8 @@
  *         Simon Duquennoy <simonduq@sics.se>
  */
 
-#ifndef __RINGBUFINDEX_H__
-#define __RINGBUFINDEX_H__
+#ifndef RINGBUFINDEX_H_
+#define RINGBUFINDEX_H_
 
 #include "contiki.h"
 
@@ -116,4 +116,4 @@ int ringbufindex_full(const struct ringbufindex *r);
  */
 int ringbufindex_empty(const struct ringbufindex *r);
 
-#endif /* __RINGBUFINDEX_H__ */
+#endif /* RINGBUFINDEX_H_ */
