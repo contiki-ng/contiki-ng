@@ -139,6 +139,17 @@ endif
 
 CP ?= cp
 
+# Configure link-time-optimization (LTO).
+FLAGS_LTO ?= -flto
+
+ifdef LTO
+  CFLAGS += $(FLAGS_LTO)
+  LDFLAGS += $(FLAGS_LTO)
+  ifdef NO_LTO_TARGET
+    PLATFORM_ACTION = skip
+  endif
+endif
+
 # Decide whether to build or to skip this target for this platform
 ifneq ("", "$(PLATFORMS_ONLY)")
   ifeq ("","$(filter $(TARGET), $(PLATFORMS_ONLY))")
