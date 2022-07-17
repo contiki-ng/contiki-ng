@@ -17,7 +17,8 @@ jobs:
   Contiki-NG:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
+    # Longest test in July 2022 takes 15 minutes.
+    timeout-minutes: 35
     # Common environment variables
     env:
         OUT_OF_TREE_TEST_PATH: out-of-tree-tests
