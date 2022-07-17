@@ -117,7 +117,7 @@ sixp_nbr_free(sixp_nbr_t *nbr)
   }
 }
 /*---------------------------------------------------------------------------*/
-int
+int16_t
 sixp_nbr_get_next_seqno(sixp_nbr_t *nbr)
 {
   assert(nbr != NULL);
