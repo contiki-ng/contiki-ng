@@ -59,6 +59,7 @@ else
 endif
 
 LD = $(CC)
+SIZE = size
 # All .csc files contain calls to make with targets that are not the ones
 # Cooja need. Just disable the final copy so Cooja can share the build
 # system with the rest of Contiki-NG.

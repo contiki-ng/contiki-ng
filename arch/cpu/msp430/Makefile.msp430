@@ -58,6 +58,7 @@ AR       = msp430-ar
 NM       = msp430-nm
 OBJCOPY  = msp430-objcopy
 STRIP    = msp430-strip
+SIZE     = msp430-size
 BSL      = msp430-bsl
 
 ifdef CPU_HAS_MSP430X

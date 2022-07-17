@@ -15,6 +15,7 @@ AS       = as
 NM       = nm
 OBJCOPY  = objcopy
 STRIP    = strip
+SIZE     = size
 ifeq ($(WERROR),1)
 CFLAGSWERROR=-Werror
 endif
