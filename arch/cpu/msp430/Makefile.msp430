@@ -6,8 +6,6 @@ endif
 
 CFLAGS += -gstabs+
 
-.SUFFIXES:
-
 ### Define the CPU directory
 CONTIKI_CPU = $(CONTIKI_NG_RELOC_CPU_DIR)/msp430
 
