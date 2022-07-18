@@ -127,9 +127,6 @@ LD_END_GROUP = -Wl,--end-group
 ################################################################################
 ### Specialized build targets
 
-.PHONY: FORCE
-FORCE:
-
 # Always re-build ieee-addr.o in case the command line passes a new NODEID
 $(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
 	$(TRACE_CC)
