@@ -98,6 +98,12 @@ RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Des
   dpkg -i /tmp/nrf-cli-tools/nRF-Command-Line-Tools_10_12_1_Linux-amd64.deb && \
   rm -rf nRFCommandLineTools10121Linuxamd64.tar.gz /tmp/nrf-cli-tools
 
+# Install Renode from github releases
+ARG RENODE_VERSION=1.13.0
+RUN wget -nv https://github.com/renode/renode/releases/download/v${RENODE_VERSION}/renode_${RENODE_VERSION}_amd64.deb \
+  && dpkg -i renode_${RENODE_VERSION}_amd64.deb \
+  && rm renode_${RENODE_VERSION}_amd64.deb
+
 # Sphinx is required for building the readthedocs API documentation.
 # RTD requirements are shared with .readthedocs.yaml for build consistency - check RTD build if modifying.
 # Matplotlib is required for result visualization.
@@ -146,13 +152,6 @@ RUN wget -nv https://www.doxygen.nl/files/doxygen-1.9.4.linux.bin.tar.gz && \
     wget -nv https://github.com/ccache/ccache/releases/download/v4.6.1/ccache-4.6.1-linux-x86_64.tar.xz && \
     tar xf ccache-4.6.1-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.6.1-linux-x86_64/ccache && \
     rm ccache-4.6.1-linux-x86_64.tar.xz
-
-# Download, build and install Renode
-RUN git clone --quiet https://github.com/renode/renode.git \
-  && cd ${HOME}/renode \
-  && git checkout v1.13.0 \
-  && ./build.sh
-ENV PATH="${HOME}/renode:${PATH}"
 
 # By default, we use a Docker bind mount to share the repo with the host,
 # with Docker run option:
