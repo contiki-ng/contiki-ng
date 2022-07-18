@@ -63,6 +63,8 @@ endif
 # Command converting lowercase to uppercase, and "-" and "/" to "_".
 UPPERCASE_CMD = tr '[:lower:][\-/]' '[:upper:][__]'
 
+COMMA := ,
+
 JAVA = java
 
 BUILD_DIR = build
@@ -314,7 +316,6 @@ endif
 
 ### Forward comma-separated list of arbitrary defines to the compiler
 
-COMMA := ,
 CFLAGS += ${addprefix -D,${subst $(COMMA), ,$(DEFINES)}}
 
 ### Setup directory search path for source and header files
@@ -460,10 +461,6 @@ TARGET_LIBEXTRAS = $(LD_START_GROUP) $(TARGET_LIBFILES) $(LD_END_GROUP)
 # outputs to LIBNAME on all platforms.
 $(BUILD_DIR_BOARD)/%.$(TARGET): LIBNAME ?= $@
 $(BUILD_DIR_BOARD)/%.$(TARGET): $(OBJECTDIR)/%.o $(LDSCRIPT) $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_OBJECTFILES)
-ifdef REDEFINE_PRINTF
-	@echo Redefining printf,sprintf,vsnprintf,etc.
-	$(Q)$(foreach OBJ,$^, $(OBJCOPY) --redefine-syms $(CONTIKI)/arch/platform/$(TARGET)/redefine.syms $(OBJ); )
-endif
 	$(TRACE_LD)
 	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out $(LDSCRIPT) %.a,$^} \
 	    ${filter %.a,$^} $(TARGET_LIBEXTRAS) -o $(LIBNAME)

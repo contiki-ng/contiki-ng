@@ -82,4 +82,9 @@ vsnprintf(char *str, size_t size, const char *format, va_list ap)
   *buffer.pos = '\0';
   return res;
 }
+
+#if defined(CONTIKI_TARGET_COOJA) && !defined(__APPLE__)
+extern int __wrap_snprintf(char *str, size_t size, const char *format, ...) __attribute__((nonnull, nothrow, alias("snprintf")));
+extern int __wrap_vsnprintf(char *str, size_t size, const char *format, va_list ap) __attribute__((nonnull, nothrow, alias("vsnprintf")));
+#endif
 /*---------------------------------------------------------------------------*/

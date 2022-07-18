@@ -28,6 +28,7 @@ COOJA_DIR = $(CONTIKI_NG_TOOLS_DIR)/cooja
 
 # Use dbg-io for IO functions like printf()
 MODULES += os/lib/dbg-io
+WRAPPED_FUNS = printf putchar puts snprintf sprintf vsnprintf
 
 JAVA_INCDIR := $(shell $(JAVA) -XshowSettings:properties -version 2>&1 | grep java.home | awk -F"= " '{print $$2}')
 ifneq ($(MAKECMDGOALS),clean)
@@ -49,13 +50,16 @@ else ifeq ($(HOST_OS),Darwin)
   CFLAGS += -fno-common -DHAVE_SNPRINTF
   LDFLAGS_WERROR = -Wl,-fatal_warnings
   LDFLAGS += -dynamiclib -fno-common -framework $(JAVA_FRAMEWORK)
-  # No objcopy in OS X, disable.
-  OBJCOPY = true
 else
   JAVA_OS_NAME = linux
   CC = gcc
   CFLAGS += -fPIC -fcommon
   LDFLAGS += -shared -Wl,-zdefs -Wl,-Map=$(MAPFILE)
+endif
+
+ifneq ($(HOST_OS),Darwin)
+  # Use the printf-family replacement functions in dbg-io.
+  LDFLAGS += $(addprefix -Wl$(COMMA)--wrap$(COMMA), $(WRAPPED_FUNS))
 endif
 
 LD = $(CC)
@@ -64,11 +68,8 @@ SIZE = size
 # Cooja need. Just disable the final copy so Cooja can share the build
 # system with the rest of Contiki-NG.
 CP = true
-OBJCOPY ?= objcopy
 
 JAVA_CFLAGS = -I"$(JAVA_INCDIR)/include" -I"$(JAVA_INCDIR)/include/$(JAVA_OS_NAME)"
-
-REDEFINE_PRINTF = 1
 
 ### Assuming simulator quickstart if no JNI library name set from Cooja
 ifndef LIBNAME
