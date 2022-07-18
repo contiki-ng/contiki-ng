@@ -121,6 +121,9 @@ LDSCRIPT ?= $(CONTIKI_CPU)/$(SUBFAMILY)/$(SUBFAMILY).lds
 # Globally linked libraries
 TARGET_LIBFILES += -lc -lgcc -lnosys -lm
 
+LD_START_GROUP = -Wl,--start-group
+LD_END_GROUP = -Wl,--end-group
+
 ################################################################################
 ### Specialized build targets
 
