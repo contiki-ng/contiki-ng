@@ -30,12 +30,12 @@ MPID=$!
 printf "Waiting for network formation (%d seconds)\n" "$WAIT_TIME"
 sleep $WAIT_TIME
 
-# Do ping
-echo "Running Traceroute"
-traceroute6 $IPADDR -m 5 | tee $BASENAME.scriptlog
-# Fetch traceroute6 status code (not $? because this is piped)
+echo "Running mtr (traceroute)"
+# IPv6, 5 hops max, no DNS lookups, 3 pings each, output with report mode.
+mtr -6 -m 5 -n -c 3 -r $IPADDR | tee $BASENAME.scriptlog
+# Fetch mtr status code (not $? because this is piped)
 STATUS=${PIPESTATUS[0]}
-HOPS=`grep -v traceroute $BASENAME.scriptlog | wc -l`
+HOPS=`grep -e "^ " $BASENAME.scriptlog | wc -l`
 
 echo "Closing simulation and tunslip6"
 sleep 1
