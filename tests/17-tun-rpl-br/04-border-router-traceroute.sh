@@ -48,6 +48,7 @@ if [ $STATUS -eq 0 ] && [ $HOPS -eq $TARGETHOPS ] ; then
   printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
 else
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
+  exit 1
 fi
 
 # We do not want Make to stop -> Return 0

@@ -7,13 +7,14 @@ all: clean
 	@$(MAKE) summary
 
 summary: $(TESTLOGS)
-	@cat *.testlog > summary
 	@echo "========== Summary =========="
-	@cat summary
+	@([ ! -f summary ] && echo "All tests OK" && touch summary) || \
+          (echo "Failures:" && cat summary && false)
 
 %.testlog: %.sh
 	@echo "========== Running script test $(basename $@).sh =========="
-	@./"$(basename $@).sh" "$(realpath $(CONTIKI))"
+	@./"$(basename $@).sh" "$(realpath $(CONTIKI))" || \
+          echo "TEST FAIL: $<" >> summary
 
 clean:
 	@rm -f *.*log report summary
