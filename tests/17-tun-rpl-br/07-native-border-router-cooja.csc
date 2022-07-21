@@ -221,6 +221,7 @@ make -j$(CPUS) hello-world.cooja TARGET=cooja</commands>
     <plugin_config>
       <port>60001</port>
       <bound>true</bound>
+      <commands>[CONFIG_DIR]/test-native-border-router.sh [CONTIKI_DIR] 07-native-border-router-cooja fd00::204:4:4:4 60</commands>
     </plugin_config>
     <width>362</width>
     <z>3</z>

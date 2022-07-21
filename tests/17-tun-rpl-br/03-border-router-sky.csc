@@ -207,6 +207,7 @@ make -j$(CPUS) hello-world.sky TARGET=sky</commands>
     <plugin_config>
       <port>60001</port>
       <bound>true</bound>
+      <commands>[CONFIG_DIR]/test-border-router.sh [CONTIKI_DIR] 03-border-router-sky fd00::0212:7404:0004:0404 60</commands>
     </plugin_config>
     <width>362</width>
     <z>2</z>

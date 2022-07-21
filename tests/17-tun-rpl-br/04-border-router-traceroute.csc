@@ -221,6 +221,7 @@ make -j$(CPUS) hello-world.cooja TARGET=cooja</commands>
     <plugin_config>
       <port>60001</port>
       <bound>true</bound>
+      <commands>[CONFIG_DIR]/04-border-router-traceroute.sh [CONTIKI_DIR] 04-border-router-traceroute</commands>
     </plugin_config>
     <width>362</width>
     <z>3</z>
