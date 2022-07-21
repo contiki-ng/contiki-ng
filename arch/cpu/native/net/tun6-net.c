@@ -114,7 +114,7 @@ cleanup(void)
 }
 
 /*---------------------------------------------------------------------------*/
-static void
+static void CC_NORETURN
 sigcleanup(int signo)
 {
   fprintf(stderr, "signal %d\n", signo);
@@ -238,7 +238,6 @@ tun_output(uint8_t *data, int len)
   /* fprintf(stderr, "*** Writing to tun...%d\n", len); */
   if(tunfd != -1 && write(tunfd, data, len) != len) {
     err(1, "serial_to_tun: write");
-    return -1;
   }
   return 0;
 }
