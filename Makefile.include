@@ -390,7 +390,8 @@ DEPFLAGS ?= -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 # file type and filter out the results we want. Without the filter, DEPFILES
 # will contain cpp files from the first PROJECT_SOURCEFILES and c files from
 # the second PROJECT_SOURCEFILES.
-DEPFILES := ${filter %.d, $(CONTIKI_SOURCEFILES:%.c=$(DEPDIR)/%.d) \
+DEPFILES := $(addprefix $(DEPDIR)/, $(addsuffix .d, $(CONTIKI_PROJECT))) \
+            ${filter %.d, $(CONTIKI_SOURCEFILES:%.c=$(DEPDIR)/%.d) \
                           $(PROJECT_SOURCEFILES:%.c=$(DEPDIR)/%.d) \
                           $(PROJECT_SOURCEFILES:%.cpp=$(DEPDIR)/%.d)}
 $(DEPFILES):
