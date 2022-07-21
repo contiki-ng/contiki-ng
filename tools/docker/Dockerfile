@@ -13,9 +13,7 @@ RUN apt-get -qq update && \
       software-properties-common > /dev/null && \
     apt-get -qq clean
 
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
-  echo "deb http://download.mono-project.com/repo/ubuntu stable-focal main" | tee /etc/apt/sources.list.d/mono-official-stable.list && \
-  add-apt-repository ppa:mosquitto-dev/mosquitto-ppa && \
+RUN add-apt-repository ppa:mosquitto-dev/mosquitto-ppa && \
   apt-get -qq update && \
   apt-get -qq -y --no-install-recommends install \
     ant \
@@ -32,7 +30,6 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     libgtk2.0-0 \
     libncurses5 \
     libpng-dev \
-    mono-complete \
     mosquitto \
     mosquitto-clients \
     mtr-tiny \
@@ -101,8 +98,9 @@ RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Des
 # Install Renode from github releases
 ARG RENODE_VERSION=1.13.0
 RUN wget -nv https://github.com/renode/renode/releases/download/v${RENODE_VERSION}/renode_${RENODE_VERSION}_amd64.deb \
-  && dpkg -i renode_${RENODE_VERSION}_amd64.deb \
-  && rm renode_${RENODE_VERSION}_amd64.deb
+  && apt-get -qq -y --no-install-recommends install ./renode_${RENODE_VERSION}_amd64.deb > /dev/null \
+  && rm renode_${RENODE_VERSION}_amd64.deb \
+  && apt-get -qq clean
 
 # Sphinx is required for building the readthedocs API documentation.
 # RTD requirements are shared with .readthedocs.yaml for build consistency - check RTD build if modifying.
