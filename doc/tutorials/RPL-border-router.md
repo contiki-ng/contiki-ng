@@ -112,4 +112,4 @@ If you take a closer look to `examples/rpl-border-router`, it basically uses the
 
 [tutorials:rpl]: /doc/tutorials/RPL
 
-[tutorial:cooja-border-router]: /doc/tutorials/Cooja:-simulating-a-border-router
+[tutorial:cooja-border-router]: /doc/tutorials/Cooja-simulating-a-border-router

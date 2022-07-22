@@ -101,7 +101,7 @@ Networking:
 Simulation:
 * [Cooja: getting started](/doc/tutorials/Running-Contiki-NG-in-Cooja.md)
 * [Cooja: simulating a RPL network](/doc/tutorials/Running-a-RPL-network-in-Cooja.md)
-* [Cooja: simulating a RPL network with a border router](/doc/tutorials/Cooja:-simulating-a-border-router.md)
+* [Cooja: simulating a RPL network with a border router](/doc/tutorials/Cooja-simulating-a-border-router.md)
 * [Running Contiki-NG in Renode](/doc/tutorials/Running-Contiki-NG-in-Renode.md)
 
 ## Organization, etc.
@@ -113,7 +113,7 @@ Simulation:
 * [Releases](https://github.com/contiki-ng/contiki-ng/releases)
 * [Roadmap](/doc/project/Roadmap.md)
 * [Issue and PR labels](/doc/project/Issue-and-Pull-Request-Labels.md)
-* [Where to report issues, ask questions, etc.?](/doc/project/Where-to-report-issues,-ask-questions,-etc.%3F.md)
+* [Where to report issues, ask questions, etc.?](/doc/project/Where-to-report-issues,-ask-questions,-etc.md)
 * [Logo](/doc/project/Logo.md)
 
 
