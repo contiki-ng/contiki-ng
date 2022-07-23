@@ -74,9 +74,6 @@ OUT_BIN = $(BUILD_DIR_BOARD)/%.bin
 OUT_LST = $(BUILD_DIR_BOARD)/%.lst
 OUT_ELF = $(BUILD_DIR_BOARD)/%.elf
 
-### Don't treat the following files as intermediate
-.PRECIOUS: $(OUT_ELF) $(OUT_HEX) $(OUT_BIN)
-
 $(OUT_I16HEX): $(OUT_ELF)
 	$(TRACE_OBJCOPY)
 	$(Q)$(OBJCOPY) -O ihex $< $@

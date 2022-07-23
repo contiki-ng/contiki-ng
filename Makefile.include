@@ -19,6 +19,10 @@ MAKEFLAGS += --no-builtin-rules
 Makefile: ;
 Makefile.%: ;
 
+# The target logic makes all build artifacts implicit, prevent make from
+# removing object files upon build completion.
+.SECONDARY:
+
 ### Include a helper Makefile that creates variables for all Contiki-NG path
 ### locations.
 include $(CONTIKI)/Makefile.dir-variables
@@ -548,10 +552,6 @@ endif
 
 ### Include Makefile.gcc for GCC specific definitions and actions
 include $(CONTIKI)/Makefile.gcc
-
-# Don't treat $(BUILD_DIR_BOARD)/%.$(TARGET) and $(TARGET) as intermediate
-# files because for many platforms they are in fact the primary target.
-.PRECIOUS: $(BUILD_DIR_BOARD)/%.$(TARGET) %.$(TARGET)
 
 ifeq ($(PLATFORM_ACTION),skip)
 # Skip this target.
