@@ -482,10 +482,10 @@ endif
 	$(TRACE_CP)
 	$(Q)$(CP) $< $@
 
-%.ramprof: %.$(TARGET)
+%.ramprof: $(BUILD_DIR_BOARD)/%.$(TARGET)
 	$(NM) -S -td --size-sort $< | grep -i " [abdrw] " | cut -d' ' -f2,4
 
-%.flashprof: %.$(TARGET)
+%.flashprof: $(BUILD_DIR_BOARD)/%.$(TARGET)
 	$(NM) -S -td --size-sort $< | grep -i " [t] " | cut -d' ' -f2,4
 
 include $(CONTIKI)/Makefile.help

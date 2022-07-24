@@ -210,10 +210,10 @@ MAKEFILES_CUSTOMRULES += $(CONTIKI_NG_RELOC_PLATFORM_DIR)/jn516x/Makefile.custom
 
 %.d: clean
 
-%.nm: %.$(TARGET)
+%.nm: $(BUILD_DIR_BOARD)/%.$(TARGET)
 	$(Q)$(NM) -nS $< > $@
 
-%.dmp: %.$(TARGET)
+%.dmp: $(BUILD_DIR_BOARD)/%.$(TARGET)
 	$(Q)$(OBJDUMP) -d $< > $@
 
 $(BUILD_DIR_BOARD)/%.$(TARGET).bin: $(BUILD_DIR_BOARD)/%.$(TARGET)
