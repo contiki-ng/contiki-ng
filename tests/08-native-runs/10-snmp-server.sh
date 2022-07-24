@@ -10,8 +10,8 @@ IPADDR=fd00::302:304:506:708
 
 test_handler () {
   # Starting Contiki-NG native node
-  make -C $CONTIKI/examples/snmp-server > make.log 2> make.err
-  sudo $CONTIKI/examples/snmp-server/snmp-server.native > node.log 2> node.err &
+  make -C $CONTIKI/examples/snmp-server
+  sudo $CONTIKI/examples/snmp-server/snmp-server.native &
   CPID=$!
   sleep 2
 
@@ -26,18 +26,11 @@ test_handler () {
     cp $BASENAME.log $BASENAME.testlog
     printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
   else
-    echo "==== make.log ====" ; cat make.log;
-    echo "==== make.err ====" ; cat make.err;
-    echo "==== node.log ====" ; cat node.log;
-    echo "==== node.err ====" ; cat node.err;
     echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
     
     printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
-    rm -f make.log make.err node.log node.err
     exit 1
   fi
-
-  rm -f make.log make.err node.log node.err
 }
 
 # v1
