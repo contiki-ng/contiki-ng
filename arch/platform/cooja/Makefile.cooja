@@ -39,12 +39,7 @@ endif
 
 JAVA_FRAMEWORK ?= JavaNativeFoundation
 
-ifeq ($(HOST_OS),Windows)
-  JAVA_OS_NAME = win32
-  CC = mingw32-gcc
-  CFLAGS += -D__int64\="long long"
-  LDFLAGS += -shared -Wl,--add-stdcall-alias -L/usr/lib/mingw
-else ifeq ($(HOST_OS),Darwin)
+ifeq ($(HOST_OS),Darwin)
   JAVA_OS_NAME = darwin
   CC = gcc
   CFLAGS += -fno-common -DHAVE_SNPRINTF
