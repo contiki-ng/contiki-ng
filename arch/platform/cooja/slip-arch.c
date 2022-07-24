@@ -28,8 +28,6 @@
  *
  */
 
-#if !defined(NETSTACK_CONF_WITH_NULLNET) || !NETSTACK_CONF_WITH_NULLNET
-
 #include "dev/slip.h"
 #include "dev/rs232.h"
 
@@ -39,4 +37,3 @@ slip_arch_init()
   rs232_set_input(slip_input_byte);
 }
 
-#endif
