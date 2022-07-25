@@ -64,7 +64,7 @@ get_target = $(firstword $(subst :, ,$1))
 get_target_vars = $(wordlist 2,15,$(subst :, ,$1))
 
 define dooneexample
-@echo -n Building example $(3): $(1) $(4) for target $(2)
+@echo Building example $(3): $(1) $(4) for target $(2)
 @((cd $(EXAMPLESDIR)/$(1) && \
    $(MAKE) $(4) TARGET=$(2) $(MAKEOPTIONS) clean && \
    make -j$(CPUS) $(4) TARGET=$(2) $(MAKEOPTIONS)) || \
