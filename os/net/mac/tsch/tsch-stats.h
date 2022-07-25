@@ -39,8 +39,8 @@
  * @{
 */
 
-#ifndef __TSCH_STATS_H__
-#define __TSCH_STATS_H__
+#ifndef TSCH_STATS_H_
+#define TSCH_STATS_H_
 
 /********** Includes **********/
 
@@ -219,5 +219,5 @@ tsch_stats_index_to_channel(uint8_t channel_index)
 }
 
 
-#endif /* __TSCH_STATS_H__ */
+#endif /* TSCH_STATS_H_ */
 /** @} */

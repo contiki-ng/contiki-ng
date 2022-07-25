@@ -37,8 +37,8 @@
  *	TSCH security
 */
 
-#ifndef __TSCH_SECURITY_H__
-#define __TSCH_SECURITY_H__
+#ifndef TSCH_SECURITY_H_
+#define TSCH_SECURITY_H_
 
 /********** Includes **********/
 
@@ -146,5 +146,5 @@ unsigned int tsch_security_parse_frame(const uint8_t *hdr, int hdrlen,
  */
 void tsch_security_set_packetbuf_attr(uint8_t frame_type);
 
-#endif /* __TSCH_SECURITY_H__ */
+#endif /* TSCH_SECURITY_H_ */
 /** @} */

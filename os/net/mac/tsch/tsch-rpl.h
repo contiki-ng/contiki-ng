@@ -35,8 +35,8 @@
  *	TSCH-RPL interaction
 */
 
-#ifndef __TSCH_RPL_H__
-#define __TSCH_RPL_H__
+#ifndef TSCH_RPL_H_
+#define TSCH_RPL_H_
 
 /********** Includes **********/
 
@@ -86,5 +86,5 @@ void tsch_rpl_callback_parent_switch(rpl_parent_t *old, rpl_parent_t *new);
  */
 int tsch_rpl_check_dodag_joined(void);
 
-#endif /* __TSCH_RPL_H__ */
+#endif /* TSCH_RPL_H_ */
 /** @} */
