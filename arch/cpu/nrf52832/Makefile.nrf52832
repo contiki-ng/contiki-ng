@@ -144,7 +144,8 @@ LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # let linker to dump unused sections
 LDFLAGS += -Wl,--gc-sections
 # use newlib in nano version
-LDFLAGS += --specs=nano.specs -lc -lnosys
+LDFLAGS += --specs=nano.specs
+TARGET_LIBFILES += -lc -lnosys
 
 # Assembler flags
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
