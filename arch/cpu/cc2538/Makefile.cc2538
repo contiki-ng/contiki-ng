@@ -34,7 +34,7 @@ USB_SOURCEFILES += usb-core.c cdc-acm.c usb-arch.c usb-serial.c cdc-acm-descript
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(USB_SOURCEFILES)
 
 ### Always re-build ieee-addr.o in case the command line passes a new NODEID
-$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
+$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(DEPDIR)
 	$(TRACE_CC)
 	$(Q)$(CCACHE) $(CC) $(CFLAGS) -c $< -o $@
 
@@ -45,7 +45,7 @@ LDGENFLAGS += -imacros "dev/flash.h" -imacros "cfs-coffee-arch.h"
 LDGENFLAGS += -x c -P -E
 
 # NB: Assumes LDSCRIPT was not overridden and is in $(OBJECTDIR)
-$(LDSCRIPT): $(SOURCE_LDSCRIPT) FORCE | $(OBJECTDIR)
+$(LDSCRIPT): $(SOURCE_LDSCRIPT) FORCE | $(DEPDIR)
 	$(TRACE_CC)
 	$(Q)$(CCACHE) $(CC) $(LDGENFLAGS) $< | grep -v '^\s*#\s*pragma\>' > $@
 
