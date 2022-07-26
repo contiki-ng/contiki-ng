@@ -111,7 +111,9 @@ CFLAGS += -fno-common
 
 # Linker flags
 LDFLAGS += --entry resetISR
-LDFLAGS += --specs=nano.specs
+ifeq ($(CLANG),0)
+  LDFLAGS += --specs=nano.specs
+endif
 LDFLAGS += -nostartfiles
 LDFLAGS += -static
 

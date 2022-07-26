@@ -21,6 +21,8 @@ include $(CONTIKI)/Makefile.dir-variables
 MODULES += $(CONTIKI_NG_APP_LAYER_DIR)/mqtt $(CONTIKI_NG_APP_LAYER_DIR)/coap
 
 # FIXME: Fix the code and remove the next line.
-CFLAGS += -Wno-stringop-truncation
+ifneq ($(CLANG),1)
+  CFLAGS += -Wno-stringop-truncation
+endif
 
 include $(CONTIKI)/Makefile.include

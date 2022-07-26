@@ -31,6 +31,9 @@ include $(CONTIKI)/Makefile.dir-variables
 # Setting this option is also important for tests on Cooja motes to check for warnings.
 WERROR ?= 1
 
+# Disable Clang by default.
+CLANG ?= 0
+
 include $(CONTIKI)/Makefile.identify-target
 
 ### Include Makefile.tools to pull in targets that allow us to build tools dir
@@ -131,6 +134,18 @@ endif
 include $(target_makefile)
 
 ifneq ($(MAKECMDGOALS),clean)
+  ifeq ($(CLANG),1)
+    # Use GCC sysroot unless user specified something else.
+    ifndef SYSROOT
+      SYSROOT := $(shell $(CC) $(CFLAGS) --print-sysroot)
+    endif
+    CC := clang-14
+    AS := $(CC)
+    LD := $(CC)
+    CFLAGS += $(CFLAGS_CLANG)
+    LDFLAGS += $(LDFLAGS_CLANG)
+  endif
+
   # Validate the toolchain.
   ifeq (, $(shell which $(CC)))
     $(error Target "$(TARGET)" compiler "$(CC)" cannot be found)

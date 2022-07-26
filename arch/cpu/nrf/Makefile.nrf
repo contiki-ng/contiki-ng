@@ -40,7 +40,9 @@ CFLAGS += -DNRFX_ATOMIC_USE_BUILT_IN
 CFLAGS += -DNRFX_UARTE_ENABLED
 CFLAGS += -DNRFX_UARTE0_ENABLED
 
-LDFLAGS += --specs=nano.specs
+ifeq ($(CLANG),0)
+  LDFLAGS += --specs=nano.specs
+endif
 LDFLAGS += -L $(NRFX_ROOT)/mdk
 LDFLAGS += -Wl,--defsym=_stack=end
 LDFLAGS += -Wl,--defsym=_stack_origin=__stack
