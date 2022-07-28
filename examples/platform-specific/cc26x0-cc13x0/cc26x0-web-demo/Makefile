@@ -5,6 +5,8 @@ PLATFORMS_ONLY = cc26x0-cc13x0
 
 MODULES_REL += ./resources
 
+NEEDS_CONTIKI_VERSION_FILES += res-device.c
+
 PROJECT_SOURCEFILES += coap-server.c net-uart.c mqtt-client.c
 PROJECT_SOURCEFILES += httpd-simple.c
 

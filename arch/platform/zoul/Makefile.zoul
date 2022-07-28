@@ -19,7 +19,11 @@ BSL_FLAGS += -e -w -v
 BSL_SPEED ?= 460800
 
 # Works in Linux and probably on OSX too (RTCC example)
-CFLAGS += -DDATE="\"`date +"%02u %02d %02m %02y %02H %02M %02S"`\""
+COMPILE_DATE := $(shell date +"%02u %02d %02m %02y %02H %02M %02S")
+CFLAGS_DATE ?= -DDATE="\"$(COMPILE_DATE)\""
+
+# Compile platform.o with -DDATE, other files without it.
+$(OBJECTDIR)/platform.o: CFLAGS += $(CFLAGS_DATE)
 
 ### Configure the build for the board and pull in board-specific sources
 CONTIKI_TARGET_DIRS += . dev

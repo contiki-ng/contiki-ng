@@ -352,10 +352,13 @@ RELSTR:=${shell git --git-dir ${CONTIKI}/.git --work-tree ${CONTIKI} describe \
 endif
 
 ifneq ($(RELSTR),)
-CFLAGS += -DCONTIKI_VERSION_STRING=\"Contiki-NG-$(RELSTR)\"
+CONTIKI_VERSION = -DCONTIKI_VERSION_STRING=\"Contiki-NG-$(RELSTR)\"
 else
-CFLAGS += -DCONTIKI_VERSION_STRING=\"Contiki-NG\"
+CONTIKI_VERSION = -DCONTIKI_VERSION_STRING=\"Contiki-NG\"
 endif
+
+# These files are compiled with -DCONTIKI_VERSION_STRING in CFLAGS.
+NEEDS_CONTIKI_VERSION_FILES += contiki-main.c lwm2m-device.c
 
 ### Harmonize filename of a .map file, if the platform's build system wants
 ### to create one
@@ -401,6 +404,10 @@ DEPFILES := $(addprefix $(DEPDIR)/, $(addsuffix .d, $(CONTIKI_PROJECT))) \
                           $(PROJECT_SOURCEFILES:%.cpp=$(DEPDIR)/%.d)}
 $(DEPFILES):
 include $(wildcard $(DEPFILES))
+
+# Add CONTIKI_VERSION to CFLAGS for these files.
+NEEDS_VERSION_OBJFILES = $(NEEDS_CONTIKI_VERSION_FILES:%.c=$(OBJECTDIR)/%.o)
+$(NEEDS_VERSION_OBJFILES): CFLAGS += $(CONTIKI_VERSION)
 
 # Include custom build rule Makefiles specified by platforms/CPUs.
 include $(MAKEFILES_CUSTOMRULES)
@@ -526,7 +533,7 @@ ifdef MAKE_COAP_DTLS_KEYSTORE
 	@echo "##### \"MAKE_COAP_DTLS_KEYSTORE\": _______________ $(MAKE_COAP_DTLS_KEYSTORE)"
 endif
 	@echo "----------------- C variables: -----------------"
-	$(Q)$(CC) $(CFLAGS) -E $(VIEWCONF) | grep \#\#\#\#\#
+	$(Q)$(CC) $(CONTIKI_VERSION) $(CFLAGS) -E $(VIEWCONF) | grep \#\#\#\#\#
 	@echo "------------------------------------------------"
 	@echo "'==' Means the flag is set to a given a value"
 	@echo "'->' Means the flag is unset, but will default to a given value"
