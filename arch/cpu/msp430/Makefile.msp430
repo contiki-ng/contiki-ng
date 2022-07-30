@@ -45,7 +45,7 @@ CONTIKI_SOURCEFILES        += $(CONTIKI_TARGET_SOURCEFILES)
 ### Compiler definitions
 
 ifeq ($(WERROR),1)
-CFLAGSWERROR= -Wall -Werror
+  CFLAGSWERROR = -Werror
 endif
 
 CC       = msp430-gcc
