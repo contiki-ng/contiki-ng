@@ -137,6 +137,8 @@ WORKDIR                 ${HOME}
 
 # Create Cooja shortcut
 COPY --chown=user:user files/cooja ${HOME}/.local/bin/cooja
+# Add aliases for CI. Use a file to avoid quoting issues.
+COPY --chown=user:user files/bash_aliases ${HOME}/.bash_aliases
 
 # Doxygen 1.8.17 in Ubuntu 20.04 gives (false) warnings on mqtt.h.
 # Use a binary from the Doxygen homepage, static linking started with 1.9.3.
