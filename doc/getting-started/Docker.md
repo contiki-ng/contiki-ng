@@ -222,24 +222,20 @@ On occasion, changes to the Contiki-NG source code base require corresponding ch
 
 As of release v4.5 (#1108), we host multiple docker container images on DockerHub, as [`contiker/contiki-ng`](https://hub.docker.com/r/contiker/contiki-ng). When a user wants to use a specific Contiki-NG version then they can download the corresponding correct docker image:
 
-* `contiker/contiki-ng:latest`: This is the default image. Under all circumstances, this image is expected to be identical to `contiker/contiki-ng:develop` and to work with the latest git version of branch `develop`. Note: This is bugged until [contiki-ng/contiki-ng#1334](https://github.com/contiki-ng/contiki-ng/issues/1334) has been resolved.
+* `contiker/contiki-ng:latest`: This is the default image. Under all circumstances, this image is expected to be identical to `contiker/contiki-ng:develop` and to work with the latest git version of branch `develop`.
 * `contiker/contiki-ng:master`: This is an image that corresponds to the latest version of branch `master`. Typically this will also correspond to the most recent Contiki-NG release.
 * `contiker/contiki-ng:develop`: This is an image that corresponds to the latest version of branch `develop`.
-* `contiker/contiki-ng:XXXXXXX`: This is an image that was created from `tools/docker/Dockerfile` version XXXXXXX. For example `contiker/contiki-ng:f823e6a1` was created by [`tools/docker/Dockerfile` version f823e6a1](https://github.com/contiki-ng/contiki-ng/blob/f823e6a1a041d0a408700b8eb2945011d26d86a2/tools/docker/Dockerfile). One such image is automatically pushed to dockerhub every time there is a git version change for directory `tools/docker`.
+* `contiker/contiki-ng:<hash>`: This is an image that was created from `tools/docker` with hash `<hash>`. A new image is automatically pushed to Dockerhub for every commit that causes the hash to change.
 
-Images tagged with a hash allow users who wish to use a specific Contiki-NG git version (after #1108) to download the correct corresponding container image. Let's assume you wish to use git version NNNNNN. To determine the corresponding tag and pull the correct container image, you can do something like this:
+Images tagged with a hash allow users who wish to use a specific Contiki-NG git version (after #1108) to download the corresponding container image. Let's assume you wish to use git version NNNNNN. To determine the hash and pull the corresponding container image, you can do something like this:
 
 ```
 $ git checkout NNNNNN
 [...]
-$ git log -1 --oneline -- tools/docker/
-YYYYYYYY Commit Message
-$ docker pull contiker/contiki-ng:YYYYYYYY
+$ tools/docker/print-dockerhash.sh
+<hash>
+$ docker pull contiker/contiki-ng:<hash>
 ```
-
-Note that in the general case NNNNNN and YYYYYYYY will be different.
-
-The configuration of each individual docker image can be viewed by inspecting the version of `tools/docker/Dockerfile` that was used to create the image.
 
 ## Running out-of-tree-tests
 If you want to run the entire test suite inside docker, you will need to take additional steps in order for `out-of-tree-tests` to work.

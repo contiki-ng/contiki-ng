@@ -49,7 +49,7 @@ jobs:
     # Construct the correct docker container image tag corresponding to this build
     - name: Figure out correct docker image tag
       run: |
-        echo DOCKER_IMG=$DOCKER_BASE_IMG:${{ hashFiles('tools/docker/**') }} >> $GITHUB_ENV
+        tools/docker/print-dockerhash.sh >> $GITHUB_ENV
         echo COOJA_COMMIT=$(git -C tools/cooja log -1 --oneline | cut -d" " -f1) >> $GITHUB_ENV
 
     # Try to download the image from dockerhub. If it works, use it.
