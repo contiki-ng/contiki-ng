@@ -6,7 +6,7 @@ Contiki-NG is an operating system for resource-constrained devices in the Intern
 
 Online presence:
 * GitHub repository: https://github.com/contiki-ng/contiki-ng
-* Documentation: https://github.com/contiki-ng/contiki-ng/wiki
+* Documentation: https://contiki-ng.readthedocs.io/en/develop/
 * Gitter: https://gitter.im/contiki-ng
 * Contiki-NG tag on Stack Overflow: https://stackoverflow.com/questions/tagged/contiki-ng
 * Twitter: https://twitter.com/contiki_ng
