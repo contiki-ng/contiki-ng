@@ -18,7 +18,7 @@ In a nutshell, creating a Contiki-NG port involves the following steps:
   * Developing drivers and arch-specific modules for your platform.
   * Extending the Contiki-NG build system for your platform.
 * [Writing some examples](#create-some-examples).
-* [Adding some compile tests](#add-travis-tests) for your port.
+* [Adding some compile tests](#add-ci-tests) for your port.
 * [Creating API docs and guides](#add-documentation).
 
 ### CPU code
@@ -236,7 +236,7 @@ You will likely want your users to be able to use some of the existing Contiki-N
 
 You will also likely want your users to use examples the fully expose your platform's features (e.g. sensors). Under `examples/platform-specific`, create a sub-directory with the same name as your target's name and create such examples therein. Examples in this location are expected to contain any amount of platform-specific code.
 
-### Add Travis tests
+### Add CI tests
 As part of this step, you will want to achieve two things:
 
 * Compile-test existing examples for your platform
@@ -250,7 +250,7 @@ For example, assume that you have developed multiple board variants (eg. `board-
 * You want to test [`hello-world`](https://github.com/contiki-ng/contiki-ng/tree/develop/examples/hello-world), and [`rpl-udp`](https://github.com/contiki-ng/contiki-ng/tree/develop/examples/rpl-udp) for `board-a` only.
 * You want to test [`rpl-border-router`](https://github.com/contiki-ng/contiki-ng/tree/develop/examples/rpl-border-router) and [`sensniff`](https://github.com/contiki-ng/contiki-ng/tree/develop/examples/sensniff) for `board-b` only.
 
-You then need to add the following lines (not all need to be added to the same `Makefile`/travis job):
+You then need to add the following lines (not all need to be added to the same `Makefile`/CI job):
 
 ```
 hello-world/my-platform \
