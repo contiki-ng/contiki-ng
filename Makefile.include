@@ -457,10 +457,6 @@ $(OBJECTDIR)/%.e: %.cpp | $(OBJECTDIR)
 	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) -E $< -o $@
 endif
 
-ifndef AROPTS
-  AROPTS = rc
-endif
-
 ifndef LD
   LD = $(CC)
 endif
