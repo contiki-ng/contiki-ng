@@ -19,7 +19,7 @@ SIZE     = size
 ifeq ($(WERROR),1)
 CFLAGSWERROR=-Werror
 endif
-CFLAGSNO = -Wall -g $(CFLAGSWERROR)
+CFLAGSNO = -Wall $(CFLAGSWERROR)
 CFLAGS  += $(CFLAGSNO)
 
 ### Are we building with code size optimisations?
