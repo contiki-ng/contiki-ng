@@ -472,6 +472,9 @@ ifndef CUSTOM_RULE_LINK
 # These are not defined by default since it has a significant performance cost.
 TARGET_LIBEXTRAS = $(LD_START_GROUP) $(TARGET_LIBFILES) $(LD_END_GROUP)
 
+# The order of object files passed to $(LD) varies across runs and this causes
+# binary sizes to vary. Sort the files to get a deterministic size.
+#
 # Cooja passes LIBNAME through the environment and all .csc files contain
 # calls to make with a target that is *not* what Cooja needs. Add
 # a compatibility line for link rule so we can have a single rule that
@@ -479,8 +482,7 @@ TARGET_LIBEXTRAS = $(LD_START_GROUP) $(TARGET_LIBFILES) $(LD_END_GROUP)
 $(BUILD_DIR_BOARD)/%.$(TARGET): LIBNAME ?= $@
 $(BUILD_DIR_BOARD)/%.$(TARGET): $(OBJECTDIR)/%.o $(LDSCRIPT) $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_OBJECTFILES)
 	$(TRACE_LD)
-	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out $(LDSCRIPT) %.a,$^} \
-	    ${filter %.a,$^} $(TARGET_LIBEXTRAS) -o $(LIBNAME)
+	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) $(sort ${filter-out $(LDSCRIPT) %.a,$^}) ${filter %.a,$^} $(TARGET_LIBEXTRAS) -o $(LIBNAME)
 ifdef BINARY_SIZE_LOGFILE
 	$(Q)$(SIZE) $(LIBNAME) | grep $(BUILD_DIR_BOARD) >> $(BINARY_SIZE_LOGFILE)
 endif
