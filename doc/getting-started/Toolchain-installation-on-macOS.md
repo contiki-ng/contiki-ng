@@ -46,7 +46,7 @@ $ brew tap contiki-ng/contiki-ng-arm
 $ brew install contiki-ng-arm-gcc-bin
 ```
 
-This will automatically install the same version as the one currently installed in the [docker image](/doc/getting-started/Docker) and used by our travis CI tests.
+This will automatically install the same version as the one currently installed in the [docker image](/doc/getting-started/Docker) and used by the CI tests.
 
 The formula itself is hosted under [contiki-ng/homebrew-contiki-ng-arm](https://github.com/contiki-ng/homebrew-contiki-ng-arm)
 

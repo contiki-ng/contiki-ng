@@ -3,7 +3,7 @@
 We provide multiple Docker images for Contiki-NG hosted on DockerHub, as [`contiker/contiki-ng`](https://hub.docker.com/r/contiker/contiki-ng).
 
 The `Dockerfile` can be found in the Contiki-NG repository under `tools/docker`.
-As all Continuous Integration tests in Travis are run in a Docker container, it is easy to reproduce the testing environment locally via Docker.
+As all Continuous Integration tests are run in a Docker container, it is easy to reproduce the testing environment locally via Docker.
 
 ## Setup
 
@@ -24,7 +24,7 @@ Download the Contiki-NG image:
 $ docker pull contiker/contiki-ng
 ```
 
-This will automatically download `contiker/contiki-ng:latest`, which is the image used in Travis and which we recommend for development. If you wish to use a different image version please follow the guidelines in the start of the article.
+This will automatically download `contiker/contiki-ng:latest`, which is the image used in CI and which we recommend for development. If you wish to use a different image version please follow the guidelines in the start of the article.
 The image is meant for use with Contiki-NG as a bind mount, which means you make the Contiki-NG repository on the host accessible from inside the container.
 This way, you can work on the codebase using host tools / editors, and build/run commands on the same codebase from the container.
 If you do not have it already, you need to check out Contiki-NG:
