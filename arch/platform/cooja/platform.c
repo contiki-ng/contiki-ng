@@ -85,11 +85,11 @@
 #define COOJA__QUOTEME(a,b,c) COOJA_QUOTEME(a,b,c)
 #define COOJA_QUOTEME(a,b,c) a##b##c
 #define COOJA_JNI_PATH Java_org_contikios_cooja_corecomm_
-#define Java_org_contikios_cooja_corecomm_CLASSNAME_init COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_init)
-#define Java_org_contikios_cooja_corecomm_CLASSNAME_getMemory COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_getMemory)
-#define Java_org_contikios_cooja_corecomm_CLASSNAME_setMemory COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setMemory)
-#define Java_org_contikios_cooja_corecomm_CLASSNAME_tick COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_tick)
-#define Java_org_contikios_cooja_corecomm_CLASSNAME_setReferenceAddress COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setReferenceAddress)
+#define CLASS_init COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_init)
+#define CLASS_getMemory COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_getMemory)
+#define CLASS_setMemory COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setMemory)
+#define CLASS_tick COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_tick)
+#define CLASS_setReferenceAddress COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setReferenceAddress)
 
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip.h"
@@ -252,7 +252,7 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
  *             responsible Java part (MoteType.java).
  */
 JNIEXPORT void JNICALL
-Java_org_contikios_cooja_corecomm_CLASSNAME_init(JNIEnv *env, jobject obj)
+CLASS_init(JNIEnv *env, jobject obj)
 {
   /* Create rtimers and Contiki threads */
   cooja_mt_start(&rtimer_thread, &rtimer_thread_loop, NULL);
@@ -277,7 +277,8 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_init(JNIEnv *env, jobject obj)
  *             responsible Java part (MoteType.java).
  */
 JNIEXPORT void JNICALL
-Java_org_contikios_cooja_corecomm_CLASSNAME_getMemory(JNIEnv *env, jobject obj, jlong rel_addr, jint length, jbyteArray mem_arr)
+CLASS_getMemory(JNIEnv *env, jobject obj, jlong rel_addr, jint length,
+                jbyteArray mem_arr)
 {
   (*env)->SetByteArrayRegion(
       env,
@@ -304,7 +305,8 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_getMemory(JNIEnv *env, jobject obj, 
  *             responsible Java part (MoteType.java).
  */
 JNIEXPORT void JNICALL
-Java_org_contikios_cooja_corecomm_CLASSNAME_setMemory(JNIEnv *env, jobject obj, jlong rel_addr, jint length, jbyteArray mem_arr)
+CLASS_setMemory(JNIEnv *env, jobject obj, jlong rel_addr, jint length,
+                jbyteArray mem_arr)
 {
   (*env)->GetByteArrayRegion(env, mem_arr, 0, length,
                              (jbyte *)((intptr_t)rel_addr + referenceVar));
@@ -330,7 +332,7 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_setMemory(JNIEnv *env, jobject obj, 
  *             responsible Java part (MoteType.java).
  */
 JNIEXPORT void JNICALL
-Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj)
+CLASS_tick(JNIEnv *env, jobject obj)
 {
   simProcessRunValue = 0;
 
@@ -373,7 +375,7 @@ Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj)
  *             responsible Java part (MoteType.java).
  */
 JNIEXPORT void JNICALL
-Java_org_contikios_cooja_corecomm_CLASSNAME_setReferenceAddress(JNIEnv *env, jobject obj, jlong addr)
+CLASS_setReferenceAddress(JNIEnv *env, jobject obj, jlong addr)
 {
   referenceVar = (((intptr_t)&referenceVar) - ((intptr_t)addr));
 }
