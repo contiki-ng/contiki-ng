@@ -62,11 +62,7 @@ $(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(DEPDIR)
 	$(TRACE_CC)
 	$(Q)$(CCACHE) $(CC) $(CFLAGS) -c $< -o $@
 
-### Always re-build ccfg.c so changes to ccfg-conf.h will apply without having
-### to make clean first
-$(OBJECTDIR)/ccfg.o: ccfg.c FORCE | $(OBJECTDIR)
-	$(TRACE_CC)
-	$(Q)$(CCACHE) $(CC) $(CFLAGS) -include "ccxxware-conf.h" -c $< -o $@
+$(OBJECTDIR)/ccfg.o: CFLAGS += -include "ccxxware-conf.h"
 
 # a target that gives a user-friendly memory profile, taking into account the RAM
 # that is statically occupied by the stack as defined in the linker script
