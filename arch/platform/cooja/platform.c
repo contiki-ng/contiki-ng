@@ -82,14 +82,16 @@
 #ifndef CLASSNAME
 #error CLASSNAME is undefined, required by platform.c
 #endif /* CLASSNAME */
-#define COOJA__QUOTEME(a,b,c) COOJA_QUOTEME(a,b,c)
-#define COOJA_QUOTEME(a,b,c) a##b##c
-#define COOJA_JNI_PATH Java_org_contikios_cooja_corecomm_
-#define CLASS_init COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_init)
-#define CLASS_getMemory COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_getMemory)
-#define CLASS_setMemory COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setMemory)
-#define CLASS_tick COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_tick)
-#define CLASS_setReferenceAddress COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setReferenceAddress)
+/* Construct the name of JNI method m in class c. */
+#define COOJA_METHOD(c, m) COOJA_QUOTEME(c, m)
+/* Indirection to get the right preprocessor behavior. */
+#define COOJA_QUOTEME(c, m) Java_org_contikios_cooja_corecomm_##c##_##m
+/* Names of JNI methods. */
+#define CLASS_init COOJA_METHOD(CLASSNAME, init)
+#define CLASS_getMemory COOJA_METHOD(CLASSNAME, getMemory)
+#define CLASS_setMemory COOJA_METHOD(CLASSNAME, setMemory)
+#define CLASS_tick COOJA_METHOD(CLASSNAME, tick)
+#define CLASS_setReferenceAddress COOJA_METHOD(CLASSNAME, setReferenceAddress)
 
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip.h"
