@@ -47,9 +47,6 @@ ifneq ($(NRF52_JLINK_SN),)
 JLINK_OPTS += -SelectEmuBySN $(NRF52_JLINK_SN)
 endif
 
-#function for removing duplicates in a list
-remduplicates = $(strip $(if $1,$(firstword $1) $(call remduplicates,$(filter-out $(firstword $1),$1))))
-
 ### CPU-dependent directories
 CONTIKI_CPU_DIRS += . dev ble #compat
 
@@ -160,10 +157,11 @@ ASMFLAGS += -DBLE_STACK_SUPPORT_REQD
 
 C_SOURCE_FILE_NAMES = $(notdir $(C_SOURCE_FILES))
 CONTIKI_SOURCEFILES += $(C_SOURCE_FILE_NAMES)
-C_PATHS = $(call remduplicates, $(dir $(C_SOURCE_FILES) ) )
+# Sort removes duplicates.
+C_PATHS = $(sort $(dir $(C_SOURCE_FILES)))
 
 ASM_SOURCE_FILE_NAMES = $(notdir $(ASM_SOURCE_FILES))
-ASM_PATHS = $(call remduplicates, $(dir $(ASM_SOURCE_FILES) ))
+ASM_PATHS = $(sort $(dir $(ASM_SOURCE_FILES)))
 ASM_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(ASM_SOURCE_FILE_NAMES:.s=.o) )
 
 vpath %.c $(C_PATHS)
