@@ -34,9 +34,7 @@ USB_SOURCEFILES += usb-core.c cdc-acm.c usb-arch.c usb-serial.c cdc-acm-descript
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(USB_SOURCEFILES)
 
 ### Always re-build ieee-addr.o in case the command line passes a new NODEID
-$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(DEPDIR)
-	$(TRACE_CC)
-	$(Q)$(CCACHE) $(CC) $(CFLAGS) -c $< -o $@
+$(OBJECTDIR)/ieee-addr.o: FORCE
 
 ### This rule is used to generate the correct linker script
 LDGENFLAGS += $(CFLAGS)
