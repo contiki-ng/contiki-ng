@@ -137,8 +137,7 @@ void leds_arch_init(void);
 static void
 rtimer_thread_loop(void *data)
 {
-  while(1)
-  {
+  while(1) {
     rtimer_arch_check();
 
     /* Return to COOJA */
@@ -191,8 +190,7 @@ platform_init_stage_three()
 void
 platform_main_loop()
 {
-  while(1)
-  {
+  while(1) {
     simProcessRunValue = process_run();
     while(simProcessRunValue-- > 0) {
       process_run();
@@ -220,7 +218,7 @@ process_run_thread_loop(void *data)
   /* Then call common Contiki-NG main function */
   main();
 }
-
+/*---------------------------------------------------------------------------*/
 /**
  * \brief           Callback on load of library.
  * \param vm        unused
@@ -237,7 +235,6 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
 {
   return JNI_VERSION_10;
 }
-
 /*---------------------------------------------------------------------------*/
 /**
  * \brief      Initialize a mote by starting processes etc.
@@ -256,7 +253,7 @@ CLASS_init(JNIEnv *env, jobject obj)
   /* Create rtimers and Contiki threads */
   cooja_mt_start(&rtimer_thread, &rtimer_thread_loop, NULL);
   cooja_mt_start(&process_run_thread, &process_run_thread_loop, NULL);
- }
+}
 /*---------------------------------------------------------------------------*/
 /**
  * \brief      Get a segment from the process memory.
@@ -361,7 +358,6 @@ CLASS_tick(JNIEnv *env, jobject obj)
 
   /* Save nearest expiration time */
   simEtimerNextExpirationTime = etimer_next_expiration_time();
-
 }
 /*---------------------------------------------------------------------------*/
 /**
