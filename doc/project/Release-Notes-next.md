@@ -4,6 +4,9 @@ We are releasing version XXX of Contiki-NG. This release adds XXX, and support
 for link-time-optimization that can reduce the binary size up to 50% on some
 examples.
 
+Various parts of the user experience for developers have been improved in this release:
+* Docker image updated to Ubuntu 22.04.
+
 ## Find out more at:
 
 * GitHub repository: https://github.com/contiki-ng/contiki-ng
