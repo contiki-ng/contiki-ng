@@ -78,6 +78,7 @@ BUILD_DIR_TARGET_BOARD = $(BUILD_DIR_TARGET)/$(BOARD)
 BUILD_DIR_FULL = $(BUILD_DIR_TARGET_BOARD:/=)/$(BUILD_DIR_CONFIG)
 # Ditto if BUILD_DIR_CONFIG was empty
 BUILD_DIR_BOARD = $(BUILD_DIR_FULL:/=)
+GENDIR = $(BUILD_DIR_BOARD)/gen
 OBJECTDIR = $(BUILD_DIR_BOARD)/obj
 DEPDIR = $(OBJECTDIR)/.deps
 
@@ -187,7 +188,7 @@ endif # $(BOARD) not empty
 PLATFORM_ACTION ?= build
 
 # Provide way to create directories that have been removed by make clean.
-$(OBJECTDIR) $(DEPDIR):
+$(OBJECTDIR) $(DEPDIR) $(GENDIR):
 	$(TRACE_MKDIR)
 	$(Q)mkdir -p $@
 
@@ -358,6 +359,7 @@ SOURCEDIRS += . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) \
 
 vpath %.c $(SOURCEDIRS)
 vpath %.cpp $(SOURCEDIRS)
+vpath %.in $(SOURCEDIRS)
 vpath %.S $(SOURCEDIRS)
 vpath %.s $(SOURCEDIRS)
 
@@ -408,6 +410,10 @@ distclean:
 	done
 	$(Q)rm -rf $(BUILD_DIR)
 
+# Compare % and %.diffupdate, replace % with %.diffupdate if they differ.
+$(GENDIR)/%: $(GENDIR)/%.diffupdate | $(GENDIR)
+	$(Q)diff $< $@ > /dev/null 2>&1 || mv $< $@
+
 ### Automatic dependency generation, see
 ### http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/#advanced
 
@@ -435,6 +441,16 @@ $(NEEDS_VERSION_OBJFILES): CFLAGS += $(CONTIKI_VERSION)
 
 # Include custom build rule Makefiles specified by platforms/CPUs.
 include $(MAKEFILES_CUSTOMRULES)
+
+ifndef CUSTOM_RULE_IN_TO_GENDIR
+QUOTE := '
+# Fix Emacs syntax highlighting: '
+
+# Run sed on the .in file to produce the outfile, with one replacement
+# expression for each LHS=RHS in $(REPLACEMENTS).
+$(GENDIR)/%: %.in | $(GENDIR)
+	$(Q)sed $(addprefix -e , $(addsuffix =g$(QUOTE), $(addprefix $(QUOTE)s=, $(REPLACEMENTS)))) $< > $@
+endif
 
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.c | $(DEPDIR)

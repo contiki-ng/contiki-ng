@@ -7,7 +7,12 @@ CFLAGS += -DCMSIS_DEV_HDR=\"cc2538_cm3.h\"
 
 ### If the user-specified a Node ID, pass a define
 ifdef NODEID
-  CFLAGS += -DIEEE_ADDR_NODE_ID=$(NODEID)
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @DEFINE@=IEEE_ADDR_NODE_ID
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @NODEID@=$(NODEID)
+else
+  # Otherwise, define an unused define.
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @DEFINE@=BOGUS_NODE_ID
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @NODEID@=1
 endif
 
 ### CPU-dependent directories
@@ -33,8 +38,12 @@ USB_SOURCEFILES += usb-core.c cdc-acm.c usb-arch.c usb-serial.c cdc-acm-descript
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(USB_SOURCEFILES)
 
-### Always re-build ieee-addr.o in case the command line passes a new NODEID
-$(OBJECTDIR)/ieee-addr.o: FORCE
+# Always re-build ieee-addr.h in case the command line passes a new NODEID.
+# The build system will avoid writing a new file with identical NODEID.
+$(GENDIR)/ieee-addr-id.h.diffupdate: FORCE
+
+$(OBJECTDIR)/ieee-addr.o: CFLAGS += -I$(GENDIR)
+$(OBJECTDIR)/ieee-addr.o: $(GENDIR)/ieee-addr-id.h
 
 ### This rule is used to generate the correct linker script
 LDGENFLAGS += $(CFLAGS)
