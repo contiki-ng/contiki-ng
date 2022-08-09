@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simconf>
   <simulation>
-    <title>Basic IPv6 test</title>
+    <title>TCP socket test</title>
     <randomseed>generated</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
@@ -16,11 +16,11 @@
     </events>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
-      <identifier>sender</identifier>
-      <description>Sender</description>
-      <source>[CONTIKI_DIR]/tests/07-simulation-base/code-ipv6/udp-sender/udp-sender.c</source>
+      <identifier>mtype782</identifier>
+      <description>Server</description>
+      <source>[CONTIKI_DIR]/tests/07-simulation-base/code-ipv6/tcp-server/tcp-server.c</source>
       <commands>make TARGET=cooja clean
-make -j$(CPUS) udp-sender.cooja TARGET=cooja</commands>
+make -j$(CPUS) tcp-server.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -38,15 +38,14 @@ make -j$(CPUS) udp-sender.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
-      <identifier>receiver</identifier>
-      <description>Receiver</description>
-      <source>[CONTIKI_DIR]/tests/07-simulation-base/code-ipv6/udp-receiver/udp-receiver.c</source>
+      <identifier>mtype74</identifier>
+      <description>Client</description>
+      <source>[CONTIKI_DIR]/tests/07-simulation-base/code-ipv6/tcp-client/tcp-client.c</source>
       <commands>make TARGET=cooja clean
-make -j$(CPUS) udp-receiver.cooja TARGET=cooja</commands>
+make -j$(CPUS) tcp-client.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -64,10 +63,8 @@ make -j$(CPUS) udp-receiver.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>100.0</x>
@@ -78,10 +75,14 @@ make -j$(CPUS) udp-receiver.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>1</id>
       </interface_config>
-      <motetype_identifier>sender</motetype_identifier>
+      <interface_config>
+        org.contikios.cooja.contikimote.interfaces.ContikiRadio
+        <bitrate>250.0</bitrate>
+      </interface_config>
+      <interface_config>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</interface_config>
+      <motetype_identifier>mtype782</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>94.96401380574989</x>
@@ -92,13 +93,18 @@ make -j$(CPUS) udp-receiver.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>2</id>
       </interface_config>
-      <motetype_identifier>receiver</motetype_identifier>
+      <interface_config>
+        org.contikios.cooja.contikimote.interfaces.ContikiRadio
+        <bitrate>250.0</bitrate>
+      </interface_config>
+      <interface_config>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</interface_config>
+      <motetype_identifier>mtype74</motetype_identifier>
     </mote>
   </simulation>
   <plugin>
     org.contikios.cooja.plugins.SimControl
     <width>280</width>
-    <z>2</z>
+    <z>4</z>
     <height>160</height>
     <location_x>38</location_x>
     <location_y>13</location_y>
@@ -107,24 +113,57 @@ make -j$(CPUS) udp-receiver.cooja TARGET=cooja</commands>
     org.contikios.cooja.plugins.LogListener
     <plugin_config>
       <filter />
+      <formatted_time />
+      <coloring />
     </plugin_config>
     <width>680</width>
     <z>1</z>
     <height>240</height>
-    <location_x>109</location_x>
-    <location_y>377</location_y>
+    <location_x>380</location_x>
+    <location_y>769</location_y>
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.ScriptRunner
     <plugin_config>
-      <scriptfile>[CONFIG_DIR]/ipv6.js</scriptfile>
+      <scriptfile>[CONTIKI_DIR]/tests/07-simulation-base/ipv6-tcp.js</scriptfile>
       <active>true</active>
     </plugin_config>
     <width>600</width>
     <z>0</z>
     <height>700</height>
-    <location_x>330</location_x>
-    <location_y>24</location_y>
+    <location_x>421</location_x>
+    <location_y>12</location_y>
+  </plugin>
+  <plugin>
+    org.contikios.cooja.plugins.Visualizer
+    <plugin_config>
+      <moterelations>true</moterelations>
+      <skin>org.contikios.cooja.plugins.skins.IDVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.GridVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.TrafficVisualizerSkin</skin>
+      <skin>org.contikios.cooja.plugins.skins.UDGMVisualizerSkin</skin>
+      <viewport>70.04135021855352 0.0 0.0 70.04135021855352 -6633.771385491715 -1446.6243572841263</viewport>
+    </plugin_config>
+    <width>400</width>
+    <z>3</z>
+    <height>400</height>
+    <location_x>1</location_x>
+    <location_y>1</location_y>
+  </plugin>
+  <plugin>
+    org.contikios.cooja.plugins.RadioLogger
+    <plugin_config>
+      <split>150</split>
+      <formatted_time />
+      <showdups>false</showdups>
+      <hidenodests>false</hidenodests>
+      <analyzers name="6lowpan" />
+    </plugin_config>
+    <width>1068</width>
+    <z>2</z>
+    <height>300</height>
+    <location_x>547</location_x>
+    <location_y>40</location_y>
   </plugin>
 </simconf>
 
