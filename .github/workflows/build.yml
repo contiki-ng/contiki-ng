@@ -48,8 +48,9 @@ jobs:
 
     # Construct the correct docker container image tag corresponding to this build
     - name: Figure out correct docker image tag
-      run:
+      run: |
         echo DOCKER_IMG=$DOCKER_BASE_IMG:${{ hashFiles('tools/docker/**') }} >> $GITHUB_ENV
+        echo COOJA_COMMIT=$(git -C tools/cooja log -1 --oneline | cut -d" " -f1) >> $GITHUB_ENV
 
     # Try to download the image from dockerhub. If it works, use it.
     #
@@ -124,11 +125,25 @@ jobs:
         key: compilation-${{ matrix.test }}
         max-size: 250M
 
+    # Keep a cache of the Cooja build/dist files. Keyed on Cooja repo
+    # commit to ensure clean rebuild when updating Cooja submodule.
+    - name: Cache Cooja Artifacts
+      uses: actions/cache@v3
+      with:
+        path: |
+          tools/cooja/build
+          tools/cooja/dist
+        key: ${{ runner.os }}-cooja-${{ env.COOJA_COMMIT }}
+
     # Fire up the container and run corresponding tests
     - name: Execute tests
       run: |
         # Set permissions for Docker mount
         sudo chown -R 1000:1000 .
+        # Cache restores write-time timestamps, update timestamps to be more
+        # recent than the files that were just checked out. Ensure the command
+        # is successful when build/dist are not found in cache.
+        find tools/cooja/build tools/cooja/dist -exec touch {} \; 2>/dev/null || true
         # Run test
         # FIXME: (2023) Remove "ccache -c", workaround for cache growing
         #        too large from ccache CI/ccache configuration mismatch.
