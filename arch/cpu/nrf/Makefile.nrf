@@ -41,12 +41,13 @@ CFLAGS += -DNRFX_UARTE_ENABLED
 CFLAGS += -DNRFX_UARTE0_ENABLED
 
 LDFLAGS += --specs=nano.specs
-LDFLAGS += -lgcc -lc -lnosys
 LDFLAGS += -L $(NRFX_ROOT)/mdk
 LDFLAGS += -Wl,--defsym=_stack=end
 LDFLAGS += -Wl,--defsym=_stack_origin=__stack
 LDFLAGS += -Wl,--defsym=_heap=end
 LDFLAGS += -Wl,--defsym=_eheap=__stack
+
+TARGET_LIBFILES += -lgcc -lc -lnosys
 
 #source common to all targets
 NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_wdt.c
