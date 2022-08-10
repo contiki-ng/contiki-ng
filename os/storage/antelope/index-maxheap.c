@@ -686,7 +686,7 @@ get_next(index_iterator_t *iterator)
   uint8_t next_free_slot;
 
   heap = (heap_t *)iterator->index->opaque_data;
-  key = *(maxheap_key_t *)&iterator->min_value;
+  key = VALUE_INT(&iterator->min_value);
 
   if(cache.index_iterator != iterator || iterator->next_item_no == 0) {
     /* Initialize the cache for a new search. */
