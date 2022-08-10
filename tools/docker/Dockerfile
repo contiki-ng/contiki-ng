@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -8,13 +8,7 @@ USER root
 # Tools
 RUN apt-get -qq update && \
     apt-get -qq -y --no-install-recommends install \
-      ca-certificates \
-      gnupg \
-      software-properties-common > /dev/null && \
-    apt-get -qq clean
-
-RUN add-apt-repository ppa:mosquitto-dev/mosquitto-ppa && \
-  apt-get -qq update && \
+      ca-certificates > /dev/null && \
   apt-get -qq -y --no-install-recommends install \
     ant \
     build-essential \
