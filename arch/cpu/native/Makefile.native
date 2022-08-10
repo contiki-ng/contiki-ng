@@ -47,7 +47,6 @@ ifeq ($(NATIVE_CAN_OPTIIMIZE),1)
 endif
 
 ifeq ($(HOST_OS),Darwin)
-AROPTS = -rc
 LDFLAGS_WERROR := -Wl,-fatal_warnings
 LDFLAGS += -Wl,-flat_namespace
 CFLAGS += -DHAVE_SNPRINTF=1 -U__ASSERT_USE_STDERR
