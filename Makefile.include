@@ -111,8 +111,6 @@ $(1) \
 }}}}
 endef
 
-uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
-
 # Rule to force rebuilds.
 .PHONY: FORCE
 FORCE:
@@ -290,7 +288,8 @@ else ifeq ($(MAKE_ROUTING),MAKE_ROUTING_NULLROUTING)
 endif
 
 MODULEDIRS = $(MODULES_REL) ${addprefix $(CONTIKI)/, $(MODULES)}
-UNIQUEMODULES = $(call uniq,$(MODULEDIRS))
+# Sort removes duplicates.
+UNIQUEMODULES = $(sort $(MODULEDIRS))
 MODULES_SOURCES = ${foreach d, $(UNIQUEMODULES), ${subst ${d}/,,${wildcard $(d)/*.c}}}
 
 # Include module-specific makefiles
