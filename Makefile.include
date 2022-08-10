@@ -139,6 +139,15 @@ endif
 
 CP ?= cp
 
+# Default to release builds.
+DEBUG ?= 0
+# Default to generate debug information for gdb. Targets can override this.
+CFLAGS_DEBUG ?= -ggdb
+
+ifeq ($(DEBUG),1)
+  CFLAGS += $(CFLAGS_DEBUG)
+endif
+
 # Configure link-time-optimization (LTO).
 FLAGS_LTO ?= -flto
 

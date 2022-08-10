@@ -29,8 +29,6 @@ ifdef nodemac
 CFLAGS += -DMACID=$(nodemac)
 endif
 
-CFLAGS += -g
-
 include $(CONTIKI_NG_RELOC_CPU_DIR)/msp430/Makefile.msp430
 
 NUMPAR=20

@@ -128,7 +128,7 @@ errors.
 
 For the `cc26xx-demo`, the included readme describes in detail what the example does.
 
-To generate an assembly listing of the compiled firmware, run `make cc26xx-demo.lst`. This may be useful for debugging or optimizing your application code. To intersperse the C source code within the assembly listing, you must instruct the compiler to include debugging information by adding `CFLAGS += -g` to the project Makefile and rebuild by running `make clean cc26xx-demo.lst`.
+To generate an assembly listing of the compiled firmware, run `make cc26xx-demo.lst`. This may be useful for debugging or optimizing your application code. To intersperse the C source code within the assembly listing, you must instruct the compiler to include debugging information by adding `DEBUG = 1` to the project Makefile and rebuild by running `make clean cc26xx-demo.lst`.
 
 ## How to Program your Device
 
