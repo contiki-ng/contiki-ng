@@ -37,7 +37,6 @@ make -j$(CPUS) sender-node.cooja TARGET=cooja DEFINES=RPL_CONF_MOP=RPL_MOP_NON_S
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiCFS</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
@@ -62,7 +61,6 @@ make -j$(CPUS) root-node.cooja TARGET=cooja DEFINES=RPL_CONF_MOP=RPL_MOP_NON_STO
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiCFS</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
@@ -87,7 +85,6 @@ make -j$(CPUS) receiver-node.cooja TARGET=cooja DEFINES=RPL_CONF_MOP=RPL_MOP_NON
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiCFS</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <mote>
       <interface_config>

@@ -38,7 +38,6 @@ make -j$(CPUS) unicast-sender.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
@@ -64,7 +63,6 @@ make -j$(CPUS) udp-receiver.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <mote>
       <breakpoints />

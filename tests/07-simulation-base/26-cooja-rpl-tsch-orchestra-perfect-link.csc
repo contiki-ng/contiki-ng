@@ -37,7 +37,6 @@ make -j$(CPUS) node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=1 MAKE_WITH_STORING_R
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiCFS</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <mote>
       <interface_config>
