@@ -82,14 +82,16 @@
 #ifndef CLASSNAME
 #error CLASSNAME is undefined, required by platform.c
 #endif /* CLASSNAME */
-#define COOJA__QUOTEME(a,b,c) COOJA_QUOTEME(a,b,c)
-#define COOJA_QUOTEME(a,b,c) a##b##c
-#define COOJA_JNI_PATH Java_org_contikios_cooja_corecomm_
-#define CLASS_init COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_init)
-#define CLASS_getMemory COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_getMemory)
-#define CLASS_setMemory COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setMemory)
-#define CLASS_tick COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_tick)
-#define CLASS_setReferenceAddress COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setReferenceAddress)
+/* Construct the name of JNI method m in class c. */
+#define COOJA_METHOD(c, m) COOJA_QUOTEME(c, m)
+/* Indirection to get the right preprocessor behavior. */
+#define COOJA_QUOTEME(c, m) Java_org_contikios_cooja_corecomm_##c##_##m
+/* Names of JNI methods. */
+#define CLASS_init COOJA_METHOD(CLASSNAME, init)
+#define CLASS_getMemory COOJA_METHOD(CLASSNAME, getMemory)
+#define CLASS_setMemory COOJA_METHOD(CLASSNAME, setMemory)
+#define CLASS_tick COOJA_METHOD(CLASSNAME, tick)
+#define CLASS_setReferenceAddress COOJA_METHOD(CLASSNAME, setReferenceAddress)
 
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip.h"
@@ -113,9 +115,6 @@ SIM_INTERFACE_NAME(leds_interface);
 SIM_INTERFACE_NAME(cfs_interface);
 SIM_INTERFACE_NAME(eeprom_interface);
 SIM_INTERFACES(&vib_interface, &moteid_interface, &rs232_interface, &simlog_interface, &beep_interface, &radio_interface, &button_interface, &pir_interface, &clock_interface, &leds_interface, &cfs_interface, &eeprom_interface);
-/* Example: manually add mote interfaces */
-//SIM_INTERFACE_NAME(dummy_interface);
-//SIM_INTERFACES(..., &dummy_interface);
 
 /* Sensors */
 SENSORS(&button_sensor, &pir_sensor, &vib_sensor);
@@ -138,8 +137,7 @@ void leds_arch_init(void);
 static void
 rtimer_thread_loop(void *data)
 {
-  while(1)
-  {
+  while(1) {
     rtimer_arch_check();
 
     /* Return to COOJA */
@@ -192,8 +190,7 @@ platform_init_stage_three()
 void
 platform_main_loop()
 {
-  while(1)
-  {
+  while(1) {
     simProcessRunValue = process_run();
     while(simProcessRunValue-- > 0) {
       process_run();
@@ -221,7 +218,7 @@ process_run_thread_loop(void *data)
   /* Then call common Contiki-NG main function */
   main();
 }
-
+/*---------------------------------------------------------------------------*/
 /**
  * \brief           Callback on load of library.
  * \param vm        unused
@@ -238,7 +235,6 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
 {
   return JNI_VERSION_10;
 }
-
 /*---------------------------------------------------------------------------*/
 /**
  * \brief      Initialize a mote by starting processes etc.
@@ -257,7 +253,7 @@ CLASS_init(JNIEnv *env, jobject obj)
   /* Create rtimers and Contiki threads */
   cooja_mt_start(&rtimer_thread, &rtimer_thread_loop, NULL);
   cooja_mt_start(&process_run_thread, &process_run_thread_loop, NULL);
- }
+}
 /*---------------------------------------------------------------------------*/
 /**
  * \brief      Get a segment from the process memory.
@@ -362,7 +358,6 @@ CLASS_tick(JNIEnv *env, jobject obj)
 
   /* Save nearest expiration time */
   simEtimerNextExpirationTime = etimer_next_expiration_time();
-
 }
 /*---------------------------------------------------------------------------*/
 /**
