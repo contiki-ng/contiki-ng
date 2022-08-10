@@ -8,36 +8,26 @@ BASENAME=$(basename $0 .sh)
 
 IPADDR=fd00::302:304:506:708
 
-test_handler () {
-  # Starting Contiki-NG native node
-  make -C $CONTIKI/examples/snmp-server > make.log 2> make.err
-  sudo $CONTIKI/examples/snmp-server/snmp-server.native > node.log 2> node.err &
-  CPID=$!
-  sleep 2
+# Starting Contiki-NG native node
+make -j4 -C $CONTIKI/examples/snmp-server
+sudo $CONTIKI/examples/snmp-server/snmp-server.native &
+CPID=$!
 
+test_handler () {
+  sleep 2
   $1 2>&1 | grep -z -E "$2" >> $BASENAME.log 2>&1 
   STATUS=$?
-  
-  sleep 2
-  kill_bg $CPID > /dev/null 2>&1
-  wait $CPID > /dev/null 2>&1
 
   if [ $STATUS -eq 0 ] ; then
     cp $BASENAME.log $BASENAME.testlog
     printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
   else
-    echo "==== make.log ====" ; cat make.log;
-    echo "==== make.err ====" ; cat make.err;
-    echo "==== node.log ====" ; cat node.log;
-    echo "==== node.err ====" ; cat node.err;
+    kill_bg $CPID
     echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
-    
+    echo $1
     printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
-    rm -f make.log make.err node.log node.err
     exit 1
   fi
-
-  rm -f make.log make.err node.log node.err
 }
 
 # v1
@@ -75,6 +65,9 @@ test_handler "snmpget -t2 -v2c -c public udp6:[$IPADDR]:161 1.3.6.1.2.1.1.1.0 1.
 #v3
 ## snmpget - fail - timeout - v3 not implemented
 test_handler "snmpget -t2 -v3 -l authPriv -u snmp-poller -a SHA -A \"PASSWORD1\" -x AES -X \"PASSWORD1\" udp6:[$IPADDR]:161 1.3.6.1.2.1.1.1.0" ".*Timeout.*"
+
+kill_bg $CPID > /dev/null 2>&1
+wait $CPID > /dev/null 2>&1
 
 # We do not want Make to stop -> Return 0
 # The Makefile will check if a log contains FAIL at the end
