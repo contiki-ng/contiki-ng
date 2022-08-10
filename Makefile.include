@@ -409,10 +409,14 @@ DEPFLAGS ?= -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 # file type and filter out the results we want. Without the filter, DEPFILES
 # will contain cpp files from the first PROJECT_SOURCEFILES and c files from
 # the second PROJECT_SOURCEFILES.
+# LDSCRIPT is generated with the preprocessor on some targets, so enable
+# those targets to avoid rebuilds as well.
 DEPFILES := $(addprefix $(DEPDIR)/, $(addsuffix .d, $(CONTIKI_PROJECT))) \
             ${filter %.d, $(CONTIKI_SOURCEFILES:%.c=$(DEPDIR)/%.d) \
                           $(PROJECT_SOURCEFILES:%.c=$(DEPDIR)/%.d) \
-                          $(PROJECT_SOURCEFILES:%.cpp=$(DEPDIR)/%.d)}
+                          $(PROJECT_SOURCEFILES:%.cpp=$(DEPDIR)/%.d)} \
+            $(addprefix $(DEPDIR)/, $(addsuffix .d, $(notdir $(LDSCRIPT))))
+
 $(DEPFILES):
 include $(wildcard $(DEPFILES))
 

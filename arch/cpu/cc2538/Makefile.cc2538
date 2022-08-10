@@ -45,8 +45,8 @@ LDGENFLAGS += -imacros "dev/flash.h" -imacros "cfs-coffee-arch.h"
 LDGENFLAGS += -x c -P -E
 
 # NB: Assumes LDSCRIPT was not overridden and is in $(OBJECTDIR)
-$(LDSCRIPT): $(SOURCE_LDSCRIPT) FORCE | $(DEPDIR)
+$(LDSCRIPT): $(SOURCE_LDSCRIPT) $(DEPDIR)/$(notdir $(LDSCRIPT)).d | $(DEPDIR)
 	$(TRACE_CC)
-	$(Q)$(CCACHE) $(CC) $(LDGENFLAGS) $< | grep -v '^\s*#\s*pragma\>' > $@
+	$(Q)$(CCACHE) $(CC) $(LDGENFLAGS) -MT $@ -MMD -MP -MF $(DEPDIR)/$(@F).d $< | grep -v '^\s*#\s*pragma\>' > $@
 
 include $(CONTIKI)/$(CONTIKI_NG_CM3_DIR)/Makefile.cm3
