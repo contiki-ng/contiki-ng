@@ -54,7 +54,9 @@ CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 LDFLAGS += -mabi=aapcs -mfloat-abi=hard -mfpu=fpv4-sp-d16
-LDFLAGS += --specs=nano.specs
+ifeq ($(CLANG),0)
+  LDFLAGS += --specs=nano.specs
+endif
 LDFLAGS += -L $(NRF5_SDK_ROOT)/modules/nrfx/mdk
 TARGET_LIBFILES += -lc -lnosys
 

@@ -27,6 +27,15 @@ ifeq ($(WERROR),1)
   CFLAGS += -Werror
 endif
 
+ifeq ($(CLANG),1)
+  CFLAGS_CLANG += --target=arm-none-none-eabi --sysroot=$(SYSROOT)
+  LDFLAGS_CLANG += --target=arm-none-none-eabi --sysroot=$(SYSROOT)
+  LDFLAGS_CLANG += -fuse-ld=$(SYSROOT)/bin/ld
+
+  LIBGCC := $(shell $(CC) $(CFLAGS) --print-libgcc)
+  LDFLAGS_CLANG += --rtlib=libgcc -L$(dir $(LIBGCC))
+endif
+
 ### Pass CFLAGS along to assembly files in the build
 ASFLAGS += $(CFLAGS)
 ### Specify '-c' option to assemble only and not link

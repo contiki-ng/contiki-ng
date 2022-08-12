@@ -16,6 +16,10 @@ CFLAGS += -DCPU_CONF_PATH=\"nrf5340-application-conf.h\"
 CFLAGS += -mfloat-abi=hard 
 CFLAGS += -mfpu=fpv5-sp-d16
 
+# GCC automatically invokes the linker with this flag, Clang does not.
+ifeq ($(CLANG),1)
+  LDFLAGS += -L$(NRFX_ROOT)/mdk
+endif
 LDFLAGS += -mfloat-abi=hard 
 LDFLAGS += -mfpu=fpv5-sp-d16
 
