@@ -10,7 +10,6 @@ RUN apt-get -qq update && \
     apt-get -qq -y --no-install-recommends install \
       ca-certificates > /dev/null && \
   apt-get -qq -y --no-install-recommends install \
-    ant \
     build-essential \
     gdb \
     git \
@@ -24,11 +23,11 @@ RUN apt-get -qq update && \
     libgtk2.0-0 \
     libncurses5 \
     libpng-dev \
+    libxtst6 \
     mosquitto \
     mosquitto-clients \
     mtr-tiny \
     net-tools \
-    openjdk-11-jdk \
     python3-dev \
     python3-pip \
     python3-setuptools \
@@ -45,8 +44,21 @@ RUN apt-get -qq update && \
     smitools \
     snmp \
     snmp-mibs-downloader \
-    > /dev/null \
-  && apt-get -qq clean
+    > /dev/null && \
+  wget -nv https://github.com/dongjinleekr/graalvm-ce-deb/releases/download/22.2.0-0/graalvm-ce-java11_amd64_22.2.0-0.deb && \
+  dpkg --unpack graalvm-ce-java11_amd64_22.2.0-0.deb && \
+  apt-get -qq -y --no-install-recommends install \
+    ca-certificates-java \
+    java-common \
+    libnss3 \
+    libnspr4 \
+    libsqlite3-0 \
+    > /dev/null && \
+  apt-get -qq -y --no-install-recommends install \
+    ant \
+    > /dev/null && \
+  rm graalvm-ce-java11_amd64_22.2.0-0.deb && \
+  apt-get -qq clean
 
 # Install ARM toolchain
 RUN wget -nv https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 && \
