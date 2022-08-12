@@ -99,15 +99,12 @@ RUN wget -nv https://github.com/renode/renode/releases/download/v${RENODE_VERSIO
 # Sphinx is required for building the readthedocs API documentation.
 # RTD requirements are shared with .readthedocs.yaml for build consistency - check RTD build if modifying.
 # Matplotlib is required for result visualization.
-# Nrfutil 6.1.3 does not work with protobuf 4, so install latest 3.x
 # Keep the image size down by removing the pip cache when done.
 COPY files/rtd_requirements.txt /tmp
 RUN python3 -m pip -q install --upgrade pip && \
     python3 -m pip -q install \
       setuptools \
       matplotlib \
-      'protobuf<=4' && \
-    python3 -m pip -q install \
       nrfutil && \
     python3 -m pip -q install -r /tmp/rtd_requirements.txt && \
     rm -rf /root/.cache /tmp/rtd_requirements.txt
