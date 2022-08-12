@@ -115,21 +115,17 @@ CLEAN += *.firmware *.ihex
 %.ihex: $(BUILD_DIR_BOARD)/%.$(TARGET)
 	$(OBJCOPY) $^ -O ihex $@
 
-$(COOJA_PATH)/build.xml:
+$(COOJA_PATH)/java:
 	@echo '----------------'
-	@echo 'Could not find the COOJA build file. Did you run "git submodule update --init --recursive"?'
+	@echo 'Could not find COOJA. Did you run "git submodule update --init --recursive"?'
 	@echo '----------------'
+	@false
 
-$(COOJA_PATH)/mspsim/build.xml: $(COOJA_PATH)/build.xml
-	@echo '----------------'
-	@echo 'Could not find the MSPSim build file. Did you run "git submodule update --init --recursive"?'
-	@echo '----------------'
+$(COOJA_PATH)/dist/cooja.jar: | $(COOJA_PATH)/java
+	ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $(COOJA_PATH)/build.xml jar
 
-$(COOJA_PATH)/mspsim/mspsim.jar: $(COOJA_PATH)/mspsim/build.xml
-	cd $(COOJA_PATH)/mspsim && ant jar
+%.mspsim: $(BUILD_DIR_BOARD)/%.${TARGET} | $(COOJA_PATH)/java
+	$(Q)ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $(COOJA_PATH)/build.xml run-mspsim -Dargs="-platform=${TARGET}" -DFIRMWAREFILE=$(realpath $<)
 
-%.mspsim: $(BUILD_DIR_BOARD)/%.${TARGET} ${COOJA_PATH}/mspsim/mspsim.jar
-	$(JAVA) -jar ${COOJA_PATH}/mspsim/mspsim.jar -platform=${TARGET} $<
-
-%.mspsim-maptable: $(BUILD_DIR_BOARD)/%.$(TARGET)
-	$(JAVA) -classpath ${COOJA_PATH}/mspsim/mspsim.jar se.sics.mspsim.util.MapTable $(CONTIKI_NG_PROJECT_MAP)
+%.mspsim-maptable: $(BUILD_DIR_BOARD)/%.$(TARGET) ${COOJA_PATH}/dist/cooja.jar
+	$(Q)$(JAVA) -classpath ${COOJA_PATH}/dist/cooja.jar se.sics.mspsim.util.MapTable $(CONTIKI_NG_PROJECT_MAP)
