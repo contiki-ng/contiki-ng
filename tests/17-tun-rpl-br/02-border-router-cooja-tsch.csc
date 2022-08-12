@@ -221,6 +221,8 @@ make -j$(CPUS) hello-world.cooja TARGET=cooja MAKE_MAC=MAKE_MAC_TSCH DEFINES=TSC
     <plugin_config>
       <port>60001</port>
       <bound>true</bound>
+      <!-- Add a little extra initial time to account for TSCH association time. -->
+      <commands>[CONFIG_DIR]/test-border-router.sh [CONTIKI_DIR] 02-border-router-cooja-tsch fd00::204:4:4:4 120</commands>
     </plugin_config>
     <width>362</width>
     <z>3</z>
