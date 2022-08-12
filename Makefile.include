@@ -419,7 +419,8 @@ DEPFLAGS ?= -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 # the second PROJECT_SOURCEFILES.
 # LDSCRIPT is generated with the preprocessor on some targets, so enable
 # those targets to avoid rebuilds as well.
-DEPFILES := $(addprefix $(DEPDIR)/, $(addsuffix .d, $(CONTIKI_PROJECT))) \
+DEPFILES := $(TARGET_DEPFILES) \
+            $(addprefix $(DEPDIR)/, $(addsuffix .d, $(CONTIKI_PROJECT))) \
             ${filter %.d, $(CONTIKI_SOURCEFILES:%.c=$(DEPDIR)/%.d) \
                           $(PROJECT_SOURCEFILES:%.c=$(DEPDIR)/%.d) \
                           $(PROJECT_SOURCEFILES:%.cpp=$(DEPDIR)/%.d)} \

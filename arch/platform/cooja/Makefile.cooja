@@ -125,9 +125,12 @@ $(BUILD_DIR_BOARD)/%.$(TARGET): MAPFILE = $(LIBNAME:.cooja=.map)
 # This is mtype<NNN>.o which is built from platform.c with
 # CLASSNAME passed from the environment by Cooja.
 MTYPE_OBJ = $(LIBNAME:.cooja=.o)
+MTYPE_DEP = $(DEPDIR)/$(notdir $(LIBNAME:.cooja=.d))
+
+TARGET_DEPFILES += $(MTYPE_DEP)
 
 PROJECT_OBJECTFILES += $(MTYPE_OBJ)
 
-$(MTYPE_OBJ): platform.c | $(DEPDIR)
+$(MTYPE_OBJ): platform.c $(MTYPE_DEP) | $(DEPDIR)
 	$(TRACE_CC)
-	$(Q)$(CCACHE) $(CC) $(CFLAGS) -c $< -o $@
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) -MT $@ -MMD -MP -MF $(MTYPE_DEP) -c $< -o $@
