@@ -113,9 +113,7 @@ RUN wget -nv https://github.com/renode/renode/releases/download/v${RENODE_VERSIO
 # Matplotlib is required for result visualization.
 # Keep the image size down by removing the pip cache when done.
 COPY files/rtd_requirements.txt /tmp
-RUN python3 -m pip -q install --upgrade pip && \
-    python3 -m pip -q install \
-      setuptools \
+RUN python3 -m pip -q install \
       matplotlib \
       nrfutil && \
     python3 -m pip -q install -r /tmp/rtd_requirements.txt && \
