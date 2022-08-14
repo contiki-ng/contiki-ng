@@ -21,6 +21,7 @@ USER root
 # python3: used by scripts.
 # snmp: used by the regression tests.
 # sudo: used by the regression tests.
+# udev: needed for jlink deb postinst script.
 # unzip: required during docker image build for software installation.
 # valgrind: used by the regression tests.
 # wget: used by the regression tests.
@@ -50,6 +51,7 @@ RUN apt-get -qq update && \
     sudo \
     screen \
     srecord \
+    udev \
     unzip \
     libusb-1.0-0 \
     valgrind \
@@ -96,12 +98,12 @@ RUN wget -nv https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/n
 ENV NRF52_SDK_ROOT /usr/nrf52-sdk
 
 # Install nRF Command Line tools
-RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-12-1/nRFCommandLineTools10121Linuxamd64.tar.gz && \
-  mkdir /tmp/nrf-cli-tools && \
-  tar xzf nRFCommandLineTools10121Linuxamd64.tar.gz -C /tmp/nrf-cli-tools && \
-  apt-get -qq -y --no-install-recommends install /tmp/nrf-cli-tools/JLink_Linux_V688a_x86_64.deb && \
-  apt-get -qq -y --no-install-recommends install /tmp/nrf-cli-tools/nRF-Command-Line-Tools_10_12_1_Linux-amd64.deb && \
-  rm -rf nRFCommandLineTools10121Linuxamd64.tar.gz /tmp/nrf-cli-tools && \
+RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-17-3/nrf-command-line-tools_10.17.3_amd64.deb && \
+  wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-17-3/nrf-command-line-tools-10.17.3_Linux-amd64.tar.gz && \
+  apt-get -qq -y --no-install-recommends install ./nrf-command-line-tools_10.17.3_amd64.deb > /dev/null && \
+  tar zxf nrf-command-line-tools-10.17.3_Linux-amd64.tar.gz ./JLink_Linux_V766a_x86_64.deb && \
+  apt-get -qq -y --no-install-recommends install ./JLink_Linux_V766a_x86_64.deb > /dev/null && \
+  rm -f *.deb *.tar.gz && \
   apt-get -qq clean
 
 # Install Renode from github releases
