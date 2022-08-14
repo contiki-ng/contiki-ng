@@ -215,7 +215,7 @@ HardFault_Handler(void)
  * @brief Hardfault handler
  * 
  */
-void HardFault_Handler(void) __attribute__((naked));
+void HardFault_Handler(void);
 /*---------------------------------------------------------------------------*/
 /**
  * @brief Hardfault handler
