@@ -38,4 +38,4 @@ simple_udp_sendto(&udp_conn, payload, 2, &destination_ipaddr);
 
 You're all set! The last parameter is the IPv6 address (type `uip_ipaddr_t`) of the destination. If the connection was registered initially with a given remote, you do not need to specify the destination every time you send, simply use `simple_udp_send` instead. Finally, you can also send to a particular UDP port with `simple_udp_sendto_port`.
 
-[doxygen:simple-udp]: https://contiki-ng.github.io//ngdoc/group__simple-udp.html
+[doxygen:simple-udp]: https://contiki-ng.readthedocs.io/en/develop/_api/group__simple-udp.html

@@ -18,7 +18,7 @@ If you are coming from Contiki, this is what you need to know:
 * The configuration system, in particular how the network stack is set up, has changed significantly. Read [doc:configuration-system]
 * The build system is overall unchanged, but offers a number of new handy commands (configuration inspection, intermediate build file generation). It is documented at [doc:build-system]
 
-[doxygen]: https://contiki-ng.github.io/ngdoc/modules.html
+[doxygen]: https://contiki-ng.readthedocs.io/en/develop/_api/index.html
 [doc:home]: https://github.com/contiki-ng/contiki-ng/wiki
 [doc:configuration-system]: /doc/getting-started/The-Contiki-NG-configuration-system
 [doc:build-system]: /doc/getting-started/The-Contiki-NG-build-system
