@@ -18,7 +18,7 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype782</identifier>
       <description>Server</description>
-      <source>[CONTIKI_DIR]/tests/07-simulation-base/code-ipv6/tcp-server/tcp-server.c</source>
+      <source>[CONFIG_DIR]/code-ipv6/tcp-server/tcp-server.c</source>
       <commands>make TARGET=cooja clean
 make -j$(CPUS) tcp-server.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
@@ -43,7 +43,7 @@ make -j$(CPUS) tcp-server.cooja TARGET=cooja</commands>
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>mtype74</identifier>
       <description>Client</description>
-      <source>[CONTIKI_DIR]/tests/07-simulation-base/code-ipv6/tcp-client/tcp-client.c</source>
+      <source>[CONFIG_DIR]/code-ipv6/tcp-client/tcp-client.c</source>
       <commands>make TARGET=cooja clean
 make -j$(CPUS) tcp-client.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
@@ -75,11 +75,6 @@ make -j$(CPUS) tcp-client.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>1</id>
       </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
-      </interface_config>
-      <interface_config>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</interface_config>
       <motetype_identifier>mtype782</motetype_identifier>
     </mote>
     <mote>
@@ -93,11 +88,6 @@ make -j$(CPUS) tcp-client.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>2</id>
       </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
-      </interface_config>
-      <interface_config>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</interface_config>
       <motetype_identifier>mtype74</motetype_identifier>
     </mote>
   </simulation>
@@ -125,7 +115,7 @@ make -j$(CPUS) tcp-client.cooja TARGET=cooja</commands>
   <plugin>
     org.contikios.cooja.plugins.ScriptRunner
     <plugin_config>
-      <scriptfile>[CONTIKI_DIR]/tests/07-simulation-base/ipv6-tcp.js</scriptfile>
+      <scriptfile>[CONFIG_DIR]/ipv6-tcp.js</scriptfile>
       <active>true</active>
     </plugin_config>
     <width>600</width>
@@ -155,8 +145,6 @@ make -j$(CPUS) tcp-client.cooja TARGET=cooja</commands>
     <plugin_config>
       <split>150</split>
       <formatted_time />
-      <showdups>false</showdups>
-      <hidenodests>false</hidenodests>
       <analyzers name="6lowpan" />
     </plugin_config>
     <width>1068</width>

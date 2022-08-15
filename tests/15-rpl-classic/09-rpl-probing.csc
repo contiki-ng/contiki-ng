@@ -2,7 +2,7 @@
 <simconf>
   <simulation>
     <title>My simulation</title>
-    <randomseed>123456</randomseed>
+    <randomseed>1</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
       org.contikios.cooja.radiomediums.UDGM
@@ -97,10 +97,6 @@ make -j$(CPUS) receiver-node.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>1</id>
       </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
-      </interface_config>
       <motetype_identifier>mtype481</motetype_identifier>
     </mote>
     <mote>
@@ -114,10 +110,6 @@ make -j$(CPUS) receiver-node.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>2</id>
       </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
-      </interface_config>
       <motetype_identifier>mtype190</motetype_identifier>
     </mote>
     <mote>
@@ -130,10 +122,6 @@ make -j$(CPUS) receiver-node.cooja TARGET=cooja</commands>
       <interface_config>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>3</id>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
       </interface_config>
       <motetype_identifier>mtype692</motetype_identifier>
     </mote>
@@ -244,3 +232,4 @@ while(true) {&#xD;
     <location_y>14</location_y>
   </plugin>
 </simconf>
+

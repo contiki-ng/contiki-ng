@@ -35,7 +35,6 @@ make -j$(CPUS) hello-world.z1 TARGET=z1</commands>
       <moteinterface>org.contikios.cooja.mspmote.interfaces.MspDebugOutput</moteinterface>
     </motetype>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>94.96401380574989</x>
@@ -61,6 +60,8 @@ make -j$(CPUS) hello-world.z1 TARGET=z1</commands>
     org.contikios.cooja.plugins.LogListener
     <plugin_config>
       <filter />
+      <formatted_time />
+      <coloring />
     </plugin_config>
     <width>680</width>
     <z>1</z>

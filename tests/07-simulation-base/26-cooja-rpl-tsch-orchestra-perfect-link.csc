@@ -2,7 +2,7 @@
 <simconf>
   <simulation>
     <title>RPL+TSCH</title>
-    <randomseed>123456</randomseed>
+    <randomseed>1</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
       org.contikios.cooja.radiomediums.UDGM
@@ -19,7 +19,7 @@
       <identifier>mtype660</identifier>
       <description>RPL/TSCH Node</description>
       <source>[CONTIKI_DIR]/examples/6tisch/simple-node/node.c</source>
-      <commands EXPORT="discard">make TARGET=cooja clean
+      <commands>make TARGET=cooja clean
 make -j$(CPUS) node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=1 MAKE_WITH_STORING_ROUTING=1 MAKE_WITH_LINK_BASED_ORCHESTRA=1 DEFINES=LINK_STATS_CONF_PACKET_COUNTERS=1,TSCH_CONF_KEEPALIVE_TIMEOUT=1024,TSCH_CONF_MAX_KEEPALIVE_TIMEOUT=1024,ORCHESTRA_CONF_UNICAST_MIN_CHANNEL_OFFSET=2,ORCHESTRA_CONF_EB_MIN_CHANNEL_OFFSET=1,ORCHESTRA_CONF_EB_MAX_CHANNEL_OFFSET=1</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
@@ -49,10 +49,6 @@ make -j$(CPUS) node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=1 MAKE_WITH_STORING_R
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>1</id>
       </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
-      </interface_config>
       <motetype_identifier>mtype660</motetype_identifier>
     </mote>
     <mote>
@@ -65,10 +61,6 @@ make -j$(CPUS) node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=1 MAKE_WITH_STORING_R
       <interface_config>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>2</id>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
       </interface_config>
       <motetype_identifier>mtype660</motetype_identifier>
     </mote>
@@ -116,8 +108,8 @@ make -j$(CPUS) node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=1 MAKE_WITH_STORING_R
       <mote>0</mote>
       <mote>1</mote>
       <showRadioRXTX />
-      <showRadioHW />
       <showRadioChannels />
+      <showRadioHW />
       <zoomfactor>16529.88882215865</zoomfactor>
     </plugin_config>
     <width>1304</width>
@@ -134,10 +126,10 @@ while(true) {;&#xD;
   WAIT_UNTIL(id == 2 &amp;&amp; msg.contains("Link Stats"));&#xD;
   log.log(msg + "\n");&#xD;
   fields = msg.split(" ");&#xD;
-  if(fields.length >= 9) {&#xD;
+  if(fields.length &gt;= 9) {&#xD;
     tx = parseInt(fields[5].split("=")[1]);&#xD;
     ack = parseInt(fields[6].split("=")[1]);&#xD;
-    if(tx > 0 &amp;&amp; tx == ack) {&#xD;
+    if(tx &gt; 0 &amp;&amp; tx == ack) {&#xD;
       log.testOK(); /* Report test success and quit */&#xD;
     }&#xD;
   }&#xD;
@@ -151,6 +143,5 @@ while(true) {;&#xD;
     <location_x>963</location_x>
     <location_y>111</location_y>
   </plugin>
-
 </simconf>
 

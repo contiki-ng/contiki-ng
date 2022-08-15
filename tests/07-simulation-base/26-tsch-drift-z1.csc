@@ -2,7 +2,7 @@
 <simconf>
   <simulation>
     <title>Clock drift test</title>
-    <randomseed>123456</randomseed>
+    <randomseed>1</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
       org.contikios.cooja.radiomediums.UDGM
@@ -21,6 +21,7 @@
       <source EXPORT="discard">[CONTIKI_DIR]/examples/6tisch/simple-node/node.c</source>
       <commands EXPORT="discard">make TARGET=z1 clean
       make -j$(CPUS) node.z1 TARGET=z1</commands>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/6tisch/simple-node/node.z1</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -34,7 +35,6 @@
       <moteinterface>org.contikios.cooja.mspmote.interfaces.MspDebugOutput</moteinterface>
     </motetype>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>-1.285769821276336</x>
@@ -42,34 +42,28 @@
         <z>0.0</z>
       </interface_config>
       <interface_config>
-        org.contikios.cooja.mspmote.interfaces.MspMoteID
-        <id>1</id>
-      </interface_config>
-      <interface_config>
         org.contikios.cooja.mspmote.interfaces.MspClock
         <deviation>0.9999975</deviation>
+      </interface_config>
+      <interface_config>
+        org.contikios.cooja.mspmote.interfaces.MspMoteID
+        <id>1</id>
       </interface_config>
       <motetype_identifier>z11</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
-        <x>10</x>
-        <y>50</y>
+        <x>10.0</x>
+        <y>50.0</y>
         <z>0.0</z>
       </interface_config>
       <interface_config>
         org.contikios.cooja.mspmote.interfaces.MspMoteID
         <id>2</id>
       </interface_config>
-      <interface_config>
-        org.contikios.cooja.mspmote.interfaces.MspClock
-        <deviation>1</deviation>
-      </interface_config>
       <motetype_identifier>z11</motetype_identifier>
     </mote>
-
   </simulation>
   <plugin>
     org.contikios.cooja.plugins.SimControl
@@ -114,9 +108,9 @@
       <mote>0</mote>
       <mote>1</mote>
       <showRadioRXTX />
-      <showRadioHW />
       <showRadioChannels />
-      <zoomfactor>1000</zoomfactor>
+      <showRadioHW />
+      <zoomfactor>1000.0</zoomfactor>
     </plugin_config>
     <width>1304</width>
     <z>2</z>
@@ -135,7 +129,7 @@ while(true) {;&#xD;
   WAIT_UNTIL(msg.contains("drift"));&#xD;
   log.log(msg + "\n");&#xD;
   if(msg.contains("drift 2 ppm")) {&#xD;
-    if(++counter >= 5) {;&#xD;
+    if(++counter &gt;= 5) {;&#xD;
       log.testOK(); /* Report test success and quit */&#xD;
     }&#xD;
   }&#xD;
@@ -150,3 +144,4 @@ while(true) {;&#xD;
     <location_y>111</location_y>
   </plugin>
 </simconf>
+

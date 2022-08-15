@@ -2,7 +2,7 @@
 <simconf>
   <simulation>
     <title>data-structures-sky</title>
-    <randomseed>123456</randomseed>
+    <randomseed>1</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
       org.contikios.cooja.radiomediums.UDGM
@@ -18,10 +18,10 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <identifier>sky1</identifier>
       <description>Sky Mote Type #sky1</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/tests/07-simulation-base/code-data-structures/test-data-structures.c</source>
+      <source EXPORT="discard">[CONFIG_DIR]/code-data-structures/test-data-structures.c</source>
       <commands EXPORT="discard">make clean TARGET=sky
 make -j$(CPUS) test-data-structures.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONTIKI_DIR]/tests/07-simulation-base/code-data-structures/test-data-structures.sky</firmware>
+      <firmware EXPORT="copy">[CONFIG_DIR]/code-data-structures/test-data-structures.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -39,16 +39,11 @@ make -j$(CPUS) test-data-structures.sky TARGET=sky</commands>
       <moteinterface>org.contikios.cooja.mspmote.interfaces.SkyTemperature</moteinterface>
     </motetype>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>3.086692968239446</x>
         <y>5.726233183606267</y>
         <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.mspmote.interfaces.MspClock
-        <deviation>1.0</deviation>
       </interface_config>
       <interface_config>
         org.contikios.cooja.mspmote.interfaces.MspMoteID
@@ -91,3 +86,4 @@ make -j$(CPUS) test-data-structures.sky TARGET=sky</commands>
     <location_y>1</location_y>
   </plugin>
 </simconf>
+

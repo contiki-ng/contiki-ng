@@ -34,7 +34,6 @@ make -j$(CPUS) hello-world.sky TARGET=sky</commands>
       <moteinterface>org.contikios.cooja.mspmote.interfaces.SkyLED</moteinterface>
     </motetype>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>64.11203103628397</x>
@@ -72,6 +71,8 @@ make -j$(CPUS) hello-world.sky TARGET=sky</commands>
     org.contikios.cooja.plugins.LogListener
     <plugin_config>
       <filter />
+      <formatted_time />
+      <coloring />
     </plugin_config>
     <width>680</width>
     <z>1</z>
@@ -80,3 +81,4 @@ make -j$(CPUS) hello-world.sky TARGET=sky</commands>
     <location_y>288</location_y>
   </plugin>
 </simconf>
+
