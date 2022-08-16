@@ -130,7 +130,7 @@ enum {
  *
  *             TCP sockets use input and output buffers for incoming
  *             and outgoing data. The memory for these buffers must be
- *             allocated by the caller. The size of the buffers
+ *             allocated by the caller. The sizes of the buffers
  *             determine the amount of data that can be received and
  *             sent, and the principle is that the application that
  *             sets up the TCP socket will know roughly how large
@@ -220,10 +220,10 @@ int tcp_socket_unlisten(struct tcp_socket *s);
  *
  *             This function sends data over a connected TCP
  *             socket. The data is placed in the output buffer and
- *             sent to the remote host as soon as possiblce. When the
+ *             sent to the remote host as soon as possible. When the
  *             data has been acknowledged by the remote host, the
- *             event callback is sent with the TCP_SOCKET_DATA_SENT
- *             event.
+ *             socket's event callback is called with the event
+ *             argument set to TCP_SOCKET_DATA_SENT.
  */
 int tcp_socket_send(struct tcp_socket *s,
                     const uint8_t *dataptr,
