@@ -15,16 +15,16 @@ CPID=$!
 
 test_handler () {
   sleep 2
-  $1 2>&1 | grep -z -E "$2" >> $BASENAME.log 2>&1 
+  $1 2>&1 | tee $BASENAME.log
+  grep -z -E "$2" $BASENAME.log
   STATUS=$?
 
   if [ $STATUS -eq 0 ] ; then
-    cp $BASENAME.log $BASENAME.testlog
     printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
   else
     kill_bg $CPID
-    echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
     echo $1
+    echo $2
     printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
     exit 1
   fi
