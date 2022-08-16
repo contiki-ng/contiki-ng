@@ -53,4 +53,4 @@ When enabled, the `queuebuf` module will be initialised automatically by Contiki
 
 Keep in mind that some Contiki-NG modules require the `queuebuf` module (e.g., CSMA, TSCH, and 6LoWPAN fragmentation support), so you should disable it only if you do not need any of this functionality.
 
-[doxygen:packetbuf]: https://contiki-ng.readthedocs.io/en/latest/_api/group__packetbuf.html
+[doxygen:packetbuf]: https://contiki-ng.readthedocs.io/en/develop/_api/group__packetbuf.html
