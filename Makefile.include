@@ -46,15 +46,7 @@ ifeq ($(DEFINES),)
   endif
 endif
 
-ifndef HOST_OS
-  ifeq ($(OS),Windows_NT)
-  ## TODO: detect more specific Windows set-ups,
-  ## e.g. CygWin, MingW, VisualC, Watcom, Interix
-    HOST_OS := Windows
-  else
-    HOST_OS := $(shell uname)
-  endif
-endif
+HOST_OS := $(shell uname)
 
 #More debug information when running in CI
 ifdef CI
@@ -408,7 +400,6 @@ vpath %.s $(SOURCEDIRS)
 CFLAGS += ${addprefix -I,$(SOURCEDIRS) $(CONTIKI)}
 
 ### Check for a git repo and pass version if found
-### git.exe in Windows cmd shells may require no stderr redirection
 ifndef RELSTR
 RELSTR:=${shell git --git-dir ${CONTIKI}/.git --work-tree ${CONTIKI} describe \
           --tags --always --dirty}
