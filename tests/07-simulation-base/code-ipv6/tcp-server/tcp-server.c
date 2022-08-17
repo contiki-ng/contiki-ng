@@ -53,15 +53,15 @@ AUTOSTART_PROCESSES(&test_tcp_server);
 static struct tcp_socket server_sock;
 static uint8_t in_buf[SOCKET_BUF_SIZE];
 static uint8_t out_buf[SOCKET_BUF_SIZE];
-static size_t total_bytes_received;
+static size_t bytes_received;
 /*****************************************************************************/
 static int
 data_callback(struct tcp_socket *sock, void *ptr, const uint8_t *input, int len)
 {
-  LOG_INFO("RECV %d bytes\n", len);
   if(len >= 0) {
-    total_bytes_received += len;
+    bytes_received += len;
   }
+  LOG_INFO("RECV %d bytes (total %zu)\n", len, bytes_received);
 
   return 0;
 }
@@ -69,27 +69,28 @@ data_callback(struct tcp_socket *sock, void *ptr, const uint8_t *input, int len)
 static void
 event_callback(struct tcp_socket *sock, void *ptr, tcp_socket_event_t event)
 {
-  LOG_INFO_("TCP socket event: ");
+  LOG_INFO("TCP socket event: ");
   switch(event) {
   case TCP_SOCKET_CONNECTED:
-    LOG_INFO("CONNECTED\n");
+    LOG_INFO_("CONNECTED\n");
     break;
   case TCP_SOCKET_CLOSED:
-    LOG_INFO("CLOSED\n");
+    LOG_INFO_("CLOSED\n");
     break;
   case TCP_SOCKET_TIMEDOUT:
-    LOG_INFO("TIMED OUT\n");
+    LOG_INFO_("TIMED OUT\n");
     break;
   case TCP_SOCKET_ABORTED:
-    LOG_INFO("ABORTED\n");
+    LOG_INFO_("ABORTED\n");
     break;
   case TCP_SOCKET_DATA_SENT:
-    LOG_INFO("DATA SENT\n");
+    LOG_INFO_("DATA SENT\n");
     break;
   default:
-    LOG_INFO("UNKNOWN (%d)\n", (int)event);
+    LOG_INFO_("UNKNOWN (%d)\n", (int)event);
     break;
   }
+  tcp_socket_unregister(&server_sock);
 }
 /*****************************************************************************/
 PROCESS_THREAD(test_tcp_server, ev, data)
@@ -108,6 +109,7 @@ PROCESS_THREAD(test_tcp_server, ev, data)
 
   if(tcp_socket_listen(&server_sock, TCP_TEST_PORT) < 0) {
     LOG_ERR("Failed to listen on port %d\n", TCP_TEST_PORT);
+    tcp_socket_unregister(&server_sock);
     PROCESS_EXIT();
   }
 

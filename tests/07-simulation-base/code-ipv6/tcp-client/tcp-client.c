@@ -54,15 +54,17 @@ AUTOSTART_PROCESSES(&test_tcp_client);
 static struct tcp_socket client_sock;
 static uint8_t in_buf[SOCKET_BUF_SIZE];
 static uint8_t out_buf[SOCKET_BUF_SIZE];
-static size_t total_bytes_received;
+static size_t bytes_received;
+static size_t bytes_sent;
 static volatile bool can_send;
+static volatile bool shutdown_test;
 /*****************************************************************************/
 static int
 data_callback(struct tcp_socket *sock, void *ptr, const uint8_t *input, int len)
 {
   LOG_INFO("RECV %d bytes\n", len);
   if(len >= 0) {
-    total_bytes_received += len;
+    bytes_received += len;
   }
 
   return 0;
@@ -71,39 +73,42 @@ data_callback(struct tcp_socket *sock, void *ptr, const uint8_t *input, int len)
 static void
 event_callback(struct tcp_socket *sock, void *ptr, tcp_socket_event_t event)
 {
-  LOG_INFO_("TCP socket event: ");
+  LOG_INFO("TCP socket event: ");
   switch(event) {
   case TCP_SOCKET_CONNECTED:
-    LOG_INFO("CONNECTED\n");
+    LOG_INFO_("CONNECTED\n");
     can_send = true;
-    process_poll(&test_tcp_client);
     break;
   case TCP_SOCKET_CLOSED:
-    LOG_INFO("CLOSED\n");
+    LOG_INFO_("CLOSED\n");
+    shutdown_test = true;
     break;
   case TCP_SOCKET_TIMEDOUT:
-    LOG_INFO("TIMED OUT\n");
+    LOG_INFO_("TIMED OUT\n");
+    shutdown_test = true;
     break;
   case TCP_SOCKET_ABORTED:
-    LOG_INFO("ABORTED\n");
+    LOG_INFO_("ABORTED\n");
+    shutdown_test = true;
     break;
   case TCP_SOCKET_DATA_SENT:
-    LOG_INFO("DATA SENT\n");
+    LOG_INFO_("DATA SENT\n");
     can_send = true;
-    process_poll(&test_tcp_client);
     break;
   default:
-    LOG_INFO("UNKNOWN (%d)\n", (int)event);
+    LOG_INFO_("UNKNOWN (%d)\n", (int)event);
+    shutdown_test = true;
     break;
   }
+
+  process_poll(&test_tcp_client);
 }
 /*****************************************************************************/
 PROCESS_THREAD(test_tcp_client, ev, data)
 {
   static struct etimer startup_timer;
   static uip_ipaddr_t addr;
-  static uint8_t buf[100];
-  static size_t bytes_sent;
+  static uint8_t buf[SOCKET_BUF_SIZE];
 
   PROCESS_BEGIN();
 
@@ -138,20 +143,30 @@ PROCESS_THREAD(test_tcp_client, ev, data)
 
   LOG_INFO("Sending %u bytes to the server...\n", TEST_STREAM_LENGTH);
 
-  for(; bytes_sent < TEST_STREAM_LENGTH;) {
+  for(;;) {
     PROCESS_YIELD();
-    if(can_send) {
-      if(tcp_socket_send(&client_sock, buf, sizeof(buf)) < 0) {
+    if(shutdown_test) {
+      break;
+    } else if(bytes_sent == TEST_STREAM_LENGTH) {
+      LOG_INFO("Sent %zu bytes successfully\n", bytes_sent);
+      LOG_INFO("Test OK\n");
+      tcp_socket_close(&client_sock);
+    } else if(can_send) {
+      size_t bytes_to_send = TEST_STREAM_LENGTH < sizeof(buf) + bytes_sent ?
+	TEST_STREAM_LENGTH - bytes_sent : sizeof(buf);
+      int ret = tcp_socket_send(&client_sock, buf, bytes_to_send);
+      if(ret < 0) {
         LOG_ERR("Failed to send %zu bytes\n", sizeof(buf));
-        PROCESS_EXIT();
+        break;
       }
-      bytes_sent += sizeof(buf);
+      bytes_sent += ret;
+      LOG_INFO("SENT %d bytes (total %zu)\n", ret, bytes_sent);
       can_send = false;
     }
   }
 
-  LOG_INFO("Sent %zu bytes successfully\n", bytes_sent);
-  LOG_INFO("Test OK\n");
+  LOG_INFO("Shutting down\n");
+  tcp_socket_unregister(&client_sock);
 
   PROCESS_END();
 }
