@@ -6,6 +6,24 @@ ENV DEBIAN_FRONTEND noninteractive
 USER root
 
 # Tools
+# build-essential: development tools.
+# gdb: development tools.
+# git: development tools.
+# iputils-ping: used by regression tests.
+# less: convenience tool.
+# lib32z1: 32-bit libz, probably used by some old 32-bit binary.
+# libcanberra-gtk-module: remove warning message from renode.
+# libcoap2-bin: used by regression tests.
+# libxtst6: required for GraalVM/Java11 to run Cooja in GUI mode.
+# mosquitto: used by the regression tests.
+# mtr-tiny: used by the regression tests.
+# net-tools: used by the regression tests.
+# python3: used by scripts.
+# snmp: used by the regression tests.
+# sudo: used by the regression tests.
+# unzip: required during docker image build for software installation.
+# valgrind: used by the regression tests.
+# wget: used by the regression tests.
 RUN apt-get -qq update && \
     apt-get -qq -y --no-install-recommends install \
       ca-certificates \
@@ -17,15 +35,11 @@ RUN apt-get -qq update && \
     build-essential \
     gdb \
     git \
-    gtk-sharp2 \
     iputils-ping \
     less \
     lib32z1 \
     libcanberra-gtk-module \
     libcoap2-bin \
-    libfreetype6-dev \
-    libgtk2.0-0 \
-    libncurses5 \
     libpng-dev \
     libxtst6 \
     mosquitto \
@@ -40,7 +54,6 @@ RUN apt-get -qq update && \
     sudo \
     screen \
     srecord \
-    uml-utilities \
     unzip \
     libusb-1.0-0 \
     valgrind \
@@ -102,9 +115,10 @@ ENV NRF52_SDK_ROOT /usr/nrf52-sdk
 RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-12-1/nRFCommandLineTools10121Linuxamd64.tar.gz && \
   mkdir /tmp/nrf-cli-tools && \
   tar xzf nRFCommandLineTools10121Linuxamd64.tar.gz -C /tmp/nrf-cli-tools && \
-  dpkg -i /tmp/nrf-cli-tools/JLink_Linux_V688a_x86_64.deb && \
-  dpkg -i /tmp/nrf-cli-tools/nRF-Command-Line-Tools_10_12_1_Linux-amd64.deb && \
-  rm -rf nRFCommandLineTools10121Linuxamd64.tar.gz /tmp/nrf-cli-tools
+  apt-get -qq -y --no-install-recommends install /tmp/nrf-cli-tools/JLink_Linux_V688a_x86_64.deb && \
+  apt-get -qq -y --no-install-recommends install /tmp/nrf-cli-tools/nRF-Command-Line-Tools_10_12_1_Linux-amd64.deb && \
+  rm -rf nRFCommandLineTools10121Linuxamd64.tar.gz /tmp/nrf-cli-tools && \
+  apt-get -qq clean
 
 # Install Renode from github releases
 ARG RENODE_VERSION=1.13.0
