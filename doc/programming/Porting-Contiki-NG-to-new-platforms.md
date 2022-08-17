@@ -191,7 +191,7 @@ You then need to decide whether you want to specify your own main loop (do so on
 ```C
 #define PLATFORM_CONF_PROVIDES_MAIN_LOOP 1
 ```
-One platform that defines its own main loop is the [jn516x](https://github.com/contiki-ng/contiki-ng/tree/develop/arch/platform/jn516x/platform.c) platform.
+One platform that defines its own main loop is the [native](https://github.com/contiki-ng/contiki-ng/tree/develop/arch/platform/native/platform.c) platform.
 
 Lastly, the main loop will periodically try to put your device to a low-power state. This is achieved by calling `platform_idle()`, which is one more function that you will need to provide an implementation for (once again in `platform.c`).
 
