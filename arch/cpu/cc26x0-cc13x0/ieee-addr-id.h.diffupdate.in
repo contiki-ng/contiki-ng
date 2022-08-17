@@ -1,0 +1,6 @@
+#ifndef IEEE_ADDR_ID_H_
+#define IEEE_ADDR_ID_H_
+
+#define @DEFINE@ @NODEID@
+
+#endif /* IEEE_ADDR_ID_H_ */
