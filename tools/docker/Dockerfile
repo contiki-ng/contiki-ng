@@ -76,6 +76,9 @@ RUN apt-get -qq update && \
     gradle \
     > /dev/null && \
   rm graalvm-ce-java11_amd64_22.2.0-0.deb && \
+  wget -nv https://github.com/dongjinleekr/graalvm-ce-deb/releases/download/22.2.0-0/graalvm-ce-java17_amd64_22.2.0-0.deb && \
+  dpkg -i graalvm-ce-java17_amd64_22.2.0-0.deb && \
+  rm graalvm-ce-java17_amd64_22.2.0-0.deb && \
   apt-get -qq clean
 
 # Install ARM toolchain
