@@ -115,9 +115,9 @@ jobs:
     # Install in /usr/bin so the ccache action gets the expected environment.
     - name: install ccache
       run: |
-        wget -nv https://github.com/ccache/ccache/releases/download/v4.6.1/ccache-4.6.1-linux-x86_64.tar.xz
-        sudo tar xf ccache-4.6.1-linux-x86_64.tar.xz -C /usr/bin --strip-components=1 --no-same-owner ccache-4.6.1-linux-x86_64/ccache
-        rm -f ccache-4.6.1-linux-x86_64.tar.xz
+        wget -nv https://github.com/ccache/ccache/releases/download/v4.6.2/ccache-4.6.2-linux-x86_64.tar.xz
+        sudo tar xf ccache-4.6.2-linux-x86_64.tar.xz -C /usr/bin --strip-components=1 --no-same-owner ccache-4.6.2-linux-x86_64/ccache
+        rm -f ccache-*-linux-x86_64.tar.xz
 
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1.2.2
