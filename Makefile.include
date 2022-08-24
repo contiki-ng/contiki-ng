@@ -65,6 +65,7 @@ UPPERCASE_CMD = tr '[:lower:][\-/]' '[:upper:][__]'
 COMMA := ,
 
 JAVA = java
+GRADLE = gradle
 
 BUILD_DIR = build
 BUILD_DIR_TARGET = $(BUILD_DIR)/$(TARGET)

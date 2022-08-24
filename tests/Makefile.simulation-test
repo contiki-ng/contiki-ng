@@ -57,7 +57,7 @@ summary: clean
 # Successful simulations do nothing, failures appends test+seed to summary.
 %.testlog: %.csc
 	@for (( SEED=$(BASESEED); SEED < $$(( $(BASESEED) + $(RUNCOUNT) )); SEED++ )); do \
-          ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $(CONTIKI)/tools/cooja/build.xml run_bigmem -Dargs="-nogui=$(realpath $<) -contiki=$(realpath $(CONTIKI)) -logdir=$(dir $(realpath $<)) -random-seed=$$SEED" || \
+          gradle --no-watch-fs --parallel --build-cache -p $(CONTIKI)/tools/cooja run --args="-nogui=$(realpath $<) -contiki=$(realpath $(CONTIKI)) -logdir=$(dir $(realpath $<)) -random-seed=$$SEED" || \
             echo "TEST FAIL: $< seed $$SEED" >> summary; \
          done
 

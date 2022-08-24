@@ -74,7 +74,7 @@ CURDIR := $(shell pwd)
 
 .PHONY: $(MAKECMDGOALS)
 $(MAKECMDGOALS):
-	$(Q)ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $(COOJA_DIR)/build.xml run_bigmem -Dargs="-quickstart=$(addprefix $(CURDIR)/,$(firstword $(MAKECMDGOALS))) -contiki=$(realpath $(CONTIKI)) -logdir=$(CURDIR)"
+	$(Q)$(GRADLE) --no-watch-fs --parallel --build-cache -p $(COOJA_DIR) run --args="-quickstart=$(addprefix $(CURDIR)/,$(firstword $(MAKECMDGOALS))) -contiki=$(realpath $(CONTIKI)) -logdir=$(CURDIR)"
 endif
 endif ## QUICKSTART
 

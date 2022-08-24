@@ -132,7 +132,7 @@ jobs:
       with:
         path: |
           tools/cooja/build
-          tools/cooja/dist
+          tools/cooja/.gradle
         key: ${{ runner.os }}-cooja-${{ env.COOJA_COMMIT }}
 
     # Fire up the container and run corresponding tests
@@ -143,7 +143,7 @@ jobs:
         # Cache restores write-time timestamps, update timestamps to be more
         # recent than the files that were just checked out. Ensure the command
         # is successful when build/dist are not found in cache.
-        find tools/cooja/build tools/cooja/dist -exec touch {} \; 2>/dev/null || true
+        find tools/cooja/build tools/cooja/.gradle -exec touch {} \; 2>/dev/null || true
         # Run test
         # FIXME: (2023) Remove "ccache -c", workaround for cache growing
         #        too large from ccache CI/ccache configuration mismatch.

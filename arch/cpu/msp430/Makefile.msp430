@@ -121,11 +121,11 @@ $(COOJA_PATH)/java:
 	@echo '----------------'
 	@false
 
-$(COOJA_PATH)/dist/cooja.jar: | $(COOJA_PATH)/java
-	ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $(COOJA_PATH)/build.xml jar
+$(COOJA_PATH)/build/libs/cooja-full.jar: | $(COOJA_PATH)/java
+	$(Q)$(GRADLE) --no-watch-fs --parallel --build-cache -p $(COOJA_PATH) fulljar
 
-%.mspsim: $(BUILD_DIR_BOARD)/%.${TARGET} | $(COOJA_PATH)/java
-	$(Q)ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $(COOJA_PATH)/build.xml run-mspsim -Dargs="-platform=${TARGET}" -DFIRMWAREFILE=$(realpath $<)
+%.mspsim: $(BUILD_DIR_BOARD)/%.${TARGET} ${COOJA_PATH}/build/libs/cooja-full.jar
+	  $(Q)$(JAVA) -classpath ${COOJA_PATH}/build/libs/cooja-full.jar se.sics.mspsim.Main -platform=${TARGET} $(realpath $<)
 
-%.mspsim-maptable: $(BUILD_DIR_BOARD)/%.$(TARGET) ${COOJA_PATH}/dist/cooja.jar
-	$(Q)$(JAVA) -classpath ${COOJA_PATH}/dist/cooja.jar se.sics.mspsim.util.MapTable $(CONTIKI_NG_PROJECT_MAP)
+%.mspsim-maptable: $(BUILD_DIR_BOARD)/%.$(TARGET) ${COOJA_PATH}/build/libs/cooja-full.jar
+	$(Q)$(JAVA) -classpath ${COOJA_PATH}/build/libs/cooja-full.jar se.sics.mspsim.util.MapTable $(CONTIKI_NG_PROJECT_MAP)
