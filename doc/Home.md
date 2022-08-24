@@ -66,7 +66,6 @@ Also feel free to download our [cheat sheet](https://contiki-ng.github.io/resour
 * [cc2538dk: TI cc2538 development kit](/doc/platforms/cc2538dk.md)
 * [cc26x0-cc13x0 / srf06-cc26xx: TI cc26x0 and cc13x0 platforms](/doc/platforms/srf06-cc26xx.md)
 * [cooja: Cooja native motes platform](/doc/platforms/cooja.md)
-* [jn516x: NXP jn516x series](/doc/platforms/jn516x.md)
 * [native: Contiki-NG as a native process](/doc/platforms/native.md)
 * [nrf52840: Nordic Semiconductor nRF52840](/doc/platforms/nrf52840.md)
 * [nrf: Nordic Semiconductor nRF5340 and nRF52840 (using nRF MDK)](/doc/platforms/nrf.md)

@@ -47,7 +47,6 @@ This implementation includes:
 ## Platforms
 
 The implemenation has been tested on the following platforms:
-  * NXP JN516x (`jn516x`)
   * Tmote Sky (`sky`)
   * CC2538DK (`cc2538dk`)
   * Zolertia Z1 (`z1`)
@@ -99,7 +98,7 @@ rank -> join priority) as defined in the 6TiSCH minimal configuration.
 
 A simple TSCH+RPL example is included under `examples/6tisch/simple-node`.
 To use TSCH, first make sure your platform supports it.
-Currently, `jn516x`, `sky`, `cc2538dk`, `zoul`, `openmote-cc2538`, `srf06-cc26xx`, and `cooja` are the supported platforms.
+Currently, `sky`, `cc2538dk`, `zoul`, `openmote-cc2538`, `srf06-cc26xx`, and `cooja` are the supported platforms.
 To add your own, we refer the reader to the next section.
 
 To enable TSCH in your application, simple add the TSCH module from your Makefile with:
@@ -149,7 +148,7 @@ To fine-tune, experiment with the following defines:
 ## Porting TSCH to a new platform
 
 Porting TSCH to a new platform requires a few new features in the radio driver, a number of timing-related configuration parameters.
-The easiest is probably to start from one of the existing port: `jn516x`, `sky`, `cc2538dk`, `zoul`, `openmote-cc2538`, `srf06-cc26xx`.
+The easiest is probably to start from one of the existing port: `sky`, `cc2538dk`, `zoul`, `openmote-cc2538`, `srf06-cc26xx`.
 
 ### Radio features required for TSCH
 

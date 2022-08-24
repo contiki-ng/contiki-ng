@@ -31,7 +31,6 @@ COOJA.testlog
 # platform build artifacts
 *.cc2538dk
 *.cooja
-*.jn516x
 *.native
 *.nrf52dk
 *.nrf52840
@@ -47,7 +46,6 @@ COOJA.testlog
 # do not ignore platform makefiles
 !Makefile.cc2538dk
 !Makefile.cooja
-!Makefile.jn516x
 !Makefile.native
 !Makefile.nrf52dk
 !Makefile.nrf52840
