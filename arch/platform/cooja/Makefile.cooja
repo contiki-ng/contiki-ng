@@ -122,7 +122,10 @@ $(BUILD_DIR_BOARD)/%.$(TARGET): MAPFILE = $(LIBNAME:.cooja=.map)
 MTYPE_OBJ = $(LIBNAME:.cooja=.o)
 MTYPE_DEP = $(DEPDIR)/$(notdir $(LIBNAME:.cooja=.d))
 
+# LIBNAME is not set for example in QUICKSTART or for clean
+ifdef LIBNAME
 TARGET_DEPFILES += $(MTYPE_DEP)
+endif # LIBNAME
 
 PROJECT_OBJECTFILES += $(MTYPE_OBJ)
 
