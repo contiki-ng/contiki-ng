@@ -204,7 +204,8 @@ make -j$(CPUS) hello-world.cooja TARGET=cooja</commands>
 /* Set simulaion speed to real time. Required for
  * Native BR test, as the Native BR will run as a
  * unix process, at real time. */
-sim.setSpeedLimit(1.0);</script>
+sim.setSpeedLimit(1.0);
+while (true) { YIELD(); }</script>
       <active>true</active>
     </plugin_config>
     <width>600</width>

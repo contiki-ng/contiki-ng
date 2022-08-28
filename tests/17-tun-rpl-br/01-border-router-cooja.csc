@@ -202,7 +202,8 @@ make -j$(CPUS) hello-world.cooja TARGET=cooja</commands>
     <plugin_config>
       <script>TIMEOUT(10000000000); /* milliseconds. no action at timeout */
 /* Set simulaion speed to real time */
-sim.setSpeedLimit(1.0);</script>
+sim.setSpeedLimit(1.0);
+while (true) { YIELD(); }</script>
       <active>true</active>
     </plugin_config>
     <width>600</width>
