@@ -18,7 +18,7 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>sender</identifier>
       <description>Sender</description>
-      <source>[CONTIKI_DIR]/tests/07-simulation-base/code-ipv6/udp-sender/unicast-sender.c</source>
+      <source>[CONFIG_DIR]/code-ipv6/udp-sender/unicast-sender.c</source>
       <commands>make TARGET=cooja clean
 make -j$(CPUS) unicast-sender.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
@@ -43,7 +43,7 @@ make -j$(CPUS) unicast-sender.cooja TARGET=cooja</commands>
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>receiver</identifier>
       <description>Receiver</description>
-      <source>[CONTIKI_DIR]/tests/07-simulation-base/code-ipv6/udp-receiver/udp-receiver.c</source>
+      <source>[CONFIG_DIR]/code-ipv6/udp-receiver/udp-receiver.c</source>
       <commands>make TARGET=cooja clean
 make -j$(CPUS) udp-receiver.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
@@ -65,7 +65,6 @@ make -j$(CPUS) udp-receiver.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
     </motetype>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>100.0</x>
@@ -79,7 +78,6 @@ make -j$(CPUS) udp-receiver.cooja TARGET=cooja</commands>
       <motetype_identifier>sender</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>94.96401380574989</x>
@@ -105,6 +103,8 @@ make -j$(CPUS) udp-receiver.cooja TARGET=cooja</commands>
     org.contikios.cooja.plugins.LogListener
     <plugin_config>
       <filter />
+      <formatted_time />
+      <coloring />
     </plugin_config>
     <width>680</width>
     <z>1</z>

@@ -2,7 +2,7 @@
 <simconf>
   <simulation>
     <title>RPL+TSCH (Z1)</title>
-    <randomseed>123456</randomseed>
+    <randomseed>1</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
       org.contikios.cooja.radiomediums.UDGM
@@ -21,6 +21,7 @@
       <source EXPORT="discard">[CONTIKI_DIR]/examples/6tisch/simple-node/node.c</source>
       <commands EXPORT="discard">make TARGET=z1 clean
       make -j$(CPUS) node.z1 TARGET=z1 MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=0 MAKE_WITH_PERIODIC_ROUTES_PRINT=1</commands>
+      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/6tisch/simple-node/node.z1</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -34,7 +35,6 @@
       <moteinterface>org.contikios.cooja.mspmote.interfaces.MspDebugOutput</moteinterface>
     </motetype>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>-1.285769821276336</x>
@@ -48,7 +48,6 @@
       <motetype_identifier>z11</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>-19.324109516886306</x>
@@ -62,7 +61,6 @@
       <motetype_identifier>z11</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>5.815501305791592</x>
@@ -76,7 +74,6 @@
       <motetype_identifier>z11</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>31.920697784030082</x>
@@ -90,7 +87,6 @@
       <motetype_identifier>z11</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>47.21747673247198</x>
@@ -104,7 +100,6 @@
       <motetype_identifier>z11</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>10.622284947035123</x>
@@ -199,3 +194,4 @@ while(true) {;&#xD;
     <location_y>111</location_y>
   </plugin>
 </simconf>
+
