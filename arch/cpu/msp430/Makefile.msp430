@@ -1,5 +1,3 @@
-COOJA_PATH ?= $(CONTIKI_NG_TOOLS_DIR)/cooja
-
 ifdef nodeid
 CFLAGS += -DNODEID=$(nodeid)
 endif
