@@ -64,8 +64,9 @@ UPPERCASE_CMD = tr '[:lower:][\-/]' '[:upper:][__]'
 
 COMMA := ,
 
+COOJA_PATH ?= $(CONTIKI_NG_TOOLS_DIR)/cooja
 JAVA = java
-GRADLE = gradle
+GRADLE = $(COOJA_PATH)/gradlew
 
 BUILD_DIR = build
 BUILD_DIR_TARGET = $(BUILD_DIR)/$(TARGET)
