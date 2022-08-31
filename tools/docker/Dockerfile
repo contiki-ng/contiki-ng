@@ -26,11 +26,7 @@ USER root
 # wget: used by the regression tests.
 RUN apt-get -qq update && \
     apt-get -qq -y --no-install-recommends install \
-      ca-certificates \
-      gnupg \
-      software-properties-common > /dev/null && \
-  add-apt-repository -y -n ppa:cwchien/gradle && \
-  apt-get update && \
+      ca-certificates > /dev/null && \
   apt-get -qq -y --no-install-recommends install \
     build-essential \
     gdb \
@@ -73,7 +69,6 @@ RUN apt-get -qq update && \
     > /dev/null && \
   apt-get -qq -y --no-install-recommends install \
     ant \
-    gradle \
     > /dev/null && \
   rm graalvm-ce-java11_amd64_22.2.0-0.deb && \
   wget -nv https://github.com/dongjinleekr/graalvm-ce-deb/releases/download/22.2.0-0/graalvm-ce-java17_amd64_22.2.0-0.deb && \
