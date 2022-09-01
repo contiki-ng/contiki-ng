@@ -21,6 +21,10 @@ ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(COOJA_VERSION),$(EXPECTED_COOJA_VERSION))
     $(error Got COOJA_VERSION $(COOJA_VERSION) but expected $(EXPECTED_COOJA_VERSION))
   endif
+
+  ifneq ($(BOARD),)
+    $(error Cooja motes do not support boards, please remove the configuration 'BOARD=$(BOARD)')
+  endif
 endif
 endif
 
