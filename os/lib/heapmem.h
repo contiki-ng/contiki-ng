@@ -76,8 +76,6 @@
 
 #include <stdlib.h>
 
-#include "contiki.h"
-
 typedef struct heapmem_stats {
   size_t allocated;
   size_t overhead;
