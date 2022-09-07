@@ -511,3 +511,10 @@ heapmem_stats(heapmem_stats_t *stats)
   stats->footprint = heap_usage;
   stats->chunks = stats->overhead / sizeof(chunk_t);
 }
+
+/* heapmem_alignment: return the minimum alignment of allocated addresses. */
+size_t
+heapmem_alignment(void)
+{
+  return HEAPMEM_ALIGNMENT;
+}
