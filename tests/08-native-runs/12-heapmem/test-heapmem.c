@@ -34,6 +34,7 @@
  *      Nicolas Tsiftes <nicolas.tsiftes@ri.se>
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -77,6 +78,13 @@ UNIT_TEST(do_many_allocations)
   char *ptrs[TEST_CONCURRENT] = { NULL };
   unsigned failed_allocations = 0;
   unsigned failed_deallocations = 0;
+  unsigned misalignments = 0;
+  unsigned min_alignment = heapmem_alignment();
+
+  UNIT_TEST_ASSERT(min_alignment != 0);
+  UNIT_TEST_ASSERT(!(min_alignment & (min_alignment - 1)));
+
+  printf("Using heapmem alignment of %u\n", min_alignment);
 
   /*
    * Do a number of allocations (TEST_LIMIT) of a random size in the range
@@ -103,6 +111,9 @@ UNIT_TEST(do_many_allocations)
     if(ptrs[alloc_index] == NULL) {
       failed_allocations++;
     } else {
+      if((uintptr_t)ptrs[alloc_index] & (min_alignment - 1)) {
+        misalignments++;
+      }
       memset(ptrs[alloc_index], '!', alloc_size);
     }
   }
@@ -118,8 +129,10 @@ UNIT_TEST(do_many_allocations)
 
   printf("Failed allocations: %u\n", failed_allocations);
   printf("Failed deallocations: %u\n", failed_deallocations);
+  printf("Misaligned addresses: %u\n", misalignments);
   UNIT_TEST_ASSERT(failed_allocations == 0);
   UNIT_TEST_ASSERT(failed_deallocations == 0);
+  UNIT_TEST_ASSERT(misalignments == 0);
 
   UNIT_TEST_END();
 }
