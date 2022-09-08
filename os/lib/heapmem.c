@@ -44,6 +44,7 @@
 #define HEAPMEM_DEBUG 0
 #endif
 
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -84,6 +85,13 @@
 #define HEAPMEM_REALLOC 1
 #endif /* HEAPMEM_CONF_REALLOC */
 
+#if __STDC_VERSION__ >= 201112L
+#include <stdalign.h>
+#define HEAPMEM_DEFAULT_ALIGNMENT alignof(max_align_t)
+#else
+#define HEAPMEM_DEFAULT_ALIGNMENT sizeof(size_t)
+#endif
+
 /*
  * The HEAPMEM_CONF_ALIGNMENT parameter decides what the minimum alignment
  * for allocated data should be.
@@ -91,7 +99,7 @@
 #ifdef HEAPMEM_CONF_ALIGNMENT
 #define HEAPMEM_ALIGNMENT HEAPMEM_CONF_ALIGNMENT
 #else
-#define HEAPMEM_ALIGNMENT sizeof(int)
+#define HEAPMEM_ALIGNMENT HEAPMEM_DEFAULT_ALIGNMENT
 #endif /* HEAPMEM_CONF_ALIGNMENT */
 
 #define ALIGN(size)						\
