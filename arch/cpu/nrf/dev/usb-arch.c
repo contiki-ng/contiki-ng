@@ -54,6 +54,7 @@
 
 #include "nrfx.h"
 #include "nrfx_power.h"
+#include "nrf_ficr.h"
 /*---------------------------------------------------------------------------*/
 extern void tusb_hal_nrf_power_event(uint32_t event);
 /*---------------------------------------------------------------------------*/
@@ -76,8 +77,8 @@ power_event_handler(nrfx_power_usb_evt_t event)
 void
 usb_arch_init(void)
 {
-  const uint16_t serial_num_high_bytes = (uint16_t)NRF_FICR->DEVICEADDR[1] | 0xC000; // The masking makes the address match the Random Static BLE address.
-  const uint32_t serial_num_low_bytes  = NRF_FICR->DEVICEADDR[0];
+  const uint16_t serial_num_high_bytes = nrf_ficr_deviceid_get(NRF_FICR, 1) | 0xC000;
+  const uint32_t serial_num_low_bytes  = nrf_ficr_deviceid_get(NRF_FICR, 0);
   const nrfx_power_config_t power_config = { 0 };
   const nrfx_power_usbevt_config_t power_usbevt_config = {
     .handler = power_event_handler
