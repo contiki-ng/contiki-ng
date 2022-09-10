@@ -49,7 +49,10 @@
 #include "tusb.h"
 #include "usbd.h"
 /*---------------------------------------------------------------------------*/
+#define BULK_PACKET_SIZE 64
+/*---------------------------------------------------------------------------*/
 static int (*input_handler)(unsigned char c) = NULL;
+static unsigned char usb_buffer[BULK_PACKET_SIZE];
 /*---------------------------------------------------------------------------*/
 PROCESS(usb_arch_process, "USB Arch");
 /*---------------------------------------------------------------------------*/
@@ -82,9 +85,25 @@ usb_init(void)
 void
 usb_write(uint8_t *buffer, uint32_t buffer_size)
 {
-  tud_cdc_write(buffer, buffer_size);
-  tud_cdc_write_flush();
+  uint32_t i;
 
+  i = 0;
+  /* Operating with BULK_PACKET_SIZE as 64 (Not high speed) */
+  while(buffer_size > BULK_PACKET_SIZE) {
+    tud_cdc_write(buffer + i, BULK_PACKET_SIZE);
+    usb_flush();
+    i += BULK_PACKET_SIZE;
+    buffer_size -= BULK_PACKET_SIZE;
+  }
+
+  /* Don't flush on the last write */
+  tud_cdc_write(buffer + i, buffer_size);
+}
+/*---------------------------------------------------------------------------*/
+void
+usb_flush(void)
+{
+  tud_cdc_write_flush();
   /* Call the task to handle the events immediately */
   tud_task();
 }
@@ -92,7 +111,6 @@ usb_write(uint8_t *buffer, uint32_t buffer_size)
 void
 cdc_task(void)
 {
-  unsigned char usb_buffer[64];
   uint32_t usb_read_length;
   uint32_t i;
 
