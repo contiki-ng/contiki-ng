@@ -96,7 +96,7 @@ COOJA_INTFS	= beep.c ip.c leds-arch.c moteid.c \
 		    clock.c cooja-log.c cfs-cooja.c cooja-radio.c \
 			eeprom.c slip-arch.c
 
-COOJA_CORE = random.c sensors.c leds.c gpio-hal-arch.c buttons.c
+COOJA_CORE = platform.c random.c sensors.c leds.c gpio-hal-arch.c buttons.c
 
 # (COOJA_SOURCEFILES contains additional sources set from simulator)
 CONTIKI_TARGET_SOURCEFILES = \
@@ -117,7 +117,7 @@ CFLAGS   += $(CFLAGSNO)
 # of the rule resides in Makefile.include.
 $(BUILD_DIR_BOARD)/%.$(TARGET): MAPFILE = $(LIBNAME:.cooja=.map)
 
-# This is mtype<NNN>.o which is built from platform.c with
+# This is mtype<NNN>.o which is built from mtype.c with
 # CLASSNAME passed from the environment by Cooja.
 MTYPE_OBJ = $(LIBNAME:.cooja=.o)
 MTYPE_DEP = $(DEPDIR)/$(notdir $(LIBNAME:.cooja=.d))
@@ -129,6 +129,6 @@ endif # LIBNAME
 
 PROJECT_OBJECTFILES += $(MTYPE_OBJ)
 
-$(MTYPE_OBJ): platform.c $(MTYPE_DEP) | $(DEPDIR)
+$(MTYPE_OBJ): mtype.c $(MTYPE_DEP) | $(DEPDIR)
 	$(TRACE_CC)
 	$(Q)$(CCACHE) $(CC) $(CFLAGS) -MT $@ -MMD -MP -MF $(MTYPE_DEP) -c $< -o $@
