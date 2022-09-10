@@ -45,6 +45,7 @@
 #include "contiki.h"
 
 #include "usb.h"
+#include "usb_descriptors.h"
 
 #include "tusb.h"
 #include "usbd.h"
@@ -53,6 +54,9 @@
 /*---------------------------------------------------------------------------*/
 static int (*input_handler)(unsigned char c) = NULL;
 static unsigned char usb_buffer[BULK_PACKET_SIZE];
+static char manufacturer[] = "Contiki-NG";
+static char product[] = "Contiki-NG USB";
+static char cdc_interface[] = "Contiki-NG CDC";
 /*---------------------------------------------------------------------------*/
 PROCESS(usb_arch_process, "USB Arch");
 /*---------------------------------------------------------------------------*/
@@ -76,6 +80,10 @@ usb_set_input(int (*input)(unsigned char c))
 void
 usb_init(void)
 {
+  usb_descriptor_set_manufacturer(manufacturer);
+  usb_descriptor_set_product(product);
+  usb_descriptor_set_cdc_interface(cdc_interface);
+
   usb_arch_init();
 
   /* Initialize the usb process */

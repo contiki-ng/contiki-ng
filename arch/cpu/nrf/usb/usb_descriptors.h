@@ -36,71 +36,46 @@
  * @{
  *
  * \file
- *         USB header file for the nRF.
+ *         USB descriptors header file for the nRF.
  * \author
  *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  *
  */
 /*---------------------------------------------------------------------------*/
-#ifndef USB_H_
-#define USB_H_
+#ifndef USB_DESCRIPTOR_H_
+#define USB_DESCRIPTOR_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 /*---------------------------------------------------------------------------*/
 /**
- * @brief Initialize the USB driver
+ * @brief Set the manufactorer
  *
+ * @param manufacturer pointer to manufactorer string
  */
-void usb_init(void);
+void usb_descriptor_set_manufacturer(char *manufacturer);
 /*---------------------------------------------------------------------------*/
 /**
- * @brief Writes to the USB driver
+ * @brief Set the product
  *
- * @param buffer data to be transferred
- * @param buffer_size size of data
+ * @param product pointer to product string
+ */
+void usb_descriptor_set_product(char *product);
+/*---------------------------------------------------------------------------*/
+/**
+ * @brief Set the serial
  *
- * @pre @ref usb_init must have been called
+ * @param serial pointer to serial string
  */
-void usb_write(uint8_t *buffer, uint32_t buffer_size);
+void usb_descriptor_set_serial(char *serial);
 /*---------------------------------------------------------------------------*/
 /**
- * @brief Flush USB buffer
- * 
- * @pre @ref usb_init must have been called
- * @pre Data must be written by @ref usb_write prior
- */
-void usb_flush(void);
-/*---------------------------------------------------------------------------*/
-/**
- * @brief Sets the input handler called in the event handler
+ * @brief Set the cdc interface
  *
- * @param input character that has been read
+ * @param cdc_interface pointer to cdc interface string
  */
-void usb_set_input(int (*input)(unsigned char c));
+void usb_descriptor_set_cdc_interface(char *cdc_interface);
 /*---------------------------------------------------------------------------*/
-/**
- * @brief Handles the interrupt
- * 
- * @remarks Must be called from the arch interrupt handler
- * 
- */
-void usb_interrupt_handler(void);
-/*---------------------------------------------------------------------------*/
-/* Arch specific interface                                                   */
-/*---------------------------------------------------------------------------*/
-/**
- * @brief Initialize the architecture specific USB driver
- *
- */
-void usb_arch_init(void);
-/*---------------------------------------------------------------------------*/
-/**
- * @brief Boot device into DFU
- * 
- */
-void usb_arch_reboot_to_dfu(void);
-/*---------------------------------------------------------------------------*/
-#endif /* USB_H_ */
+#endif /* USB_DESCRIPTOR_H_ */
 /*---------------------------------------------------------------------------*/
 /**
  * @}

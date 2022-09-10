@@ -50,12 +50,16 @@
 #if NRF_HAS_USB
 /*---------------------------------------------------------------------------*/
 #include "usb.h"
+#include "usb_descriptors.h"
 
 #include "nrfx.h"
 #include "nrfx_power.h"
 /*---------------------------------------------------------------------------*/
-/* extern since it is not available in any header file in the tinyusb */
 extern void tusb_hal_nrf_power_event(uint32_t event);
+/*---------------------------------------------------------------------------*/
+#define SERIAL_NUMBER_STRING_SIZE 12
+/*---------------------------------------------------------------------------*/
+static char serial[SERIAL_NUMBER_STRING_SIZE + 1];
 /*---------------------------------------------------------------------------*/
 void
 USBD_IRQHandler(void)
@@ -72,6 +76,8 @@ power_event_handler(nrfx_power_usb_evt_t event)
 void
 usb_arch_init(void)
 {
+  const uint16_t serial_num_high_bytes = (uint16_t)NRF_FICR->DEVICEADDR[1] | 0xC000; // The masking makes the address match the Random Static BLE address.
+  const uint32_t serial_num_low_bytes  = NRF_FICR->DEVICEADDR[0];
   const nrfx_power_config_t power_config = { 0 };
   const nrfx_power_usbevt_config_t power_usbevt_config = {
     .handler = power_event_handler
@@ -82,6 +88,15 @@ usb_arch_init(void)
   nrfx_power_usbevt_init(&power_usbevt_config);
 
   nrfx_power_usbevt_enable();
+
+  // Set up descriptor
+  snprintf(serial,
+                  SERIAL_NUMBER_STRING_SIZE + 1,
+                  "%04"PRIX16"%08"PRIX32,
+                  serial_num_high_bytes,
+                  serial_num_low_bytes);
+
+  usb_descriptor_set_serial(serial);
 
   nrfx_power_usb_state_t usb_reg = nrfx_power_usbstatus_get();
   if(usb_reg == NRFX_POWER_USB_STATE_CONNECTED) {
