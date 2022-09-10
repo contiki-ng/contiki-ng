@@ -84,15 +84,26 @@
 #define GPIO_HAL_CONF_ARCH_HDR_PATH          "gpio-hal-arch.h"
 #define GPIO_HAL_CONF_ARCH_SW_TOGGLE         0
 /*---------------------------------------------------------------------------*/
-#define TSCH_CONF_HW_FRAME_FILTERING          0
-#define TSCH_CONF_RADIO_ON_DURING_TIMESLOT    1
-#define TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS  1
-#define TSCH_CONF_TIMESYNC_REMOVE_JITTER      0
+#ifndef TSCH_CONF_HW_FRAME_FILTERING
+#define TSCH_CONF_HW_FRAME_FILTERING  0
+#endif /* TSCH_CONF_HW_FRAME_FILTERING */
+
+#ifndef TSCH_CONF_RADIO_ON_DURING_TIMESLOT
+#define TSCH_CONF_RADIO_ON_DURING_TIMESLOT 1
+#endif /* TSCH_CONF_RADIO_ON_DURING_TIMESLOT */
+
+#ifndef TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS
+#define TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS 1
+#endif /* TSCH_CONF_RESYNC_WITH_SFD_TIMESTAMPS */
+
+#ifndef TSCH_CONF_TIMESYNC_REMOVE_JITTER
+#define TSCH_CONF_TIMESYNC_REMOVE_JITTER 0
+#endif /* TSCH_CONF_TIMESYNC_REMOVE_JITTER */
 /*---------------------------------------------------------------------------*/
 #define CSMA_CONF_SEND_SOFT_ACK       1
 /*---------------------------------------------------------------------------*/
 #endif /* NRF_DEF_H_ */
 /*---------------------------------------------------------------------------*/
-/** 
- * @} 
+/**
+ * @}
  */
