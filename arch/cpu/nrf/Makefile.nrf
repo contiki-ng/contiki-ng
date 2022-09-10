@@ -92,16 +92,7 @@ ifdef TINYUSB
   TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/common/tusb_fifo.c
   TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/device/usbd.c
   TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/device/usbd_control.c
-  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/class/audio/audio_device.c
   TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/class/cdc/cdc_device.c
-  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/class/dfu/dfu_device.c
-  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/class/dfu/dfu_rt_device.c
-  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/class/hid/hid_device.c
-  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/class/midi/midi_device.c
-  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/class/msc/msc_device.c
-  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/class/net/ncm_device.c
-  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/class/usbtmc/usbtmc_device.c
-  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/class/vendor/vendor_device.c
 
   #assembly files
   TINYUSB_ASM_SRCS += 
@@ -113,16 +104,7 @@ ifdef TINYUSB
   TINYUSB_INC_PATHS += src/
   TINYUSB_INC_PATHS += src/common/
   TINYUSB_INC_PATHS += src/device/
-  TINYUSB_INC_PATHS += src/class/audio/
-
   TINYUSB_INC_PATHS += src/class/cdc/
-  TINYUSB_INC_PATHS += src/class/dfu/
-  TINYUSB_INC_PATHS += src/class/hid/
-  TINYUSB_INC_PATHS += src/class/midi/
-  TINYUSB_INC_PATHS += src/class/msc/
-  TINYUSB_INC_PATHS += src/class/net/
-  TINYUSB_INC_PATHS += src/class/usbtmc/
-  TINYUSB_INC_PATHS += src/class/vendor/
 
   EXTERNALDIRS += $(addprefix $(TINYUSB_ROOT)/, $(TINYUSB_INC_PATHS))
 
