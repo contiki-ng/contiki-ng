@@ -28,8 +28,6 @@ ifneq ($(MAKECMDGOALS),clean)
 endif
 endif
 
-COOJA_DIR = $(CONTIKI_NG_TOOLS_DIR)/cooja
-
 # Use dbg-io for IO functions like printf()
 MODULES += os/lib/dbg-io
 WRAPPED_FUNS = printf putchar puts snprintf sprintf vsnprintf
@@ -69,14 +67,6 @@ SIZE = size
 CP = true
 
 JAVA_CFLAGS = -I"$(JAVA_INCDIR)/include" -I"$(JAVA_INCDIR)/include/$(JAVA_OS_NAME)"
-
-### Assuming simulator quickstart if no JNI library name set from Cooja
-ifndef LIBNAME
-CURDIR := $(shell pwd)
-
-%.csc %.csc.gz: FORCE
-	$(Q)$(GRADLE) --no-watch-fs --parallel --build-cache -p $(COOJA_DIR) run --args="-quickstart=$(addprefix $(CURDIR)/,$@) -contiki=$(realpath $(CONTIKI)) -logdir=$(CURDIR)"
-endif ## QUICKSTART
 
 # No stack end symbol available, code does not work on 64-bit architectures.
 MODULES_SOURCES_EXCLUDES += stack-check.c
