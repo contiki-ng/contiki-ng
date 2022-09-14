@@ -76,8 +76,6 @@
 
 #include <stdlib.h>
 
-#include "contiki.h"
-
 typedef struct heapmem_stats {
   size_t allocated;
   size_t overhead;
@@ -163,6 +161,13 @@ bool heapmem_free(void *ptr);
  */
 
 void heapmem_stats(heapmem_stats_t *stats);
+
+/**
+ * \brief       Obtain the minimum alignment of allocated addresses.
+ * \return      The alignment value, which is a power of two.
+ */
+
+size_t heapmem_alignment(void);
 
 #endif /* !HEAPMEM_H */
 
