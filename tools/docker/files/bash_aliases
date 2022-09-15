@@ -5,3 +5,7 @@
 cimake () {
   RELSTR=citest CFLAGS_DATE='-DDATE="\"05 29 07 22 14 24 07\""' make "$@"
 }
+
+# Enable "cscmake file.csc" anywhere in the tree. Use the native target
+# to silence warnings from the build system.
+alias cscmake='make -f $CONTIKI_NG/Makefile.include TARGET=native'
