@@ -15,7 +15,7 @@ echo "Downloading leshan"
 LESHAN_JAR=leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar
 wget -nv -nc https://joakimeriksson.github.io/resources/$LESHAN_JAR
 echo "Starting leshan server"
-java -jar $LESHAN_JAR -lp 5686 -slp 5687 >leshan.log 2>leshan.err &
+java --add-opens java.base/java.util=ALL-UNNAMED -jar $LESHAN_JAR -lp 5686 -slp 5687 >leshan.log 2>leshan.err &
 LESHID=$!
 
 echo "Starting lwm2m standalone example"

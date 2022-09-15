@@ -14,7 +14,7 @@ USER root
 # lib32z1: 32-bit libz, probably used by some old 32-bit binary.
 # libcanberra-gtk-module: remove warning message from renode.
 # libcoap2-bin: used by regression tests.
-# libxtst6: required for GraalVM/Java11 to run Cooja in GUI mode.
+# libxtst6: required for GraalVM/Java17 to run Cooja in GUI mode.
 # mosquitto: used by the regression tests.
 # mtr-tiny: used by the regression tests.
 # net-tools: used by the regression tests.
@@ -58,8 +58,8 @@ RUN apt-get -qq update && \
     snmp \
     snmp-mibs-downloader \
     > /dev/null && \
-  wget -nv https://github.com/dongjinleekr/graalvm-ce-deb/releases/download/22.2.0-0/graalvm-ce-java11_amd64_22.2.0-0.deb && \
-  dpkg --unpack graalvm-ce-java11_amd64_22.2.0-0.deb && \
+  wget -nv https://github.com/dongjinleekr/graalvm-ce-deb/releases/download/22.2.0-0/graalvm-ce-java17_amd64_22.2.0-0.deb && \
+  dpkg --unpack graalvm-ce-java17_amd64_22.2.0-0.deb && \
   apt-get -qq -y --no-install-recommends install \
     ca-certificates-java \
     java-common \
@@ -70,9 +70,6 @@ RUN apt-get -qq update && \
   apt-get -qq -y --no-install-recommends install \
     ant \
     > /dev/null && \
-  rm graalvm-ce-java11_amd64_22.2.0-0.deb && \
-  wget -nv https://github.com/dongjinleekr/graalvm-ce-deb/releases/download/22.2.0-0/graalvm-ce-java17_amd64_22.2.0-0.deb && \
-  dpkg -i graalvm-ce-java17_amd64_22.2.0-0.deb && \
   rm graalvm-ce-java17_amd64_22.2.0-0.deb && \
   apt-get -qq clean
 
