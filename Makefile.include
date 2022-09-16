@@ -48,11 +48,12 @@ endif
 
 HOST_OS := $(shell uname)
 
-#More debug information when running in CI
-ifdef CI
-  ifeq ($(CI),true)
-    V = 1
-  endif
+# Display more build information when running in CI, less when quiet.
+ifeq ($(CI),true)
+  V = 1
+else ifeq ($(QUIET),1)
+  V = 1
+  Q = @
 endif
 
 ifneq (, $(shell which ccache))
