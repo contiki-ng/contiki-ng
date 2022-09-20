@@ -11,9 +11,13 @@ ifndef CONTIKI
   $(error CONTIKI not defined!)
 endif
 
-ifdef LIBNAME
 # Detect incompatible Cooja versions when not performing "make clean".
 ifneq ($(MAKECMDGOALS),clean)
+  ifndef LIBNAME
+    $(warning Cooja target should be built by Cooja)
+    $(error Use TARGET=native for quickstarting a .csc simulation file)
+  endif
+
   ifndef COOJA_VERSION
     $(error COOJA_VERSION not defined, please upgrade Cooja)
   endif
@@ -25,7 +29,6 @@ ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(BOARD),)
     $(error Cooja motes do not support boards, please remove the configuration 'BOARD=$(BOARD)')
   endif
-endif
 endif
 
 # Use dbg-io for IO functions like printf()
