@@ -81,6 +81,7 @@ UNIT_TEST(do_many_allocations)
   unsigned misalignments = 0;
   unsigned min_alignment = heapmem_alignment();
 
+  /* The minimum alignment value must be a power of two */
   UNIT_TEST_ASSERT(min_alignment != 0);
   UNIT_TEST_ASSERT(!(min_alignment & (min_alignment - 1)));
 
@@ -146,6 +147,8 @@ UNIT_TEST(invalid_freeing)
   UNIT_TEST_ASSERT(heapmem_free(NULL) == false);
 
   char *ptr = heapmem_alloc(10);
+  /* This small allocation should succeed. */
+  UNIT_TEST_ASSERT(ptr != NULL);
   /* A single free operation on allocated memory should succeed. */
   UNIT_TEST_ASSERT(heapmem_free(ptr) == true);
 
@@ -168,7 +171,7 @@ UNIT_TEST(max_alloc)
 
   /* The test uses a much smaller size than the theoretical maximum because
      the heapmem module is not yet supporting such large allocations. */
-  printf("Allocate %zu bytes\n", stats_before.available/ 2);
+  printf("Allocate %zu bytes\n", stats_before.available / 2);
   char *ptr = heapmem_alloc(stats_before.available / 2);
 
   UNIT_TEST_ASSERT(ptr != NULL);
@@ -191,7 +194,8 @@ UNIT_TEST(stats_check)
   heapmem_stats_t stats;
   heapmem_stats(&stats);
 
-  printf("* allocated %zu\n* overhead %zu\n* available %zu\n* footprint %zu\n* chunks %zu\n",
+  printf("* allocated %zu\n* overhead %zu\n* available %zu\n"
+	 "* footprint %zu\n* chunks %zu\n",
          stats.allocated, stats.overhead, stats.available,
          stats.footprint, stats.chunks);
 
