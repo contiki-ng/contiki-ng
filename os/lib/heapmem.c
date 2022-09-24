@@ -410,7 +410,9 @@ heapmem_realloc_debug(void *ptr, size_t size,
 heapmem_realloc(void *ptr, size_t size)
 #endif
 {
-  if(!IN_HEAP(ptr)) {
+  /* Allow the special case of ptr being NULL as an alias
+     for heapmem_alloc(). */
+  if(ptr != NULL && !IN_HEAP(ptr)) {
     LOG_WARN("%s: ptr %p is not in the heap\n", __func__, ptr);
     return NULL;
   }
