@@ -235,4 +235,20 @@ etimer_stop(struct etimer *et)
   et->p = PROCESS_NONE;
 }
 /*---------------------------------------------------------------------------*/
+bool
+etimer_check_ordering(void)
+{
+  struct etimer *current;
+
+  current = next_etimer;
+  while(current && current->next) {
+    if(CLOCK_LT(etimer_expiration_time(current->next),
+        etimer_expiration_time(current))) {
+      return false;
+    }
+    current = current->next;
+  }
+  return true;
+}
+/*---------------------------------------------------------------------------*/
 /** @} */
