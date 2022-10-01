@@ -61,11 +61,13 @@
 #define LOG_LEVEL LOG_LEVEL_INFO
 
 #define TEST_PROTOCOL_DEFAULT "uip"
-#define TEST_FILE_DEFAULT "fuzzing-input"
 #define TEST_BUFFER_SIZE 2000
 
 #define TEST_COAP_ENDPOINT "fdfd::100"
 #define TEST_COAP_PORT 8293
+
+extern int contiki_argc;
+extern char **contiki_argv;
 
 typedef bool (*protocol_function_t)(char *, int);
 
@@ -170,25 +172,10 @@ select_protocol(const char *protocol_name)
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(packet_injector_process, ev, data)
-{
+void
+process_packet(const char *filename, const char *protocol_name, protocol_function_t protocol_input) {
   static char file_buf[TEST_BUFFER_SIZE];
   static int len;
-  static const char *filename;
-  static const char *protocol_name;
-  static protocol_function_t protocol_input;
-
-  PROCESS_BEGIN();
-
-  filename = getenv("TEST_FILE");
-  if(filename == NULL) {
-    filename = TEST_FILE_DEFAULT;
-  }
-
-  protocol_name = getenv("TEST_PROTOCOL");
-  if(protocol_name == NULL) {
-    protocol_name = TEST_PROTOCOL_DEFAULT;
-  }
 
   LOG_INFO("Using input file \"%s\"\n", filename);
 
@@ -198,6 +185,26 @@ PROCESS_THREAD(packet_injector_process, ev, data)
     exit(EXIT_FAILURE);
   }
 
+  LOG_INFO("Injecting a packet of %d bytes into %s\n", len, protocol_name);
+
+  if(protocol_input(file_buf, len) == false) {
+    exit(EXIT_FAILURE);
+  }
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(packet_injector_process, ev, data)
+{
+  static const char *filename;
+  static const char *protocol_name;
+  static protocol_function_t protocol_input;
+
+  PROCESS_BEGIN();
+
+  protocol_name = getenv("TEST_PROTOCOL");
+  if(protocol_name == NULL) {
+    protocol_name = TEST_PROTOCOL_DEFAULT;
+  }
+
   protocol_input = select_protocol(protocol_name);
   if(protocol_input == NULL) {
     LOG_ERR("unsupported protocol: \"%s\"\n",
@@ -205,10 +212,9 @@ PROCESS_THREAD(packet_injector_process, ev, data)
     exit(EXIT_FAILURE);
   }
 
-  LOG_INFO("Injecting a packet of %d bytes into %s\n", len, protocol_name);
-
-  if(protocol_input(file_buf, len) == false) {
-    exit(EXIT_FAILURE);
+  for(int i = 1; i < contiki_argc; i++) {
+    filename = contiki_argv[i];
+    process_packet(filename, protocol_name, protocol_input);
   }
 
   exit(EXIT_SUCCESS);
