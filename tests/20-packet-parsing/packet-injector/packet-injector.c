@@ -47,8 +47,10 @@
 #include <unistd.h>
 
 /* Contiki-NG headers. */
+#include <dev/ble-hal.h>
 #include <net/ipv6/uip.h>
 #include <net/ipv6/uiplib.h>
+#include <net/mac/ble/ble-l2cap.h>
 #include <net/netstack.h>
 #include <net/packetbuf.h>
 #include <net/ipv6/sicslowpan.h>
@@ -133,6 +135,17 @@ inject_uip_packet(char *data, int len)
 }
 /*---------------------------------------------------------------------------*/
 static bool
+inject_ble_l2cap_packet(char *data, int len)
+{
+  packetbuf_copyfrom(data, len);
+  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME_BLE_RX_EVENT);
+
+  ble_l2cap_driver.input();
+
+  return true;
+}
+/*---------------------------------------------------------------------------*/
+static bool
 inject_sicslowpan_packet(char *data, int len)
 {
   packetbuf_copyfrom(data, len);
@@ -154,6 +167,7 @@ select_protocol(const char *protocol_name)
   };
   struct proto_mapper map[] = {
     {"coap", inject_coap_packet},
+    {"ble-l2cap", inject_ble_l2cap_packet},
     {"sicslowpan", inject_sicslowpan_packet},
     {"uip", inject_uip_packet}
   };
