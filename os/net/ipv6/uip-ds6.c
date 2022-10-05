@@ -600,7 +600,7 @@ uip_ds6_set_lladdr_from_iid(uip_lladdr_t *lladdr, const uip_ipaddr_t *ipaddr)
   memcpy(lladdr, ipaddr->u8 + 8, UIP_LLADDR_LEN);
   lladdr->addr[0] ^= 0x02;
 #elif (UIP_LLADDR_LEN == 2)
-  memcpy(lladdr, ipaddr->u8 + 6, UIP_LLADDR_LEN);
+  memcpy(lladdr, ipaddr->u8 + 8 + 6, UIP_LLADDR_LEN);
 #else
 #error uip-ds6.c cannot build lladdr address when UIP_LLADDR_LEN is not 8 or 2
 #endif
