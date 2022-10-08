@@ -99,6 +99,21 @@ read_packet(const char *filename, char *buf, int max_len)
   return len;
 }
 /*---------------------------------------------------------------------------*/
+static void
+set_uip_buf(char *data, int len)
+{
+  if(len > sizeof(uip_buf)) {
+    LOG_DBG("Adjusting the input length from %d to %d to fit the uIP buffer\n",
+            len, (int)sizeof(uip_buf));
+    len = sizeof(uip_buf);
+  }
+
+  uip_len = len;
+
+  /* Fill uIP buffer with packet data. */
+  memcpy(uip_buf, data, len);
+}
+/*---------------------------------------------------------------------------*/
 static bool
 inject_coap_packet(char *data, int len)
 {
@@ -116,19 +131,18 @@ inject_coap_packet(char *data, int len)
 }
 /*---------------------------------------------------------------------------*/
 static bool
+inject_tcpip_packet(char *data, int len)
+{
+  set_uip_buf(data, len);
+  tcpip_input();
+
+  return true;
+}
+/*---------------------------------------------------------------------------*/
+static bool
 inject_uip_packet(char *data, int len)
 {
-  if(len > sizeof(uip_buf)) {
-    LOG_DBG("Adjusting the input length from %d to %d to fit the uIP buffer\n",
-            len, (int)sizeof(uip_buf));
-    len = sizeof(uip_buf);
-  }
-
-  uip_len = len;
-
-  /* Fill uIP buffer with packet data. */
-  memcpy(uip_buf, data, len);
-
+  set_uip_buf(data, len);
   uip_input();
 
   return true;
@@ -169,6 +183,7 @@ select_protocol(const char *protocol_name)
     {"coap", inject_coap_packet},
     {"ble-l2cap", inject_ble_l2cap_packet},
     {"sicslowpan", inject_sicslowpan_packet},
+    {"tcpip", inject_tcpip_packet},
     {"uip", inject_uip_packet}
   };
   int i;
