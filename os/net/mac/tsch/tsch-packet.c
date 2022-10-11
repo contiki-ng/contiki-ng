@@ -51,6 +51,7 @@
 #include "net/netstack.h"
 #include "lib/ccm-star.h"
 #include "lib/aes-128.h"
+#include <string.h>
 
 /* Log configuration */
 #include "sys/log.h"
