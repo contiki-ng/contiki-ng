@@ -48,6 +48,7 @@
 #include "linkaddr.h"
 
 #include "nrf.h"
+#include "nrf_ficr.h"
 
 #include "linkaddr-arch.h"
 
@@ -72,18 +73,9 @@ populate_link_address(void)
   device_address[0] = (NORDIC_SEMI_VENDOR_OUI) >> 16 & 0xFF;
   device_address[1] = (NORDIC_SEMI_VENDOR_OUI) >> 8 & 0xFF;
   device_address[2] = NORDIC_SEMI_VENDOR_OUI & 0xFF;
-#if defined(NRF_FICR)
-  device_address[3] = NRF_FICR->DEVICEADDR[1] & 0xFF;
-  device_address_low = NRF_FICR->DEVICEADDR[0];
-#elif defined(NRF_FICR_NS)
-  device_address[3] = NRF_FICR_NS->DEVICEADDR[1] & 0xFF;
-  device_address_low = NRF_FICR_NS->DEVICEADDR[0];
-#elif defined(NRF_FICR_S)
-  device_address[3] = 0;
-  device_address_low = 0;
-#else
-#error "NRF_FICR not supported?"
-#endif
+  device_address[3] = nrf_ficr_deviceid_get(NRF_FICR, 1) & 0xFF;
+  device_address_low = nrf_ficr_deviceid_get(NRF_FICR, 0);
+
   memcpy(&device_address[4], &device_address_low, sizeof(device_address_low));
 
   memcpy(&linkaddr_node_addr, &device_address[8 - LINKADDR_SIZE],

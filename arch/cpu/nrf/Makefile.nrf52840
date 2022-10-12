@@ -1,4 +1,4 @@
-include $(CONTIKI_CPU)/Makefile.nrfx  
+include $(CONTIKI_CPU)/Makefile.libs  
 
 # Boards
 ifeq ($(BOARD), nrf52840/dongle)
@@ -16,6 +16,10 @@ NRFX_C_SRCS += $(NRFX_ROOT)/mdk/system_nrf52840.c
 EXTERNALDIRS += $(NRFX_ROOT)/mdk/
 
 CFLAGS += -DCPU_CONF_PATH=\"nrf52840-conf.h\"
+CFLAGS += -DCPU_DEF_PATH=\"nrf52840-def.h\"
+
+## Tinyusb
+TINYUSB = 1
 
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2021 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,21 +32,52 @@
  * \addtogroup nrf
  * @{
  *
- * \addtogroup nrf-5340-application nRF5340 Application Core
+ * \addtogroup nrf-usb USB driver
  * @{
  *
  * \file
- *      Header with configuration defines to nrf 5340 application core
+ *         USB descriptors header file for the nRF.
  * \author
- *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *
  */
 /*---------------------------------------------------------------------------*/
-#ifndef NRF5340_APPLICATION_CONF_H_
-#define NRF5340_APPLICATION_CONF_H_
+#ifndef USB_DESCRIPTOR_H_
+#define USB_DESCRIPTOR_H_
 /*---------------------------------------------------------------------------*/
-#endif /* NRF5340_APPLICATION_CONF_H_ */
+#include "contiki.h"
 /*---------------------------------------------------------------------------*/
-/** 
+/**
+ * @brief Set the manufactorer
+ *
+ * @param manufacturer pointer to manufactorer string
+ */
+void usb_descriptor_set_manufacturer(char *manufacturer);
+/*---------------------------------------------------------------------------*/
+/**
+ * @brief Set the product
+ *
+ * @param product pointer to product string
+ */
+void usb_descriptor_set_product(char *product);
+/*---------------------------------------------------------------------------*/
+/**
+ * @brief Set the serial
+ *
+ * @param serial pointer to serial string
+ */
+void usb_descriptor_set_serial(char *serial);
+/*---------------------------------------------------------------------------*/
+/**
+ * @brief Set the cdc interface
+ *
+ * @param cdc_interface pointer to cdc interface string
+ */
+void usb_descriptor_set_cdc_interface(char *cdc_interface);
+/*---------------------------------------------------------------------------*/
+#endif /* USB_DESCRIPTOR_H_ */
+/*---------------------------------------------------------------------------*/
+/**
  * @}
  * @}
  */

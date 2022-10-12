@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2021 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,88 +29,88 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup nrf-platforms
+ * \addtogroup nrf
+ * @{
+ *
+ * \addtogroup nrf-dev Device drivers
+ * @{
+ *
+ * \addtogroup nrf-usb USB driver
  * @{
  *
  * \file
- *      Platform implementation for nRF
+ *         USB implementation for the nRF.
  * \author
- *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
-
-#include "dev/gpio-hal.h"
-#include "dev/button-hal.h"
-#include "dev/leds.h"
-#include "dev/serial-line.h"
-
-#include "random.h"
-#include "int-master.h"
-#include "sensors.h"
-#include "uarte-arch.h"
-#include "linkaddr-arch.h"
-#include "reset-arch.h"
-
-#include "lpm.h"
-#include "usb.h"
-
 /*---------------------------------------------------------------------------*/
-/* Log configuration */
-#include "sys/log.h"
-#define LOG_MODULE "NRF"
-#define LOG_LEVEL LOG_LEVEL_MAIN
-/*---------------------------------------------------------------------------*/
-void
-platform_init_stage_one(void)
-{
-  gpio_hal_init();
-  leds_init();
-}
-/*---------------------------------------------------------------------------*/
-void
-platform_init_stage_two(void)
-{
-  button_hal_init();
-
-  /* Seed value is ignored since hardware RNG is used. */
-  random_init(0x5678);
-
-#if NRF_HAS_UARTE
-  uarte_init();
-#endif /* NRF_HAS_UARTE */
-
 #if NRF_HAS_USB
-  usb_init();
+/*---------------------------------------------------------------------------*/
+#include "usb.h"
+#include "usb_descriptors.h"
+
+#include "nrfx.h"
+#include "nrfx_power.h"
+#include "nrf_ficr.h"
+/*---------------------------------------------------------------------------*/
+extern void tusb_hal_nrf_power_event(uint32_t event);
+/*---------------------------------------------------------------------------*/
+#define SERIAL_NUMBER_STRING_SIZE 12
+/*---------------------------------------------------------------------------*/
+static char serial[SERIAL_NUMBER_STRING_SIZE + 1];
+/*---------------------------------------------------------------------------*/
+void
+USBD_IRQHandler(void)
+{
+  usb_interrupt_handler();
+}
+/*---------------------------------------------------------------------------*/
+static void
+power_event_handler(nrfx_power_usb_evt_t event)
+{
+  tusb_hal_nrf_power_event((uint32_t)event);
+}
+/*---------------------------------------------------------------------------*/
+void
+usb_arch_init(void)
+{
+  const uint16_t serial_num_high_bytes = nrf_ficr_deviceid_get(NRF_FICR, 1) | 0xC000;
+  const uint32_t serial_num_low_bytes  = nrf_ficr_deviceid_get(NRF_FICR, 0);
+  const nrfx_power_config_t power_config = { 0 };
+  const nrfx_power_usbevt_config_t power_usbevt_config = {
+    .handler = power_event_handler
+  };
+
+  nrfx_power_init(&power_config);
+
+  nrfx_power_usbevt_init(&power_usbevt_config);
+
+  nrfx_power_usbevt_enable();
+
+  // Set up descriptor
+  snprintf(serial,
+                  SERIAL_NUMBER_STRING_SIZE + 1,
+                  "%04"PRIX16"%08"PRIX32,
+                  serial_num_high_bytes,
+                  serial_num_low_bytes);
+
+  usb_descriptor_set_serial(serial);
+
+  nrfx_power_usb_state_t usb_reg = nrfx_power_usbstatus_get();
+  if(usb_reg == NRFX_POWER_USB_STATE_CONNECTED) {
+    tusb_hal_nrf_power_event(NRFX_POWER_USB_EVT_DETECTED);
+  } else if(usb_reg == NRFX_POWER_USB_STATE_READY) {
+    tusb_hal_nrf_power_event(NRFX_POWER_USB_EVT_READY);
+  }
+}
+/*---------------------------------------------------------------------------*/
 #endif /* NRF_HAS_USB */
-
-  serial_line_init();
-
-#if BUILD_WITH_SHELL
-#if PLATFORM_DBG_CONF_USB
-  usb_set_input(serial_line_input_byte);
-#else /* PLATFORM_DBG_CONF_USB */
-  uarte_set_input(serial_line_input_byte);
-#endif /* PLATFORM_DBG_CONF_USB */
-#endif /* BUILD_WITH_SHELL */
-
-  populate_link_address();
-
-  reset_debug();
-}
-/*---------------------------------------------------------------------------*/
-void
-platform_init_stage_three(void)
-{
-  process_start(&sensors_process, NULL);
-}
-/*---------------------------------------------------------------------------*/
-void
-platform_idle()
-{
-  lpm_drop();
-}
 /*---------------------------------------------------------------------------*/
 /**
+ * @}
+ * @}
  * @}
  */

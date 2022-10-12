@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2021 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,102 +27,127 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
+
 /**
  * \addtogroup nrf
  * @{
  *
- * \addtogroup nrf-dev Device drivers
+ * \addtogroup nrf-usb USB driver
  * @{
- *
- * \addtogroup nrf-uarte UARTE driver
- * @{
- *
+ * *
  * \file
- *         UARTE implementation for the nRF.
+ *         USB driver for the nRF.
  * \author
  *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  *
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+
+#include "usb.h"
+#include "usb_descriptors.h"
+
+#include "tusb.h"
+#include "usbd.h"
 /*---------------------------------------------------------------------------*/
-#if NRF_HAS_UARTE
-/*---------------------------------------------------------------------------*/
-#include "nrfx_config.h"
-#include "nrfx_uarte.h"
-#include "hal/nrf_gpio.h"
+#define BULK_PACKET_SIZE 64
 /*---------------------------------------------------------------------------*/
 static int (*input_handler)(unsigned char c) = NULL;
+static unsigned char usb_buffer[BULK_PACKET_SIZE];
+static char manufacturer[] = "Contiki-NG";
+static char product[] = "Contiki-NG USB";
+static char cdc_interface[] = "Contiki-NG CDC";
 /*---------------------------------------------------------------------------*/
-static nrfx_uarte_t instance = NRFX_UARTE_INSTANCE(0);
-static uint8_t uarte_buffer;
+PROCESS(usb_arch_process, "USB Arch");
 /*---------------------------------------------------------------------------*/
 void
-uarte_write(unsigned char data)
+usb_interrupt_handler(void)
 {
-  do {
-  }  while(nrfx_uarte_tx_in_progress(&instance));
-  nrfx_uarte_tx(&instance, &data, sizeof(data));
+  tud_int_handler(0);
+
+  /* Poll the process since we are in interrupt context */
+  process_poll(&usb_arch_process);
 }
 /*---------------------------------------------------------------------------*/
-/**
- * @brief UARTE event handler
- *
- * @param p_event UARTE event
- * @param p_context UARTE context
- */
-static void
-uarte_handler(nrfx_uarte_event_t const *p_event, void *p_context)
-{
-  uint8_t *p_data;
-  size_t bytes;
-  size_t i;
 
-  /* Don't spend time in interrupt if the input_handler is not set */
-  if(p_event->type == NRFX_UARTE_EVT_RX_DONE) {
-    if(input_handler) {
-      p_data = p_event->data.rxtx.p_data;
-      bytes = p_event->data.rxtx.bytes;
-      for(i = 0; i < bytes; i++) {
-        input_handler(p_data[i]);
-      }
-      nrfx_uarte_rx(&instance, &uarte_buffer, sizeof(uarte_buffer));
+/*---------------------------------------------------------------------------*/
+void
+usb_set_input(int (*input)(unsigned char c))
+{
+  input_handler = input;
+}
+/*---------------------------------------------------------------------------*/
+void
+usb_init(void)
+{
+  usb_descriptor_set_manufacturer(manufacturer);
+  usb_descriptor_set_product(product);
+  usb_descriptor_set_cdc_interface(cdc_interface);
+
+  usb_arch_init();
+
+  /* Initialize the usb process */
+  process_start(&usb_arch_process, NULL);
+}
+/*---------------------------------------------------------------------------*/
+void
+usb_write(uint8_t *buffer, uint32_t buffer_size)
+{
+  uint32_t i;
+
+  i = 0;
+  /* Operating with BULK_PACKET_SIZE as 64 (Not high speed) */
+  while(buffer_size > BULK_PACKET_SIZE) {
+    tud_cdc_write(buffer + i, BULK_PACKET_SIZE);
+    usb_flush();
+    i += BULK_PACKET_SIZE;
+    buffer_size -= BULK_PACKET_SIZE;
+  }
+
+  /* Don't flush on the last write */
+  tud_cdc_write(buffer + i, buffer_size);
+}
+/*---------------------------------------------------------------------------*/
+void
+usb_flush(void)
+{
+  tud_cdc_write_flush();
+  /* Call the task to handle the events immediately */
+  tud_task();
+}
+/*---------------------------------------------------------------------------*/
+void
+cdc_task(void)
+{
+  uint32_t usb_read_length;
+  uint32_t i;
+
+  if(tud_cdc_available()) {
+    usb_read_length = tud_cdc_read(usb_buffer, sizeof(usb_buffer));
+    for(i = 0; i < usb_read_length && input_handler; i++) {
+      input_handler(usb_buffer[i]);
     }
   }
 }
 /*---------------------------------------------------------------------------*/
-void
-uarte_set_input(int (*input)(unsigned char c))
+PROCESS_THREAD(usb_arch_process, ev, data)
 {
-  input_handler = input;
+  PROCESS_BEGIN();
 
-  if(input) {
-    nrfx_uarte_rx(&instance, &uarte_buffer, sizeof(uarte_buffer));
+  tusb_init();
+
+  while(1) {
+    PROCESS_YIELD_UNTIL(tud_task_event_ready());
+
+    tud_task();
+
+    cdc_task();
   }
-}
-/*---------------------------------------------------------------------------*/
-void
-uarte_init(void)
-{ 
-#if defined(NRF_UARTE0_TX_PORT) && defined(NRF_UARTE0_TX_PIN) \
-  && defined(NRF_UARTE0_RX_PORT) && defined(NRF_UARTE0_RX_PIN)
-  const nrfx_uarte_config_t config = NRFX_UARTE_DEFAULT_CONFIG(
-    NRF_GPIO_PIN_MAP(NRF_UARTE0_TX_PORT, NRF_UARTE0_TX_PIN), 
-    NRF_GPIO_PIN_MAP(NRF_UARTE0_RX_PORT, NRF_UARTE0_RX_PIN)
-  );
 
-  nrfx_uarte_init(&instance, &config, uarte_handler);
-#else
-  (void) uarte_handler;
-#endif /* defined(NRF_UARTE0_TX_PORT) && defined(NRF_UARTE0_TX_PIN) \
-  && defined(NRF_UARTE0_RX_PORT) && defined(NRF_UARTE0_RX_PIN) */
+  PROCESS_END();
 }
-/*---------------------------------------------------------------------------*/
-#endif /* NRF_HAS_UARTE */
 /*---------------------------------------------------------------------------*/
 /**
- * @}
  * @}
  * @}
  */

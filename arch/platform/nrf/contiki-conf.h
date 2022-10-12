@@ -47,11 +47,18 @@
 /*---------------------------------------------------------------------------*/
 #include "nrf-def.h"
 /*---------------------------------------------------------------------------*/
-/* Include Project Specific conf */
+/* Include Board Specific configuration */
 #ifdef BOARD_CONF_PATH
 #include BOARD_CONF_PATH
 #else /* BOARD_CONF_PATH */
 #error "BOARD_CONF_PATH undefined"
+#endif /* BOARD_CONF_PATH */
+/*---------------------------------------------------------------------------*/
+/* Include Board Specific defines */
+#ifdef BOARD_DEF_PATH
+#include BOARD_DEF_PATH
+#else /* BOARD_CONF_PATH */
+#error "BOARD_DEF_PATH undefined"
 #endif /* BOARD_CONF_PATH */
 /*---------------------------------------------------------------------------*/
 /* Include CPU Group configuration */

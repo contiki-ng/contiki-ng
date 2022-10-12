@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2021 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,19 +32,22 @@
  * \addtogroup nrf
  * @{
  *
- * \addtogroup nrf-5340-application nRF5340 Application Core
+ * \addtogroup nrf-5340-network nRF5340 Network Core
  * @{
  *
  * \file
- *      Header with configuration defines to nrf 5340 application core
+ *      Header with configuration defines to nrf 5340 network core
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  */
 /*---------------------------------------------------------------------------*/
-#ifndef NRF5340_APPLICATION_CONF_H_
-#define NRF5340_APPLICATION_CONF_H_
+#ifndef NRF5340_NETWORK_DEF_H_
+#define NRF5340_NETWORK_DEF_H_
 /*---------------------------------------------------------------------------*/
-#endif /* NRF5340_APPLICATION_CONF_H_ */
+#define NRF_HAS_USB     0
+#define NRF_HAS_UARTE   1
+/*---------------------------------------------------------------------------*/
+#endif /* NRF5340_NETWORK_DEF_H_ */
 /*---------------------------------------------------------------------------*/
 /** 
  * @}

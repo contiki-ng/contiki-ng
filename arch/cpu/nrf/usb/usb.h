@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2021 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,21 +32,71 @@
  * \addtogroup nrf
  * @{
  *
- * \addtogroup nrf-5340-application nRF5340 Application Core
+ * \addtogroup nrf-usb USB driver
  * @{
  *
  * \file
- *      Header with configuration defines to nrf 5340 application core
+ *         USB header file for the nRF.
  * \author
- *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *
  */
 /*---------------------------------------------------------------------------*/
-#ifndef NRF5340_APPLICATION_CONF_H_
-#define NRF5340_APPLICATION_CONF_H_
+#ifndef USB_H_
+#define USB_H_
 /*---------------------------------------------------------------------------*/
-#endif /* NRF5340_APPLICATION_CONF_H_ */
+#include "contiki.h"
 /*---------------------------------------------------------------------------*/
-/** 
+/**
+ * @brief Initialize the USB driver
+ *
+ */
+void usb_init(void);
+/*---------------------------------------------------------------------------*/
+/**
+ * @brief Writes to the USB driver
+ *
+ * @param buffer data to be transferred
+ * @param buffer_size size of data
+ *
+ * @pre @ref usb_init must have been called
+ */
+void usb_write(uint8_t *buffer, uint32_t buffer_size);
+/*---------------------------------------------------------------------------*/
+/**
+ * @brief Flush USB buffer
+ * 
+ * @pre @ref usb_init must have been called
+ * @pre Data must be written by @ref usb_write prior
+ */
+void usb_flush(void);
+/*---------------------------------------------------------------------------*/
+/**
+ * @brief Sets the input handler called in the event handler
+ *
+ * @param input character that has been read
+ */
+void usb_set_input(int (*input)(unsigned char c));
+/*---------------------------------------------------------------------------*/
+/**
+ * @brief Handles the interrupt
+ * 
+ * @remarks Must be called from the arch interrupt handler
+ * 
+ */
+void usb_interrupt_handler(void);
+/*---------------------------------------------------------------------------*/
+/* Arch specific interface                                                   */
+/*---------------------------------------------------------------------------*/
+/**
+ * @brief Initialize the architecture specific USB driver
+ *
+ */
+void usb_arch_init(void);
+/*---------------------------------------------------------------------------*/
+#endif /* USB_H_ */
+/*---------------------------------------------------------------------------*/
+/**
  * @}
  * @}
  */
