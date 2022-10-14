@@ -113,6 +113,14 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
   return JNI_VERSION_10;
 }
 /*---------------------------------------------------------------------------*/
+void
+cooja_init(void)
+{
+  /* Create rtimers and Contiki threads */
+  cooja_mt_start(&rtimer_thread, &rtimer_thread_loop, NULL);
+  cooja_mt_start(&process_run_thread, &process_run_thread_loop, NULL);
+}
+/*---------------------------------------------------------------------------*/
 /**
  * \brief      Initialize a mote by starting processes etc.
  * \param env  JNI Environment interface pointer
@@ -127,9 +135,7 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
 JNIEXPORT void JNICALL
 CLASS_init(JNIEnv *env, jobject obj)
 {
-  /* Create rtimers and Contiki threads */
-  cooja_mt_start(&rtimer_thread, &rtimer_thread_loop, NULL);
-  cooja_mt_start(&process_run_thread, &process_run_thread_loop, NULL);
+  cooja_init();
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -185,27 +191,8 @@ CLASS_setMemory(JNIEnv *env, jobject obj, jlong rel_addr, jint length,
                              (jbyte *)((intptr_t)rel_addr + referenceVar));
 }
 /*---------------------------------------------------------------------------*/
-/**
- * \brief      Let mote execute one "block" of code (tick mote).
- * \param env  JNI Environment interface pointer
- * \param obj  unused
- *
- *             Let mote defined by the active contiki processes and current
- *             process memory execute some program code. This code must not block
- *             or else this function will never return. A typical contiki
- *             process will return when it executes PROCESS_WAIT..() statements.
- *
- *             Before the control is left to contiki processes, any messages
- *             from the Java part are handled. These may for example be
- *             incoming network data. After the contiki processes return control,
- *             messages to the Java part are also handled (those which may need
- *             special attention).
- *
- *             This is a JNI function and should only be called via the
- *             responsible Java part (MoteType.java).
- */
-JNIEXPORT void JNICALL
-CLASS_tick(JNIEnv *env, jobject obj)
+void
+cooja_tick(void)
 {
   simProcessRunValue = 0;
 
@@ -235,6 +222,31 @@ CLASS_tick(JNIEnv *env, jobject obj)
 
   /* Save nearest expiration time */
   simEtimerNextExpirationTime = etimer_next_expiration_time();
+}
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief      Let mote execute one "block" of code (tick mote).
+ * \param env  JNI Environment interface pointer
+ * \param obj  unused
+ *
+ *             Let mote defined by the active contiki processes and current
+ *             process memory execute some program code. This code must not block
+ *             or else this function will never return. A typical contiki
+ *             process will return when it executes PROCESS_WAIT..() statements.
+ *
+ *             Before the control is left to contiki processes, any messages
+ *             from the Java part are handled. These may for example be
+ *             incoming network data. After the contiki processes return control,
+ *             messages to the Java part are also handled (those which may need
+ *             special attention).
+ *
+ *             This is a JNI function and should only be called via the
+ *             responsible Java part (MoteType.java).
+ */
+JNIEXPORT void JNICALL
+CLASS_tick(JNIEnv *env, jobject obj)
+{
+  cooja_tick();
 }
 /*---------------------------------------------------------------------------*/
 /**
