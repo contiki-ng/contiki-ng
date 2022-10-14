@@ -43,6 +43,20 @@ GRADLE ?= $(CONTIKI)/tools/cooja/gradlew
 
 Q ?= @
 
+# The build phase ~never fails for Cooja tests, so silence the build system.
+QUIET ?= 1
+
+# Prevent make from printing "Entering/Leaving directory <..>".
+# This cannot be done in Makefile.include because MAKEFLAGS already contains
+# -w at that point. ContikiMoteType clears its environment before compiling
+# so the problem will only be seen for MSP430-based motes.
+ifneq ($(CI),true)
+ifeq ($(QUIET),1)
+  MAKEFLAGS += --no-print-directory
+  export QUIET
+endif
+endif
+
 .PHONY: all clean tests
 tests: $(TESTLOGS)
 
