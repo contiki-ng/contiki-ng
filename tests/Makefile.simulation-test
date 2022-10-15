@@ -58,7 +58,14 @@ endif
 endif
 
 .PHONY: all clean tests
-tests: $(TESTLOGS)
+
+# Perform a bash loop of $(RUNCOUNT) iterations.
+# Successful simulations do nothing, failures appends test+seed to summary.
+tests: $(TESTS)
+	@for (( SEED=$(BASESEED); SEED < $$(( $(BASESEED) + $(RUNCOUNT) )); SEED++ )); do \
+          $(GRADLE) --no-watch-fs --parallel --build-cache -p $(CONTIKI)/tools/cooja run --args="$(addprefix -nogui=,$(realpath $^)) -contiki=$(realpath $(CONTIKI)) -logdir=$(dir $(realpath $<)) -random-seed=$$SEED" || \
+            echo "TEST FAIL: $^ seed $$SEED" >> summary; \
+         done
 
 # Last line of rule checks for existence of the file summary to decide if
 # the test succeeded. Based on that, some output is echoed followed by using
@@ -68,14 +75,6 @@ summary: clean
 	@echo "========== Summary =========="
 	@([ ! -f summary ] && echo "All tests OK" && touch summary) || \
           (echo "Failures:" && cat summary && false)
-
-# Perform a bash loop of $(RUNCOUNT) iterations.
-# Successful simulations do nothing, failures appends test+seed to summary.
-%.testlog: %.csc
-	@for (( SEED=$(BASESEED); SEED < $$(( $(BASESEED) + $(RUNCOUNT) )); SEED++ )); do \
-          $(GRADLE) --no-watch-fs --parallel --build-cache -p $(CONTIKI)/tools/cooja run --args="-nogui=$(realpath $<) -contiki=$(realpath $(CONTIKI)) -logdir=$(dir $(realpath $<)) -random-seed=$$SEED" || \
-            echo "TEST FAIL: $< seed $$SEED" >> summary; \
-         done
 
 clean:
 	$(Q)rm -f *.*log report summary
