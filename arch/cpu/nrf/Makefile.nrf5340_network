@@ -16,6 +16,10 @@ CFLAGS += -DCPU_DEF_PATH=\"nrf5340-network-def.h\"
 
 TARGET_LIBFILES += -lm
 
+ifeq ($(NRF_NATIVE_USB),1)
+$(error The nrf5340 network core does not support USB)
+endif
+
 include $(CONTIKI)/$(CONTIKI_NG_CM33_DIR)/Makefile.cm33+nodsp
 
 include $(CONTIKI_CPU)/Makefile.nrf

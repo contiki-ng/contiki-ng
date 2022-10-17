@@ -19,7 +19,6 @@ CONTIKI_CPU_SOURCEFILES += temp-arch.c
 CONTIKI_CPU_SOURCEFILES += linkaddr-arch.c
 CONTIKI_CPU_SOURCEFILES += reset-arch.c
 CONTIKI_CPU_SOURCEFILES += slip-arch.c
-CONTIKI_CPU_SOURCEFILES += usb-arch.c
 
 # Overrides
 CONTIKI_CPU_SOURCEFILES += random.c
@@ -80,7 +79,7 @@ NRFX_INC_PATHS += hal
 EXTERNALDIRS += $(addprefix $(NRFX_ROOT)/, $(NRFX_INC_PATHS))
 
 ## Tinyusb
-ifdef TINYUSB
+ifeq ($(NRF_NATIVE_USB),1)
   CFLAGS += -DCFG_TUSB_MCU=OPT_MCU_NRF5X
   #nrf specific
   TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/portable/nordic/nrf5x/dcd_nrf5x.c
@@ -112,6 +111,11 @@ ifdef TINYUSB
 
   CONTIKI_CPU_SOURCEFILES += usb.c
   CONTIKI_CPU_SOURCEFILES += usb_descriptors.c
+  CONTIKI_CPU_SOURCEFILES += usb-arch.c
+
+  CFLAGS += -DPLATFORM_DBG_CONF_USB=1
+  CFLAGS += -DPLAFTORM_SLIP_ARCH_CONF_USB=1
+  CFLAGS += -DNRF_NATIVE_USB=1
 endif
 
 CONTIKI_CPU_DIRS += usb/

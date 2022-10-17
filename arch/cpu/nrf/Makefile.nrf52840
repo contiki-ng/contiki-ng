@@ -18,9 +18,6 @@ EXTERNALDIRS += $(NRFX_ROOT)/mdk/
 CFLAGS += -DCPU_CONF_PATH=\"nrf52840-conf.h\"
 CFLAGS += -DCPU_DEF_PATH=\"nrf52840-def.h\"
 
-## Tinyusb
-TINYUSB = 1
-
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16

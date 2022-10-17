@@ -80,9 +80,9 @@ platform_init_stage_two(void)
   uarte_init();
 #endif /* NRF_HAS_UARTE */
 
-#if NRF_HAS_USB
+#if NRF_HAS_USB && defined(NRF_NATIVE_USB) && NRF_NATIVE_USB == 1
   usb_init();
-#endif /* NRF_HAS_USB */
+#endif /* NRF_HAS_USB && defined(NRF_NATIVE_USB) && NRF_NATIVE_USB == 1 */
 
   serial_line_init();
 
