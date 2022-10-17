@@ -86,14 +86,6 @@ RUN wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 &
   cp -f -r /tmp/msp430/* /usr/local/ && \
   rm -rf /tmp/msp430 mspgcc*.tar.bz2
 
-## Install nRF52 SDK
-RUN wget -nv https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/nrf5_iot_sdk_3288530.zip && \
-    mkdir /usr/nrf52-sdk && \
-    unzip -q nrf5_iot_sdk_3288530.zip -d /usr/nrf52-sdk && \
-    rm nrf5_iot_sdk_3288530.zip
-
-ENV NRF52_SDK_ROOT /usr/nrf52-sdk
-
 # Install nRF Command Line tools
 RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-17-3/nrf-command-line-tools_10.17.3_amd64.deb && \
   wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-17-3/nrf-command-line-tools-10.17.3_Linux-amd64.tar.gz && \

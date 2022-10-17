@@ -54,9 +54,6 @@ $ wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 && 
 
 If desired, instructions to compile MSP430 GCC 4.7.2 from source can be found [here](https://github.com/tecip-nes/contiki-tres/wiki/Building-the-latest-version-of-mspgcc). Currently the instructions do not seem to be updated for newer versions of Ubuntu but it is possible to compile in an older version of Ubuntu and copy the binaries. Binaries for 32-bit Ubuntu can be downloaded and installed following [this script](https://github.com/contiki-ng/contiki-ng/blob/develop/tools/docker/Dockerfile#L50).
 
-### Installing NRF sdk
-To get the NRF52dk platform to work you will need to add SDK and programming tools, see
-[Platform-nrf52dk](/doc/platforms/nrf52dk).
 
 ### Install Java for the Cooja network simulator
 

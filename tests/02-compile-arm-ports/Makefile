@@ -21,7 +21,6 @@ dev/gpio-hal/zoul:BOARD=orion \
 dev/leds/simplelink:BOARD=srf06/cc26x0 \
 dev/rgb-led/zoul:BOARD=remote-reva \
 dev/dht11/nrf52840:BOARD=dk \
-hello-world/nrf52dk \
 hello-world/nrf52840:BOARD=dk \
 hello-world/nrf52840:BOARD=dongle \
 hello-world/openmote:BOARD=openmote-b \
@@ -80,10 +79,6 @@ platform-specific/nrf/start-network-core/nrf:BOARD=nrf52840/dk \
 platform-specific/nrf/start-network-core/nrf:BOARD=nrf52840/dongle \
 platform-specific/nrf/start-network-core/nrf:BOARD=nrf5340/dk/application \
 platform-specific/nrf/start-network-core/nrf:BOARD=nrf5340/dk/network \
-platform-specific/nrf52dk/blink-hello/nrf52dk \
-platform-specific/nrf52dk/coap-demo/coap-client/nrf52dk:SERVER_IPV6_EP=ffff \
-platform-specific/nrf52dk/mqtt-demo/nrf52dk \
-platform-specific/nrf52dk/timer-test/nrf52dk \
 platform-specific/zoul/at-test/zoul \
 platform-specific/zoul/orion/client/zoul:BOARD=orion \
 platform-specific/zoul/orion/ip64-router/zoul:BOARD=orion \

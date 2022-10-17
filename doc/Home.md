@@ -69,7 +69,6 @@ Also feel free to download our [cheat sheet](https://contiki-ng.github.io/resour
 * [native: Contiki-NG as a native process](/doc/platforms/native.md)
 * [nrf52840: Nordic Semiconductor nRF52840](/doc/platforms/nrf52840.md)
 * [nrf: Nordic Semiconductor nRF5340 and nRF52840 (using nRF MDK)](/doc/platforms/nrf.md)
-* [nrf52dk: Nordic Semiconductor nRF52 development kit](/doc/platforms/nrf52dk.md)
 * [openmote-cc2538: OpenMote cc2538](/doc/platforms/openmote-cc2538.md)
 * [simplelink: TI SimpleLink MCU Platform](/doc/platforms/simplelink.md)
 * [sky: Tmote Sky / TelosB](/doc/platforms/sky.md)

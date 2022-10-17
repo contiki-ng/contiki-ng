@@ -3,7 +3,6 @@ TOOLSDIR=$(HOME)/contiki-ng/tools
 
 EXAMPLES = \
 hello-world/native \
-hello-world/nrf52dk \
 hello-world/zoul \
 hello-world/openmote \
 hello-world/cc26x0-cc13x0 \
