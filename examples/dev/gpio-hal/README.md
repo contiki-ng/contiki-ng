@@ -1,4 +1,6 @@
-# GPIO HAL Example
+# dev/gpio-hal
+
+## GPIO HAL Example
 This example demonstrates and tests the functionality of the GPIO HAL. You can
 use it to:
 
@@ -13,7 +15,7 @@ This example assumes a device with:
   the same port.
 * 1 button.
 
-# Supported devices
+### Supported devices
 This example is expected to work off-the-shelf on the following boards:
 
 * All CC13xx/CC26xx devices
@@ -21,7 +23,7 @@ This example is expected to work off-the-shelf on the following boards:
 * nRF52840
 * Cooja motes
 
-# Extending for other platforms
+### Extending for other platforms
 Create a sub-directory with the same name as your platform. For example, for
 platform `my-new-platform` create a subdirectory called `my-new-platform`.
 Source files in this directory will be compiled automatically. In the most

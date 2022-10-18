@@ -18,9 +18,9 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>sender</identifier>
       <description>Sender</description>
-      <source>[CONTIKI_DIR]/tests/07-simulation-base/code-ipv6/sender/udp-sender.c</source>
+      <source>[CONFIG_DIR]/code-ipv6/udp-sender/udp-sender.c</source>
       <commands>make TARGET=cooja clean
-make -j udp-sender.cooja TARGET=cooja</commands>
+make -j$(CPUS) udp-sender.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -38,15 +38,14 @@ make -j udp-sender.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
       <identifier>receiver</identifier>
       <description>Receiver</description>
-      <source>[CONTIKI_DIR]/tests/07-simulation-base/code-ipv6/receiver/udp-receiver.c</source>
+      <source>[CONFIG_DIR]/code-ipv6/udp-receiver/udp-receiver.c</source>
       <commands>make TARGET=cooja clean
-make -j udp-receiver.cooja TARGET=cooja</commands>
+make -j$(CPUS) udp-receiver.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -64,10 +63,8 @@ make -j udp-receiver.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>100.0</x>
@@ -81,7 +78,6 @@ make -j udp-receiver.cooja TARGET=cooja</commands>
       <motetype_identifier>sender</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>94.96401380574989</x>
@@ -107,6 +103,8 @@ make -j udp-receiver.cooja TARGET=cooja</commands>
     org.contikios.cooja.plugins.LogListener
     <plugin_config>
       <filter />
+      <formatted_time />
+      <coloring />
     </plugin_config>
     <width>680</width>
     <z>1</z>

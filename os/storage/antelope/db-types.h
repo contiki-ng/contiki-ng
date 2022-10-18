@@ -28,8 +28,7 @@
  */
 
 /**
- * \file
- *	.
+ * \file db-types.h
  * \author
  * 	Nicolas Tsiftes <nvt@sics.se>
  */

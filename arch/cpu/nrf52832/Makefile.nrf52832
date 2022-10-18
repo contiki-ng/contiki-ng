@@ -47,9 +47,6 @@ ifneq ($(NRF52_JLINK_SN),)
 JLINK_OPTS += -SelectEmuBySN $(NRF52_JLINK_SN)
 endif
 
-#function for removing duplicates in a list
-remduplicates = $(strip $(if $1,$(firstword $1) $(call remduplicates,$(filter-out $(firstword $1),$1))))
-
 ### CPU-dependent directories
 CONTIKI_CPU_DIRS += . dev ble #compat
 
@@ -135,17 +132,18 @@ CFLAGS += -D__HEAP_SIZE=512
 CFLAGS += -DSWI_DISABLE0
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DBLE_STACK_SUPPORT_REQD
-CFLAGS += -ggdb
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 # keep every function in separate section. This will allow linker to dump unused functions
-LDFLAGS += -Xlinker -Map=$(CONTIKI_NG_PROJECT_MAP)
 LDFLAGS += -mabi=aapcs -L $(TEMPLATE_PATH)
 LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # let linker to dump unused sections
 LDFLAGS += -Wl,--gc-sections
 # use newlib in nano version
-LDFLAGS += --specs=nano.specs -lc -lnosys
+ifeq ($(CLANG),0)
+  LDFLAGS += --specs=nano.specs
+endif
+TARGET_LIBFILES += -lc -lnosys
 
 # Assembler flags
 ifneq ($(NRF52_WITHOUT_SOFTDEVICE),1)
@@ -160,30 +158,23 @@ ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
 ASMFLAGS += -DBLE_STACK_SUPPORT_REQD
 
 C_SOURCE_FILE_NAMES = $(notdir $(C_SOURCE_FILES))
-C_PATHS = $(call remduplicates, $(dir $(C_SOURCE_FILES) ) )
-C_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(C_SOURCE_FILE_NAMES:.c=.o) )
+CONTIKI_SOURCEFILES += $(C_SOURCE_FILE_NAMES)
+# Sort removes duplicates.
+C_PATHS = $(sort $(dir $(C_SOURCE_FILES)))
 
 ASM_SOURCE_FILE_NAMES = $(notdir $(ASM_SOURCE_FILES))
-ASM_PATHS = $(call remduplicates, $(dir $(ASM_SOURCE_FILES) ))
+ASM_PATHS = $(sort $(dir $(ASM_SOURCE_FILES)))
 ASM_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(ASM_SOURCE_FILE_NAMES:.s=.o) )
 
 vpath %.c $(C_PATHS)
 vpath %.s $(ASM_PATHS)
 
-OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
-
-NRFLIB = $(BUILD_DIR_BOARD)/nrf52832.a
-
-TARGET_LIBS = $(NRFLIB) $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/lib/ble_6lowpan.a
-
-$(NRFLIB): $(OBJECTS)
-	$(TRACE_AR)
-	$(Q)$(AR) $(AROPTS) $@ $^
+CONTIKI_OBJECTFILES += $(ASM_OBJECTS) $(NRF52_SDK_ROOT)/components/iot/ble_6lowpan/lib/ble_6lowpan.a
 
 # Assemble files
-$(OBJECT_DIRECTORY)/%.o: %.s
+$(OBJECT_DIRECTORY)/%.o: %.s | $(DEPDIR)
 	$(TRACE_CC)
-	$(Q)$(CC) $(ASMFLAGS) $(addprefix -I$(NRF52_SDK_ROOT)/, $(INC_PATHS)) -c -o $@ $<
+	$(Q)$(CCACHE) $(CC) $(ASMFLAGS) $(addprefix -I$(NRF52_SDK_ROOT)/, $(INC_PATHS)) -c -o $@ $<
 
 include $(CONTIKI)/$(CONTIKI_NG_CM4_DIR)/Makefile.cm4
 

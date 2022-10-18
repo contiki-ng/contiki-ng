@@ -5,24 +5,39 @@ endif
 
 CONTIKI_TARGET_DIRS = . dev
 CONTIKI_TARGET_MAIN = ${addprefix $(OBJECTDIR)/,contiki-main.o}
+CONTIKI_TARGET_SOURCEFILES += platform.c clock.c xmem.c buttons.c
 
-CONTIKI_TARGET_SOURCEFILES += platform.c clock.c xmem.c
-CONTIKI_TARGET_SOURCEFILES += cfs-posix.c cfs-posix-dir.c buttons.c
+# The different options
+MAKE_CFS_POSIX = 1
+MAKE_CFS_COFFEE = 2
 
-ifeq ($(HOST_OS),Windows)
-CONTIKI_TARGET_SOURCEFILES += wpcap-drv.c wpcap.c
-TARGET_LIBFILES = /lib/w32api/libws2_32.a /lib/w32api/libiphlpapi.a
+# Use CFS POSIX the default CFS backend.
+MAKE_CFS ?= MAKE_CFS_POSIX
+
+ifeq ($(MAKE_CFS),MAKE_CFS_POSIX)
+  CONTIKI_TARGET_SOURCEFILES += cfs-posix.c cfs-posix-dir.c
+else ifeq ($(MAKE_CFS),MAKE_CFS_COFFEE)
+  MODULES += $(CONTIKI_NG_STORAGE_DIR)/cfs
 else
-CONTIKI_TARGET_SOURCEFILES += tun6-net.c
+  ${error Invalid MAKE_CFS configuration: "$(MAKE_CFS)"}
 endif
+
+# No stack end symbol available, code does not work on 64-bit architectures.
+MODULES_SOURCES_EXCLUDES += stack-check.c
+# No Serial Peripheral Interface on Native.
+MODULES_SOURCES_EXCLUDES += spi.c
+# No slip driver on Native.
+MODULES_SOURCES_EXCLUDES += slip.c
+# No sensor drivers on Native.
+MODULES_SOURCES_EXCLUDES += sensors.c
+
+CONTIKI_TARGET_SOURCEFILES += tun6-net.c
 
 ifeq ($(HOST_OS),Linux)
 TARGET_LIBFILES += -lrt
 endif
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
-
-.SUFFIXES:
 
 # Enable nullmac by default
 MAKE_MAC ?= MAKE_MAC_NULLMAC

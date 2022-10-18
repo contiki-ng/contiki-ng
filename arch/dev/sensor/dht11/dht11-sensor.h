@@ -31,17 +31,16 @@
 /*---------------------------------------------------------------------------*/
 
 /**
+ * \addtogroup dev
+ * @{
+ *
+ * \defgroup dht11-sensor DHT 11 Sensor driver
+ * @{
+ *
  * \file
  *      DHT 11 sensor header file
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
- */
-
-/**
- * \addtogroup dht11-sensor
- * @{
- *
- * DHT 11 Sensor
  */
 
 #ifndef DHT11_SENSOR_H_
@@ -107,4 +106,7 @@ extern const struct sensors_sensor dht11_sensor;
 
 #endif /* DHT11_SENSOR_H_ */
 
-/** @} */
+/**
+ * @}
+ * @}
+ */

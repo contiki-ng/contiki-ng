@@ -57,13 +57,13 @@ dbl_circ_list_init(dbl_circ_list_t dblcl)
 }
 /*---------------------------------------------------------------------------*/
 void *
-dbl_circ_list_head(dbl_circ_list_t dblcl)
+dbl_circ_list_head(const dbl_circ_list_t dblcl)
 {
   return *dblcl;
 }
 /*---------------------------------------------------------------------------*/
 void *
-dbl_circ_list_tail(dbl_circ_list_t dblcl)
+dbl_circ_list_tail(const dbl_circ_list_t dblcl)
 {
   struct dblcl *this;
 
@@ -77,7 +77,7 @@ dbl_circ_list_tail(dbl_circ_list_t dblcl)
 }
 /*---------------------------------------------------------------------------*/
 void
-dbl_circ_list_remove(dbl_circ_list_t dblcl, void *element)
+dbl_circ_list_remove(dbl_circ_list_t dblcl, const void *element)
 {
   struct dblcl *this;
 
@@ -202,7 +202,7 @@ dbl_circ_list_add_before(dbl_circ_list_t dblcl, void *existing, void *element)
 }
 /*---------------------------------------------------------------------------*/
 unsigned long
-dbl_circ_list_length(dbl_circ_list_t dblcl)
+dbl_circ_list_length(const dbl_circ_list_t dblcl)
 {
   unsigned long len = 1;
   struct dblcl *this;
@@ -219,7 +219,7 @@ dbl_circ_list_length(dbl_circ_list_t dblcl)
 }
 /*---------------------------------------------------------------------------*/
 bool
-dbl_circ_list_is_empty(dbl_circ_list_t dblcl)
+dbl_circ_list_is_empty(const dbl_circ_list_t dblcl)
 {
   return *dblcl == NULL ? true : false;
 }

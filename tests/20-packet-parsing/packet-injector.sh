@@ -49,19 +49,20 @@ if [ $((TIMEDOUT + FAILED)) -gt 0 ]; then
   echo "==== $CODE.err ====" ; cat $CODE.err;
 
   printf "%-32s TEST FAIL\n" "$CODE-$TEST_PROTOCOL" | tee $CODE.testlog;
+
+  echo "Succeeded: " $SUCCEEDED
+  echo "Timed out: " $TIMEDOUT
+  echo "Failed   : " $FAILED
+
+  rm -f make.log make.err $CODE.log $CODE.err
+  sleep 3
+  exit 1
 else
   cp $CODE.log $CODE.testlog
   printf "%-32s TEST OK\n" "$CODE-$TEST_PROTOCOL" | tee $CODE.testlog;
 fi
 
-rm make.log
-rm make.err
-rm $CODE.log
-rm $CODE.err
-
-echo "Succeeded: " $SUCCEEDED
-echo "Timed out: " $TIMEDOUT
-echo "Failed   : " $FAILED
+rm -f make.log make.err $CODE.log $CODE.err
 
 sleep 3
 

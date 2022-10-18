@@ -39,8 +39,8 @@
  *         Simon Duquennoy <simonduq@sics.se>
  */
 
-#ifndef __TSCH_TYPES_H__
-#define __TSCH_TYPES_H__
+#ifndef TSCH_TYPES_H_
+#define TSCH_TYPES_H_
 
 /********** Includes **********/
 
@@ -154,5 +154,5 @@ struct input_packet {
   uint8_t channel; /* Channel we received the packet on */
 };
 
-#endif /* __TSCH_CONF_H__ */
+#endif /* TSCH_CONF_H_ */
 /** @} */

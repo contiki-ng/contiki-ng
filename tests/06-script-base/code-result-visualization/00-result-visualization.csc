@@ -2,7 +2,7 @@
 <simconf>
   <simulation>
     <title>RPL+TSCH</title>
-    <randomseed>123456</randomseed>
+    <randomseed>1</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
       org.contikios.cooja.radiomediums.UDGM
@@ -19,7 +19,8 @@
       <identifier>mtype660</identifier>
       <description>RPL/TSCH Node</description>
       <source>[CONTIKI_DIR]/examples/benchmarks/result-visualization/node.c</source>
-      <commands>make TARGET=cooja node.cooja</commands>
+      <commands>make clean TARGET=cooja
+make -j$(CPUS) TARGET=cooja node.cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -36,7 +37,6 @@
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiCFS</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <mote>
       <interface_config>
@@ -48,10 +48,6 @@
       <interface_config>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>1</id>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
       </interface_config>
       <motetype_identifier>mtype660</motetype_identifier>
     </mote>
@@ -65,10 +61,6 @@
       <interface_config>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>2</id>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
       </interface_config>
       <motetype_identifier>mtype660</motetype_identifier>
     </mote>
@@ -116,12 +108,12 @@
       <mote>0</mote>
       <mote>1</mote>
       <showRadioRXTX />
-      <showRadioHW />
       <showRadioChannels />
+      <showRadioHW />
       <zoomfactor>16529.88882215865</zoomfactor>
     </plugin_config>
     <width>1304</width>
-    <z>2</z>
+    <z>1</z>
     <height>311</height>
     <location_x>0</location_x>
     <location_y>412</location_y>

@@ -105,9 +105,9 @@ get_channel_for_addr(const linkaddr_t *peer_addr)
 static l2cap_channel_t *
 get_channel_for_cid(uint16_t own_cid)
 {
-  uint8_t i = own_cid - L2CAP_FLOW_CHANNEL;
+  int16_t i = own_cid - L2CAP_FLOW_CHANNEL;
   if(i >= 0 && i < l2cap_channel_count) {
-    return &l2cap_channels[own_cid - L2CAP_FLOW_CHANNEL];
+    return &l2cap_channels[i];
   } else {
     return NULL;
   }

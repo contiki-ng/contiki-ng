@@ -66,7 +66,8 @@ uip_sr_num_nodes(void)
 }
 /*---------------------------------------------------------------------------*/
 static int
-node_matches_address(void *graph, const uip_sr_node_t *node, const uip_ipaddr_t *addr)
+node_matches_address(const void *graph, const uip_sr_node_t *node,
+                     const uip_ipaddr_t *addr)
 {
   if(node == NULL || addr == NULL || graph != node->graph) {
     return 0;
@@ -78,7 +79,7 @@ node_matches_address(void *graph, const uip_sr_node_t *node, const uip_ipaddr_t 
 }
 /*---------------------------------------------------------------------------*/
 uip_sr_node_t *
-uip_sr_get_node(void *graph, const uip_ipaddr_t *addr)
+uip_sr_get_node(const void *graph, const uip_ipaddr_t *addr)
 {
   uip_sr_node_t *l;
   for(l = list_head(nodelist); l != NULL; l = list_item_next(l)) {
@@ -91,7 +92,7 @@ uip_sr_get_node(void *graph, const uip_ipaddr_t *addr)
 }
 /*---------------------------------------------------------------------------*/
 int
-uip_sr_is_addr_reachable(void *graph, const uip_ipaddr_t *addr)
+uip_sr_is_addr_reachable(const void *graph, const uip_ipaddr_t *addr)
 {
   int max_depth = UIP_SR_LINK_NUM;
   uip_ipaddr_t root_ipaddr;
@@ -110,17 +111,21 @@ uip_sr_is_addr_reachable(void *graph, const uip_ipaddr_t *addr)
 }
 /*---------------------------------------------------------------------------*/
 void
-uip_sr_expire_parent(void *graph, const uip_ipaddr_t *child, const uip_ipaddr_t *parent)
+uip_sr_expire_parent(const void *graph, const uip_ipaddr_t *child,
+                     const uip_ipaddr_t *parent)
 {
   uip_sr_node_t *l = uip_sr_get_node(graph, child);
   /* Check if parent matches */
   if(l != NULL && node_matches_address(graph, l->parent, parent)) {
-    l->lifetime = UIP_SR_REMOVAL_DELAY;
+    if(l->lifetime > UIP_SR_REMOVAL_DELAY) {
+      l->lifetime = UIP_SR_REMOVAL_DELAY;
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
 uip_sr_node_t *
-uip_sr_update_node(void *graph, const uip_ipaddr_t *child, const uip_ipaddr_t *parent, uint32_t lifetime)
+uip_sr_update_node(void *graph, const uip_ipaddr_t *child,
+                   const uip_ipaddr_t *parent, uint32_t lifetime)
 {
   uip_sr_node_t *child_node = uip_sr_get_node(graph, child);
   uip_sr_node_t *parent_node = uip_sr_get_node(graph, parent);
@@ -197,7 +202,7 @@ uip_sr_node_head(void)
 }
 /*---------------------------------------------------------------------------*/
 uip_sr_node_t *
-uip_sr_node_next(uip_sr_node_t *item)
+uip_sr_node_next(const uip_sr_node_t *item)
 {
   return list_item_next(item);
 }
@@ -213,22 +218,26 @@ uip_sr_periodic(unsigned seconds)
     next = list_item_next(l);
     if(l->lifetime == 0) {
       uip_sr_node_t *l2;
+      int can_be_removed = 1;
       for(l2 = list_head(nodelist); l2 != NULL; l2 = list_item_next(l2)) {
         if(l2->parent == l) {
+          can_be_removed = 0;
           break;
         }
       }
-      if(LOG_INFO_ENABLED) {
-        uip_ipaddr_t node_addr;
-        NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, l);
-        LOG_INFO("NS: removing expired node ");
-        LOG_INFO_6ADDR(&node_addr);
-        LOG_INFO_("\n");
+      if(can_be_removed) {
+        /* No child found, deallocate node */
+        if(LOG_INFO_ENABLED) {
+          uip_ipaddr_t node_addr;
+          NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, l);
+          LOG_INFO("NS: removing expired node ");
+          LOG_INFO_6ADDR(&node_addr);
+          LOG_INFO_("\n");
+        }
+        list_remove(nodelist, l);
+        memb_free(&nodememb, l);
+        num_nodes--;
       }
-      /* No child found, deallocate node */
-      list_remove(nodelist, l);
-      memb_free(&nodememb, l);
-      num_nodes--;
     } else if(l->lifetime != UIP_SR_INFINITE_LIFETIME) {
       l->lifetime = l->lifetime > seconds ? l->lifetime - seconds : 0;
     }
@@ -249,7 +258,7 @@ uip_sr_free_all(void)
 }
 /*---------------------------------------------------------------------------*/
 int
-uip_sr_link_snprint(char *buf, int buflen, uip_sr_node_t *link)
+uip_sr_link_snprint(char *buf, int buflen, const uip_sr_node_t *link)
 {
   int index = 0;
   uip_ipaddr_t child_ipaddr;

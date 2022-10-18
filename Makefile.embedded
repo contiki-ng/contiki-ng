@@ -13,18 +13,14 @@ RLWRAPGOALS = login serialdump serialview
 BAUDRATE ?= 115200
 SERIALDUMP_TIME_FMT ?=
 
-ifeq ($(HOST_OS),Windows)
-  SERIALDUMP = $(SERIAL_DUMP_BIN)
-else
-  RLWRAP = $(notdir $(shell which rlwrap))
-  ifeq ($(RLWRAP),)
-    ifneq ($(filter $(RLWRAPGOALS),$(MAKECMDGOALS)),)
-      $(info Running serialdump without rlwrap support.)
-      $(info Consider installing rlwarp in order to be able to use command history)
-    endif
+RLWRAP = $(notdir $(shell which rlwrap))
+ifeq ($(RLWRAP),)
+  ifneq ($(filter $(RLWRAPGOALS),$(MAKECMDGOALS)),)
+    $(info Running serialdump without rlwrap support.)
+    $(info Consider installing rlwarp in order to be able to use command history)
   endif
-  SERIALDUMP = $(RLWRAP) $(SERIAL_DUMP_BIN)
 endif
+SERIALDUMP = $(RLWRAP) $(SERIAL_DUMP_BIN)
 
 serialdump: $(SERIAL_DUMP_BIN)
 	$(SERIALDUMP) -b$(BAUDRATE) -T$(SERIALDUMP_TIME_FMT) $(PORT) | tee serialdump-`date +%Y%m%d-%H%M`
@@ -34,14 +30,3 @@ serialview: $(SERIAL_DUMP_BIN)
 
 login: $(SERIAL_DUMP_BIN)
 	$(SERIALDUMP) -b$(BAUDRATE) $(PORT)
-
-###
-### Targets using tools/motelist
-###
-CONTIKI_NG_MOTELIST_DIR = $(CONTIKI_NG_TOOLS_DIR)/motelist
-CONTIKI_NG_MOTELIST = python $(CONTIKI_NG_MOTELIST_DIR)/motelist.py
-
-.PHONY: motelist-all
-
-motelist-all:
-	$(CONTIKI_NG_MOTELIST)

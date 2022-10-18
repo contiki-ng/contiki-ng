@@ -1,0 +1,11 @@
+# Function to get a static environment and run make. Two consecutive invocations
+# will get a 100% direct hitrate in ccache for the second invocation.
+# Use a function since bash does not expand aliases for non-interactive
+# shells like the CI tests.
+cimake () {
+  RELSTR=citest CFLAGS_DATE='-DDATE="\"05 29 07 22 14 24 07\""' make "$@"
+}
+
+# Enable "cscmake file.csc" anywhere in the tree. Use the native target
+# to silence warnings from the build system.
+alias cscmake='make -f $CONTIKI_NG/Makefile.include TARGET=native'

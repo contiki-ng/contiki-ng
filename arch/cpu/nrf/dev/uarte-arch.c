@@ -47,18 +47,15 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 /*---------------------------------------------------------------------------*/
-#if PLATFORM_HAS_UARTE 
+#if NRF_HAS_UARTE
 /*---------------------------------------------------------------------------*/
 #include "nrfx_config.h"
 #include "nrfx_uarte.h"
 #include "hal/nrf_gpio.h"
 /*---------------------------------------------------------------------------*/
 static int (*input_handler)(unsigned char c) = NULL;
-#define NRF_UARTE0_TX NRF_GPIO_PIN_MAP(NRF_UARTE0_TX_PORT, NRF_UARTE0_TX_PIN)
-#define NRF_UARTE0_RX NRF_GPIO_PIN_MAP(NRF_UARTE0_RX_PORT, NRF_UARTE0_RX_PIN)
 /*---------------------------------------------------------------------------*/
 static nrfx_uarte_t instance = NRFX_UARTE_INSTANCE(0);
-static nrfx_uarte_config_t config = NRFX_UARTE_DEFAULT_CONFIG(NRF_UARTE0_TX, NRF_UARTE0_RX);
 static uint8_t uarte_buffer;
 /*---------------------------------------------------------------------------*/
 void
@@ -71,7 +68,7 @@ uarte_write(unsigned char data)
 /*---------------------------------------------------------------------------*/
 /**
  * @brief UARTE event handler
- * 
+ *
  * @param p_event UARTE event
  * @param p_context UARTE context
  */
@@ -107,11 +104,22 @@ uarte_set_input(int (*input)(unsigned char c))
 /*---------------------------------------------------------------------------*/
 void
 uarte_init(void)
-{
+{ 
+#if defined(NRF_UARTE0_TX_PORT) && defined(NRF_UARTE0_TX_PIN) \
+  && defined(NRF_UARTE0_RX_PORT) && defined(NRF_UARTE0_RX_PIN)
+  const nrfx_uarte_config_t config = NRFX_UARTE_DEFAULT_CONFIG(
+    NRF_GPIO_PIN_MAP(NRF_UARTE0_TX_PORT, NRF_UARTE0_TX_PIN), 
+    NRF_GPIO_PIN_MAP(NRF_UARTE0_RX_PORT, NRF_UARTE0_RX_PIN)
+  );
+
   nrfx_uarte_init(&instance, &config, uarte_handler);
+#else
+  (void) uarte_handler;
+#endif /* defined(NRF_UARTE0_TX_PORT) && defined(NRF_UARTE0_TX_PIN) \
+  && defined(NRF_UARTE0_RX_PORT) && defined(NRF_UARTE0_RX_PIN) */
 }
 /*---------------------------------------------------------------------------*/
-#endif /* PLATFORM_HAS_UARTE */
+#endif /* NRF_HAS_UARTE */
 /*---------------------------------------------------------------------------*/
 /**
  * @}

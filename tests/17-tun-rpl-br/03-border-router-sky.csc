@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simconf>
-  <project EXPORT="discard">[APPS_DIR]/mrm</project>
-  <project EXPORT="discard">[APPS_DIR]/mspsim</project>
-  <project EXPORT="discard">[APPS_DIR]/avrora</project>
-  <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
-  <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <simulation>
     <title>My simulation</title>
     <speedlimit>1.0</speedlimit>
-    <randomseed>123456</randomseed>
+    <randomseed>1</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
       org.contikios.cooja.radiomediums.UDGM
@@ -26,7 +21,7 @@
       <description>Sky Mote Type #sky1</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/rpl-border-router/border-router.c</source>
       <commands EXPORT="discard">make clean TARGET=sky
-make -j border-router.sky TARGET=sky</commands>
+make -j$(CPUS) border-router.sky TARGET=sky</commands>
       <firmware EXPORT="copy">[CONTIKI_DIR]/examples/rpl-border-router/border-router.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
@@ -50,7 +45,7 @@ make -j border-router.sky TARGET=sky</commands>
       <description>Sky Mote Type #sky2</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/hello-world/hello-world.c</source>
       <commands EXPORT="discard">make clean TARGET=sky
-make -j hello-world.sky TARGET=sky</commands>
+make -j$(CPUS) hello-world.sky TARGET=sky</commands>
       <firmware EXPORT="copy">[CONTIKI_DIR]/examples/hello-world/hello-world.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
@@ -69,16 +64,11 @@ make -j hello-world.sky TARGET=sky</commands>
       <moteinterface>org.contikios.cooja.mspmote.interfaces.SkyTemperature</moteinterface>
     </motetype>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>-24.750327773354453</x>
         <y>17.688901393447438</y>
         <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.mspmote.interfaces.MspClock
-        <deviation>1.0</deviation>
       </interface_config>
       <interface_config>
         org.contikios.cooja.mspmote.interfaces.MspMoteID
@@ -87,16 +77,11 @@ make -j hello-world.sky TARGET=sky</commands>
       <motetype_identifier>sky1</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>1.091493067677618</x>
         <y>40.943504236660225</y>
         <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.mspmote.interfaces.MspClock
-        <deviation>1.0</deviation>
       </interface_config>
       <interface_config>
         org.contikios.cooja.mspmote.interfaces.MspMoteID
@@ -105,16 +90,11 @@ make -j hello-world.sky TARGET=sky</commands>
       <motetype_identifier>sky2</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>22.647678967805337</x>
         <y>61.6365018442491</y>
         <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.mspmote.interfaces.MspClock
-        <deviation>1.0</deviation>
       </interface_config>
       <interface_config>
         org.contikios.cooja.mspmote.interfaces.MspMoteID
@@ -123,16 +103,11 @@ make -j hello-world.sky TARGET=sky</commands>
       <motetype_identifier>sky2</motetype_identifier>
     </mote>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>44.02005813888037</x>
         <y>93.02398317771755</y>
         <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.mspmote.interfaces.MspClock
-        <deviation>1.0</deviation>
       </interface_config>
       <interface_config>
         org.contikios.cooja.mspmote.interfaces.MspMoteID
@@ -212,6 +187,7 @@ make -j hello-world.sky TARGET=sky</commands>
     <plugin_config>
       <port>60001</port>
       <bound>true</bound>
+      <commands>[CONFIG_DIR]/test-border-router.sh [CONTIKI_DIR] 03-border-router-sky fd00::0212:7404:0004:0404 60</commands>
     </plugin_config>
     <width>362</width>
     <z>2</z>
@@ -224,7 +200,8 @@ make -j hello-world.sky TARGET=sky</commands>
     <plugin_config>
       <script>TIMEOUT(10000000000); /* milliseconds. no action at timeout */
 /* Set simulaion speed to real time */
-sim.setSpeedLimit(1.0);</script>
+sim.setSpeedLimit(1.0);
+while (true) { YIELD(); }</script>
       <active>true</active>
     </plugin_config>
     <width>600</width>
@@ -234,3 +211,4 @@ sim.setSpeedLimit(1.0);</script>
     <location_y>13</location_y>
   </plugin>
 </simconf>
+

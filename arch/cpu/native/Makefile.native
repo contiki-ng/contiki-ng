@@ -4,36 +4,37 @@ CONTIKI_SOURCEFILES += rtimer-arch.c watchdog.c eeprom.c int-master.c
 CONTIKI_SOURCEFILES += gpio-hal-arch.c
 
 ### Compiler definitions
-CC       ?= gcc
-CXX      ?= g++
+CC       = gcc
+CXX      = g++
 ifdef LD_OVERRIDE
   LD     = $(LD_OVERRIDE)
 else
   LD     = gcc
 endif
-AS       ?= as
-NM       ?= nm
-OBJCOPY  ?= objcopy
-STRIP    ?= strip
+AS       = as
+NM       = nm
+OBJCOPY  = objcopy
+STRIP    = strip
+SIZE     = size
 ifeq ($(WERROR),1)
 CFLAGSWERROR=-Werror
 endif
-CFLAGSNO = -Wall -g $(CFLAGSWERROR)
+CFLAGSNO = -Wall $(CFLAGSWERROR)
 CFLAGS  += $(CFLAGSNO)
 
 ### Are we building with code size optimisations?
 SMALL ?= 0
 
 # The optimizations on native platform cannot be enabled in GCC (not Clang) versions less than 7.2
-GCC_IS_CLANG := $(shell gcc --version 2> /dev/null | grep clang)
+GCC_IS_CLANG := $(shell $(CC) --version 2> /dev/null | grep clang)
 ifneq ($(GCC_IS_CLANG),)
   NATIVE_CAN_OPTIIMIZE = 1
 else
-  GCC_VERSION := $(shell gcc -dumpfullversion -dumpversion | cut -b1-3)
+  GCC_VERSION := $(shell $(CC) -dumpfullversion -dumpversion | cut -b1-3)
   ifeq ($(shell expr $(GCC_VERSION) \>= 7.2), 1)
-  	NATIVE_CAN_OPTIIMIZE = 1
+    NATIVE_CAN_OPTIIMIZE = 1
   else
-  	NATIVE_CAN_OPTIIMIZE = 0
+    NATIVE_CAN_OPTIIMIZE = 0
   endif
 endif
 
@@ -46,19 +47,14 @@ ifeq ($(NATIVE_CAN_OPTIIMIZE),1)
 endif
 
 ifeq ($(HOST_OS),Darwin)
-AROPTS = -rc
 LDFLAGS_WERROR := -Wl,-fatal_warnings
-LDFLAGS += -Wl,-flat_namespace,-map,$(CONTIKI_NG_PROJECT_MAP)
+LDFLAGS += -Wl,-flat_namespace
 CFLAGS += -DHAVE_SNPRINTF=1 -U__ASSERT_USE_STDERR
-else
-ifeq ($(HOST_OS),Linux)
-LDFLAGS += -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP),-export-dynamic
 endif
+
+# Disallow undefined symbols in object files.
+ifeq ($(HOST_OS),Linux)
+LDFLAGS += -Wl,-zdefs
 endif
 
 MAKE_MAC ?= MAKE_MAC_NULLMAC
-
-### Compilation rules
-
-%.so: $(OBJECTDIR)/%.o
-	$(LD) -shared -o $@ $^

@@ -1,3 +1,6 @@
+CURDIR := $(abspath $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
+BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
+
 EXAMPLESDIR=../../examples
 TOOLSDIR=../../tools
 

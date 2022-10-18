@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simconf>
-  <project EXPORT="discard">[APPS_DIR]/mrm</project>
-  <project EXPORT="discard">[APPS_DIR]/mspsim</project>
-  <project EXPORT="discard">[APPS_DIR]/avrora</project>
-  <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
-  <project EXPORT="discard">[APPS_DIR]/powertracker</project>
-  <project EXPORT="discard">[APPS_DIR]/radiologger-headless</project>
   <simulation>
     <title>ETSI Plugtest 2017 with Cooja Mote</title>
     <speedlimit>1.0</speedlimit>
@@ -27,7 +21,7 @@
       <description>RPL/TSCH Node</description>
       <source>[CONTIKI_DIR]/examples/6tisch/etsi-plugtest-2017/node.c</source>
       <commands>make TARGET=cooja clean
-      make TARGET=cooja MAKE_WITH_SIXTOP=1 node.cooja</commands>
+      make -j$(CPUS) TARGET=cooja MAKE_WITH_SIXTOP=1 node.cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -44,7 +38,6 @@
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiCFS</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <mote>
       <interface_config>

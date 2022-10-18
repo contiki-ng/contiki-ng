@@ -257,8 +257,6 @@ platform_init_stage_three(void)
   }
   LOG_INFO_("\n");
 
-  LOG_INFO("Node ID: %d\n", node_id);
-
 #if BOARD_SENSORS_ENABLE
   process_start(&sensors_process, NULL);
 #endif

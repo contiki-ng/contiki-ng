@@ -1,23 +1,24 @@
-RE-Mote + Node Red README
-========================
+# platform-specific/zoul/node-red
+
+## RE-Mote + Node Red README
 
 A very basic example of how to use MQTT-Demo + Mosquitto + Node Red
 
-Install Mosquitto
------------------
+### Install Mosquitto
+
 * Install and run [mosquitto](http://mosquitto.org/). Default configuration
   options should work.
 
-Fire up a Re-Mote
------------------
+### Fire up a Re-Mote
+
 * Compile the MQTT demo example from `../../../cc2538dk/mqtt-demo.c` following
   the instructions of the README.md therein.
 * Program your RE-Mote.
 * If you are running mosquitto with `-v`, a few seconds later you should see
   the Re-Mote connect, subscribe and start publishing.
 
-Deploy your Node Red
---------------------
+### Deploy your Node Red
+
 * Install and run [Node Red](https://github.com/node-red/node-red) as per the
   instructions
 * Open `mqtt-remote-demo.json` from this directory with your favourite text
@@ -29,10 +30,10 @@ Deploy your Node Red
 * Hit Deploy
 * Optionally, export the flow to a file for future use
 
-Browse
-------
+### Browse
+
 Fire up a browser and browse to `http://<Node-Red's IP or hostname>/remote`
 
-Do more cool stuff
-------------------
+### Do more cool stuff
+
 Come up with more cool flows and share!

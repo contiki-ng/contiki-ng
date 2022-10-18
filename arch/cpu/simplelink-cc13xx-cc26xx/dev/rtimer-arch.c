@@ -157,12 +157,7 @@ rtimer_arch_init(void)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief    Schedules an rtimer task to be triggered at time \p t.
- * \param t  The time when the task will need executed.
- *
- *           \p t is an absolute time, in other words the task will be
- *           executed AT time \p t, not IN \p t rtimer ticks.
- *
+
  *           This function schedules a one-shot event with the AON RTC.
  *
  *           This functions converts \p t to a value suitable for the AON RTC.

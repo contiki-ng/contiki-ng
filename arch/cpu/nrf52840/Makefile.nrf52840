@@ -51,12 +51,14 @@ CFLAGS += -DNRF52840_XXAA
 CFLAGS += -D__HEAP_SIZE=512
 CFLAGS += -DSWI_DISABLE0
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
-CFLAGS += -ggdb
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 LDFLAGS += -mabi=aapcs -mfloat-abi=hard -mfpu=fpv4-sp-d16
-LDFLAGS += --specs=nano.specs -lc -lnosys
+ifeq ($(CLANG),0)
+  LDFLAGS += --specs=nano.specs
+endif
 LDFLAGS += -L $(NRF5_SDK_ROOT)/modules/nrfx/mdk
+TARGET_LIBFILES += -lc -lnosys
 
 # nRF52 SDK sources
 NRF52_SDK_C_SRCS += components/boards/boards.c \
@@ -122,7 +124,7 @@ endif
 
 %.upload: $(OUT_HEX)
 ifeq (, $(shell which $(NRFJPROG)))
-	@echo "ERROR: Could not find nrfjprog, please install it first"
+	$(error Could not find nrfjprog "$(NRFJPROG)", please install it)
 else
 	$(NRFJPROG) -f nrf52 $(NRFJPROG_FLAGS) --sectorerase --program $<
 	$(NRFJPROG) -f nrf52 $(NRFJPROG_FLAGS) --reset
@@ -150,7 +152,7 @@ nrf-upload-sequence: $(foreach SNR, $(NRF_SNRS), nrf-upload-snr.$(SNR))
 
 %.upload-all: $(OUT_HEX)
 ifeq (, $(shell which $(NRFJPROG)))
-	@echo "ERROR: Could not find nrfjprog, please install it first"
+	$(error Could not find nrfjprog "$(NRFJPROG)", please install it)
 else
 	$(MAKE) HEX_FILE=$< -j $(NUMPAR) nrf-upload-sequence
 endif
@@ -162,7 +164,7 @@ DFU_FLAGS = -p $(PORT)
 
 %.dfu-upload: $(OUT_HEX)
 ifeq (, $(shell which $(NRFUTIL)))
-	@echo "ERROR: Could not find nrfutil, please install it first"
+	$(error Could not find nrfutil "$(NRFUTIL)", please install it first)
 else
 	$(NRFUTIL) pkg generate --hw-version 52 --sd-req 0x00 --debug-mode --application $< $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip
 	$(NRFUTIL) dfu usb-serial $(DFU_FLAGS) -pkg $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip

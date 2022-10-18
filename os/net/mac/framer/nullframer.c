@@ -47,7 +47,7 @@
 
 /*---------------------------------------------------------------------------*/
 static int
-is_broadcast_addr(uint8_t mode, uint8_t *addr)
+is_broadcast_addr(uint8_t mode, const uint8_t *addr)
 {
   int i = mode == FRAME802154_SHORTADDRMODE ? 2 : 8;
   while(i-- > 0) {

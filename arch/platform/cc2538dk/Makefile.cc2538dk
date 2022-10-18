@@ -29,7 +29,7 @@ BSL = $(CONTIKI_NG_TOOLS_DIR)/cc2538-bsl/cc2538-bsl.py
 
 %.upload: $(OUT_BIN) $(OUT_ELF)
 ifeq ($(wildcard $(BSL)), )
-	@echo "ERROR: Could not find the cc2538-bsl script. Did you run 'git submodule update --init' ?"
+	$(error Could not find "$(BSL)". Did you run 'git submodule update --init'?)
 else
 	$(eval BSL_ADDRESS_ARG := -a $(shell $(OBJDUMP) -h \
 	                               $(BUILD_DIR_BOARD)/$*.elf | grep -B1 LOAD | \

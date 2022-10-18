@@ -83,27 +83,6 @@
 void uip_add32(uint8_t *op32, uint16_t op16);
 
 /**
- * Calculate the Internet checksum over a buffer.
- *
- * The Internet checksum is the one's complement of the one's
- * complement sum of all 16-bit words in the buffer.
- *
- * See RFC1071.
- *
- * \note This function is not called in the current version of uIP,
- * but future versions might make use of it.
- *
- * \param data A pointer to the buffer over which the checksum is to be
- * computed.
- *
- * \param len The length of the buffer over which the checksum is to
- * be computed.
- *
- * \return The Internet checksum of the buffer.
- */
-uint16_t uip_chksum(uint16_t *data, uint16_t len);
-
-/**
  * Calculate the IP header checksum of the packet header in uip_buf.
  *
  * The IP header checksum is the Internet checksum of the 20 bytes of
@@ -127,7 +106,6 @@ uint16_t uip_tcpchksum(void);
 
 uint16_t uip_udpchksum(void);
 
-/** @} */
 /** @} */
 
 #endif /* UIP_ARCH_H_ */

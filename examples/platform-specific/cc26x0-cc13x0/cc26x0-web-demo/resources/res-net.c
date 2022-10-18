@@ -40,6 +40,7 @@
 #include "coap-engine.h"
 #include "coap.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/ipv6/uiplib.h"
 #include "coap-server.h"
 #include "cc26x0-web-demo.h"
 
@@ -89,7 +90,7 @@ res_get_handler_pref_parent(coap_message_t *request, coap_message_t *response,
                             uint16_t preferred_size, int32_t *offset)
 {
   unsigned int accept = -1;
-  char def_rt_str[64];
+  char def_rt_str[UIPLIB_IPV6_MAX_STR_LEN];
 
   coap_get_header_accept(request, &accept);
 

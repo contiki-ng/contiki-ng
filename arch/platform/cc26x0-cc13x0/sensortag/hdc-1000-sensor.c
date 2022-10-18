@@ -211,10 +211,6 @@ notify_ready(void *not_used)
 static int
 value(int type)
 {
-  int rv;
-  float temp;
-  float hum;
-
   if(enabled != HDC_1000_SENSOR_STATUS_READINGS_READY) {
     PRINTF("Sensor disabled or starting up (%d)\n", enabled);
     return CC26XX_SENSOR_READING_ERROR;
@@ -224,16 +220,19 @@ value(int type)
      type != HDC_1000_SENSOR_TYPE_HUMID) {
     PRINTF("Invalid type\n");
     return CC26XX_SENSOR_READING_ERROR;
-  } else {
-    convert(&temp, &hum);
-    PRINTF("HDC: %04X %04X       t=%d h=%d\n", raw_temp, raw_hum,
-           (int)(temp * 100), (int)(hum * 100));
+  }
 
-    if(type == HDC_1000_SENSOR_TYPE_TEMP) {
-      rv = (int)(temp * 100);
-    } else if(type == HDC_1000_SENSOR_TYPE_HUMID) {
-      rv = (int)(hum * 100);
-    }
+  float temp;
+  float hum;
+  convert(&temp, &hum);
+  PRINTF("HDC: %04X %04X       t=%d h=%d\n", raw_temp, raw_hum,
+         (int)(temp * 100), (int)(hum * 100));
+
+  int rv = 0;
+  if(type == HDC_1000_SENSOR_TYPE_TEMP) {
+    rv = (int)(temp * 100);
+  } else if(type == HDC_1000_SENSOR_TYPE_HUMID) {
+    rv = (int)(hum * 100);
   }
   return rv;
 }

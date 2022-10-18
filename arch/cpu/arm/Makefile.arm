@@ -22,9 +22,18 @@ CFLAGS += -mthumb -mabi=aapcs -mlittle-endian
 CFLAGS += -Wall
 CFLAGS += -std=c99
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
-CFLAGS += -fshort-enums -fomit-frame-pointer -fno-builtin
+CFLAGS += -fshort-enums -fomit-frame-pointer
 ifeq ($(WERROR),1)
   CFLAGS += -Werror
+endif
+
+ifeq ($(CLANG),1)
+  CFLAGS_CLANG += --target=arm-none-none-eabi --sysroot=$(SYSROOT)
+  LDFLAGS_CLANG += --target=arm-none-none-eabi --sysroot=$(SYSROOT)
+  LDFLAGS_CLANG += -fuse-ld=$(SYSROOT)/bin/ld
+
+  LIBGCC := $(shell $(CC) $(CFLAGS) --print-libgcc)
+  LDFLAGS_CLANG += --rtlib=libgcc -L$(dir $(LIBGCC))
 endif
 
 ### Pass CFLAGS along to assembly files in the build
@@ -33,6 +42,9 @@ ASFLAGS += $(CFLAGS)
 ASFLAGS += -c 
 
 LDFLAGS += -mthumb -mabi=aapcs -mlittle-endian
+
+# Disallow undefined symbols in object files.
+LDFLAGS += -Wl,-zdefs
 
 OBJDUMP_FLAGS += --disassemble --source --disassembler-options=force-thumb
 
@@ -69,9 +81,7 @@ OUT_HEX = $(BUILD_DIR_BOARD)/%.hex
 OUT_I16HEX = $(BUILD_DIR_BOARD)/%.i16hex
 OUT_BIN = $(BUILD_DIR_BOARD)/%.bin
 OUT_LST = $(BUILD_DIR_BOARD)/%.lst
-
-### Don't treat the following files as intermediate
-.PRECIOUS: $(OUT_ELF) $(OUT_HEX) $(OUT_BIN)
+OUT_ELF = $(BUILD_DIR_BOARD)/%.elf
 
 $(OUT_I16HEX): $(OUT_ELF)
 	$(TRACE_OBJCOPY)
@@ -89,8 +99,6 @@ $(OUT_LST): $(OUT_ELF)
 	$(TRACE_OBJDUMP)
 	$(Q)$(OBJDUMP) $(OBJDUMP_FLAGS) $< > $@
 
-### We don't really need the .hex and .bin for the .$(TARGET) but let's make
-### sure they get built
-$(BUILD_DIR_BOARD)/%.$(TARGET): $(OUT_ELF) $(OUT_HEX) $(OUT_BIN)
+$(BUILD_DIR_BOARD)/%.$(TARGET): $(OUT_ELF)
 	$(TRACE_CP)
 	$(Q)cp $< $@

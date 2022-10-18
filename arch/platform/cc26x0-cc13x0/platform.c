@@ -78,7 +78,7 @@
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "CC26xx/CC13xx"
+#define LOG_MODULE "CC26x0/CC13x0"
 #define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 /** \brief Board specific iniatialisation */

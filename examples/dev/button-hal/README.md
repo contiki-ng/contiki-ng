@@ -1,4 +1,6 @@
-# Button HAL Example
+# dev/button-hal
+
+## Button HAL Example
 This example demonstrates and tests the functionality of the Button HAL.
 You can use this example to:
 
@@ -8,7 +10,7 @@ developing a new port.
 
 This example assumes a device with at least one switch (button or simiar).
 
-# Supported devices
+### Supported devices
 This example is expected to work off-the-shelf on the following boards:
 
 * All CC13xx/CC26xx devices

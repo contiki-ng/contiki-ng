@@ -19,7 +19,8 @@
       <identifier>sky1</identifier>
       <description>Sky Mote Type #1</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/hello-world/hello-world.c</source>
-      <commands EXPORT="discard">make -j hello-world.sky TARGET=sky</commands>
+      <commands EXPORT="discard">make TARGET=sky clean
+make -j$(CPUS) hello-world.sky TARGET=sky</commands>
       <firmware EXPORT="copy">[CONTIKI_DIR]/examples/hello-world/hello-world.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -33,7 +34,6 @@
       <moteinterface>org.contikios.cooja.mspmote.interfaces.SkyLED</moteinterface>
     </motetype>
     <mote>
-      <breakpoints />
       <interface_config>
         org.contikios.cooja.interfaces.Position
         <x>64.11203103628397</x>
@@ -71,6 +71,8 @@
     org.contikios.cooja.plugins.LogListener
     <plugin_config>
       <filter />
+      <formatted_time />
+      <coloring />
     </plugin_config>
     <width>680</width>
     <z>1</z>
@@ -79,3 +81,4 @@
     <location_y>288</location_y>
   </plugin>
 </simconf>
+

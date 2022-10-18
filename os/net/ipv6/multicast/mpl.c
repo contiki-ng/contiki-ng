@@ -459,7 +459,7 @@ extern uint16_t uip_slen;
  * \brief Modify an ipv6 address to give it link local scope
  * a: uip_ip6addr_t address to modify
  */
-#define UIP_ADDR_MAKE_LINK_LOCAL(a) (((uip_ip6addr_t *)a)->u8[1] = UIP_MCAST6_SCOPE_LINK_LOCAL)
+#define UIP_ADDR_MAKE_LINK_LOCAL(a) (((uip_ip6addr_t *)a)->u8[1] = (((uip_ip6addr_t *)a)->u8[1] & 0xF0) | UIP_MCAST6_SCOPE_LINK_LOCAL)
 /*---------------------------------------------------------------------------*/
 /* Local function prototypes */
 /*---------------------------------------------------------------------------*/
@@ -534,8 +534,8 @@ domain_set_allocate(uip_ip6addr_t *address)
         LOG_DBG("Found higher scoped address in table\n");
         break;
       }
-    } while(data_addr.u8[1] <= 5);
-    if(data_addr.u8[1] > 5) {
+    } while(uip_mcast6_get_address_scope(&data_addr) <= UIP_MCAST6_SCOPE_SITE_LOCAL);
+    if(uip_mcast6_get_address_scope(&data_addr) > UIP_MCAST6_SCOPE_SITE_LOCAL) {
       LOG_ERR("Failed to find MPL domain data address in table\n");
       return NULL;
     }

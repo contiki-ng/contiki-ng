@@ -55,25 +55,30 @@
 /*---------------------------------------------------------------------------*/
 
 /**
- * \brief Block 1 support within a coap-ressource
+ * \brief Block 1 support within a CoAP resource.
  *
- *        This function will help you to use block 1. If target is null
- *        error handling and response configuration is active. On return
- *        value 0, the last block was recived, while on return value 1
- *        more blocks will follow. With target, len and maxlen this
- *        function will assemble the blocks.
+ *        This function will help you to use block 1. If the target
+ *        parameter is \p NULL, then error handling and response
+ *        configuration is active.
  *
- *        You can find an example in:
- *        examples/er-rest-example/resources/res-b1-sep-b2.c
+ *        You can find an example in
+ *        examples/coap/coap-example-server/resources/res-b1-sep-b2.c
  *
- * \param request   Request pointer from the handler
- * \param response  Response pointer from the handler
- * \param target    Pointer to the buffer where the request payload can be assembled
- * \param len       Pointer to the variable, where the function stores the actual length
- * \param max_len   Length of the "target"-Buffer
+ * \param request Request pointer from the handler.
  *
- * \return 0 if initialisation was successful
- *         -1 if initialisation failed
+ * \param response Response pointer from the handler.
+ *
+ * \param target Pointer to the buffer where the request payload can
+ * be assembled.
+ *
+ * \param len Pointer to the variable where the function stores the
+ * actual length.
+ *
+ * \param max_len Length of the \p target buffer.
+ *
+ * \return 0 if the initialisation was successful,
+ *         1 if more blocks will follow, or
+ *         -1 if the initialisation failed.
  */
 int
 coap_block1_handler(coap_message_t *request, coap_message_t *response,
@@ -107,7 +112,8 @@ coap_block1_handler(coap_message_t *request, coap_message_t *response,
             request->block1_size,
             request->block1_offset);
 
-    coap_set_header_block1(response, request->block1_num, request->block1_more, request->block1_size);
+    coap_set_header_block1(response, request->block1_num,
+			   request->block1_more, request->block1_size);
     if(request->block1_more) {
       coap_set_status_code(response, CONTINUE_2_31);
       return 1;

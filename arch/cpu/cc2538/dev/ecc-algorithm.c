@@ -197,5 +197,4 @@ PT_THREAD(ecc_dsa_verify(ecc_dsa_verify_state_t *state)) {
 
 /**
  * @}
- * @}
  */

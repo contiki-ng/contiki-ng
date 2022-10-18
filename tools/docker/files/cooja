@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Periodically print an invisible character to keep Windows docker from
+# terminating the session for inactivity.
+/bin/bash -c "while sleep 120; do printf '\33[0n'; done" &
+PID=$!
+
+trap exit_cleanup INT
+
+function exit_cleanup() {
+  kill $PID
+}
+
+$HOME/contiki-ng/tools/cooja/gradlew --no-watch-fs --parallel --build-cache -p $HOME/contiki-ng/tools/cooja run "$@"
+
+exit_cleanup

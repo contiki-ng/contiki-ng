@@ -1,3 +1,5 @@
+# benchmarks/result-visualization
+
 Result visualization
 --------------------
 
@@ -25,11 +27,8 @@ extract metrics from that log file, and plot the metrics.
 The steps are automated in the script `run-cooja.py`.
 The script requires Python 3 and assumes that Cooja has lareayd been build.
 
-When the `run-cooja.py` script is executed, it performs the following steps:
-
-1. Checks if Cooja has been built.
-2. Execute a Cooja simulation using the simulation file `cooja.csc`
-   and control file `coojalogger.js`.
+When the `run-cooja.py` script is executed, it executes a Cooja simulation
+using the simulation file `cooja.csc` and control file `coojalogger.js`.
 
 The results are saved in the log file called `COOJA.testlog`.
 

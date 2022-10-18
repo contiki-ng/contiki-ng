@@ -59,7 +59,7 @@
 /*---------------------------------------------------------------------------*/
 /* Protocol Constants */
 /*---------------------------------------------------------------------------*/
-#define ALL_MPL_FORWARDERS(a, r)   uip_ip6addr(a, 0xFF00 + r,0x00,0x00,0x00,0x00,0x00,0x00,0xFC)
+#define ALL_MPL_FORWARDERS(a, r)   uip_ip6addr(a, 0xFF00 + r, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFC)
 #define HBHO_OPT_TYPE_MPL          0x6D
 #define MPL_IP_HOP_LIMIT           0xFF   /**< Hop limit for ICMP messages */
 #define HBHO_BASE_LEN              8
@@ -145,7 +145,7 @@
 #endif
 /*---------------------------------------------------------------------------*/
 /**
-* Seed ID Low Bits
+ * Seed ID Low Bits
  * If the Seed ID Length setting is 1 or 2, this setting defines the seed
  * id for this seed. If the seed id setting is 3, then this defines the lower
  * 64 bits of the seed id.
@@ -157,7 +157,7 @@
 #endif
 /*---------------------------------------------------------------------------*/
 /**
-* Seed ID High Bits
+ * Seed ID High Bits
  * If the Seed ID Length setting is 3, this setting defines the upper 64 bits
  * for the seed id. Else it's ignored.
  */

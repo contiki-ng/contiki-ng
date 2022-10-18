@@ -57,15 +57,15 @@ bool uipbuf_set_len(uint16_t len);
 
 /**
  * \brief          Updates the length field in the uIP buffer
- * \param buffer   The IPv6 header
+ * \param hdr      The IPv6 header
  * \param len      The new length value
  */
 void uipbuf_set_len_field(struct uip_ip_hdr *hdr, uint16_t len);
 
 /**
  * \brief          Returns the value of the length field in the uIP buffer
- * \param buffer   The IPv6 header
- * \retvel         The length value
+ * \param hdr      The IPv6 header
+ * \retval         The length value
  */
 uint16_t uipbuf_get_len_field(struct uip_ip_hdr *hdr);
 
@@ -187,8 +187,15 @@ void uipbuf_init(void);
 /* Avoid using prefix compression on the packet (6LoWPAN) */
 #define UIPBUF_ATTR_FLAGS_6LOWPAN_NO_PREFIX_COMPRESSION   0x02
 
-/* MAC will set the default for this packet */
+
+/* Use this initial security level if defined */
+#ifdef UIPBUF_ATTR_LLSEC_STARTUP_LEVEL
+#define UIPBUF_ATTR_LLSEC_LEVEL_MAC_DEFAULT UIPBUF_ATTR_LLSEC_STARTUP_LEVEL
+#else
+/* Else MAC will set the default for this packet */
 #define UIPBUF_ATTR_LLSEC_LEVEL_MAC_DEFAULT               0xffff
+#endif
+
 
 /**
  * \brief The attributes defined for uipbuf attributes function.

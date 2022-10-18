@@ -63,11 +63,6 @@ rtimer_arch_init(void)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Schedules an rtimer task to be triggered at time t
- * \param t The time when the task will need executed.
- *
- * \e t is an absolute time, in other words the task will be executed AT
- * time \e t, not IN \e t rtimer ticks.
  *
  * This function schedules a one-shot event with the nRF RTC.
  */

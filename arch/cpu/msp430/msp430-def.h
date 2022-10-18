@@ -41,7 +41,12 @@
 
 #else /* __IAR_SYSTEMS_ICC__ */
 
-#ifdef __MSPGCC__
+#if defined(__GNUC__) && (__GNUC__ >= 9)
+#include <msp430.h>
+#define nop() _no_operation()
+#define eint()  __eint()
+#define dint()  __dint()
+#elif defined(__MSPGCC__)
 #include <msp430.h>
 #include <legacymsp430.h>
 #else /* __MSPGCC__ */

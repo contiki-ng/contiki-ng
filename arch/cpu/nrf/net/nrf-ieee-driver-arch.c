@@ -465,7 +465,7 @@ enter_rx(void)
 
   LOG_DBG_("--->%u\n", nrf_radio_state_get(NRF_RADIO));
 
-  LOG_DBG("PACKETPTR=0x%08lx (rx_buf @ 0x%08lx)\n",
+  LOG_DBG("PACKETPTR=0x%08" PRIx32 " (rx_buf @ 0x%08" PRIx32 ")\n",
           (uint32_t)nrf_radio_packetptr_get(NRF_RADIO), (uint32_t)&rx_buf);
 }
 /*---------------------------------------------------------------------------*/
@@ -527,7 +527,7 @@ channel_clear(void)
   nrf_radio_event_clear(NRF_RADIO, NRF_RADIO_EVENT_CCAIDLE);
   nrf_radio_event_clear(NRF_RADIO, NRF_RADIO_EVENT_CCASTOPPED);
 
-  LOG_DBG("channel_clear: CCACTRL=0x%08lx\n", NRF_RADIO->CCACTRL);
+  LOG_DBG("channel_clear: CCACTRL=0x%08" PRIx32 "\n", NRF_RADIO->CCACTRL);
 
   /* We are now in RX. Send CCASTART */
   nrf_radio_task_trigger(NRF_RADIO, NRF_RADIO_TASK_CCASTART);
@@ -1034,12 +1034,12 @@ PROCESS_THREAD(nrf_ieee_rf_process, ev, data)
         packetbuf_set_datalen(len);
         NETSTACK_MAC.input();
         LOG_DBG("last frame (%u bytes) timestamps:\n", timestamps.phr);
-        LOG_DBG("      SFD=%lu (Derived)\n", timestamps.sfd);
-        LOG_DBG("      PHY=%lu (PPI)\n", timestamps.framestart);
-        LOG_DBG("     MPDU=%lu (Duration)\n", timestamps.mpdu_duration);
-        LOG_DBG("      END=%lu (PPI)\n", timestamps.end);
-        LOG_DBG(" Expected=%lu + %u + %lu = %lu\n", timestamps.sfd,
-                BYTE_DURATION_RTIMER, timestamps.mpdu_duration,
+        LOG_DBG("      SFD=%" PRIu32 " (Derived)\n", timestamps.sfd);
+        LOG_DBG("      PHY=%" PRIu32 " (PPI)\n", timestamps.framestart);
+        LOG_DBG("     MPDU=%" PRIu32 " (Duration)\n", timestamps.mpdu_duration);
+        LOG_DBG("      END=%" PRIu32 " (PPI)\n", timestamps.end);
+        LOG_DBG(" Expected=%" PRIu32 " + %u + %" PRIu32 " = %" PRIu32 "\n",
+                timestamps.sfd, BYTE_DURATION_RTIMER, timestamps.mpdu_duration,
                 timestamps.sfd + BYTE_DURATION_RTIMER + timestamps.mpdu_duration);
       }
     }

@@ -70,8 +70,8 @@ rtimer_clock_t lpm_stats[3];
   do { memset(lpm_stats, 0, sizeof(lpm_stats)); } while(0)
 #define LPM_STATS_ADD(pm, val)   do { lpm_stats[pm] += val; } while(0)
 #else
-#define LPM_STATS_INIT()
-#define LPM_STATS_ADD(stat, val)
+#define LPM_STATS_INIT() do {} while (0)
+#define LPM_STATS_ADD(stat, val) do {} while (0)
 #endif
 /*---------------------------------------------------------------------------*/
 /*

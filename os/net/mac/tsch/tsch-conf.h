@@ -39,8 +39,8 @@
  *         Simon Duquennoy <simonduq@sics.se>
  */
 
-#ifndef __TSCH_CONF_H__
-#define __TSCH_CONF_H__
+#ifndef TSCH_CONF_H_
+#define TSCH_CONF_H_
 
 /********** Includes **********/
 
@@ -450,5 +450,5 @@ by default, useful in case of duplicate seqno */
 #define TSCH_CONF_RX_WAIT 2200
 #endif /* TSCH_CONF_RX_WAIT */
 
-#endif /* __TSCH_CONF_H__ */
+#endif /* TSCH_CONF_H_ */
 /** @} */

@@ -138,10 +138,11 @@ add_links_to_schedule(const linkaddr_t *peer_addr, uint8_t link_option,
       continue;
     }
 
-    PRINTF("sf-simple: Schedule link %d as %s with node %u\n",
+    PRINTF("sf-simple: Schedule link %d as %s with node ",
            cell.timeslot_offset,
-           link_option == LINK_OPTION_RX ? "RX" : "TX",
-           peer_addr->u8[7]);
+           link_option == LINK_OPTION_RX ? "RX" : "TX");
+    PRINTLLADDR((uip_lladdr_t *)peer_addr);
+    PRINTF("\n");
     tsch_schedule_add_link(slotframe,
                            link_option, LINK_TYPE_NORMAL, peer_addr,
                            cell.timeslot_offset, cell.channel_offset, 1);
@@ -251,8 +252,10 @@ add_req_input(const uint8_t *body, uint16_t body_len, const linkaddr_t *peer_add
     return;
   }
 
-  PRINTF("sf-simple: Received a 6P Add Request for %d links from node %d with LinkList : ",
-         num_cells, peer_addr->u8[7]);
+  PRINTF("sf-simple: Received a 6P Add Request for %d links from node ",
+         num_cells);
+  PRINTLLADDR((uip_lladdr_t *)peer_addr);
+  PRINTF(" with LinkList : ");
   print_cell_list(cell_list, cell_list_len);
   PRINTF("\n");
 
@@ -285,7 +288,10 @@ add_req_input(const uint8_t *body, uint16_t body_len, const linkaddr_t *peer_add
 
     if(feasible_link == num_cells) {
       /* Links are feasible. Create Link Response packet */
-      PRINTF("sf-simple: Send a 6P Response to node %d\n", peer_addr->u8[7]);
+      PRINTF("sf-simple: Send a 6P Response to node ");
+      PRINTLLADDR((uip_lladdr_t *)peer_addr);
+      PRINTF("\n");
+      
       sixp_output(SIXP_PKT_TYPE_RESPONSE,
                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
                   SF_SIMPLE_SFID,
@@ -322,8 +328,10 @@ delete_req_input(const uint8_t *body, uint16_t body_len,
     return;
   }
 
-  PRINTF("sf-simple: Received a 6P Delete Request for %d links from node %d with LinkList : ",
-         num_cells, peer_addr->u8[7]);
+  PRINTF("sf-simple: Received a 6P Delete Request for %d links from node ",
+         num_cells);
+  PRINTLLADDR((uip_lladdr_t *)peer_addr);
+  PRINTF(" with LinkList : ");
   print_cell_list(cell_list, cell_list_len);
   PRINTF("\n");
 
@@ -353,7 +361,9 @@ delete_req_input(const uint8_t *body, uint16_t body_len,
   }
 
   /* Links are feasible. Create Link Response packet */
-  PRINTF("sf-simple: Send a 6P Response to node %d\n", peer_addr->u8[7]);
+  PRINTF("sf-simple: Send a 6P Response to node ");
+  PRINTLLADDR((uip_lladdr_t *)peer_addr);
+  PRINTF("\n");
   sixp_output(SIXP_PKT_TYPE_RESPONSE,
               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
               SF_SIMPLE_SFID,
@@ -539,8 +549,10 @@ sf_simple_add_links(linkaddr_t *peer_addr, uint8_t num_links)
               req_storage, req_len, peer_addr,
               NULL, NULL, 0);
 
-  PRINTF("sf-simple: Send a 6P Add Request for %d links to node %d with LinkList : ",
-         num_links, peer_addr->u8[7]);
+  PRINTF("sf-simple: Send a 6P Add Request for %d links to node ",
+         num_links);
+  PRINTLLADDR((uip_lladdr_t *)peer_addr);
+  PRINTF(" with LinkList : ");
   print_cell_list((const uint8_t *)cell_list, index * sizeof(sf_simple_cell_t));
   PRINTF("\n");
 
@@ -603,8 +615,10 @@ sf_simple_remove_links(linkaddr_t *peer_addr)
               req_storage, req_len, peer_addr,
               NULL, NULL, 0);
 
-  PRINTF("sf-simple: Send a 6P Delete Request for %d links to node %d with LinkList : ",
-         1, peer_addr->u8[7]);
+  PRINTF("sf-simple: Send a 6P Delete Request for %d links to node ",
+         1);
+  PRINTLLADDR((uip_lladdr_t *)peer_addr);
+  PRINTF(" with LinkList : ");
   print_cell_list((const uint8_t *)&cell, sizeof(cell));
   PRINTF("\n");
 

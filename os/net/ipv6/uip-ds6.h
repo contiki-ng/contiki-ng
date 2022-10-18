@@ -345,7 +345,7 @@ uip_ds6_aaddr_t *uip_ds6_aaddr_lookup(uip_ipaddr_t *ipaddr);
 
 
 /** \brief set the last 64 bits of an IP address based on the MAC address */
-void uip_ds6_set_addr_iid(uip_ipaddr_t *ipaddr, uip_lladdr_t *lladdr);
+void uip_ds6_set_addr_iid(uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr);
 
 /** \brief Build a link-layer address from an IPv6 address based on its UUID64 */
 void uip_ds6_set_lladdr_from_iid(uip_lladdr_t *lladdr, const uip_ipaddr_t *ipaddr);
@@ -385,7 +385,6 @@ uint32_t uip_ds6_compute_reachable_time(void); /** \brief compute random reachab
 #define uip_ds6_is_my_addr(addr)  (uip_ds6_addr_lookup(addr) != NULL)
 #define uip_ds6_is_my_maddr(addr) (uip_ds6_maddr_lookup(addr) != NULL)
 #define uip_ds6_is_my_aaddr(addr) (uip_ds6_aaddr_lookup(addr) != NULL)
-/** @} */
 /** @} */
 
 #endif /* UIP_DS6_H_ */

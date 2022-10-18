@@ -1,5 +1,6 @@
-Zolertia Zoul test examples
-============================================
+# platform-specific/zoul
+
+## Zolertia Zoul test examples
 
 The following tests are valid for the following platforms:
 
@@ -9,8 +10,7 @@ The following tests are valid for the following platforms:
 
 Specific RE-mote revision A examples are available at the `rev-a` folder.
 
-Compile and install an example
--------------------
+### Compile and install an example
 
 To flash either hardware platform use the same `TARGET=zoul` and the following:
 
@@ -38,8 +38,7 @@ and assuming there is a device at the `/dev/ttyUSB0`:
 
 If you ommit the `PORT` argument, the system will flash all Zolertia devices connected over USB.
 
-Visualize the console output
--------------------
+### Visualize the console output
 
 Just type `make login` to open a connection to the console via USB.
 As above to specify a given port use the `PORT=/dev/ttyUSB0` argument.
@@ -50,8 +49,7 @@ Alternatively you can save the above `PORT`, `TARGET` or `BOARD` as follows:
 
 This will save you to type these when running a command on the terminal
 
-Documentation and guides
--------------------
+### Documentation and guides
 
 More information about the platforms, guides and specific documentation can be found at [Zolertia Wiki][wiki]
 

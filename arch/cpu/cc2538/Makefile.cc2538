@@ -7,7 +7,12 @@ CFLAGS += -DCMSIS_DEV_HDR=\"cc2538_cm3.h\"
 
 ### If the user-specified a Node ID, pass a define
 ifdef NODEID
-  CFLAGS += -DIEEE_ADDR_NODE_ID=$(NODEID)
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @DEFINE@=IEEE_ADDR_NODE_ID
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @NODEID@=$(NODEID)
+else
+  # Otherwise, define an unused define.
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @DEFINE@=BOGUS_NODE_ID
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @NODEID@=1
 endif
 
 ### CPU-dependent directories
@@ -24,22 +29,21 @@ CONTIKI_CPU_SOURCEFILES += cc2538-rf.c udma.c lpm.c int-master.c
 CONTIKI_CPU_SOURCEFILES += pka.c bignum-driver.c ecc-driver.c ecc-algorithm.c
 CONTIKI_CPU_SOURCEFILES += ecc-curve.c
 CONTIKI_CPU_SOURCEFILES += dbg.c ieee-addr.c
-CONTIKI_CPU_SOURCEFILES += slip-arch.c slip.c
+CONTIKI_CPU_SOURCEFILES += slip-arch.c
 CONTIKI_CPU_SOURCEFILES += i2c.c cc2538-temp-sensor.c vdd3-sensor.c
-CONTIKI_CPU_SOURCEFILES += cfs-coffee.c cfs-coffee-arch.c pwm.c
+CONTIKI_CPU_SOURCEFILES += cfs-coffee-arch.c pwm.c
+CONTIKI_CPU_SOURCEFILES += startup-gcc.c
 
 USB_SOURCEFILES += usb-core.c cdc-acm.c usb-arch.c usb-serial.c cdc-acm-descriptors.c
 
-CPU_START_SOURCEFILES = startup-gcc.c
-
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES) $(USB_SOURCEFILES)
 
-### Always re-build ieee-addr.o in case the command line passes a new NODEID
-FORCE:
+# Always re-build ieee-addr.h in case the command line passes a new NODEID.
+# The build system will avoid writing a new file with identical NODEID.
+$(GENDIR)/ieee-addr-id.h.diffupdate: FORCE
 
-$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
-	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+$(OBJECTDIR)/ieee-addr.o: CFLAGS += -I$(GENDIR)
+$(OBJECTDIR)/ieee-addr.o: $(GENDIR)/ieee-addr-id.h
 
 ### This rule is used to generate the correct linker script
 LDGENFLAGS += $(CFLAGS)
@@ -48,8 +52,8 @@ LDGENFLAGS += -imacros "dev/flash.h" -imacros "cfs-coffee-arch.h"
 LDGENFLAGS += -x c -P -E
 
 # NB: Assumes LDSCRIPT was not overridden and is in $(OBJECTDIR)
-$(LDSCRIPT): $(SOURCE_LDSCRIPT) FORCE | $(OBJECTDIR)
+$(LDSCRIPT): $(SOURCE_LDSCRIPT) $(DEPDIR)/$(notdir $(LDSCRIPT)).d | $(DEPDIR)
 	$(TRACE_CC)
-	$(Q)$(CC) $(LDGENFLAGS) $< | grep -v '^\s*#\s*pragma\>' > $@
+	$(Q)$(CCACHE) $(CC) $(LDGENFLAGS) -MT $@ -MMD -MP -MF $(DEPDIR)/$(@F).d $< | grep -v '^\s*#\s*pragma\>' > $@
 
 include $(CONTIKI)/$(CONTIKI_NG_CM3_DIR)/Makefile.cm3

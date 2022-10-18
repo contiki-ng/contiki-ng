@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simconf>
-  <project EXPORT="discard">[CONTIKI_DIR]/tools/cooja/apps/mrm</project>
-  <project EXPORT="discard">[CONTIKI_DIR]/tools/cooja/apps/mspsim</project>
-  <project EXPORT="discard">[CONTIKI_DIR]/tools/cooja/apps/avrora</project>
-  <project EXPORT="discard">[CONTIKI_DIR]/tools/cooja/apps/serial_socket</project>
-  <project EXPORT="discard">[CONTIKI_DIR]/tools/cooja/apps/powertracker</project>
   <simulation>
     <title>Example Demonstrating the Trickle Library's Functionality</title>
     <delaytime>0</delaytime>
@@ -25,7 +20,7 @@
       <identifier>sky1</identifier>
       <description>trickle-tester</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/libs/trickle-library/trickle-library.c</source>
-      <commands EXPORT="discard">make trickle-library.sky TARGET=sky</commands>
+      <commands EXPORT="discard">make -j$(CPUS) trickle-library.sky TARGET=sky</commands>
       <firmware EXPORT="copy">[CONTIKI_DIR]/examples/libs/trickle-library/trickle-library.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>

@@ -39,8 +39,8 @@
  *         Simon Duquennoy <simonduq@sics.se>
  */
 
-#ifndef __TSCH_CONST_H__
-#define __TSCH_CONST_H__
+#ifndef TSCH_CONST_H_
+#define TSCH_CONST_H_
 
 /********** Includes **********/
 #include "net/packetbuf.h"
@@ -85,5 +85,5 @@
 #define TSCH_CLOCK_TO_TICKS(c) (((c) * RTIMER_SECOND) / CLOCK_SECOND)
 #define TSCH_CLOCK_TO_SLOTS(c, timeslot_length) ((TSCH_CLOCK_TO_TICKS(c) + timeslot_length - 1) / timeslot_length)
 
-#endif /* __TSCH_CONST_H__ */
+#endif /* TSCH_CONST_H_ */
 /** @} */

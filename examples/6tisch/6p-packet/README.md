@@ -1,4 +1,5 @@
-6P Packet Examples
-==================
+# 6tisch/6p-packet
+
+## 6P Packet Examples
 
 You can generate a pcap file having 6P packets with `6p-packet.csc`.

@@ -78,22 +78,22 @@ set_decimation_rate(uint8_t rate)
 static int
 get_channel_pin(int type)
 {
-  if((ZOUL_SENSORS_ADC1) && (type == ZOUL_SENSORS_ADC1)) {
+  if(ZOUL_SENSORS_ADC1 != 0 && (type == ZOUL_SENSORS_ADC1)) {
     return SOC_ADC_ADCCON_CH_AIN0 + ADC_SENSORS_ADC1_PIN;
   }
-  if((ZOUL_SENSORS_ADC2) && (type == ZOUL_SENSORS_ADC2)) {
+  if(ZOUL_SENSORS_ADC2 != 0 && (type == ZOUL_SENSORS_ADC2)) {
     return SOC_ADC_ADCCON_CH_AIN0 + ADC_SENSORS_ADC2_PIN;
   }
-  if((ZOUL_SENSORS_ADC3) && (type == ZOUL_SENSORS_ADC3)) {
+  if(ZOUL_SENSORS_ADC3 != 0 && (type == ZOUL_SENSORS_ADC3)) {
     return SOC_ADC_ADCCON_CH_AIN0 + ADC_SENSORS_ADC3_PIN;
   }
-  if((ZOUL_SENSORS_ADC4) && (type == ZOUL_SENSORS_ADC4)) {
+  if(ZOUL_SENSORS_ADC4 != 0 && (type == ZOUL_SENSORS_ADC4)) {
     return SOC_ADC_ADCCON_CH_AIN0 + ADC_SENSORS_ADC4_PIN;
   }
-  if((ZOUL_SENSORS_ADC5) && (type == ZOUL_SENSORS_ADC5)) {
+  if(ZOUL_SENSORS_ADC5 != 0 && (type == ZOUL_SENSORS_ADC5)) {
     return SOC_ADC_ADCCON_CH_AIN0 + ADC_SENSORS_ADC5_PIN;
   }
-  if((ZOUL_SENSORS_ADC6) && (type == ZOUL_SENSORS_ADC6)) {
+  if(ZOUL_SENSORS_ADC6 != 0 && (type == ZOUL_SENSORS_ADC6)) {
     return SOC_ADC_ADCCON_CH_AIN0 + ADC_SENSORS_ADC6_PIN;
   }
   return ZOUL_SENSORS_ERROR;

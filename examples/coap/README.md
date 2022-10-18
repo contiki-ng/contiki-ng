@@ -1,4 +1,6 @@
-# CoAP examples: client, server, and plugtest server
+# coap
+
+## CoAP examples: client, server, and plugtest server
 
 * coap-example-server: A CoAP server example showing how to use the CoAP layer to develop server-side applications.
 * coap-example-client: A CoAP client that polls the /actuators/toggle resource every 10 seconds and cycles through 4 resources on button press (target address is hard-coded).

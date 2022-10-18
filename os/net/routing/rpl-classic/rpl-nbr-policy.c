@@ -98,7 +98,7 @@ can_accept_new_parent(const linkaddr_t *candidate_for_removal, rpl_dio_t *dio)
 /*---------------------------------------------------------------------------*/
 bool
 rpl_nbr_can_accept_new(const linkaddr_t *new, const linkaddr_t *candidate_for_removal,
-                       nbr_table_reason_t reason, void *data)
+                       nbr_table_reason_t reason, const void *data)
 {
   bool accept;
   switch(reason) {

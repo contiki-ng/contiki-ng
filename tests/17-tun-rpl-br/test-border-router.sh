@@ -1,5 +1,4 @@
 #!/bin/bash
-source ../utils.sh
 
 # Contiki directory
 CONTIKI=$1
@@ -21,48 +20,25 @@ PING_DELAY=${6:-1}
 
 # ICMP request-reply count
 COUNT=5
-# Test OK of COUNT_TARGET ok out of COUNT
-COUNT_TARGET=3
-
-# Start simulation
-echo "Starting Cooja simulation $BASENAME.csc"
-java -Xshare:on -jar $CONTIKI/tools/cooja/dist/cooja.jar -nogui=$BASENAME.csc -contiki=$CONTIKI > $BASENAME.coojalog &
-JPID=$!
-sleep 20
 
 # Connect to the simulation
 echo "Starting tunslip6"
-make -C $CONTIKI/examples/rpl-border-router/ connect-router-cooja TARGET=zoul >> $BASENAME.tunslip6.log 2>&1 &
+make -C $CONTIKI/examples/rpl-border-router connect-router-cooja TARGET=zoul &
 MPID=$!
 printf "Waiting for network formation (%d seconds)\n" "$WAIT_TIME"
 sleep $WAIT_TIME
 
 # Do ping
-echo "Pinging"
-ping6 $IPADDR -c $COUNT -s $PING_SIZE -i $PING_DELAY | tee $BASENAME.scriptlog
-# Fetch ping6 status code (not $? because this is piped)
-STATUS=${PIPESTATUS[0]}
-REPLIES=`grep -c 'icmp_seq=' $BASENAME.scriptlog`
+ping6 $IPADDR -c $COUNT -s $PING_SIZE -i $PING_DELAY
+STATUS=$?
 
-echo "Closing simulation and tunslip6"
-sleep 1
-kill_bg $JPID
-kill_bg $MPID
-sleep 1
-rm COOJA.testlog
-rm COOJA.log
+echo "Closing tunslip6"
+kill $MPID
 
-if [ $STATUS -eq 0 ] && [ $REPLIES -ge $COUNT_TARGET ] ; then
-  printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
+if [ $STATUS -eq 0 ]; then
+  printf "%-32s TEST OK\n" "$BASENAME" > $BASENAME.testlog
+  exit 0
 else
-  echo "==== $BASENAME.coojalog ====" ; cat $BASENAME.coojalog;
-  echo "==== $BASENAME.tunslip6.log ====" ; cat $BASENAME.tunslip6.log;
-  echo "==== $BASENAME.scriptlog ====" ; cat $BASENAME.scriptlog;
-
-  printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
+  printf "%-32s TEST FAIL\n" "$BASENAME" > $BASENAME.testlog
+  exit 1
 fi
-
-# We do not want Make to stop -> Return 0
-# The Makefile will check if a log contains FAIL at the end
-
-exit 0

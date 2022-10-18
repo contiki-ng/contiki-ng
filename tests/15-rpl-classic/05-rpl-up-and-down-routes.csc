@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simconf>
-  <project EXPORT="discard">[APPS_DIR]/mrm</project>
-  <project EXPORT="discard">[APPS_DIR]/mspsim</project>
-  <project EXPORT="discard">[APPS_DIR]/avrora</project>
-  <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
-  <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <simulation>
     <title>My simulation</title>
-    <randomseed>123456</randomseed>
+    <randomseed>1</randomseed>
     <motedelay_us>1000000</motedelay_us>
     <radiomedium>
       org.contikios.cooja.radiomediums.UDGM
@@ -25,7 +20,7 @@
       <description>Sender</description>
       <source>[CONFIG_DIR]/code/sender-node.c</source>
       <commands>make clean TARGET=cooja
-make -j sender-node.cooja TARGET=cooja</commands>
+make -j$(CPUS) sender-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -42,7 +37,6 @@ make -j sender-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiCFS</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
@@ -50,7 +44,7 @@ make -j sender-node.cooja TARGET=cooja</commands>
       <description>RPL root</description>
       <source>[CONFIG_DIR]/code/root-node.c</source>
       <commands>make clean TARGET=cooja
-make -j root-node.cooja TARGET=cooja</commands>
+make -j$(CPUS) root-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -67,7 +61,6 @@ make -j root-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiCFS</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
@@ -75,7 +68,7 @@ make -j root-node.cooja TARGET=cooja</commands>
       <description>Receiver</description>
       <source>[CONFIG_DIR]/code/receiver-node.c</source>
       <commands>make clean TARGET=cooja
-make -j receiver-node.cooja TARGET=cooja</commands>
+make -j$(CPUS) receiver-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -92,7 +85,6 @@ make -j receiver-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiCFS</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <mote>
       <interface_config>
@@ -104,10 +96,6 @@ make -j receiver-node.cooja TARGET=cooja</commands>
       <interface_config>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>1</id>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
       </interface_config>
       <motetype_identifier>mtype782</motetype_identifier>
     </mote>
@@ -122,10 +110,6 @@ make -j receiver-node.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>2</id>
       </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
-      </interface_config>
       <motetype_identifier>mtype743</motetype_identifier>
     </mote>
     <mote>
@@ -138,10 +122,6 @@ make -j receiver-node.cooja TARGET=cooja</commands>
       <interface_config>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>4</id>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
       </interface_config>
       <motetype_identifier>mtype782</motetype_identifier>
     </mote>
@@ -156,10 +136,6 @@ make -j receiver-node.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>5</id>
       </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
-      </interface_config>
       <motetype_identifier>mtype782</motetype_identifier>
     </mote>
     <mote>
@@ -172,10 +148,6 @@ make -j receiver-node.cooja TARGET=cooja</commands>
       <interface_config>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>6</id>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
       </interface_config>
       <motetype_identifier>mtype782</motetype_identifier>
     </mote>
@@ -190,10 +162,6 @@ make -j receiver-node.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>7</id>
       </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
-      </interface_config>
       <motetype_identifier>mtype782</motetype_identifier>
     </mote>
     <mote>
@@ -207,10 +175,6 @@ make -j receiver-node.cooja TARGET=cooja</commands>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>8</id>
       </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
-      </interface_config>
       <motetype_identifier>mtype782</motetype_identifier>
     </mote>
     <mote>
@@ -223,10 +187,6 @@ make -j receiver-node.cooja TARGET=cooja</commands>
       <interface_config>
         org.contikios.cooja.contikimote.interfaces.ContikiMoteID
         <id>3</id>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiRadio
-        <bitrate>250.0</bitrate>
       </interface_config>
       <motetype_identifier>mtype452</motetype_identifier>
     </mote>
@@ -258,6 +218,8 @@ make -j receiver-node.cooja TARGET=cooja</commands>
     org.contikios.cooja.plugins.LogListener
     <plugin_config>
       <filter />
+      <formatted_time />
+      <coloring />
     </plugin_config>
     <width>1184</width>
     <z>3</z>
@@ -338,3 +300,4 @@ while(true) {&#xD;
     <location_y>43</location_y>
   </plugin>
 </simconf>
+

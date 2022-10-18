@@ -136,7 +136,7 @@ void uip_ds6_neighbors_init(void);
  * \param data Set data associated with the nbr cache
  * \return the address of a newly added nbr cache on success, NULL on
  * failure
-*/
+ */
 uip_ds6_nbr_t *uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr,
                                const uip_lladdr_t *lladdr,
                                uint8_t isrouter, uint8_t state,

@@ -1,6 +1,8 @@
-# BLEach: a fully open-source IPv6-over-BLE stack for Constrained Embedded IoT Devices
+# platform-specific/cc26x0-cc13x0/ble-ipv6
 
-## Overview
+## BLEach: a fully open-source IPv6-over-BLE stack for Constrained Embedded IoT Devices
+
+### Overview
 In 2015, the IETF released the [RFC 7668][rfc7668] that specifies how IPv6 packets
 can be exchanged using BLE connections (IPv6 over BLE).
 This Contiki extenstion implements [BLEach][bleachWeb], a fully open-source IPv6-over-BLE stack for Contiki.
@@ -12,7 +14,7 @@ It was developed by
 This IPv6-over-BLE stack is presented and evaluated in the paper:
 [BLEach: Exploiting the Full Potential of IPv6 over BLE in Constrained Embedded IoT Devices](http://sensys.acm.org/2017/), ACM SenSys'17.
 
-## Features
+### Features
 This implementation includes:
   * IPv6-over-BLE node implementation compliant to [RFC 7668][rfc7668]
     * connect to a single IPv6-over-BLE border router
@@ -24,24 +26,24 @@ This implementation includes:
 
 It has been tested on the TI CC2650 SensorTag and the TI CC2650 LaunchPad hardware.
 
-## Modules
+### Modules
 The IPv6-over-BLE stack comes with the following modules:
 
-### BLE radio
+#### BLE radio
 The implementation of the BLE radio for the TI CC26xx platform is implemented in `arch/cpu/cc26x0-cc13x0/rf-core/ble-cc2650.c`
 and `arch/cpu/cc26x0-cc13x0/rf-core/ble-hal/*.[ch]`.
 These files contain all the hardware specific code for supporting BLE as a link layer.
 
-### BLE L2CAP layer
+#### BLE L2CAP layer
 The L2CAP LE credit-based flow control support is implemented in `arch/cpu/cc26x0-cc13x0/rf-core/ble-l2cap.c`.
 Besides implementing rudimentary L2CAP support, this module handles fragmentation of large IPv6 packets.
 
-## Using BLEach
+### Using BLEach
 Currently, BLEach is only available for the Texas Instruments CC2650 hardware platform.
 
 The following sections describe how to configure BLEach for IPv6-over-BLE nodes and border routers.
 
-### IPv6-over-BLE node (BLE slave)
+#### IPv6-over-BLE node (BLE slave)
 To enable IPv6 over BLE, the project conf needs to contain:
 ```
 #define PACKETBUF_CONF_SIZE                   1280

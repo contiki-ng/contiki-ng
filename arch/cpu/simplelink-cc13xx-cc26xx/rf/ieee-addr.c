@@ -41,6 +41,7 @@
 #include "net/linkaddr.h"
 
 #include "rf/ieee-addr.h"
+#include "ieee-addr-id.h"
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(inc/hw_memmap.h)

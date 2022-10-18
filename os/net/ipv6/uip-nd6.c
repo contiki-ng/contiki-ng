@@ -364,7 +364,8 @@ discard:
 /*------------------------------------------------------------------*/
 #if UIP_ND6_SEND_NS
 void
-uip_nd6_ns_output(uip_ipaddr_t * src, uip_ipaddr_t * dest, uip_ipaddr_t * tgt)
+uip_nd6_ns_output(const uip_ipaddr_t * src, const uip_ipaddr_t * dest,
+                  uip_ipaddr_t * tgt)
 {
   uipbuf_clear();
   UIP_IP_BUF->vtc = 0x60;
@@ -702,7 +703,7 @@ discard:
 
 /*---------------------------------------------------------------------------*/
 void
-uip_nd6_ra_output(uip_ipaddr_t * dest)
+uip_nd6_ra_output(const uip_ipaddr_t * dest)
 {
 
   UIP_IP_BUF->vtc = 0x60;

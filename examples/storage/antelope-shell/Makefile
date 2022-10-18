@@ -2,10 +2,12 @@ CONTIKI = ../../..
 
 include $(CONTIKI)/Makefile.dir-variables
 
-MODULES += $(CONTIKI_NG_STORAGE_DIR)/antelope $(CONTIKI_NG_SERVICES_DIR)/unit-test
+PLATFORMS_ONLY = cc2538dk native zoul
 
-# does not fit on Sky
-PLATFORMS_ONLY= cc2538dk zoul
+MODULES += $(CONTIKI_NG_STORAGE_DIR)/antelope
+
+# If the native platform is used, we need to enable Coffee.
+MAKE_CFS = MAKE_CFS_COFFEE
 
 CONTIKI_PROJECT = shell-db
 all: $(CONTIKI_PROJECT)

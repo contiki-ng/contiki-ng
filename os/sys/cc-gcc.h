@@ -28,8 +28,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef _CC_GCC_H_
-#define _CC_GCC_H_
+#ifndef CC_GCC_H_
+#define CC_GCC_H_
 #ifdef __GNUC__
 
 #ifndef CC_CONF_INLINE
@@ -44,4 +44,4 @@
 #define CC_CONF_DEPRECATED(msg) __attribute__((deprecated(msg)))
 
 #endif /* __GNUC__ */
-#endif /* _CC_GCC_H_ */
+#endif /* CC_GCC_H_ */

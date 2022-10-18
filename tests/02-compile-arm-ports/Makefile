@@ -1,9 +1,13 @@
+CURDIR := $(abspath $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
+# FIXME: Uncomment the next line after the cortex-m customrules are removed.
+# BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
+
 EXAMPLESDIR=../../examples
 TOOLSDIR=../../tools
 
 EXAMPLES = \
 6tisch/6p-packet/zoul \
-6tisch/simple-node/cc2538dk:MAKE_WITH_SECURITY=1,MAKE_WITH_ORCHESTRA=1 \
+6tisch/simple-node/cc2538dk:MAKE_WITH_SECURITY=1:MAKE_WITH_ORCHESTRA=1 \
 6tisch/simple-node/simplelink:DEFINES=TSCH_CONF_AUTOSELECT_TIME_SOURCE=1 \
 6tisch/simple-node/nrf:BOARD=nrf52840/dk \
 6tisch/simple-node/nrf:BOARD=nrf52840/dongle \
@@ -44,6 +48,9 @@ hello-world/nrf:BOARD=nrf52840/dk \
 hello-world/nrf:BOARD=nrf52840/dongle \
 hello-world/nrf:BOARD=nrf5340/dk/application \
 hello-world/nrf:BOARD=nrf5340/dk/network \
+hello-world/nrf:BOARD=nrf52840/dk:NRF_NATIVE_USB=1 \
+hello-world/nrf:BOARD=nrf52840/dongle:NRF_NATIVE_USB=1 \
+hello-world/nrf:BOARD=nrf5340/dk/application:NRF_NATIVE_USB=1 \
 libs/data-structures/zoul \
 libs/deployment/openmote \
 libs/energest/zoul \

@@ -335,6 +335,33 @@ tsch_schedule_slot_operation(struct rtimer *tm, rtimer_clock_t ref_time, rtimer_
     RTIMER_BUSYWAIT_UNTIL_ABS(0, ref_time, offset); \
   } while(0);
 /*---------------------------------------------------------------------------*/
+/*
+ * Check whether the current channel is in the join hopping sequence.
+ * If a custom join hopping sequence is defined, EB packets are only
+ * sent using that sequence.
+ */
+static uint8_t
+is_current_channel_in_join_sequence(struct tsch_link *link)
+{
+#ifdef TSCH_CONF_JOIN_HOPPING_SEQUENCE
+  /* custom join sequence is defined, some channels might not part of it */
+  uint8_t current_channel = tsch_calculate_channel(&tsch_current_asn,
+                                                   link->channel_offset);
+  int i;
+  for(i = 0; i < sizeof(TSCH_JOIN_HOPPING_SEQUENCE); ++i) {
+    if(TSCH_JOIN_HOPPING_SEQUENCE[i] == current_channel) {
+      /* the channel is in the join sequence */
+      return 1;
+    }
+  }
+  /* the channel is not in the join sequence */
+  return 0;
+#else
+  /* all channels are in the join sequence */
+  return 1;
+#endif
+}
+/*---------------------------------------------------------------------------*/
 /* Get EB, broadcast or unicast packet to be sent, and target neighbor. */
 static struct tsch_packet *
 get_packet_and_neighbor_for_link(struct tsch_link *link, struct tsch_neighbor **target_neighbor)
@@ -346,9 +373,12 @@ get_packet_and_neighbor_for_link(struct tsch_link *link, struct tsch_neighbor **
   if(link->link_options & LINK_OPTION_TX) {
     /* is it for advertisement of EB? */
     if(link->link_type == LINK_TYPE_ADVERTISING || link->link_type == LINK_TYPE_ADVERTISING_ONLY) {
-      /* fetch EB packets */
-      n = n_eb;
-      p = tsch_queue_get_packet_for_nbr(n, link);
+      /* is the current channel in the join hopping sequence? */
+      if(is_current_channel_in_join_sequence(link)) {
+        /* fetch EB packets */
+        n = n_eb;
+        p = tsch_queue_get_packet_for_nbr(n, link);
+      }
     }
     if(link->link_type != LINK_TYPE_ADVERTISING_ONLY) {
       /* NORMAL link or no EB to send, pick a data packet */

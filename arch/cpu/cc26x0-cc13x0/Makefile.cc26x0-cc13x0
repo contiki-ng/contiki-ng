@@ -28,7 +28,12 @@ LDSCRIPT ?= $(CONTIKI_CPU)/cc26xx.ld
 
 ### If the user-specified a Node ID, pass a define
 ifdef NODEID
-  CFLAGS += -DIEEE_ADDR_NODE_ID=$(NODEID)
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @DEFINE@=IEEE_ADDR_NODE_ID
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @NODEID@=$(NODEID)
+else
+  # Otherwise, define an unused define.
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @DEFINE@=BOGUS_NODE_ID
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @NODEID@=1
 endif
 
 ### CPU-dependent directories
@@ -38,17 +43,16 @@ CONTIKI_CPU_DIRS += . dev rf-core rf-core/api rf-core/ble-hal $(TI_XXWARE_STARTU
 CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c soc-rtc.c uart.c
 CONTIKI_CPU_SOURCEFILES += contiki-watchdog.c aux-ctrl.c
 CONTIKI_CPU_SOURCEFILES += dbg.c ieee-addr.c batmon-sensor.c adc-sensor.c
-CONTIKI_CPU_SOURCEFILES += slip-arch.c slip.c cc26xx-uart.c lpm.c
+CONTIKI_CPU_SOURCEFILES += slip-arch.c cc26xx-uart.c lpm.c
 CONTIKI_CPU_SOURCEFILES += gpio-interrupt.c gpio-hal-arch.c oscillators.c
 CONTIKI_CPU_SOURCEFILES += rf-core.c rf-ble.c ieee-mode.c
 CONTIKI_CPU_SOURCEFILES += ble-cc2650.c ble-hal-cc26xx.c ble-addr.c rf-ble-cmd.c
 CONTIKI_CPU_SOURCEFILES += random.c soc-trng.c int-master.c
 CONTIKI_CPU_SOURCEFILES += spi-arch.c
 CONTIKI_CPU_SOURCEFILES += cc26xx-aes.c
+CONTIKI_CPU_SOURCEFILES += fault-handlers.c $(TI_XXWARE_STARTUP_SRCS)
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
-
-CPU_START_SOURCEFILES += fault-handlers.c $(TI_XXWARE_STARTUP_SRCS)
 
 BSL_FLAGS += -e -w -v
 
@@ -58,18 +62,14 @@ endif
 
 BSL = $(CONTIKI_NG_TOOLS_DIR)/cc2538-bsl/cc2538-bsl.py
 
-### Always re-build ieee-addr.o in case the command line passes a new NODEID
-FORCE:
+# Always re-build ieee-addr.h in case the command line passes a new NODEID.
+# The build system will avoid writing a new file with identical NODEID.
+$(GENDIR)/ieee-addr-id.h.diffupdate: FORCE
 
-$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
-	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+$(OBJECTDIR)/ieee-addr.o: CFLAGS += -I$(GENDIR)
+$(OBJECTDIR)/ieee-addr.o: $(GENDIR)/ieee-addr-id.h
 
-### Always re-build ccfg.c so changes to ccfg-conf.h will apply without having
-### to make clean first
-$(OBJECTDIR)/ccfg.o: ccfg.c FORCE | $(OBJECTDIR)
-	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -include "ccxxware-conf.h" -c $< -o $@
+$(OBJECTDIR)/ccfg.o: CFLAGS += -include "ccxxware-conf.h"
 
 # a target that gives a user-friendly memory profile, taking into account the RAM
 # that is statically occupied by the stack as defined in the linker script
@@ -77,7 +77,7 @@ $(OBJECTDIR)/ccfg.o: ccfg.c FORCE | $(OBJECTDIR)
 RAM_SIZE = 0x00003E00
 FLASH_SIZE = 0x0001E000
 STACK_SIZE = 0
-%.size: %.$(TARGET)
+%.size: $(BUILD_DIR_BOARD)/%.$(TARGET)
 	@$(SIZE) -A $< | egrep "data|bss" | awk '{s+=$$2} END {s=s+$(STACK_SIZE); f=$(RAM_SIZE)-s; printf "[RAM]   used %6d, free %6d\n",s,f;}'
 	@$(SIZE) -A $< | egrep "text|isr_vector" | awk '{s+=$$2} END {f=$(FLASH_SIZE)-s; printf "[Flash] used %6d, free %6d\n",s,f;}'
 
@@ -86,7 +86,7 @@ include $(CONTIKI)/$(CONTIKI_NG_CM3_DIR)/Makefile.cm3
 ifeq ($(BOARD_SUPPORTS_BSL),1)
 %.upload: $(OUT_BIN)
 ifeq ($(wildcard $(BSL)), )
-	@echo "ERROR: Could not find the cc2538-bsl script. Did you run 'git submodule update --init' ?"
+	$(error Could not find "$(BSL)". Did you run 'git submodule update --init'?)
 else
 	$(BSL) $(BSL_FLAGS) $<
 endif

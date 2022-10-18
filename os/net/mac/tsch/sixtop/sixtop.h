@@ -58,7 +58,7 @@
  * \param code Code, 6P Command Identifier or Return Code, of an input packet
  * \param body Body, "Other Fields", of an input packet
  * \param body_len The length of body
- * \param body src_addr Source address of an input packet
+ * \param src_addr Source address of an input packet
  */
 typedef void (* sixtop_sf_input)(sixp_pkt_type_t type,
                                  sixp_pkt_code_t code,

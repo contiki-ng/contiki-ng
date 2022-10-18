@@ -1253,8 +1253,10 @@ cfs_readdir(struct cfs_dir *dir, struct cfs_dirent *record)
   while(page < COFFEE_PAGE_COUNT) {
     read_header(&hdr, page);
     if(HDR_ACTIVE(hdr) && !HDR_LOG(hdr)) {
-      memcpy(record->name, hdr.name, sizeof(record->name));
-      record->name[sizeof(record->name) - 1] = '\0';
+      memcpy(record->name,
+             hdr.name,
+             MIN(sizeof(record->name), sizeof(hdr.name)));
+      record->name[MIN(sizeof(record->name), sizeof(hdr.name)) - 1] = '\0';
       record->size = file_end(page);
 
       next_page = next_file(page, &hdr);

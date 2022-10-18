@@ -42,8 +42,7 @@
 /**
  * \defgroup eeprom EEPROM API
  *
- * The EEPROM API defines a common interface for EEPROM access on
- * Contiki platforms.
+ * The EEPROM API defines a common interface for EEPROM access.
  *
  * A platform with EEPROM support must implement this API.
  *
@@ -53,14 +52,20 @@
 #ifndef EEPROM_H_
 #define EEPROM_H_
 
-typedef unsigned short eeprom_addr_t;
+#include <limits.h>
+#include <stdbool.h>
+#include <stddef.h>
 
-#define EEPROM_NULL			0
+typedef unsigned short eeprom_addr_t;
 
 #ifdef EEPROM_CONF_SIZE
 #define EEPROM_SIZE			(EEPROM_CONF_SIZE)
 #else
 #define EEPROM_SIZE			0 /* Default to no EEPROM */
+#endif
+
+#if EEPROM_SIZE > USHRT_MAX
+#error Too large EEPROM size -- please reconfigure EEPROM_CONF_SIZE.
 #endif
 
 #ifdef EEPROM_CONF_END_ADDR
@@ -80,9 +85,9 @@ typedef unsigned short eeprom_addr_t;
  *
  * \param size The number of bytes to write into EEPROM.
  *
- *
+ * \return a boolean indicating whether the operation succeeded.
  */
-void eeprom_write(eeprom_addr_t addr, unsigned char *buf, int size);
+bool eeprom_write(eeprom_addr_t addr, const unsigned char *buf, size_t size);
 
 /**
  * Read data from the EEPROM.
@@ -96,9 +101,10 @@ void eeprom_write(eeprom_addr_t addr, unsigned char *buf, int size);
  *
  * \param size The number of bytes to read.
  *
+ * \return a boolean indicating whether the operation succeeded.
  *
  */
-void eeprom_read(eeprom_addr_t addr, unsigned char *buf, int size);
+bool eeprom_read(eeprom_addr_t addr, unsigned char *buf, size_t size);
 
 /**
  * Initialize the EEPROM module
@@ -106,9 +112,10 @@ void eeprom_read(eeprom_addr_t addr, unsigned char *buf, int size);
  * This function initializes the EEPROM module and is called from the
  * bootup code.
  *
+ * \return a boolean indicating whether the operation succeeded.
  */
- 
-void eeprom_init(void);
+
+bool eeprom_init(void);
 
 #endif /* EEPROM_H_ */
 
