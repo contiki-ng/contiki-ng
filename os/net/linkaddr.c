@@ -65,7 +65,7 @@ linkaddr_copy(linkaddr_t *dest, const linkaddr_t *src)
 	memcpy(dest, src, LINKADDR_SIZE);
 }
 /*---------------------------------------------------------------------------*/
-int
+bool
 linkaddr_cmp(const linkaddr_t *addr1, const linkaddr_t *addr2)
 {
 	return (memcmp(addr1, addr2, LINKADDR_SIZE) == 0);

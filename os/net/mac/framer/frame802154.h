@@ -67,6 +67,7 @@
 
 #include "contiki.h"
 #include "net/linkaddr.h"
+#include <stdbool.h>
 
 #ifdef IEEE802154_CONF_PANID
 #define IEEE802154_PANID           IEEE802154_CONF_PANID
@@ -228,7 +229,7 @@ void frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has
 /* Check if the destination PAN ID, if any, matches ours */
 int frame802154_check_dest_panid(frame802154_t *frame);
 /* Check is the address is a broadcast address, whatever its size */
-int frame802154_is_broadcast_addr(uint8_t mode, const uint8_t *addr);
+bool frame802154_is_broadcast_addr(uint8_t mode, const uint8_t *addr);
 /* Check and extract source and destination linkaddr from frame */
 int frame802154_extract_linkaddr(frame802154_t *frame, linkaddr_t *source_address, linkaddr_t *dest_address);
 
