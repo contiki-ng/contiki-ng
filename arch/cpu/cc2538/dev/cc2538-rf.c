@@ -1113,8 +1113,7 @@ PROCESS_THREAD(cc2538_rf_process, ev, data)
   PROCESS_BEGIN();
 
   while(1) {
-    /* Only if we are not in poll mode oder we are in poll mode and transceiver has to be reset */
-    PROCESS_YIELD_UNTIL((!poll_mode || (poll_mode && (rf_flags & RF_MUST_RESET))) && (ev == PROCESS_EVENT_POLL));
+    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
 
     if(!poll_mode) {
       packetbuf_clear();
