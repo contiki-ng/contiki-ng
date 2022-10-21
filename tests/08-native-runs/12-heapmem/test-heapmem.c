@@ -252,6 +252,31 @@ UNIT_TEST(stats_check)
   UNIT_TEST_END();
 }
 /*****************************************************************************/
+UNIT_TEST_REGISTER(zones, "Zone allocations");
+UNIT_TEST(zones)
+{
+  UNIT_TEST_BEGIN();
+
+  UNIT_TEST_ASSERT(heapmem_zone_register(NULL, 10) == HEAPMEM_ZONE_INVALID);
+  UNIT_TEST_ASSERT(heapmem_zone_register("A", 0) == HEAPMEM_ZONE_INVALID);
+
+  heapmem_zone_t zone = heapmem_zone_register("Test", 1000);
+  UNIT_TEST_ASSERT(zone != HEAPMEM_ZONE_INVALID);
+  UNIT_TEST_ASSERT(zone != HEAPMEM_ZONE_GENERAL);
+  UNIT_TEST_ASSERT(heapmem_zone_register("Test", 10) == HEAPMEM_ZONE_INVALID);
+
+  void *ptr = heapmem_zone_alloc(zone, 100);
+  UNIT_TEST_ASSERT(ptr != NULL);
+  UNIT_TEST_ASSERT(heapmem_free(ptr) != false);
+
+  UNIT_TEST_ASSERT(heapmem_zone_alloc(zone, 1001) == NULL);
+  ptr = heapmem_alloc(1001);
+  UNIT_TEST_ASSERT(ptr != NULL);
+  UNIT_TEST_ASSERT(heapmem_free(ptr) != false);
+
+  UNIT_TEST_END();
+}
+/*****************************************************************************/
 PROCESS_THREAD(test_heapmem_process, ev, data)
 {
   PROCESS_BEGIN();
@@ -268,11 +293,13 @@ PROCESS_THREAD(test_heapmem_process, ev, data)
   UNIT_TEST_RUN(invalid_freeing);
   UNIT_TEST_RUN(reallocations);
   UNIT_TEST_RUN(stats_check);
+  UNIT_TEST_RUN(zones);
 
   if(!UNIT_TEST_PASSED(do_many_allocations) ||
      !UNIT_TEST_PASSED(max_alloc) ||
      !UNIT_TEST_PASSED(invalid_freeing) ||
-     !UNIT_TEST_PASSED(stats_check)) {
+     !UNIT_TEST_PASSED(stats_check) ||
+     !UNIT_TEST_PASSED(zones)) {
     printf("=check-me= FAILED\n");
     printf("---\n");
   }
