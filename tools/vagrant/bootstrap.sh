@@ -62,14 +62,6 @@ tar xjf mspgcc*.tar.bz2 -C /tmp/
 sudo cp -f -r /tmp/msp430/* /usr/local/
 rm -rf /tmp/msp430 mspgcc*.tar.bz2
 
-## Install nRF52 SDK
-wget https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/nrf5_iot_sdk_3288530.zip
-sudo mkdir -p /usr/nrf52-sdk
-sudo unzip nrf5_iot_sdk_3288530.zip -d /usr/nrf52-sdk
-rm nrf5_iot_sdk_3288530.zip
-
-echo "export NRF52_SDK_ROOT=/usr/nrf52-sdk" >> ${HOME}/.bashrc
-
 sudo usermod -aG dialout,plugdev,sudo vagrant
 
 # Environment variables

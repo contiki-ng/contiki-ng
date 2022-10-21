@@ -67,12 +67,6 @@ You can also try using the latest version, but be prepared to get compilation wa
 
 The best way to achieve this on OS X is through homebrew, using a formula provided in a tap. Follow the instructions here: https://github.com/tgtakaoka/homebrew-mspgcc
 
-### Installing NRF sdk
-To get the NRF52dk platform to work you will need two things:
-
-* The ARM GCC toolchain (If you have installed it by following the steps above, you don't need to do anything extra).
-* The Nordic SDK, see [Platform-nrf52dk](/doc/platforms/nrf52dk).
-
 ### Install Java JDK for the Cooja network simulator
 Nothing exciting here, just download and install Java for OSX. You will need the JDK 8, not just the runtime. 
 
