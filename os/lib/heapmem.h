@@ -74,8 +74,13 @@
 #ifndef HEAPMEM_H
 #define HEAPMEM_H
 
-#include <stdlib.h>
+#include "contiki.h"
 
+#include <stdlib.h>
+/*****************************************************************************/
+#ifndef HEAPMEM_DEBUG
+#define HEAPMEM_DEBUG 0
+#endif
 /*****************************************************************************/
 typedef struct heapmem_stats {
   size_t allocated;
@@ -114,7 +119,7 @@ void *heapmem_zone_alloc_debug(heapmem_zone_t, size_t size,
 			  const char *file, const unsigned line);
 void *heapmem_realloc_debug(void *ptr, size_t size,
 			    const char *file, const unsigned line);
-void heapmem_free_debug(void *ptr,
+bool heapmem_free_debug(void *ptr,
 			const char *file, const unsigned line);
 
 #else

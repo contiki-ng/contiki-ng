@@ -41,16 +41,11 @@
 #define LOG_MODULE "HeapMem"
 #define LOG_LEVEL LOG_LEVEL_WARN
 
-#ifndef HEAPMEM_DEBUG
-#define HEAPMEM_DEBUG 0
-#endif
-
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
 #include "lib/heapmem.h"
-#include "lib/assert.h"
 #include "sys/cc.h"
 
 /* The HEAPMEM_CONF_ARENA_SIZE parameter determines the size of the
