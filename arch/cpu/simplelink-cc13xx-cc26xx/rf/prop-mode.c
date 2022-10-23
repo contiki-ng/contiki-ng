@@ -72,6 +72,7 @@
 #include "rf/rat.h"
 #include "rf/radio-mode.h"
 /*---------------------------------------------------------------------------*/
+#include <inttypes.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
@@ -359,7 +360,7 @@ set_channel_force(uint16_t channel)
   const uint16_t freq = (uint16_t)(new_freq / 1000);
   const uint16_t frac = (uint16_t)(((new_freq - (freq * 1000)) * 0x10000) / 1000);
 
-  LOG_DBG("Set channel to %d, frequency 0x%04X.0x%04X (%lu)\n",
+  LOG_DBG("Set channel to %d, frequency 0x%04X.0x%04X (%" PRIu32 ")\n",
           (int)channel, freq, frac, new_freq);
 
   v_cmd_fs.frequency = freq;
