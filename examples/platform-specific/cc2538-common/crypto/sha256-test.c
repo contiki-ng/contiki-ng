@@ -200,7 +200,7 @@ PROCESS_THREAD(sha256_test_process, ev, data)
     ret = sha256_init(&state);
     time = RTIMER_NOW() - time;
     total_time = time;
-    printf("sha256_init(): %s, %lu us\n", str_res[ret],
+    printf("sha256_init(): %s, %" PRIu32 " us\n", str_res[ret],
            (uint32_t)((uint64_t)time * 1000000 / RTIMER_SECOND));
     PROCESS_PAUSE();
     if(ret != CRYPTO_SUCCESS) {
@@ -215,7 +215,7 @@ PROCESS_THREAD(sha256_test_process, ev, data)
       ret = sha256_process(&state, vectors[i].data[j], len);
       time = RTIMER_NOW() - time;
       total_time += time;
-      printf("sha256_process(): %s, %lu us\n", str_res[ret],
+      printf("sha256_process(): %s, %" PRIu32 " us\n", str_res[ret],
              (uint32_t)((uint64_t)time * 1000000 / RTIMER_SECOND));
       PROCESS_PAUSE();
       if(ret != CRYPTO_SUCCESS) {
@@ -230,7 +230,7 @@ PROCESS_THREAD(sha256_test_process, ev, data)
     ret = sha256_done(&state, sha256);
     time = RTIMER_NOW() - time;
     total_time += time;
-    printf("sha256_done(): %s, %lu us\n", str_res[ret],
+    printf("sha256_done(): %s, %" PRIu32 " us\n", str_res[ret],
            (uint32_t)((uint64_t)time * 1000000 / RTIMER_SECOND));
     PROCESS_PAUSE();
     if(ret != CRYPTO_SUCCESS) {
@@ -242,7 +242,7 @@ PROCESS_THREAD(sha256_test_process, ev, data)
     } else {
       puts("Computed SHA-256 hash OK");
     }
-    printf("Total duration: %lu us\n",
+    printf("Total duration: %" PRIu32 " us\n",
            (uint32_t)((uint64_t)total_time * 1000000 / RTIMER_SECOND));
   }
 

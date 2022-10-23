@@ -129,13 +129,13 @@ PROCESS_THREAD(ecdh_test, ev, data) {
   time = RTIMER_NOW();
   PT_SPAWN(&(ecdh_test.pt), &(side_a.pt), ecc_multiply(&side_a));
   time = RTIMER_NOW() - time;
-  printf("Round 1, Side a: %i, %lu ms\n", (unsigned)side_a.result,
+  printf("Round 1, Side a: %i, %" PRIu32 " ms\n", (unsigned)side_a.result,
          (uint32_t)((uint64_t)time * 1000 / RTIMER_SECOND));
 
   time = RTIMER_NOW();
   PT_SPAWN(&(ecdh_test.pt), &(side_b.pt), ecc_multiply(&side_b));
   time = RTIMER_NOW() - time;
-  printf("Round 1, Side b: %i, %lu ms\n", (unsigned)side_b.result,
+  printf("Round 1, Side b: %i, %" PRIu32 " ms\n", (unsigned)side_b.result,
          (uint32_t)((uint64_t)time * 1000 / RTIMER_SECOND));
 
   /*
@@ -152,12 +152,12 @@ PROCESS_THREAD(ecdh_test, ev, data) {
   time = RTIMER_NOW();
   PT_SPAWN(&(ecdh_test.pt), &(side_a.pt), ecc_multiply(&side_a));
   time = RTIMER_NOW() - time;
-  printf("Round 2, Side a: %i, %lu ms\n", (unsigned)side_a.result,
+  printf("Round 2, Side a: %i, %" PRIu32 " ms\n", (unsigned)side_a.result,
          (uint32_t)((uint64_t)time * 1000 / RTIMER_SECOND));
   time = RTIMER_NOW();
   PT_SPAWN(&(ecdh_test.pt), &(side_b.pt), ecc_multiply(&side_b));
   time = RTIMER_NOW() - time;
-  printf("Round 2, Side b: %i, %lu ms\n", (unsigned)side_b.result,
+  printf("Round 2, Side b: %i, %" PRIu32 " ms\n", (unsigned)side_b.result,
          (uint32_t)((uint64_t)time * 1000 / RTIMER_SECOND));
 
   /*

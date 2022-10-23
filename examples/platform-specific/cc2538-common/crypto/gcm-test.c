@@ -547,7 +547,7 @@ PROCESS_THREAD(gcm_test_process, ev, data)
       ret = aes_load_keys(keys[key_size_index].keys,
               keys[key_size_index].key_size, keys[key_size_index].count, 0);
       time = RTIMER_NOW() - time;
-      printf("aes_load_keys(): %s, %lu us\n", str_res[ret],
+      printf("aes_load_keys(): %s, %" PRIu32 " us\n", str_res[ret],
              (uint32_t)((uint64_t)time * 1000000 / RTIMER_SECOND));
       PROCESS_PAUSE();
       if(ret != CRYPTO_SUCCESS) {
@@ -579,20 +579,20 @@ PROCESS_THREAD(gcm_test_process, ev, data)
         time2 = RTIMER_NOW() - time2;
         total_time += time2;
       }
-      printf("gcm_auth_encrypt_start(): %s, %lu us\n", str_res[ret],
+      printf("gcm_auth_encrypt_start(): %s, %" PRIu32 " us\n", str_res[ret],
              (uint32_t)((uint64_t)time * 1000000 / RTIMER_SECOND));
       if(ret != CRYPTO_SUCCESS) {
         PROCESS_PAUSE();
         continue;
       }
-      printf("gcm_auth_encrypt_check_status() wait: %lu us\n",
+      printf("gcm_auth_encrypt_check_status() wait: %" PRIu32 " us\n",
              (uint32_t)((uint64_t)time2 * 1000000 / RTIMER_SECOND));
 
       time = RTIMER_NOW();
       ret = gcm_auth_encrypt_get_result(tag);
       time = RTIMER_NOW() - time;
       total_time += time;
-      printf("gcm_auth_encrypt_get_result(): %s, %lu us\n", str_res[ret],
+      printf("gcm_auth_encrypt_get_result(): %s, %" PRIu32 " us\n", str_res[ret],
              (uint32_t)((uint64_t)time * 1000000 / RTIMER_SECOND));
       PROCESS_PAUSE();
       if(ret != CRYPTO_SUCCESS) {
@@ -623,20 +623,20 @@ PROCESS_THREAD(gcm_test_process, ev, data)
         time2 = RTIMER_NOW() - time2;
         total_time += time2;
       }
-      printf("gcm_auth_decrypt_start(): %s, %lu us\n", str_res[ret],
+      printf("gcm_auth_decrypt_start(): %s, %" PRIu32 " us\n", str_res[ret],
              (uint32_t)((uint64_t)time * 1000000 / RTIMER_SECOND));
       if(ret != CRYPTO_SUCCESS) {
         PROCESS_PAUSE();
         continue;
       }
-      printf("gcm_auth_decrypt_check_status() wait: %lu us\n",
+      printf("gcm_auth_decrypt_check_status() wait: %" PRIu32 " us\n",
              (uint32_t)((uint64_t)time2 * 1000000 / RTIMER_SECOND));
 
       time = RTIMER_NOW();
       ret = gcm_auth_decrypt_get_result(vectors[i].tag, tag);
       time = RTIMER_NOW() - time;
       total_time += time;
-      printf("gcm_auth_decrypt_get_result(): %s, %lu us\n", str_res[ret],
+      printf("gcm_auth_decrypt_get_result(): %s, %" PRIu32 " us\n", str_res[ret],
              (uint32_t)((uint64_t)time * 1000000 / RTIMER_SECOND));
       PROCESS_PAUSE();
       if(ret != CRYPTO_SUCCESS) {
@@ -650,7 +650,7 @@ PROCESS_THREAD(gcm_test_process, ev, data)
       }
     }
 
-    printf("Total duration: %lu us\n",
+    printf("Total duration: %" PRIu32 " us\n",
            (uint32_t)((uint64_t)total_time * 1000000 / RTIMER_SECOND));
   }
 
