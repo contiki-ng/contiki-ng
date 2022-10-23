@@ -55,19 +55,40 @@ disk_initialize(BYTE pdrv)
 DRESULT __attribute__((__weak__))
 disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
 {
-  return mmc_driver.read(pdrv, buff, sector, count);
+  switch(mmc_driver.read(pdrv, buff, sector, count)) {
+  default:
+  case DISK_RESULT_NO_INIT:
+  case DISK_RESULT_IO_ERROR: return RES_ERROR;
+  case DISK_RESULT_OK: return RES_OK;
+  case DISK_RESULT_WR_PROTECTED: return RES_WRPRT;
+  case DISK_RESULT_INVALID_ARG: return RES_PARERR;
+  }
 }
 /*----------------------------------------------------------------------------*/
 DRESULT __attribute__((__weak__))
 disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
 {
-  return mmc_driver.write(pdrv, buff, sector, count);
+  switch(mmc_driver.write(pdrv, buff, sector, count)) {
+  default:
+  case DISK_RESULT_NO_INIT:
+  case DISK_RESULT_IO_ERROR: return RES_ERROR;
+  case DISK_RESULT_OK: return RES_OK;
+  case DISK_RESULT_WR_PROTECTED: return RES_WRPRT;
+  case DISK_RESULT_INVALID_ARG: return RES_PARERR;
+  }
 }
 /*----------------------------------------------------------------------------*/
 DRESULT __attribute__((__weak__))
 disk_ioctl(BYTE pdrv, BYTE cmd, void *buff)
 {
-  return mmc_driver.ioctl(pdrv, cmd, buff);
+  switch(mmc_driver.ioctl(pdrv, cmd, buff)) {
+  default:
+  case DISK_RESULT_NO_INIT:
+  case DISK_RESULT_IO_ERROR: return RES_ERROR;
+  case DISK_RESULT_OK: return RES_OK;
+  case DISK_RESULT_WR_PROTECTED: return RES_WRPRT;
+  case DISK_RESULT_INVALID_ARG: return RES_PARERR;
+  }
 }
 /*----------------------------------------------------------------------------*/
 DWORD __attribute__((__weak__))
