@@ -381,7 +381,7 @@ input(sixp_pkt_type_t type, sixp_pkt_code_t code,
       request_input(code.cmd, body, body_len, src_addr);
       break;
     case SIXP_PKT_TYPE_RESPONSE:
-      response_input(code.cmd, body, body_len, src_addr);
+      response_input(code.rc, body, body_len, src_addr);
       break;
     default:
       /* unsupported */
