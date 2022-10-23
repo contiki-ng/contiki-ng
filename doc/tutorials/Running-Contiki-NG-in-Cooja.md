@@ -2,13 +2,13 @@
 
 This tutorial shows how to use Cooja, a network simulator.
 First, make sure you have Cooja installed (see [doc:toolchain-installation]).
-Make sure the right Java virtual machine is installed along with Ant, the right environment variables set, and the Cooja submodule downloaded (`git submodule update --init --recursive`).
+Make sure the right Java virtual machine is installed, and the Cooja submodule downloaded (`git submodule update --init --recursive`).
 
 Go to the Cooja directory, build and start it with `ant`.
 
 ```
 $ cd tools/cooja
-$ ant
+$ ./gradlew run
 ```
 
 Cooja will start with an empty window:
@@ -36,8 +36,8 @@ We will now create a simple simulation, with just one node running the `hello-wo
 First, we need to create a new mote type.
 Go to `Motes->Add motes->Create new mote type`.
 Select a mote type, either `Cooja mote` or `Sky mote`.
-* Cooja motes have the advantage of running as native processes inside Cooja: they are fast and not memory constrained. However, they do not simulate a mote hardware precisely, and only work on 32-bit Linux, or inside our [Docker image](/doc/getting-started/Docker) (`contiker cooja` will start Cooja inside a container, with support for Cooja motes).
-* Sky motes have the advantage of emulating the hardware in a cycle-accurate way with MSPSim. They also work on OSX or Windows in addition to Linux.
+* Cooja motes have the advantage of running as native processes inside Cooja: they are fast and not memory constrained. However, they do not simulate a mote hardware precisely (`contiker cooja` will start Cooja inside a container, with support for Cooja motes).
+* Sky motes have the advantage of emulating the hardware in a cycle-accurate way with MSPSim.
 
 Below, with Cooja motes:
 ![Cooja](https://contiki-ng.github.io/images/Cooja3.png)
