@@ -73,7 +73,8 @@ extern int _stack_origin;
 void
 stack_check_init(void)
 {
-  uint8_t *p;
+  /* Make this volatile to prevent the compiler from optimising the while loop */
+  volatile uint8_t *p;
 
   /* Make this static to avoid destroying it in the while loop */
   static void *stack_top;
