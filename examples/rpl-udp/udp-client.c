@@ -14,7 +14,7 @@
 #define UDP_CLIENT_PORT	8765
 #define UDP_SERVER_PORT	5678
 
-#define SEND_INTERVAL		  (60 * CLOCK_SECOND)
+#define SEND_INTERVAL		  (10 * CLOCK_SECOND)
 
 static struct simple_udp_connection udp_conn;
 static uint32_t rx_count = 0;
