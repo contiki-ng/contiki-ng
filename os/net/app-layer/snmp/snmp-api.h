@@ -56,11 +56,6 @@
  */
 
 /**
- * @brief The MIB Resource struct
- */
-typedef struct snmp_mib_resource_s snmp_mib_resource_t;
-
-/**
  * @brief Initializes statically an oid with the "null" terminator
  *
  * @remarks This should be used inside handlers when declaring an oid
