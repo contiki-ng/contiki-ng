@@ -219,7 +219,7 @@ make -j$(CPUS) node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=
   <plugin>
     org.contikios.cooja.plugins.ScriptRunner
     <plugin_config>
-      <script>TIMEOUT(360000); /* Time out after 6 minutes */&#xD;
+      <script>TIMEOUT(660000); /* Time out after 11 minutes */&#xD;
 /* Wait until a node (can only be the DAGRoot) has&#xD;
  * 9 routing entries including one for the root (i.e. can reach every node) */&#xD;
 log.log("Waiting for routing links to fill\n");&#xD;
