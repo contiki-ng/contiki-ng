@@ -595,7 +595,7 @@ PROCESS_THREAD(ecb_test_process, ev, data)
       ret = aes_load_keys(keys[key_size_index].keys,
               keys[key_size_index].key_size, keys[key_size_index].count, 0);
       time = RTIMER_NOW() - time;
-      printf("aes_load_keys(): %s, %lu us\n", str_res[ret],
+      printf("aes_load_keys(): %s, %" PRIu32 " us\n", str_res[ret],
              (uint32_t)((uint64_t)time * 1000000 / RTIMER_SECOND));
       PROCESS_PAUSE();
       if(ret != CRYPTO_SUCCESS) {
@@ -624,13 +624,13 @@ PROCESS_THREAD(ecb_test_process, ev, data)
       time2 = RTIMER_NOW() - time2;
       total_time += time2;
     }
-    printf("ecb_crypt_start(): %s, %lu us\n", str_res[ret],
+    printf("ecb_crypt_start(): %s, %" PRIu32 " us\n", str_res[ret],
            (uint32_t)((uint64_t)time * 1000000 / RTIMER_SECOND));
     if(ret != CRYPTO_SUCCESS) {
       PROCESS_PAUSE();
       continue;
     }
-    printf("ecb_crypt_check_status() wait: %s, %lu us\n", str_res[res],
+    printf("ecb_crypt_check_status() wait: %s, %" PRIu32 " us\n", str_res[res],
            (uint32_t)((uint64_t)time2 * 1000000 / RTIMER_SECOND));
     PROCESS_PAUSE();
     if(res != CRYPTO_SUCCESS) {
@@ -643,7 +643,7 @@ PROCESS_THREAD(ecb_test_process, ev, data)
       puts("Output message OK");
     }
 
-    printf("Total duration: %lu us\n",
+    printf("Total duration: %" PRIu32 " us\n",
            (uint32_t)((uint64_t)total_time * 1000000 / RTIMER_SECOND));
   }
 
