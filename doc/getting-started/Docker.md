@@ -79,12 +79,12 @@ Running test 01-rpl-up-route with random Seed 1.................... OK
 You can even start Cooja from the container:
 ```bash
 $ cd tools/cooja
-$ ant
+$ ./gradlew run
 ```
 
-Or use the shortcut located in the home directory:
+Or use the shortcut:
 ```bash
-$ ~/cooja
+$ cooja
 ```
 
 Or directly from the host (outside the container)
