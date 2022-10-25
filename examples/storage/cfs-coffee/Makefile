@@ -1,6 +1,6 @@
 CONTIKI = ../../..
 
-PLATFORMS_ONLY = cc2538dk native sky zoul
+PLATFORMS_ONLY = cc2538dk native sky zoul gecko
 
 include $(CONTIKI)/Makefile.dir-variables
 

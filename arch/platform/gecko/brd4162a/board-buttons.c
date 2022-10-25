@@ -1,4 +1,7 @@
 /*
+ * Copyright (C) 2022 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -7,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -26,21 +28,30 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+/**
+ * \addtogroup gecko-platforms
+ * @{
+ *
+ * \addtogroup brd4162a
+ * @{
+ *
+ * \file
+ *         brd4162a specific buttons driver implementation.
+ * \author
+ *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ */
 /*---------------------------------------------------------------------------*/
-#if CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_OPENMOTE_CC2538 || \
-    CONTIKI_TARGET_ZOUL
-#define COFFEE_CONF_SIZE              (CC2538_DEV_FLASH_SIZE / 2)
-#define COFFEE_CONF_MICRO_LOGS        1
-#define COFFEE_CONF_APPEND_ONLY       0
-#endif /* CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL */
-
-#if CONTIKI_TARGET_GECKO
-#define COFFEE_CONF_SIZE              (FLASH_SIZE / 2)
-#define COFFEE_CONF_MICRO_LOGS        1
-#define COFFEE_CONF_APPEND_ONLY       0
-#endif /* CONTIKI_TARGET_GECKO */
-
-#endif /* PROJECT_CONF_H_ */
+#include "contiki.h"
+#include "dev/button-hal.h"
 /*---------------------------------------------------------------------------*/
+BUTTON_HAL_BUTTON(btn_1, "Button 1", GECKO_BUTTON1_PORT, GECKO_BUTTON1_PIN, \
+                  GPIO_HAL_PIN_CFG_PULL_UP, BUTTON_HAL_ID_BUTTON_ZERO, true);
+BUTTON_HAL_BUTTON(btn_2, "Button 2", GECKO_BUTTON2_PORT, GECKO_BUTTON2_PIN, \
+                  GPIO_HAL_PIN_CFG_PULL_UP, BUTTON_HAL_ID_BUTTON_ONE, true);
+/*---------------------------------------------------------------------------*/
+BUTTON_HAL_BUTTONS(&btn_1, &btn_2);
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ */

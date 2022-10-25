@@ -1,4 +1,7 @@
 /*
+ * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -7,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -25,22 +27,53 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
-/*---------------------------------------------------------------------------*/
-#if CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_OPENMOTE_CC2538 || \
-    CONTIKI_TARGET_ZOUL
-#define COFFEE_CONF_SIZE              (CC2538_DEV_FLASH_SIZE / 2)
-#define COFFEE_CONF_MICRO_LOGS        1
-#define COFFEE_CONF_APPEND_ONLY       0
-#endif /* CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL */
 
-#if CONTIKI_TARGET_GECKO
-#define COFFEE_CONF_SIZE              (FLASH_SIZE / 2)
-#define COFFEE_CONF_MICRO_LOGS        1
-#define COFFEE_CONF_APPEND_ONLY       0
-#endif /* CONTIKI_TARGET_GECKO */
+/**
+ * \addtogroup gecko
+ * @{
+ *
+ * \addtogroup gecko-sys System drivers
+ * @{
+ *
+ * \addtogroup gecko-linkaddr Link Address driver
+ * @{
+ *
+ * \file
+ *         Link address implementation for the gecko.
+ * \author
+ *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ */
+#include "contiki.h"
 
-#endif /* PROJECT_CONF_H_ */
+#include "linkaddr.h"
+#include "linkaddr-arch.h"
+
+#include "em_system.h"
+#include <string.h>
 /*---------------------------------------------------------------------------*/
+static inline uint64_t
+swap_long(uint64_t val)
+{
+  val = (val & 0x00000000FFFFFFFF) << 32 | (val & 0xFFFFFFFF00000000) >> 32;
+  val = (val & 0x0000FFFF0000FFFF) << 16 | (val & 0xFFFF0000FFFF0000) >> 16;
+  val = (val & 0x00FF00FF00FF00FF) << 8 | (val & 0xFF00FF00FF00FF00) >> 8;
+  return val;
+}
+/*---------------------------------------------------------------------------*/
+void
+populate_link_address(void)
+{
+  uint64_t system_number;
+  uint64_t system_number_net_order;
+
+  system_number = SYSTEM_GetUnique();
+  system_number_net_order = swap_long(system_number);
+
+  memcpy(linkaddr_node_addr.u8, &system_number_net_order, LINKADDR_SIZE);
+}
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ * @}
+ */

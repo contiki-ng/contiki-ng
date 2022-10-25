@@ -1,4 +1,7 @@
 /*
+ * Copyright (C) 2022 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -7,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -26,21 +28,32 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+/**
+ * \addtogroup gecko
+ * @{
+ *
+ * \file
+ *      Header with configuration defines common to all gecko platforms
+ * \author
+ *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ */
 /*---------------------------------------------------------------------------*/
-#if CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_OPENMOTE_CC2538 || \
-    CONTIKI_TARGET_ZOUL
-#define COFFEE_CONF_SIZE              (CC2538_DEV_FLASH_SIZE / 2)
-#define COFFEE_CONF_MICRO_LOGS        1
-#define COFFEE_CONF_APPEND_ONLY       0
-#endif /* CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL */
-
-#if CONTIKI_TARGET_GECKO
-#define COFFEE_CONF_SIZE              (FLASH_SIZE / 2)
-#define COFFEE_CONF_MICRO_LOGS        1
-#define COFFEE_CONF_APPEND_ONLY       0
-#endif /* CONTIKI_TARGET_GECKO */
-
-#endif /* PROJECT_CONF_H_ */
+#ifndef GECKO_CONF_H_
+#define GECKO_CONF_H_
 /*---------------------------------------------------------------------------*/
+/* Include CPU Specific conf */
+#ifdef CPU_CONF_PATH
+#include CPU_CONF_PATH
+#else
+#error "CPU_CONF_PATH undefined"
+#endif /* BOARD_CONF_PATH */
+/*---------------------------------------------------------------------------*/
+#ifndef NETSTACK_CONF_RADIO
+#define NETSTACK_CONF_RADIO        efr32_radio_driver
+#endif /* NETSTACK_CONF_RADIO */
+/*---------------------------------------------------------------------------*/
+#endif /* GECKO_CONF_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ */

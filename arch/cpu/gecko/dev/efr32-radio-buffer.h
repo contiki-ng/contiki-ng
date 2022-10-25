@@ -1,4 +1,7 @@
 /*
+ * Copyright (C) 2022 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -7,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -25,22 +27,50 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
-/*---------------------------------------------------------------------------*/
-#if CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_OPENMOTE_CC2538 || \
-    CONTIKI_TARGET_ZOUL
-#define COFFEE_CONF_SIZE              (CC2538_DEV_FLASH_SIZE / 2)
-#define COFFEE_CONF_MICRO_LOGS        1
-#define COFFEE_CONF_APPEND_ONLY       0
-#endif /* CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL */
 
-#if CONTIKI_TARGET_GECKO
-#define COFFEE_CONF_SIZE              (FLASH_SIZE / 2)
-#define COFFEE_CONF_MICRO_LOGS        1
-#define COFFEE_CONF_APPEND_ONLY       0
-#endif /* CONTIKI_TARGET_GECKO */
-
-#endif /* PROJECT_CONF_H_ */
+/**
+ * \addtogroup gecko
+ * @{
+ *
+ * \addtogroup gecko-dev Device drivers
+ * @{
+ *
+ * \addtogroup gecko-gpio GPIO HAL driver
+ * @{
+ *
+ * \file
+ *     GPIO HAL header file for the gecko
+ * \author
+ *     Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *
+ */
 /*---------------------------------------------------------------------------*/
+#ifndef GPIO_HAL_ARCH_H_
+#define GPIO_HAL_ARCH_H_
+/*---------------------------------------------------------------------------*/
+#include "contiki.h"
+#include "rail.h"
+
+#define RAIL_FIFO_SIZE      (128)
+
+typedef struct {
+  RAIL_Time_t timestamp;
+  int16_t rssi;
+  int16_t lqi;
+  uint8_t len;
+  uint8_t buf[RAIL_FIFO_SIZE];
+} rx_buffer_t;
+
+int has_packet(void);
+rx_buffer_t * get_full_rx_buf(void);
+rx_buffer_t * get_empty_rx_buf(void);
+void free_rx_buf(rx_buffer_t *rx_buf);
+
+/*---------------------------------------------------------------------------*/
+#endif /* GPIO_HAL_ARCH_H_ */
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ * @}
+ */

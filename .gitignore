@@ -41,6 +41,7 @@ COOJA.testlog
 *.z1
 *.zoul
 *.nrf
+*.gecko
 
 # do not ignore platform makefiles
 !Makefile.cc2538dk
@@ -52,6 +53,7 @@ COOJA.testlog
 !Makefile.cc26x0-cc13x0
 !Makefile.zoul
 !Makefile.nrf
+!Makefile.gecko
 
 # do not ignore images in documentation
 !tools/readthedocs/**/*.png

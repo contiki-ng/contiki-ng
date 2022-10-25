@@ -1,4 +1,7 @@
 /*
+ * Copyright (C) 2022 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -7,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -25,22 +27,45 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
-/*---------------------------------------------------------------------------*/
-#if CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_OPENMOTE_CC2538 || \
-    CONTIKI_TARGET_ZOUL
-#define COFFEE_CONF_SIZE              (CC2538_DEV_FLASH_SIZE / 2)
-#define COFFEE_CONF_MICRO_LOGS        1
-#define COFFEE_CONF_APPEND_ONLY       0
-#endif /* CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL */
 
-#if CONTIKI_TARGET_GECKO
-#define COFFEE_CONF_SIZE              (FLASH_SIZE / 2)
-#define COFFEE_CONF_MICRO_LOGS        1
-#define COFFEE_CONF_APPEND_ONLY       0
-#endif /* CONTIKI_TARGET_GECKO */
-
-#endif /* PROJECT_CONF_H_ */
+/**
+ * \addtogroup gecko
+ * @{
+ *
+ * \addtogroup gecko-os OS drivers
+ * @{
+ *
+ * \addtogroup gecko-dbg Debug driver
+ * @{
+ *
+ * \file
+ *         Debug driver for the gecko.
+ * \author
+ *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *
+ */
 /*---------------------------------------------------------------------------*/
+#include "contiki.h"
+
+#include "uart-arch.h"
+/*---------------------------------------------------------------------------*/
+unsigned int
+dbg_send_bytes(const unsigned char *s, unsigned int len)
+{
+  uart_write((unsigned char *)s, len);
+
+  return len;
+}
+/*---------------------------------------------------------------------------*/
+int
+dbg_putchar(int c)
+{
+  uart_write((unsigned char *)&c, sizeof(char));
+  return c;
+}
+/*---------------------------------------------------------------------------*/
+/**
+ * @}
+ * @}
+ * @}
+ */
