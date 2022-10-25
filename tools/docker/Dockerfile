@@ -9,6 +9,7 @@ USER root
 # build-essential: development tools.
 # gdb: development tools.
 # git: development tools.
+# git-lfs: development tools (used by Gecko SDK).
 # iputils-ping: used by regression tests.
 # less: convenience tool.
 # lib32z1: 32-bit libz, probably used by some old 32-bit binary.
@@ -33,6 +34,7 @@ RUN apt-get -qq update && \
     build-essential \
     gdb \
     git \
+    git-lfs \
     iputils-ping \
     less \
     lib32z1 \
