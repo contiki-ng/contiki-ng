@@ -74,5 +74,15 @@
 #define GPIO_HAL_CONF_ARCH_SW_TOGGLE         1
 #define GPIO_HAL_CONF_PORT_PIN_NUMBERING     0
 /*---------------------------------------------------------------------------*/
+/**
+ * \name rtimer
+ *
+ * @{
+ */
+#ifndef RTIMER_CONF_GUARD_TIME
+#define RTIMER_CONF_GUARD_TIME (7)
+#endif
+/** @} */
+/*---------------------------------------------------------------------------*/
 #endif /* CC2538_DEF_H_ */
 /*---------------------------------------------------------------------------*/
