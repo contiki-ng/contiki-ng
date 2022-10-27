@@ -38,6 +38,9 @@ In order to compile need:
 * Simplicity Commander for programming
   * An article can be found here: [Simplicity Commander](https://community.silabs.com/s/article/simplicity-commander?language=en_US)
 
+* Git LFS
+  * The Gecko SDK includes some pre-compiled libraries, [Rail Libary](https://docs.silabs.com/rail/latest/api-index), needed for the radio driver. These libraries are checked in using Git LFS to improve the checkout performance.
+  
 ## Getting Started
 Once all tools are installed it is recommended to start by compiling 
 and flashing `examples/hello-world` application. This allows to verify 
@@ -88,4 +91,6 @@ The Gecko SDK and auto generated files are licensed on a separate terms.
 
 ## Resources
 * Gecko SDK (https://github.com/SiliconLabs/gecko_sdk)
+* Rail Library (https://docs.silabs.com/rail/latest/api-index)
+* Git LFS (https://github.com/git-lfs/git-lfs)
 * JLink Tools (https://www.segger.com/)
