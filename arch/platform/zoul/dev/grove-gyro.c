@@ -66,7 +66,7 @@ grove_gyro_values_t gyro_values;
 /*---------------------------------------------------------------------------*/
 void (*grove_gyro_int_callback)(uint8_t value);
 /*---------------------------------------------------------------------------*/
-static uint16_t
+static int
 grove_gyro_read_reg(uint8_t reg, uint8_t *buf, uint8_t num)
 {
   if((buf == NULL) || (num <= 0)) {
