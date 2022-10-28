@@ -8,7 +8,7 @@ This page shows you how to create a virtual machine image provisioned with all t
 * Install Vagrant from [www.vagrantup.com/downloads](https://www.vagrantup.com/downloads.html)
 * Get the Contiki-NG repository
 ```bash
-$ sudo apt-get install git
+$ sudo apt-get install git git-lfs
 $ git clone https://github.com/contiki-ng/contiki-ng.git
 ```
 * Initialize Vagrant image

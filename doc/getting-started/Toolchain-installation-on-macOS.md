@@ -20,7 +20,7 @@ $ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/inst
 Using homebrew, install a bunch of helper tools, such as git, srecord, doxygen (to build the API documentation), mosquitto (to test Contiki-NG's MQTT functionality), tuntap (for tunslip and to run native examples with networking), rlwrap (for shell history), python (python 3 for running scripts and pip).
 
 ```bash
-$ brew install git srecord doxygen uncrustify ant mosquitto wget libmagic rlwrap python
+$ brew install git git-lfs srecord doxygen uncrustify ant mosquitto wget libmagic rlwrap python
 $ brew tap caskroom/cask
 $ brew cask install tuntap
 ```
