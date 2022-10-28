@@ -10,7 +10,7 @@ build:
     python: "3.8"
   jobs:
     post_install:
-      - wget -nv https://www.doxygen.nl/files/doxygen-1.9.4.linux.bin.tar.gz
+      - wget -nv https://sourceforge.net/projects/doxygen/files/rel-1.9.4/doxygen-1.9.4.linux.bin.tar.gz/download -O doxygen-1.9.4.linux.bin.tar.gz
       - tar zxf doxygen-1.9.4.linux.bin.tar.gz doxygen-1.9.4/bin/doxygen --strip-components 2 --one-top-level=tools/doxygen
       - rm doxygen-1.9.4.linux.bin.tar.gz
 
