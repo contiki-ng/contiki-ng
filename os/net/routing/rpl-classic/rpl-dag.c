@@ -844,7 +844,11 @@ rpl_select_dag(rpl_instance_t *instance, rpl_parent_t *p)
       RPL_LOLLIPOP_INCREMENT(instance->dtsn_out);
     }
     /* The DAO parent set changed - schedule a DAO transmission. */
-    rpl_schedule_dao(instance);
+    /* If MOP=MOP0 we do not want downward routes*/
+    if (instance->mop != RPL_MOP_NO_DOWNWARD_ROUTES) {
+      rpl_schedule_dao(instance);
+    }
+    
     rpl_reset_dio_timer(instance);
     if(LOG_DBG_ENABLED) {
       rpl_print_neighbor_list();
