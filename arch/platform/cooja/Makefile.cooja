@@ -5,7 +5,7 @@
 ## The purpose of this file is to compile a shared library that
 ## can be loaded into the Java part of COOJA.
 
-EXPECTED_COOJA_VERSION = 2022052601
+EXPECTED_COOJA_VERSION = 2022071901
 
 ifndef CONTIKI
   $(error CONTIKI not defined!)
@@ -55,6 +55,7 @@ else
   CC = gcc
   CFLAGS += -fPIC -fcommon
   LDFLAGS += -shared -Wl,-zdefs -Wl,-Map=$(MAPFILE)
+  LDFLAGS += -Wl,-T$(CONTIKI_NG_RELOC_PLATFORM_DIR)/cooja/cooja.ld
 endif
 
 ifneq ($(HOST_OS),Darwin)
