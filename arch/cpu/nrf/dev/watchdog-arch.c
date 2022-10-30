@@ -69,8 +69,8 @@ wdt_event_handler(void)
 void
 watchdog_init(void)
 {
-  nrfx_err_t err_code;
-  err_code = nrfx_wdt_init(&wdt, NULL, &wdt_event_handler);
+  nrfx_wdt_config_t config = NRFX_WDT_DEFAULT_CONFIG;
+  nrfx_err_t err_code = nrfx_wdt_init(&wdt, &config, &wdt_event_handler);
 
   if(err_code != NRFX_SUCCESS) {
     return;
