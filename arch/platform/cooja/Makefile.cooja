@@ -53,8 +53,8 @@ ifeq ($(HOST_OS),Darwin)
 else
   JAVA_OS_NAME = linux
   CC = gcc
-  CFLAGS += -fPIC -fcommon
-  LDFLAGS += -shared -Wl,-zdefs -Wl,-Map=$(MAPFILE)
+  CFLAGS += -fPIC
+  LDFLAGS += -shared -Wl,-zdefs
   LDFLAGS += -Wl,-T$(CONTIKI_NG_RELOC_PLATFORM_DIR)/cooja/cooja.ld
 endif
 
@@ -106,10 +106,6 @@ ifeq ($(WERROR),1)
 CFLAGSNO += -Werror
 endif
 CFLAGS   += $(CFLAGSNO)
-
-# Set build/cooja/mtype<NNN>.map as mapfile for the final link. The rest
-# of the rule resides in Makefile.include.
-$(BUILD_DIR_BOARD)/%.$(TARGET): MAPFILE = $(LIBNAME:.cooja=.map)
 
 # This is mtype<NNN>.o which is built from mtype.c with
 # CLASSNAME passed from the environment by Cooja.
