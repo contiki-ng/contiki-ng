@@ -139,11 +139,7 @@ PROCESS_THREAD(er_example_observe_client, ev, data)
   PROCESS_BEGIN();
   
   coap_endpoint_parse(SERVER_EP, strlen(SERVER_EP), &server_ep);
-
   static struct etimer et;
-
-  /* store server address in server_ipaddr */
-  SERVER_NODE(server_ipaddr);
   /* init timer and button (if available) */
   etimer_set(&et, TOGGLE_INTERVAL * CLOCK_SECOND);
 #if PLATFORM_HAS_BUTTON
