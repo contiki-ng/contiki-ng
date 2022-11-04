@@ -47,11 +47,8 @@
 static void
 set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
 {
+  const uip_ipaddr_t *default_prefix = uip_ds6_default_prefix();
   static uip_ipaddr_t root_ipaddr;
-  const uip_ipaddr_t *default_prefix;
-  int i;
-
-  default_prefix = uip_ds6_default_prefix();
 
   /* Assign a unique local address (RFC4193,
      http://tools.ietf.org/html/rfc4193). */
@@ -60,20 +57,19 @@ set_global_address(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
   } else {
     memcpy(&root_ipaddr, prefix, 8);
   }
+
   if(iid == NULL) {
     uip_ds6_set_addr_iid(&root_ipaddr, &uip_lladdr);
   } else {
-    memcpy(((uint8_t*)&root_ipaddr) + 8, ((uint8_t*)iid) + 8, 8);
+    memcpy((uint8_t *)&root_ipaddr + 8, (uint8_t *)iid + 8, 8);
   }
 
   uip_ds6_addr_add(&root_ipaddr, 0, ADDR_AUTOCONF);
 
   if(LOG_DBG_ENABLED) {
-    uint8_t state;
-
     LOG_DBG("IPv6 addresses: \n");
-    for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-      state = uip_ds6_if.addr_list[i].state;
+    for(size_t i = 0; i < UIP_DS6_ADDR_NB; i++) {
+      uint8_t state = uip_ds6_if.addr_list[i].state;
       if(uip_ds6_if.addr_list[i].isused &&
          (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
         LOG_DBG("   - ");
@@ -98,15 +94,12 @@ rpl_dag_root_set_prefix(uip_ipaddr_t *prefix, uip_ipaddr_t *iid)
 int
 rpl_dag_root_start(void)
 {
-  struct uip_ds6_addr *root_if;
-  int i;
-  uint8_t state;
   uip_ipaddr_t *ipaddr = NULL;
 
   rpl_dag_root_set_prefix(NULL, NULL);
 
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
+  for(size_t i = 0; i < UIP_DS6_ADDR_NB; i++) {
+    uint8_t state = uip_ds6_if.addr_list[i].state;
     if(uip_ds6_if.addr_list[i].isused &&
        state == ADDR_PREFERRED &&
        !uip_is_addr_linklocal(&uip_ds6_if.addr_list[i].ipaddr)) {
@@ -114,55 +107,44 @@ rpl_dag_root_start(void)
     }
   }
 
-  if(ipaddr != NULL) {
-    root_if = uip_ds6_addr_lookup(ipaddr);
-    if(root_if != NULL) {
-      rpl_dag_t *dag;
-      uip_ipaddr_t prefix;
-
-      rpl_set_root(RPL_DEFAULT_INSTANCE, ipaddr);
-      dag = rpl_get_any_dag();
-
-      /* If there are routes in this dag, we remove them all as we are
-         from now on the new dag root and the old routes are wrong */
-      if(RPL_IS_STORING(dag->instance)) {
-        rpl_remove_routes(dag);
-      }
-      if(dag->instance != NULL && dag->instance->def_route != NULL) {
-        uip_ds6_defrt_rm(dag->instance->def_route);
-        dag->instance->def_route = NULL;
-      }
-
-      uip_ip6addr_copy(&prefix, ipaddr);
-      rpl_set_prefix(dag, &prefix, 64);
-      LOG_INFO("root_set_prefix: created a new RPL dag\n");
-      return 0;
-    } else {
-      LOG_ERR("root_set_prefix: failed to create a new RPL DAG\n");
-      return -1;
-    }
-  } else {
-    LOG_ERR("root_set_prefix_dag: failed to create a new RPL DAG, no preferred IP address found\n");
+  if(ipaddr == NULL) {
+    LOG_ERR("failed to create a DAG: no preferred IP address found\n");
     return -2;
   }
+
+  struct uip_ds6_addr *root_if = uip_ds6_addr_lookup(ipaddr);
+  if(root_if == NULL) {
+    LOG_ERR("failed to create a DAG: no root interface found\n");
+    return -1;
+  }
+
+  rpl_set_root(RPL_DEFAULT_INSTANCE, ipaddr);
+  rpl_dag_t *dag = rpl_get_any_dag();
+
+  /* If there are routes in this DAG, we remove them all as we are
+     from now on the new dag root and the old routes are wrong. */
+  if(RPL_IS_STORING(dag->instance)) {
+    rpl_remove_routes(dag);
+  }
+  if(dag->instance != NULL && dag->instance->def_route != NULL) {
+    uip_ds6_defrt_rm(dag->instance->def_route);
+    dag->instance->def_route = NULL;
+  }
+
+  uip_ipaddr_t prefix;
+  uip_ip6addr_copy(&prefix, ipaddr);
+  rpl_set_prefix(dag, &prefix, 64);
+
+  LOG_INFO("created a new RPL dag\n");
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 int
 rpl_dag_root_is_root(void)
 {
-  rpl_instance_t *instance;
+  rpl_instance_t *instance = rpl_get_default_instance();
 
-  instance = rpl_get_default_instance();
-
-  if(instance == NULL) {
-    return 0;
-  }
-
-  if(instance->current_dag &&
-     instance->current_dag->rank == ROOT_RANK(instance)) {
-    return 1;
-  }
-
-  return 0;
+  return instance && instance->current_dag &&
+    instance->current_dag->rank == ROOT_RANK(instance);
 }
 /*---------------------------------------------------------------------------*/
