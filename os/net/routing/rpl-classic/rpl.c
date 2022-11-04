@@ -25,8 +25,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
  */
 
 /**
@@ -81,10 +79,12 @@ rpl_set_mode(enum rpl_mode m)
      switching to. */
   if(m == RPL_MODE_MESH) {
 
-    /* If we switch to mesh mode, we should send out a DAO message to
-       inform our parent that we now are reachable. Before we do this,
-       we must set the mode variable, since DAOs will not be sent if
-       we are in feather mode. */
+    /*
+     * If we switch to mesh mode, we should send out a DAO message to
+     * inform our parent that we now are reachable. Before we do this,
+     * we must set the mode variable, since DAOs will not be sent if
+     * we are in feather mode.
+     */
     LOG_DBG("rpl_set_mode: switching to mesh mode\n");
     mode = m;
 
@@ -97,7 +97,8 @@ rpl_set_mode(enum rpl_mode m)
     if(default_instance != NULL) {
       LOG_INFO("rpl_set_mode: RPL sending DAO with zero lifetime\n");
       if(default_instance->current_dag != NULL) {
-        dao_output(default_instance->current_dag->preferred_parent, RPL_ZERO_LIFETIME);
+        dao_output(default_instance->current_dag->preferred_parent,
+		   RPL_ZERO_LIFETIME);
       }
       rpl_cancel_dao(default_instance);
     } else {
@@ -122,39 +123,45 @@ rpl_purge_routes(void)
   uip_mcast6_route_t *mcast_route;
 #endif
 
-  /* First pass, decrement lifetime */
+  /* First pass: decrement lifetime */
   r = uip_ds6_route_head();
 
   while(r != NULL) {
-    if(r->state.lifetime >= 1 && r->state.lifetime != RPL_ROUTE_INFINITE_LIFETIME) {
+    if(r->state.lifetime >= 1 &&
+       r->state.lifetime != RPL_ROUTE_INFINITE_LIFETIME) {
       /*
-       * If a route is at lifetime == 1, set it to 0, scheduling it for
-       * immediate removal below. This achieves the same as the original code,
-       * which would delete lifetime <= 1
+       * If a route is at lifetime == 1, set it to 0, scheduling it
+       * for immediate removal below. This achieves the same as the
+       * original code, which would delete routes with lifetime <= 1.
        */
       r->state.lifetime--;
     }
     r = uip_ds6_route_next(r);
   }
 
-  /* Second pass, remove dead routes */
+  /* Second pass: remove dead routes. */
   r = uip_ds6_route_head();
 
   while(r != NULL) {
     if(r->state.lifetime < 1) {
-      /* Routes with lifetime == 1 have only just been decremented from 2 to 1,
-       * thus we want to keep them. Hence < and not <= */
+      /*
+       * Routes with lifetime == 1 have only just been decremented
+       * from 2 to 1, thus we want to keep them. Hence we use <
+       * instead of <=.
+       */
       uip_ipaddr_copy(&prefix, &r->ipaddr);
       uip_ds6_route_rm(r);
       r = uip_ds6_route_head();
       LOG_INFO("No more routes to ");
       LOG_INFO_6ADDR(&prefix);
       dag = default_instance->current_dag;
-      /* Propagate this information with a No-Path DAO to preferred parent if we are not a RPL Root */
+      /* Propagate this information with a No-Path DAO to the
+	 preferred parent if we are not a RPL root. */
       if(dag->rank != ROOT_RANK(default_instance)) {
         LOG_INFO_(" -> generate No-Path DAO\n");
         dao_output_target(dag->preferred_parent, &prefix, RPL_ZERO_LIFETIME);
-        /* Don't schedule more than 1 No-Path DAO, let next iteration handle that */
+        /* Don't schedule more than one No-Path DAO, and let next
+	   iteration handle that. */
         return;
       }
       LOG_INFO_("\n");
@@ -241,7 +248,8 @@ rpl_add_route(rpl_dag_t *dag, uip_ipaddr_t *prefix, int prefix_len,
 
   rep->state.dag = dag;
   rep->state.lifetime = RPL_LIFETIME(dag->instance, dag->instance->default_lifetime);
-  /* always clear state flags for the no-path received when adding/refreshing */
+  /* Clear state flags for the no-path DAO received previously when
+     adding or refreshing routes. */
   RPL_ROUTE_CLEAR_NOPATH_RECEIVED(rep);
 
   LOG_INFO("Added a route to ");
@@ -268,8 +276,8 @@ rpl_link_callback(const linkaddr_t *addr, int status, int numtx)
     if(instance->used == 1 ) {
       parent = rpl_find_parent_any_dag(instance, &ipaddr);
       if(parent != NULL) {
-        /* If this is the neighbor we were probing urgently, mark urgent
-        probing as done */
+        /* If this is the neighbor we were probing urgently, mark
+        urgent probing as done. */
 #if RPL_WITH_PROBING
         if(instance->urgent_probing_target == parent) {
           instance->urgent_probing_target = NULL;
@@ -342,6 +350,7 @@ static void
 init(void)
 {
   uip_ipaddr_t rplmaddr;
+
   LOG_INFO("rpl-classic started\n");
   default_instance = NULL;
 
@@ -349,7 +358,7 @@ init(void)
   rpl_reset_periodic_timer();
   rpl_icmp6_register_handlers();
 
-  /* add rpl multicast address */
+  /* Add the RPL multicast address. */
   uip_create_linklocal_rplnodes_mcast(&rplmaddr);
   uip_ds6_maddr_add(&rplmaddr);
 
@@ -369,9 +378,9 @@ get_sr_node_ipaddr(uip_ipaddr_t *addr, const uip_sr_node_t *node)
     memcpy(addr, &((rpl_dag_t *)node->graph)->dag_id, 8);
     memcpy(((unsigned char *)addr) + 8, &node->link_identifier, 8);
     return 1;
-  } else {
-    return 0;
   }
+
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -396,7 +405,7 @@ static void
 drop_route(uip_ds6_route_t *route)
 {
   /* If we are the root of the network, trigger a global repair before
-  the route gets removed */
+     the route gets removed. */
   rpl_dag_t *dag;
   dag = (rpl_dag_t *)route->state.dag;
   if(dag != NULL && dag->instance != NULL) {
@@ -428,9 +437,9 @@ rpl_is_in_leaf_mode(void)
 {
   /*
    * Confusingly, most of the RPL code uses the `rpl_mode` variable
-   * ony to check whether the node is in mesh or feather mode,
-   * and makes decision about the leaf status based on the preprocessor flag.
-   * For consistency, do the same here.
+   * only to check whether the node is in mesh or feather mode, and
+   * makes decision about the leaf status based on the preprocessor
+   * flag. For consistency, do the same here.
    */
   return RPL_LEAF_ONLY ? 1 : 0;
 }

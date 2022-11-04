@@ -29,6 +29,11 @@
  *
  */
 
+/**
+ * \addtogroup uip
+ * @{
+ */
+
 #include "contiki.h"
 #include "contiki-net.h"
 
@@ -148,3 +153,5 @@ rpl_dag_root_is_root(void)
     instance->current_dag->rank == ROOT_RANK(instance);
 }
 /*---------------------------------------------------------------------------*/
+
+/** @}*/

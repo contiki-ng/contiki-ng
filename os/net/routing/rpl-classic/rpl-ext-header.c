@@ -25,8 +25,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
  */
 
 /**
@@ -90,10 +88,11 @@ rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
 
   if(rpl_opt->flags & RPL_HDR_OPT_FWD_ERR) {
     LOG_ERR("Forward error!\n");
-    /* We should try to repair it by removing the neighbor that caused
-         the packet to be forwareded in the first place. We drop any
-         routes that go through the neighbor that sent the packet to
-         us. */
+    /*
+     * We should try to repair it by removing the neighbor that caused
+     * the packet to be forwarded in the first place. We drop any
+     * routes that go through the neighbor that sent the packet to us.
+      */
     if(RPL_IS_STORING(instance)) {
       route = uip_ds6_route_lookup(&UIP_IP_BUF->destipaddr);
       if(route != NULL) {
@@ -101,9 +100,9 @@ rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
       }
     }
     RPL_STAT(rpl_stats.forward_errors++);
-    /* Trigger DAO retransmission */
+    /* Trigger DAO retransmission. */
     rpl_reset_dio_timer(instance);
-    /* drop the packet as it is not routable */
+    /* Drop the packet because it is not routable. */
     return 0;
   }
 
@@ -120,42 +119,48 @@ rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
   sender = nbr_table_get_from_lladdr(rpl_parents, packetbuf_addr(PACKETBUF_ADDR_SENDER));
 
   if(sender != NULL && (rpl_opt->flags & RPL_HDR_OPT_RANK_ERR)) {
-    /* A rank error was signalled, attempt to repair it by updating
-     * the sender's rank from ext header */
+    /* A rank error was signalled -- attempt to repair it by updating
+       the sender's rank from the ext header. */
     sender->rank = sender_rank;
     if(RPL_IS_NON_STORING(instance)) {
-      /* Select DAG and preferred parent only in non-storing mode. In storing mode,
-       * a parent switch would result in an immediate No-path DAO transmission, dropping
-       * current incoming packet. */
+      /*
+       * Select DAG and preferred parent only in non-storing mode. In
+       * storing mode, a parent switch would result in an immediate
+       * no-path DAO transmission, dropping the current incoming
+       * packet.
+       */
       rpl_select_dag(instance, sender);
     }
   }
 
   sender_closer = sender_rank < instance->current_dag->rank;
 
-  LOG_DBG("Packet going %s, sender closer %d (%d < %d)\n", down == 1 ? "down" : "up",
-   sender_closer,
-   sender_rank,
-   instance->current_dag->rank
-   );
+  LOG_DBG("Packet going %s, sender closer %d (%d < %d)\n",
+	  down == 1 ? "down" : "up",
+	  sender_closer,
+	  sender_rank,
+	  instance->current_dag->rank);
 
   if((down && !sender_closer) || (!down && sender_closer)) {
     LOG_WARN("Loop detected - senderrank: %d my-rank: %d sender_closer: %d\n",
            sender_rank, instance->current_dag->rank,
            sender_closer);
-    /* Attempt to repair the loop by sending a unicast DIO back to the sender
-     * so that it gets a fresh update of our rank. */
+    /* Attempt to repair the loop by sending a unicast DIO back to the
+       sender so that it gets a fresh update of our rank. */
     if(sender != NULL) {
       instance->unicast_dio_target = sender;
       rpl_schedule_unicast_dio_immediately(instance);
     }
+
     if(rpl_opt->flags & RPL_HDR_OPT_RANK_ERR) {
       RPL_STAT(rpl_stats.loop_errors++);
       LOG_ERR(" Rank error signalled in RPL option!\n");
-      /* Packet must be dropped and dio trickle timer reset, see RFC6550 - 11.2.2.2 */
+      /* Packet must be dropped and dio trickle timer reset, see
+	 RFC6550 - 11.2.2.2 */
       rpl_reset_dio_timer(instance);
       return 0;
     }
+
     LOG_WARN("Single error tolerated\n");
     RPL_STAT(rpl_stats.loop_warnings++);
     rpl_opt->flags |= RPL_HDR_OPT_RANK_ERR;
@@ -175,7 +180,7 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
   uip_sr_node_t *dest_node;
   uip_sr_node_t *root_node;
 
-  /* Look for routing ext header */
+  /* Look for the routing ext header. */
   rh_header = (struct uip_routing_hdr *)uipbuf_search_header(uip_buf, uip_len, UIP_PROTO_ROUTING);
 
   dag = rpl_get_dag(&UIP_IP_BUF->destipaddr);
@@ -185,10 +190,13 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
   if((rh_header != NULL && rh_header->routing_type == RPL_RH_TYPE_SRH) ||
      (dest_node != NULL && root_node != NULL &&
       dest_node->parent == root_node)) {
-    /* Routing header found or the packet destined for a direct child of the root.
-     * The next hop should be already copied as the IPv6 destination
-     * address, via rpl_ext_header_srh_update. We turn this address into a link-local to enable
-     * forwarding to next hop */
+    /*
+     * A routing header was found or the packet was destined for a
+     * direct child of the root. The next hop should already be copied
+     * as the IPv6 destination address, via
+     * rpl_ext_header_srh_update. We turn this address into a
+     * link-local address to enable forwarding to next hop.
+     */
     uip_ipaddr_copy(ipaddr, &UIP_IP_BUF->destipaddr);
     uip_create_linklocal_prefix(ipaddr);
     return 1;
@@ -208,7 +216,8 @@ rpl_ext_header_srh_update(void)
   struct uip_rpl_srh_hdr *srh_header;
 
   /* Look for routing ext header */
-  rh_header = (struct uip_routing_hdr *)uipbuf_search_header(uip_buf, uip_len, UIP_PROTO_ROUTING);
+  rh_header = (struct uip_routing_hdr *)uipbuf_search_header(uip_buf, uip_len,
+							     UIP_PROTO_ROUTING);
 
   if(rh_header != NULL && rh_header->routing_type == RPL_RH_TYPE_SRH) {
     /* SRH found, now look for next hop */
@@ -229,17 +238,18 @@ rpl_ext_header_srh_update(void)
     (void)path_len;
 
     LOG_DBG("read SRH, path len %u, segments left %u, Cmpri %u, Cmpre %u, ext len %u (padding %u)\n",
-        path_len, segments_left, cmpri, cmpre, ext_len, padding);
+	    path_len, segments_left, cmpri, cmpre, ext_len, padding);
 
     if(segments_left == 0) {
-      /* We are the final destination, do nothing */
+      /* We are the final destination, do nothing. */
     } else if(segments_left > path_len) {
       /* Discard the packet because of a parameter problem. */
       LOG_ERR("SRH with too many segments left (%u > %u)\n",
               segments_left, path_len);
       return 0;
     } else {
-      uint8_t i = path_len - segments_left; /* The index of the next address to be visited */
+      /* The index of the next address to be visited. */
+      uint8_t i = path_len - segments_left;
       uint8_t cmpr = segments_left == 1 ? cmpre : cmpri;
       ptrdiff_t rh_offset = (uint8_t *)rh_header - uip_buf;
       size_t addr_offset = RPL_RH_LEN + RPL_SRH_LEN + (i * (16 - cmpri));
@@ -251,13 +261,13 @@ rpl_ext_header_srh_update(void)
 
       uint8_t *addr_ptr = ((uint8_t *)rh_header) + addr_offset;
 
-      /* As per RFC6554: swap the IPv6 destination address and address[i] */
+      /* As per RFC6554: swap the IPv6 destination address and address[i]. */
 
-      /* First, copy the current IPv6 destination address */
+      /* First, copy the current IPv6 destination address. */
       uip_ipaddr_copy(&current_dest_addr, &UIP_IP_BUF->destipaddr);
-      /* Second, update the IPv6 destination address with addresses[i] */
+      /* Second, update the IPv6 destination address with addresses[i]. */
       memcpy(((uint8_t *)&UIP_IP_BUF->destipaddr) + cmpr, addr_ptr, 16 - cmpr);
-      /* Third, write current_dest_addr to addresses[i] */
+      /* Third, write current_dest_addr to addresses[i]. */
       memcpy(addr_ptr, ((uint8_t *)&current_dest_addr) + cmpr, 16 - cmpr);
 
       /* Update segments left field */
@@ -279,8 +289,7 @@ rpl_ext_header_srh_update(void)
 static int
 count_matching_bytes(const void *p1, const void *p2, size_t n)
 {
-  int i = 0;
-  for(i = 0; i < n; i++) {
+  for(size_t i = 0; i < n; i++) {
     if(((uint8_t *)p1)[i] != ((uint8_t *)p2)[i]) {
       return i;
     }
@@ -291,10 +300,10 @@ count_matching_bytes(const void *p1, const void *p2, size_t n)
 static int
 insert_srh_header(void)
 {
-  /* Implementation of RFC6554 */
+  /* Implementation of RFC6554. */
   uint8_t path_len;
   uint8_t ext_len;
-  uint8_t cmpri, cmpre; /* ComprI and ComprE fields of the RPL Source Routing Header */
+  uint8_t cmpri, cmpre; /* ComprI and ComprE fields of the RPL Source Routing Header. */
   uint8_t *hop_ptr;
   uint8_t padding;
   uip_sr_node_t *dest_node;
@@ -303,7 +312,7 @@ insert_srh_header(void)
   rpl_dag_t *dag;
   uip_ipaddr_t node_addr;
 
-  /* Always insest SRH as first extension header */
+  /* Always insert the SRH as the first extension header. */
   struct uip_routing_hdr *rh_hdr = (struct uip_routing_hdr *)UIP_IP_PAYLOAD(0);
   struct uip_rpl_srh_hdr *srh_hdr = (struct uip_rpl_srh_hdr *)(UIP_IP_PAYLOAD(0) + RPL_RH_LEN);
 
@@ -311,11 +320,11 @@ insert_srh_header(void)
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
   LOG_INFO_("\n");
 
-  /* Construct source route. We do not do this recursively to keep the runtime stack usage constant. */
+  /* Construct source route. We do not do this recursively to keep the
+     runtime stack usage constant. */
 
-  /* Get link of the destination and root */
+  /* Get link of the destination and root. */
   dag = rpl_get_dag(&UIP_IP_BUF->destipaddr);
-
   if(dag == NULL) {
     LOG_ERR("SRH DAG not found\n");
     return 0;
@@ -323,7 +332,7 @@ insert_srh_header(void)
 
   dest_node = uip_sr_get_node(dag, &UIP_IP_BUF->destipaddr);
   if(dest_node == NULL) {
-    /* The destination is not found, skip SRH insertion */
+    /* The destination was not found, skip SRH insertion. */
     return 1;
   }
 
@@ -338,10 +347,10 @@ insert_srh_header(void)
     return 0;
   }
 
-  /* Compute path length and compression factors (we use cmpri == cmpre) */
+  /* Compute path length and compression factors. (We use cmpri == cmpre.) */
   path_len = 0;
   node = dest_node->parent;
-  /* For simplicity, we use cmpri = cmpre */
+  /* For simplicity, we use cmpri = cmpre. */
   cmpri = 15;
   cmpre = 15;
 
@@ -365,7 +374,8 @@ insert_srh_header(void)
     path_len++;
   }
 
-  /* Extension header length: fixed headers + (n-1) * (16-ComprI) + (16-ComprE)*/
+  /* Extension header length:
+     fixed headers + (n - 1) * (16 - ComprI) + (16 - ComprE). */
   ext_len = RPL_RH_LEN + RPL_SRH_LEN
       + (path_len - 1) * (16 - cmpre)
       + (16 - cmpri);
@@ -376,34 +386,36 @@ insert_srh_header(void)
   LOG_DBG("SRH Path len: %u, ComprI %u, ComprE %u, ext len %u (padding %u)\n",
       path_len, cmpri, cmpre, ext_len, padding);
 
-  /* Check if there is enough space to store the extension header */
+  /* Check if there is enough space to store the extension header. */
   if(uip_len + ext_len > UIP_LINK_MTU) {
-    LOG_ERR("Packet too long: impossible to add source routing header (%u bytes)\n", ext_len);
+    LOG_ERR("Too long packet: impossible to add SRH (%u bytes)\n", ext_len);
     return 0;
   }
 
-  /* Move existing ext headers and payload ext_len further */
+  /* Move existing ext headers and payload ext_len further. */
   memmove(uip_buf + UIP_IPH_LEN + uip_ext_len + ext_len,
       uip_buf + UIP_IPH_LEN + uip_ext_len, uip_len - UIP_IPH_LEN);
   memset(uip_buf + UIP_IPH_LEN + uip_ext_len, 0, ext_len);
 
-  /* Insert source routing header (as first ext header) */
+  /* Insert source routing header (as first ext header). */
   rh_hdr->next = UIP_IP_BUF->proto;
   UIP_IP_BUF->proto = UIP_PROTO_ROUTING;
 
-  /* Initialize IPv6 Routing Header */
+  /* Initialize IPv6 Routing Header. */
   rh_hdr->len = (ext_len - 8) / 8;
   rh_hdr->routing_type = RPL_RH_TYPE_SRH;
   rh_hdr->seg_left = path_len;
 
-  /* Initialize RPL Source Routing Header */
+  /* Initialize RPL Source Routing Header. */
   srh_hdr->cmpr = (cmpri << 4) + cmpre;
   srh_hdr->pad = padding << 4;
 
-  /* Initialize addresses field (the actual source route).
-   * From last to first. */
+  /* Initialize the addresses field (the actual source route).
+     From last to first. */
   node = dest_node;
-  hop_ptr = ((uint8_t *)rh_hdr) + ext_len - padding; /* Pointer where to write the next hop compressed address */
+
+  /* Pointer where to write the next hop compressed address. */
+  hop_ptr = ((uint8_t *)rh_hdr) + ext_len - padding;
 
   while(node != NULL && node->parent != root_node) {
     NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, node);
@@ -414,11 +426,12 @@ insert_srh_header(void)
     node = node->parent;
   }
 
-  /* The next hop (i.e. node whose parent is the root) is placed as the current IPv6 destination */
+  /* The next hop (i.e. node whose parent is the root) is placed as
+     the current IPv6 destination. */
   NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, node);
   uip_ipaddr_copy(&UIP_IP_BUF->destipaddr, &node_addr);
 
-  /* Update the IPv6 length field */
+  /* Update the IPv6 length field. */
   uipbuf_add_ext_hdr(ext_len);
   uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
 
@@ -433,11 +446,13 @@ update_hbh_header(void)
   struct uip_hbho_hdr *hbh_hdr = (struct uip_hbho_hdr *)UIP_IP_PAYLOAD(0);
   struct uip_ext_hdr_opt_rpl *rpl_opt = (struct uip_ext_hdr_opt_rpl *)(UIP_IP_PAYLOAD(0) + 2);
 
-  if(UIP_IP_BUF->proto == UIP_PROTO_HBHO && rpl_opt->opt_type == UIP_EXT_HDR_OPT_RPL) {
-    if(hbh_hdr->len != ((RPL_HOP_BY_HOP_LEN - 8) / 8)
-        || rpl_opt->opt_len != RPL_HDR_OPT_LEN) {
+  if(UIP_IP_BUF->proto == UIP_PROTO_HBHO &&
+     rpl_opt->opt_type == UIP_EXT_HDR_OPT_RPL) {
+    if(hbh_hdr->len != ((RPL_HOP_BY_HOP_LEN - 8) / 8) ||
+       rpl_opt->opt_len != RPL_HDR_OPT_LEN) {
 
-      LOG_ERR("Hop-by-hop extension header has wrong size (%u)\n", rpl_opt->opt_len);
+      LOG_ERR("Hop-by-hop extension header has wrong size (%u)\n",
+	      rpl_opt->opt_len);
       return 0; /* Drop */
     }
 
@@ -448,36 +463,43 @@ update_hbh_header(void)
     }
 
     LOG_INFO("Updating RPL option\n");
-    /* Update sender rank and instance, will update flags next */
+    /* Update sender rank and instance, will update flags next. */
     rpl_opt->senderrank = UIP_HTONS(instance->current_dag->rank);
     rpl_opt->instance = instance->instance_id;
 
-    if(RPL_IS_STORING(instance)) { /* In non-storing mode, downwards traffic does not have the HBH option */
-      /* Check the direction of the down flag, as per Section 11.2.2.3,
-            which states that if a packet is going down it should in
-            general not go back up again. If this happens, a
-            RPL_HDR_OPT_FWD_ERR should be flagged. */
-      if((rpl_opt->flags & RPL_HDR_OPT_DOWN)) {
+    if(RPL_IS_STORING(instance)) {
+      /* In non-storing mode, downwards traffic does not have the HBH option. */
+
+      /*
+       * Check the direction of the down flag, as per Section
+       * 11.2.2.3, which states that if a packet is going down it
+       * should in general not go back up again. If this happens, a
+       * RPL_HDR_OPT_FWD_ERR should be flagged.
+       */
+      if(rpl_opt->flags & RPL_HDR_OPT_DOWN) {
         if(uip_ds6_route_lookup(&UIP_IP_BUF->destipaddr) == NULL) {
           rpl_opt->flags |= RPL_HDR_OPT_FWD_ERR;
           LOG_WARN("RPL forwarding error\n");
           /* We should send back the packet to the originating parent,
-                but it is not feasible yet, so we send a No-Path DAO instead */
+             but it is not feasible yet, so we send a No-Path DAO instead. */
           LOG_WARN("RPL generate No-Path DAO\n");
           parent = rpl_get_parent((uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER));
           if(parent != NULL) {
-            dao_output_target(parent, &UIP_IP_BUF->destipaddr, RPL_ZERO_LIFETIME);
+            dao_output_target(parent, &UIP_IP_BUF->destipaddr,
+			      RPL_ZERO_LIFETIME);
           }
-          /* Drop packet */
+          /* Drop packet. */
           return 0;
         }
       } else {
-        /* Set the down extension flag correctly as described in Section
-              11.2 of RFC6550. If the packet progresses along a DAO route,
-              the down flag should be set. */
+        /*
+         * Set the down extension flag correctly as described in
+         * Section 11.2 of RFC6550. If the packet progresses along a
+         * DAO route, the down flag should be set.
+         */
         if(uip_ds6_route_lookup(&UIP_IP_BUF->destipaddr) == NULL) {
-          /* No route was found, so this packet will go towards the RPL
-                root. If so, we should not set the down flag. */
+          /* No route was found, so this packet will go towards the
+             RPL root. If so, we should not set the down flag. */
           rpl_opt->flags &= ~RPL_HDR_OPT_DOWN;
           LOG_DBG("RPL option going up\n");
         } else {
@@ -498,22 +520,23 @@ insert_hbh_header(const rpl_instance_t *instance)
   struct uip_hbho_hdr *hbh_hdr = (struct uip_hbho_hdr *)UIP_IP_PAYLOAD(0);
   struct uip_ext_hdr_opt_rpl *rpl_opt = (struct uip_ext_hdr_opt_rpl *)(UIP_IP_PAYLOAD(2));
 
-  /* Insert hop-by-hop header */
+  /* Insert hop-by-hop header. */
   LOG_DBG("Creating hop-by-hop option\n");
   if(uip_len + RPL_HOP_BY_HOP_LEN > UIP_LINK_MTU) {
-    LOG_ERR("Packet too long: impossible to add hop-by-hop option\n");
+    LOG_ERR("Too long packet: impossible to add hop-by-hop option\n");
     return 0;
   }
 
-  /* Move existing ext headers and payload RPL_HOP_BY_HOP_LEN further */
-  memmove(UIP_IP_PAYLOAD(RPL_HOP_BY_HOP_LEN), UIP_IP_PAYLOAD(0), uip_len - UIP_IPH_LEN);
+  /* Move existing ext headers and payload RPL_HOP_BY_HOP_LEN further. */
+  memmove(UIP_IP_PAYLOAD(RPL_HOP_BY_HOP_LEN), UIP_IP_PAYLOAD(0),
+	  uip_len - UIP_IPH_LEN);
   memset(UIP_IP_PAYLOAD(0), 0, RPL_HOP_BY_HOP_LEN);
 
-  /* Insert HBH header (as first ext header) */
+  /* Insert the HBH header as the first ext header. */
   hbh_hdr->next = UIP_IP_BUF->proto;
   UIP_IP_BUF->proto = UIP_PROTO_HBHO;
 
-  /* Initialize HBH option */
+  /* Initialize the HBH option. */
   hbh_hdr->len = (RPL_HOP_BY_HOP_LEN - 8) / 8;
   rpl_opt->opt_type = UIP_EXT_HDR_OPT_RPL;
   rpl_opt->opt_len = RPL_HDR_OPT_LEN;
@@ -524,7 +547,7 @@ insert_hbh_header(const rpl_instance_t *instance)
   uipbuf_add_ext_hdr(RPL_HOP_BY_HOP_LEN);
   uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
 
-  /* Update header before returning */
+  /* Update the header before returning. */
   return update_hbh_header();
 }
 /*---------------------------------------------------------------------------*/
@@ -542,6 +565,7 @@ rpl_ext_header_remove(void)
   if(next_header == NULL) {
     return true;
   }
+
   ext_ptr = (struct uip_ext_hdr *)next_header;
   prev_proto_ptr = &UIP_IP_BUF->proto;
 
@@ -556,7 +580,7 @@ rpl_ext_header_remove(void)
         return false;
       }
 
-      /* Update length field and rest of packet to the "left" */
+      /* Update length field and rest of packet to the "left". */
       uipbuf_set_len_field(UIP_IP_BUF, uip_len - UIP_IPH_LEN);
       if(uip_len <= next_header - uip_buf) {
         /* No more data to move. */
@@ -565,10 +589,10 @@ rpl_ext_header_remove(void)
       memmove(next_header, next_header + ext_len,
               uip_len - (next_header - uip_buf));
 
-      /* Update loop variables */
+      /* Update loop variables. */
       protocol = *prev_proto_ptr;
     } else {
-      /* move to the ext hdr */
+      /* Move to the ext hdr. */
       next_header = uipbuf_get_next_header(next_header,
                                            uip_len - (next_header - uip_buf),
                                            &protocol, false);
@@ -587,14 +611,15 @@ rpl_ext_header_remove(void)
 int
 rpl_ext_header_update(void)
 {
-  if(default_instance == NULL || default_instance->current_dag == NULL
-      || uip_is_addr_linklocal(&UIP_IP_BUF->destipaddr) || uip_is_addr_mcast(&UIP_IP_BUF->destipaddr)) {
+  if(default_instance == NULL || default_instance->current_dag == NULL ||
+     uip_is_addr_linklocal(&UIP_IP_BUF->destipaddr) ||
+     uip_is_addr_mcast(&UIP_IP_BUF->destipaddr)) {
     return 1;
   }
 
   if(default_instance->current_dag->rank == ROOT_RANK(default_instance)) {
-    /* At the root, remove headers if any, and insert SRH or HBH
-    * (SRH is inserted only if the destination is in the DODAG) */
+    /* At the root, remove headers if any, and insert SRH or HBH.
+       (SRH is inserted only if the destination is in the DODAG.) */
     rpl_ext_header_remove();
     if(rpl_get_dag(&UIP_IP_BUF->destipaddr) != NULL) {
       /* dest is in a DODAG; the packet is going down. */
@@ -610,11 +635,14 @@ rpl_ext_header_update(void)
   } else {
     if(uip_ds6_is_my_addr(&UIP_IP_BUF->srcipaddr)
         && UIP_IP_BUF->ttl == uip_ds6_if.cur_hop_limit) {
-      /* Insert HBH option at source. Checking the address is not sufficient because
-       * in non-storing mode, a packet may go up and then down the same path again */
+      /*
+       * Insert a HBH option at the source. Checking the address is
+       * insufficient because in non-storing mode, a packet may go up
+       * and then down the same path again.
+       */
       return insert_hbh_header(default_instance);
     } else {
-      /* Update HBH option at forwarders */
+      /* Update HBH option at forwarders. */
       return update_hbh_header();
     }
   }
