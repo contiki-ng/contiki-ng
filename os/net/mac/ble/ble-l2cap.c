@@ -378,11 +378,16 @@ input_l2cap_credit(uint8_t *data)
   uint16_t credits;
   l2cap_channel_t *channel = get_channel_for_addr(packetbuf_addr(PACKETBUF_ADDR_SENDER));
 
+  if(channel == NULL) {
+    LOG_WARN("input_l2cap_credit: no channel found for sender address\n");
+    return;
+  }
+
 /*  uint8_t  identifier = data[0]; */
   memcpy(&len, &data[1], 2);
 
   if(len != 4) {
-    LOG_WARN("process_l2cap_credit: invalid len: %d\n", len);
+    LOG_WARN("input_l2cap_credit: invalid len: %d\n", len);
     return;
   }
 
