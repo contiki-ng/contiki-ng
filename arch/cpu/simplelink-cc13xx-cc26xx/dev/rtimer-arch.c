@@ -72,7 +72,7 @@ rtimer_clock_stub(uintptr_t unused)
  * \brief  The Man-in-the-Middle ISR hook for the HWI dispatch ISR. This
  *         will be the ISR dispatched when INT_AON_RTC_COMB is triggered,
  *         and will either dispatch the interrupt to the rtimer driver or
- *         the HWI driver, depening on which event triggered the interrupt.
+ *         the HWI driver, depending on which event triggered the interrupt.
  */
 static void
 rtimer_isr_hook(void)
@@ -150,7 +150,7 @@ rtimer_arch_init(void)
   IntRegister(INT_AON_RTC_COMB, rtimer_isr_hook);
   IntPrioritySet(INT_AON_RTC_COMB, INT_PRI_LEVEL7);
 
-  AONEventMcuWakeUpSet(AON_EVENT_MCU_WU1, AON_EVENT_RTC_CH1);
+  AONEventMcuWakeUpSet(AON_EVENT_MCU_WU3, AON_EVENT_RTC_CH1);
   AONRTCCombinedEventConfig(HWIP_RTC_CH | RTIMER_RTC_CH);
 
   HwiP_restore(key);

@@ -53,9 +53,6 @@
 
 #include <ti/drivers/pin/PINCC26XX.h>
 /*---------------------------------------------------------------------------*/
-#define gpio_hal_arch_pin_set_input(port, pin)  PINCC26XX_setOutputEnable(pin, false)
-#define gpio_hal_arch_pin_set_output(port, pin) PINCC26XX_setOutputEnable(pin, true)
-
 #define gpio_hal_arch_set_pin(port, pin)        PINCC26XX_setOutputValue(pin, 1)
 #define gpio_hal_arch_clear_pin(port, pin)      PINCC26XX_setOutputValue(pin, 0)
 #define gpio_hal_arch_toggle_pin(port, pin)     PINCC26XX_setOutputValue(pin, \
