@@ -91,11 +91,16 @@ void
 ip64_dns64_6to4(const uint8_t *ipv6data, int ipv6datalen,
                 uint8_t *ipv4data, int ipv4datalen)
 {
-  int i, j;
+  int i;
   int qlen;
   uint8_t *qdata;
   uint8_t *q;
   struct dns_hdr *hdr;
+
+  if(ipv4datalen < sizeof(struct dns_hdr)) {
+    LOG_WARN("ip64_dns64_6to4: packet ended while parsing header\n");
+    return;
+  }
 
   hdr = (struct dns_hdr *)ipv4data;
   LOG_DBG("dns64_6to4 id: %02x%02x\n", hdr->id[0], hdr->id[1]);
@@ -115,17 +120,20 @@ ip64_dns64_6to4(const uint8_t *ipv6data, int ipv6datalen,
   qdata = ipv4data + sizeof(struct dns_hdr);
   for(i = 0; i < ((hdr->numquestions[0] << 8) + hdr->numquestions[1]); i++) {
     do {
+      if(qdata >= ipv4data + ipv4datalen) {
+        LOG_WARN("ip64_dns64_6to4: packet ended while parsing\n");
+        return;
+      }
       qlen = *qdata;
       qdata++;
-      for(j = 0; j < qlen; j++) {
-        qdata++;
-        if(qdata > ipv4data + ipv4datalen) {
-          LOG_WARN("dns64_6to4: Packet ended while parsing\n");
-          return;
-        }
-      }
+      qdata += qlen;
     } while(qlen != 0);
     q = qdata;
+
+    if(qdata + DNS_QUESTION_SIZE > ipv4data + ipv4datalen) {
+      LOG_WARN("ip64_dns64_6to4: packet ended while parsing\n");
+      return;
+    }
     if(q[DNS_QUESTION_CLASS0] == 0 && q[DNS_QUESTION_CLASS1] == DNS_CLASS_IN &&
        q[DNS_QUESTION_TYPE0] == 0 && q[DNS_QUESTION_TYPE1] == DNS_TYPE_AAAA) {
       q[DNS_QUESTION_TYPE1] = DNS_TYPE_A;
