@@ -153,12 +153,12 @@ COPY --chown=user:user files/bash_aliases ${HOME}/.bash_aliases
 # Remove the PDF manual and html directory to reduce image size.
 # Use the most recent version of ccache to ensure it supports the compiler
 # versions in the docker image.
-RUN wget -nv https://www.doxygen.nl/files/doxygen-1.9.4.linux.bin.tar.gz && \
+RUN wget -nv https://sourceforge.net/projects/doxygen/files/rel-1.9.4/doxygen-1.9.4.linux.bin.tar.gz/download -O doxygen-1.9.4.linux.bin.tar.gz && \
     tar zxf doxygen-1.9.4.linux.bin.tar.gz -C ${HOME}/.local && \
     rm -rf ${HOME}/.local/doxygen-1.9.4/html ${HOME}/.local/doxygen-1.9.4/*.pdf doxygen-1.9.4.linux.bin.tar.gz && \
     (cd ${HOME}/.local/bin && ln -s ../doxygen-1.9.4/bin/doxygen .) && \
-    wget -nv https://github.com/ccache/ccache/releases/download/v4.7/ccache-4.7-linux-x86_64.tar.xz && \
-    tar xf ccache-4.7-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.7-linux-x86_64/ccache && \
+    wget -nv https://github.com/ccache/ccache/releases/download/v4.7.2/ccache-4.7.2-linux-x86_64.tar.xz && \
+    tar xf ccache-4.7.2-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.7.2-linux-x86_64/ccache && \
     rm ccache-*-linux-x86_64.tar.xz
 
 # By default, we use a Docker bind mount to share the repo with the host,
