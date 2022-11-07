@@ -195,6 +195,7 @@ ip64_dns64_4to6(const uint8_t *ipv4data, int ipv4datalen,
       LOG_WARN("ip64_dns64_6to4: packet ended while parsing\n");
       return ipv6datalen;
     }
+    /* TODO (functionality): Should replace q[DNS_QUESTION_TYPE1] == DNS_TYPE_A ? */
     if(q[DNS_QUESTION_CLASS0] == 0 && q[DNS_QUESTION_CLASS1] == DNS_CLASS_IN &&
        q[DNS_QUESTION_TYPE0] == 0 && q[DNS_QUESTION_TYPE1] == DNS_TYPE_AAAA) {
       q[DNS_QUESTION_TYPE1] = DNS_TYPE_AAAA;
@@ -236,6 +237,7 @@ ip64_dns64_4to6(const uint8_t *ipv4data, int ipv4datalen,
           return ipv6datalen;
         }
         n = *adata;
+        /* TODO (functionality): should copy length field n to acopy? */
         adata++;
         acopy++;
 
