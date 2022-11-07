@@ -71,7 +71,7 @@
  * in added churn. In networks with high congestion or poor links,
  * this can lead to poor connectivity due to more parent switches,
  * loops, Trickle timer resets, etc.
-  */
+ */
 #ifdef RPL_MRHOF_CONF_SQUARED_ETX
 #define RPL_MRHOF_SQUARED_ETX RPL_MRHOF_CONF_SQUARED_ETX
 #else /* RPL_MRHOF_CONF_SQUARED_ETX */
@@ -93,7 +93,7 @@
 #else /* !RPL_MRHOF_SQUARED_ETX */
 #define MAX_LINK_METRIC     2048 /* Eq ETX of 4 */
 #define PARENT_SWITCH_THRESHOLD 160 /* Eq ETX of 1.25 (results in a churn comparable
-to the threshold of 96 in the non-squared case) */
+                                       to the threshold of 96 in the non-squared case) */
 #endif /* !RPL_MRHOF_SQUARED_ETX */
 
 /* Reject parents that have a higher path cost than the following. */
@@ -134,7 +134,7 @@ parent_link_metric(rpl_parent_t *p)
     uint32_t squared_etx = ((uint32_t)stats->etx * stats->etx) / LINK_STATS_ETX_DIVISOR;
     return (uint16_t)MIN(squared_etx, 0xffff);
 #else /* RPL_MRHOF_SQUARED_ETX */
-  return stats->etx;
+    return stats->etx;
 #endif /* RPL_MRHOF_SQUARED_ETX */
   }
   return 0xffff;
@@ -152,15 +152,15 @@ parent_path_cost(rpl_parent_t *p)
 #if RPL_WITH_MC
   /* Handle the different MC types */
   switch(p->dag->instance->mc.type) {
-    case RPL_DAG_MC_ETX:
-      base = p->mc.obj.etx;
-      break;
-    case RPL_DAG_MC_ENERGY:
-      base = p->mc.obj.energy.energy_est << 8;
-      break;
-    default:
-      base = p->rank;
-      break;
+  case RPL_DAG_MC_ETX:
+    base = p->mc.obj.etx;
+    break;
+  case RPL_DAG_MC_ENERGY:
+    base = p->mc.obj.energy.energy_est << 8;
+    break;
+  default:
+    base = p->rank;
+    break;
   }
 #else /* RPL_WITH_MC */
   base = p->rank;
@@ -286,27 +286,27 @@ update_metric_container(rpl_instance_t *instance)
 
   /* Handle the different MC types. */
   switch(instance->mc.type) {
-    case RPL_DAG_MC_NONE:
-      break;
-    case RPL_DAG_MC_ETX:
-      instance->mc.length = sizeof(instance->mc.obj.etx);
-      instance->mc.obj.etx = path_cost;
-      break;
-    case RPL_DAG_MC_ENERGY:
-      instance->mc.length = sizeof(instance->mc.obj.energy);
-      if(dag->rank == ROOT_RANK(instance)) {
-        type = RPL_DAG_MC_ENERGY_TYPE_MAINS;
-      } else {
-        type = RPL_DAG_MC_ENERGY_TYPE_BATTERY;
-      }
-      instance->mc.obj.energy.flags = type << RPL_DAG_MC_ENERGY_TYPE;
-      /* Energy_est is only one byte -- use the least significant byte
-	 of the path metric. */
-      instance->mc.obj.energy.energy_est = path_cost >> 8;
-      break;
-    default:
-      LOG_WARN("MRHOF, non-supported MC %u\n", instance->mc.type);
-      break;
+  case RPL_DAG_MC_NONE:
+    break;
+  case RPL_DAG_MC_ETX:
+    instance->mc.length = sizeof(instance->mc.obj.etx);
+    instance->mc.obj.etx = path_cost;
+    break;
+  case RPL_DAG_MC_ENERGY:
+    instance->mc.length = sizeof(instance->mc.obj.energy);
+    if(dag->rank == ROOT_RANK(instance)) {
+      type = RPL_DAG_MC_ENERGY_TYPE_MAINS;
+    } else {
+      type = RPL_DAG_MC_ENERGY_TYPE_BATTERY;
+    }
+    instance->mc.obj.energy.flags = type << RPL_DAG_MC_ENERGY_TYPE;
+    /* Energy_est is only one byte -- use the least significant byte
+       of the path metric. */
+    instance->mc.obj.energy.energy_est = path_cost >> 8;
+    break;
+  default:
+    LOG_WARN("MRHOF, non-supported MC %u\n", instance->mc.type);
+    break;
   }
 }
 #endif /* RPL_WITH_MC */

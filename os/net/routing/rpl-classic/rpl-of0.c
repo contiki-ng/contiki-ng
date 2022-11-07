@@ -152,7 +152,7 @@ static int
 parent_is_acceptable(rpl_parent_t *p)
 {
   return STEP_OF_RANK(p) >= MIN_STEP_OF_RANK
-      && STEP_OF_RANK(p) <= MAX_STEP_OF_RANK;
+         && STEP_OF_RANK(p) <= MAX_STEP_OF_RANK;
 }
 /*---------------------------------------------------------------------------*/
 static int

@@ -150,7 +150,7 @@ rpl_dag_root_is_root(void)
   rpl_instance_t *instance = rpl_get_default_instance();
 
   return instance && instance->current_dag &&
-    instance->current_dag->rank == ROOT_RANK(instance);
+         instance->current_dag->rank == ROOT_RANK(instance);
 }
 /*---------------------------------------------------------------------------*/
 

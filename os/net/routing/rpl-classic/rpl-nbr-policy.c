@@ -29,22 +29,21 @@
  *
  */
 
- /**
-  * \addtogroup uip
-  * @{
-  */
+/**
+ * \addtogroup uip
+ * @{
+ */
 
-
- /**
-  * \file
-  *
-  * Default RPL NBR policy
-  * decides when to add a new discovered node to the nbr table from RPL.
-  *
-  * \author Joakim Eriksson <joakime@sics.se>
-  * Contributors: Niclas Finne <nfi@sics.se>, Oriol Piñol <oriol@yanzi.se>,
-  *
-  */
+/**
+ * \file
+ *
+ * Default RPL NBR policy
+ * decides when to add a new discovered node to the nbr table from RPL.
+ *
+ * \author Joakim Eriksson <joakime@sics.se>
+ * Contributors: Niclas Finne <nfi@sics.se>, Oriol Piñol <oriol@yanzi.se>,
+ *
+ */
 
 #include "net/routing/rpl-classic/rpl-nbr-policy.h"
 #include "net/routing/rpl-classic/rpl-private.h"
@@ -66,7 +65,7 @@ get_rank(const linkaddr_t *lladdr)
   } else {
     rpl_instance_t *instance = rpl_get_default_instance();
     return instance != NULL ?
-      instance->of->rank_via_parent(p) : RPL_INFINITE_RANK;
+           instance->of->rank_via_parent(p) : RPL_INFINITE_RANK;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -100,7 +99,7 @@ can_accept_new_parent(const linkaddr_t *candidate_for_removal, rpl_dio_t *dio)
 /*---------------------------------------------------------------------------*/
 bool
 rpl_nbr_can_accept_new(const linkaddr_t *new,
-		       const linkaddr_t *candidate_for_removal,
+                       const linkaddr_t *candidate_for_removal,
                        nbr_table_reason_t reason, const void *data)
 {
   bool accept;
