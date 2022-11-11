@@ -682,6 +682,9 @@ rs_input(void)
           uip_ds6_nbr_rm(nbr);
           nbr = uip_ds6_nbr_add(&UIP_IP_BUF->srcipaddr, &lladdr_aligned,
                                 0, NBR_STALE, NBR_TABLE_REASON_IPV6_ND, NULL);
+          if(nbr == NULL) {
+            goto discard;
+          }
           nbr->reachable = nbr_data.reachable;
           nbr->sendns = nbr_data.sendns;
           nbr->nscount = nbr_data.nscount;
