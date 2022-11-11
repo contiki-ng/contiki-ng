@@ -139,7 +139,7 @@ jobs:
           tools/cooja/build
           tools/cooja/.gradle
           tools/cooja/.gradle_home
-        key: ${{ runner.os }}-cooja-gradle-deps-${{ env.COOJA_COMMIT }}
+        key: cooja-${{ runner.os }}-gradle-deps-${{ env.COOJA_COMMIT }}
 
     # Fire up the container and run corresponding tests
     - name: Execute tests
