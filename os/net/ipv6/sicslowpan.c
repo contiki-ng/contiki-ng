@@ -1733,18 +1733,21 @@ output(const linkaddr_t *localdest)
     /* sum of all IPv6 payload that goes to non-first and non-last fragments */
     int middle_fragn_total_payload = MAX(total_payload - frag1_payload - last_fragn_max_payload, 0);
     /* Ceiling of: 2 + middle_fragn_total_payload / fragn_max_payload */
-    int fragment_count = 2;
+    unsigned fragment_count = 2;
     if(middle_fragn_total_payload > 0) {
       fragment_count += 1 + (middle_fragn_total_payload - 1) / fragn_max_payload;
     }
 
-    int freebuf = queuebuf_numfree() - 1;
-    LOG_INFO("output: fragmentation needed, fragments: %u, free queuebufs: %u\n",
-      fragment_count, freebuf);
+    size_t free_bufs = queuebuf_numfree();
+    LOG_INFO("output: fragmentation needed. fragments: %u, free queuebufs: %zu\n",
+      fragment_count, free_bufs);
 
-    if(freebuf < fragment_count) {
-      LOG_WARN("output: dropping packet, not enough free bufs (needed: %u, free: %u)\n",
-        fragment_count, freebuf);
+    /* Keep one queuebuf in reserve for certain protocol implementations
+       at other layers. */
+    size_t needed_bufs = fragment_count + 1;
+    if(free_bufs < needed_bufs) {
+      LOG_WARN("output: dropping packet, not enough free bufs (needed: %zu, free: %zu)\n",
+        needed_bufs, free_bufs);
       return 0;
     }
 
