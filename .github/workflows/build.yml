@@ -115,8 +115,8 @@ jobs:
     # Install in /usr/bin so the ccache action gets the expected environment.
     - name: install ccache
       run: |
-        wget -nv https://github.com/ccache/ccache/releases/download/v4.7.2/ccache-4.7.2-linux-x86_64.tar.xz
-        sudo tar xf ccache-4.7.2-linux-x86_64.tar.xz -C /usr/bin --strip-components=1 --no-same-owner ccache-4.7.2-linux-x86_64/ccache
+        wget -nv https://github.com/ccache/ccache/releases/download/v4.7.3/ccache-4.7.3-linux-x86_64.tar.xz
+        sudo tar xf ccache-4.7.3-linux-x86_64.tar.xz -C /usr/bin --strip-components=1 --no-same-owner ccache-4.7.3-linux-x86_64/ccache
         rm -f ccache-*-linux-x86_64.tar.xz
 
     # Set the max-size according to the output from "ccache -v -s" after
