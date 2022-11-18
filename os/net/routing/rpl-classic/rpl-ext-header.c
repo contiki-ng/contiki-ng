@@ -72,11 +72,11 @@ rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
   struct uip_ext_hdr_opt_rpl *rpl_opt = (struct uip_ext_hdr_opt_rpl *)(ext_buf + opt_offset);
 
   if(hbh_hdr->len != ((RPL_HOP_BY_HOP_LEN - 8) / 8)
-      || rpl_opt->opt_type != UIP_EXT_HDR_OPT_RPL
-      || rpl_opt->opt_len != RPL_HDR_OPT_LEN) {
+     || rpl_opt->opt_type != UIP_EXT_HDR_OPT_RPL
+     || rpl_opt->opt_len != RPL_HDR_OPT_LEN) {
 
     LOG_ERR("Hop-by-hop extension header has wrong size or type (%u %u %u)\n",
-        hbh_hdr->len, rpl_opt->opt_type, rpl_opt->opt_len);
+            hbh_hdr->len, rpl_opt->opt_type, rpl_opt->opt_len);
     return 0; /* Drop */
   }
 
@@ -92,7 +92,7 @@ rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
      * We should try to repair it by removing the neighbor that caused
      * the packet to be forwarded in the first place. We drop any
      * routes that go through the neighbor that sent the packet to us.
-      */
+     */
     if(RPL_IS_STORING(instance)) {
       route = uip_ds6_route_lookup(&UIP_IP_BUF->destipaddr);
       if(route != NULL) {
@@ -136,15 +136,15 @@ rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
   sender_closer = sender_rank < instance->current_dag->rank;
 
   LOG_DBG("Packet going %s, sender closer %d (%d < %d)\n",
-	  down == 1 ? "down" : "up",
-	  sender_closer,
-	  sender_rank,
-	  instance->current_dag->rank);
+          down == 1 ? "down" : "up",
+          sender_closer,
+          sender_rank,
+          instance->current_dag->rank);
 
   if((down && !sender_closer) || (!down && sender_closer)) {
     LOG_WARN("Loop detected - senderrank: %d my-rank: %d sender_closer: %d\n",
-           sender_rank, instance->current_dag->rank,
-           sender_closer);
+             sender_rank, instance->current_dag->rank,
+             sender_closer);
     /* Attempt to repair the loop by sending a unicast DIO back to the
        sender so that it gets a fresh update of our rank. */
     if(sender != NULL) {
@@ -156,7 +156,7 @@ rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
       RPL_STAT(rpl_stats.loop_errors++);
       LOG_ERR(" Rank error signalled in RPL option!\n");
       /* Packet must be dropped and dio trickle timer reset, see
-	 RFC6550 - 11.2.2.2 */
+         RFC6550 - 11.2.2.2 */
       rpl_reset_dio_timer(instance);
       return 0;
     }
@@ -217,7 +217,7 @@ rpl_ext_header_srh_update(void)
 
   /* Look for routing ext header */
   rh_header = (struct uip_routing_hdr *)uipbuf_search_header(uip_buf, uip_len,
-							     UIP_PROTO_ROUTING);
+                                                             UIP_PROTO_ROUTING);
 
   if(rh_header != NULL && rh_header->routing_type == RPL_RH_TYPE_SRH) {
     /* SRH found, now look for next hop */
@@ -238,7 +238,7 @@ rpl_ext_header_srh_update(void)
     (void)path_len;
 
     LOG_DBG("read SRH, path len %u, segments left %u, Cmpri %u, Cmpre %u, ext len %u (padding %u)\n",
-	    path_len, segments_left, cmpri, cmpre, ext_len, padding);
+            path_len, segments_left, cmpri, cmpre, ext_len, padding);
 
     if(segments_left == 0) {
       /* We are the final destination, do nothing. */
@@ -377,14 +377,14 @@ insert_srh_header(void)
   /* Extension header length:
      fixed headers + (n - 1) * (16 - ComprI) + (16 - ComprE). */
   ext_len = RPL_RH_LEN + RPL_SRH_LEN
-      + (path_len - 1) * (16 - cmpre)
-      + (16 - cmpri);
+    + (path_len - 1) * (16 - cmpre)
+    + (16 - cmpri);
 
   padding = ext_len % 8 == 0 ? 0 : (8 - (ext_len % 8));
   ext_len += padding;
 
   LOG_DBG("SRH Path len: %u, ComprI %u, ComprE %u, ext len %u (padding %u)\n",
-      path_len, cmpri, cmpre, ext_len, padding);
+          path_len, cmpri, cmpre, ext_len, padding);
 
   /* Check if there is enough space to store the extension header. */
   if(uip_len + ext_len > UIP_LINK_MTU) {
@@ -394,7 +394,7 @@ insert_srh_header(void)
 
   /* Move existing ext headers and payload ext_len further. */
   memmove(uip_buf + UIP_IPH_LEN + uip_ext_len + ext_len,
-      uip_buf + UIP_IPH_LEN + uip_ext_len, uip_len - UIP_IPH_LEN);
+          uip_buf + UIP_IPH_LEN + uip_ext_len, uip_len - UIP_IPH_LEN);
   memset(uip_buf + UIP_IPH_LEN + uip_ext_len, 0, ext_len);
 
   /* Insert source routing header (as first ext header). */
@@ -421,7 +421,7 @@ insert_srh_header(void)
     NETSTACK_ROUTING.get_sr_node_ipaddr(&node_addr, node);
 
     hop_ptr -= (16 - cmpri);
-    memcpy(hop_ptr, ((uint8_t*)&node_addr) + cmpri, 16 - cmpri);
+    memcpy(hop_ptr, ((uint8_t *)&node_addr) + cmpri, 16 - cmpri);
 
     node = node->parent;
   }
@@ -452,7 +452,7 @@ update_hbh_header(void)
        rpl_opt->opt_len != RPL_HDR_OPT_LEN) {
 
       LOG_ERR("Hop-by-hop extension header has wrong size (%u)\n",
-	      rpl_opt->opt_len);
+              rpl_opt->opt_len);
       return 0; /* Drop */
     }
 
@@ -486,7 +486,7 @@ update_hbh_header(void)
           parent = rpl_get_parent((uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER));
           if(parent != NULL) {
             dao_output_target(parent, &UIP_IP_BUF->destipaddr,
-			      RPL_ZERO_LIFETIME);
+                              RPL_ZERO_LIFETIME);
           }
           /* Drop packet. */
           return 0;
@@ -529,7 +529,7 @@ insert_hbh_header(const rpl_instance_t *instance)
 
   /* Move existing ext headers and payload RPL_HOP_BY_HOP_LEN further. */
   memmove(UIP_IP_PAYLOAD(RPL_HOP_BY_HOP_LEN), UIP_IP_PAYLOAD(0),
-	  uip_len - UIP_IPH_LEN);
+          uip_len - UIP_IPH_LEN);
   memset(UIP_IP_PAYLOAD(0), 0, RPL_HOP_BY_HOP_LEN);
 
   /* Insert the HBH header as the first ext header. */
@@ -634,7 +634,7 @@ rpl_ext_header_update(void)
     }
   } else {
     if(uip_ds6_is_my_addr(&UIP_IP_BUF->srcipaddr)
-        && UIP_IP_BUF->ttl == uip_ds6_if.cur_hop_limit) {
+       && UIP_IP_BUF->ttl == uip_ds6_if.cur_hop_limit) {
       /*
        * Insert a HBH option at the source. Checking the address is
        * insufficient because in non-storing mode, a packet may go up
@@ -647,5 +647,4 @@ rpl_ext_header_update(void)
     }
   }
 }
-
 /** @}*/

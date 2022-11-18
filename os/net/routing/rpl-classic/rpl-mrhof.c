@@ -53,21 +53,25 @@
 #define LOG_MODULE "RPL"
 #define LOG_LEVEL LOG_LEVEL_RPL
 
-/* RFC6551 and RFC6719 do not mandate the use of a specific formula to
- * compute the ETX value. This MRHOF implementation relies on the value
- * computed by the link-stats module.It has an optional feature,
- * RPL_MRHOF_CONF_SQUARED_ETX, that consists in squaring this value.
+/*
+ * RFC6551 and RFC6719 do not mandate the use of a specific formula to
+ * compute the ETX value. This MRHOF implementation relies on the
+ * value computed by the link-stats module. It has an optional
+ * feature, RPL_MRHOF_CONF_SQUARED_ETX, that consists in squaring this
+ * value.
  *
- * Squaring basically penalizes bad links while preserving the semantics of ETX
- * (1 = perfect link, more = worse link). As a result, MRHOF will favor
- * good links over short paths. Without this feature, a hop with 50% PRR (ETX=2)
- * is equivalent to two perfect hops with 100% PRR (ETX=1+1=2). With this
- * feature, the former path obtains ETX=2*2=4 and the former ETX=1*1+1*1=2.
+ * Squaring basically penalizes bad links while preserving the
+ * semantics of ETX (1 = perfect link, more = worse link). As a
+ * result, MRHOF will favor good links over short paths. Without this
+ * feature, a hop with 50% PRR (ETX=2) is equivalent to two perfect
+ * hops with 100% PRR (ETX=1+1=2). With this feature, the former path
+ * obtains ETX=2*2=4 and the former ETX=1*1+1*1=2.
  *
- * While this feature helps achieve extra relaibility, it also results in
- * added churn. In networks with high congestion or poor links, this can lead
- * to poor connectivity due to more parent switches, loops, Trickle resets, etc.
-  */
+ * While this feature helps achieve extra reliability, it also results
+ * in added churn. In networks with high congestion or poor links,
+ * this can lead to poor connectivity due to more parent switches,
+ * loops, Trickle timer resets, etc.
+ */
 #ifdef RPL_MRHOF_CONF_SQUARED_ETX
 #define RPL_MRHOF_SQUARED_ETX RPL_MRHOF_CONF_SQUARED_ETX
 #else /* RPL_MRHOF_CONF_SQUARED_ETX */
@@ -76,17 +80,20 @@
 
 #if !RPL_MRHOF_SQUARED_ETX
 /* Configuration parameters of RFC6719. Reject parents that have a higher
- * link metric than the following. The default value is 512 but we use 1024. */
+   link metric than the following. The default value is 512 but we use 1024. */
 #define MAX_LINK_METRIC     1024 /* Eq ETX of 8 */
-/* Hysteresis of MRHOF: the rank must differ more than PARENT_SWITCH_THRESHOLD_DIV
- * in order to switch preferred parent. Default in RFC6719: 192, eq ETX of 1.5.
- * We use a more aggressive setting: 96, eq ETX of 0.75.
+
+/*
+ * Hysteresis of MRHOF: the rank must differ more than
+ * PARENT_SWITCH_THRESHOLD_DIV in order to switch preferred
+ * parent. Default in RFC6719: 192, eq ETX of 1.5.  We use a more
+ * aggressive setting: 96, eq ETX of 0.75.
  */
 #define PARENT_SWITCH_THRESHOLD 96 /* Eq ETX of 0.75 */
 #else /* !RPL_MRHOF_SQUARED_ETX */
 #define MAX_LINK_METRIC     2048 /* Eq ETX of 4 */
 #define PARENT_SWITCH_THRESHOLD 160 /* Eq ETX of 1.25 (results in a churn comparable
-to the threshold of 96 in the non-squared case) */
+                                       to the threshold of 96 in the non-squared case) */
 #endif /* !RPL_MRHOF_SQUARED_ETX */
 
 /* Reject parents that have a higher path cost than the following. */
@@ -106,13 +113,13 @@ dao_ack_callback(rpl_parent_t *p, int status)
   if(status == RPL_DAO_ACK_UNABLE_TO_ADD_ROUTE_AT_ROOT) {
     return;
   }
-  /* here we need to handle failed DAO's and other stuff */
+  /* Here we need to handle failed DAO's and other stuff. */
   LOG_DBG("MRHOF - DAO ACK received with status: %d\n", status);
   if(status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT) {
     /* punish the ETX as if this was 10 packets lost */
     link_stats_packet_sent(rpl_get_parent_lladdr(p), MAC_TX_OK, 10);
   } else if(status == RPL_DAO_ACK_TIMEOUT) { /* timeout = no ack */
-    /* punish the total lack of ACK with a similar punishment */
+    /* Punish the total lack of ACK with a similar punishment. */
     link_stats_packet_sent(rpl_get_parent_lladdr(p), MAC_TX_OK, 10);
   }
 }
@@ -127,7 +134,7 @@ parent_link_metric(rpl_parent_t *p)
     uint32_t squared_etx = ((uint32_t)stats->etx * stats->etx) / LINK_STATS_ETX_DIVISOR;
     return (uint16_t)MIN(squared_etx, 0xffff);
 #else /* RPL_MRHOF_SQUARED_ETX */
-  return stats->etx;
+    return stats->etx;
 #endif /* RPL_MRHOF_SQUARED_ETX */
   }
   return 0xffff;
@@ -145,15 +152,15 @@ parent_path_cost(rpl_parent_t *p)
 #if RPL_WITH_MC
   /* Handle the different MC types */
   switch(p->dag->instance->mc.type) {
-    case RPL_DAG_MC_ETX:
-      base = p->mc.obj.etx;
-      break;
-    case RPL_DAG_MC_ENERGY:
-      base = p->mc.obj.energy.energy_est << 8;
-      break;
-    default:
-      base = p->rank;
-      break;
+  case RPL_DAG_MC_ETX:
+    base = p->mc.obj.etx;
+    break;
+  case RPL_DAG_MC_ENERGY:
+    base = p->mc.obj.energy.energy_est << 8;
+    break;
+  default:
+    base = p->rank;
+    break;
   }
 #else /* RPL_WITH_MC */
   base = p->rank;
@@ -185,7 +192,7 @@ parent_is_acceptable(rpl_parent_t *p)
 {
   uint16_t link_metric = parent_link_metric(p);
   uint16_t path_cost = parent_path_cost(p);
-  /* Exclude links with too high link metrics or path cost (RFC6719, 3.2.2) */
+  /* Exclude links with too high link metrics or path cost. (RFC6719, 3.2.2) */
   return link_metric <= MAX_LINK_METRIC && path_cost <= MAX_PATH_COST;
 }
 /*---------------------------------------------------------------------------*/
@@ -220,7 +227,7 @@ best_parent(rpl_parent_t *p1, rpl_parent_t *p2)
   p1_cost = parent_path_cost(p1);
   p2_cost = parent_path_cost(p2);
 
-  /* Maintain stability of the preferred parent in case of similar ranks. */
+  /* Maintain the stability of the preferred parent in case of similar ranks. */
   if(p1 == dag->preferred_parent || p2 == dag->preferred_parent) {
     if(p1_cost < p2_cost + PARENT_SWITCH_THRESHOLD &&
        p1_cost > p2_cost - PARENT_SWITCH_THRESHOLD) {
@@ -266,7 +273,8 @@ update_metric_container(rpl_instance_t *instance)
   }
 
   if(dag->rank == ROOT_RANK(instance)) {
-    /* Configure MC at root only, other nodes are auto-configured when joining */
+    /* Configure the metric container at the root only; other nodes
+       are auto-configured when joining. */
     instance->mc.type = RPL_DAG_MC;
     instance->mc.flags = 0;
     instance->mc.aggr = RPL_DAG_MC_AGGR_ADDITIVE;
@@ -276,28 +284,29 @@ update_metric_container(rpl_instance_t *instance)
     path_cost = parent_path_cost(dag->preferred_parent);
   }
 
-  /* Handle the different MC types */
+  /* Handle the different MC types. */
   switch(instance->mc.type) {
-    case RPL_DAG_MC_NONE:
-      break;
-    case RPL_DAG_MC_ETX:
-      instance->mc.length = sizeof(instance->mc.obj.etx);
-      instance->mc.obj.etx = path_cost;
-      break;
-    case RPL_DAG_MC_ENERGY:
-      instance->mc.length = sizeof(instance->mc.obj.energy);
-      if(dag->rank == ROOT_RANK(instance)) {
-        type = RPL_DAG_MC_ENERGY_TYPE_MAINS;
-      } else {
-        type = RPL_DAG_MC_ENERGY_TYPE_BATTERY;
-      }
-      instance->mc.obj.energy.flags = type << RPL_DAG_MC_ENERGY_TYPE;
-      /* Energy_est is only one byte, use the least significant byte of the path metric. */
-      instance->mc.obj.energy.energy_est = path_cost >> 8;
-      break;
-    default:
-      LOG_WARN("MRHOF, non-supported MC %u\n", instance->mc.type);
-      break;
+  case RPL_DAG_MC_NONE:
+    break;
+  case RPL_DAG_MC_ETX:
+    instance->mc.length = sizeof(instance->mc.obj.etx);
+    instance->mc.obj.etx = path_cost;
+    break;
+  case RPL_DAG_MC_ENERGY:
+    instance->mc.length = sizeof(instance->mc.obj.energy);
+    if(dag->rank == ROOT_RANK(instance)) {
+      type = RPL_DAG_MC_ENERGY_TYPE_MAINS;
+    } else {
+      type = RPL_DAG_MC_ENERGY_TYPE_BATTERY;
+    }
+    instance->mc.obj.energy.flags = type << RPL_DAG_MC_ENERGY_TYPE;
+    /* Energy_est is only one byte -- use the least significant byte
+       of the path metric. */
+    instance->mc.obj.energy.energy_est = path_cost >> 8;
+    break;
+  default:
+    LOG_WARN("MRHOF, non-supported MC %u\n", instance->mc.type);
+    break;
   }
 }
 #endif /* RPL_WITH_MC */

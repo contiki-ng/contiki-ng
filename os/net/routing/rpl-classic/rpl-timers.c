@@ -51,7 +51,7 @@
 #define LOG_MODULE "RPL"
 #define LOG_LEVEL LOG_LEVEL_RPL
 
-/* A configurable function called after update of the RPL DIO interval */
+/* A configurable function called after update of the RPL DIO interval. */
 #ifdef RPL_CALLBACK_NEW_DIO_INTERVAL
 void RPL_CALLBACK_NEW_DIO_INTERVAL(clock_time_t dio_interval);
 #endif /* RPL_CALLBACK_NEW_DIO_INTERVAL */
@@ -73,7 +73,7 @@ static void handle_dio_timer(void *ptr);
 
 static uint16_t next_dis;
 
-/* dio_send_ok is true if the node is ready to send DIOs */
+/* dio_send_ok is true if the node is ready to send DIOs. */
 static uint8_t dio_send_ok;
 
 /*---------------------------------------------------------------------------*/
@@ -93,10 +93,11 @@ handle_periodic_timer(void *ptr)
   }
   rpl_recalculate_ranks();
 
-  /* handle DIS */
+  /* Handle DIS. */
 #if RPL_DIS_SEND
   next_dis++;
-  if((dag == NULL || dag->instance->current_dag->rank == RPL_INFINITE_RANK) && next_dis >= RPL_DIS_INTERVAL) {
+  if((dag == NULL || dag->instance->current_dag->rank == RPL_INFINITE_RANK)
+     && next_dis >= RPL_DIS_INTERVAL) {
     next_dis = 0;
     dis_output(NULL);
   }
@@ -110,14 +111,14 @@ new_dio_interval(rpl_instance_t *instance)
   uint32_t time;
   clock_time_t ticks;
 
-  /* TODO: too small timer intervals for many cases */
+  /* TODO: too small timer intervals for many cases. */
   time = 1UL << instance->dio_intcurrent;
 
   /* Convert from milliseconds to CLOCK_TICKS. */
   ticks = (time * CLOCK_SECOND) / 1000;
   instance->dio_next_delay = ticks;
 
-  /* random number between I/2 and I */
+  /* Random number between I/2 and I. */
   ticks = ticks / 2 + (ticks / 2 * (uint32_t)random_rand()) / RANDOM_RAND_MAX;
 
   /*
@@ -129,22 +130,22 @@ new_dio_interval(rpl_instance_t *instance)
   instance->dio_send = 1;
 
 #if RPL_CONF_STATS
-  /* keep some stats */
+  /* Keep some stats. */
   instance->dio_totint++;
   instance->dio_totrecv += instance->dio_counter;
   LOG_ANNOTATE("#A rank=%u.%u(%u),stats=%d %d %d %d,color=%s\n",
-	   DAG_RANK(instance->current_dag->rank, instance),
-           (10 * (instance->current_dag->rank % instance->min_hoprankinc)) / instance->min_hoprankinc,
-           instance->current_dag->version,
-           instance->dio_totint, instance->dio_totsend,
-           instance->dio_totrecv,instance->dio_intcurrent,
-	   instance->current_dag->rank == ROOT_RANK(instance) ? "BLUE" : "ORANGE");
+               DAG_RANK(instance->current_dag->rank, instance),
+               (10 * (instance->current_dag->rank % instance->min_hoprankinc)) / instance->min_hoprankinc,
+               instance->current_dag->version,
+               instance->dio_totint, instance->dio_totsend,
+               instance->dio_totrecv, instance->dio_intcurrent,
+               instance->current_dag->rank == ROOT_RANK(instance) ? "BLUE" : "ORANGE");
 #endif /* RPL_CONF_STATS */
 
-  /* reset the redundancy counter */
+  /* Reset the redundancy counter. */
   instance->dio_counter = 0;
 
-  /* schedule the timer */
+  /* Schedule the timer. */
   LOG_INFO("Scheduling DIO timer %lu ticks in future (Interval)\n", ticks);
   ctimer_set(&instance->dio_timer, ticks, &handle_dio_timer, instance);
 
@@ -156,9 +157,7 @@ new_dio_interval(rpl_instance_t *instance)
 static void
 handle_dio_timer(void *ptr)
 {
-  rpl_instance_t *instance;
-
-  instance = (rpl_instance_t *)ptr;
+  rpl_instance_t *instance = (rpl_instance_t *)ptr;
 
   LOG_DBG("DIO Timer triggered\n");
   if(!dio_send_ok) {
@@ -172,7 +171,7 @@ handle_dio_timer(void *ptr)
   }
 
   if(instance->dio_send) {
-    /* send DIO if counter is less than desired redundancy */
+    /* Send DIO if counter is less than desired redundancy. */
     if(instance->dio_redundancy == 0 || instance->dio_counter < instance->dio_redundancy) {
 #if RPL_CONF_STATS
       instance->dio_totsend++;
@@ -180,15 +179,17 @@ handle_dio_timer(void *ptr)
       dio_output(instance, NULL);
     } else {
       LOG_DBG("Suppressing DIO transmission (%d >= %d)\n",
-             instance->dio_counter, instance->dio_redundancy);
+              instance->dio_counter, instance->dio_redundancy);
     }
     instance->dio_send = 0;
     LOG_DBG("Scheduling DIO timer %lu ticks in future (sent)\n",
-           instance->dio_next_delay);
-    ctimer_set(&instance->dio_timer, instance->dio_next_delay, handle_dio_timer, instance);
+            instance->dio_next_delay);
+    ctimer_set(&instance->dio_timer, instance->dio_next_delay,
+               handle_dio_timer, instance);
   } else {
-    /* check if we need to double interval */
-    if(instance->dio_intcurrent < instance->dio_intmin + instance->dio_intdoubl) {
+    /* Check if we need to double interval. */
+    if(instance->dio_intcurrent <
+       instance->dio_intmin + instance->dio_intdoubl) {
       instance->dio_intcurrent++;
       LOG_DBG("DIO Timer interval doubled %d\n", instance->dio_intcurrent);
     }
@@ -252,10 +253,11 @@ set_dao_lifetime_timer(rpl_instance_t *instance)
         (clock_time_t)instance->lifetime_unit * CLOCK_SECOND / 2;
     }
 
-    /* make the time for the re registration be betwen 1/2 - 3/4 of lifetime */
+    /* Make the time for the re-registration to be between 1/2 and 3/4 of
+       the lifetime. */
     expiration_time = expiration_time + (random_rand() % (expiration_time / 2));
     LOG_DBG("Scheduling DAO lifetime timer %u ticks in the future\n",
-           (unsigned)expiration_time);
+            (unsigned)expiration_time);
     ctimer_set(&instance->dao_lifetime_timer, expiration_time,
                handle_dao_timer, instance);
   }
@@ -264,13 +266,12 @@ set_dao_lifetime_timer(rpl_instance_t *instance)
 static void
 handle_dao_timer(void *ptr)
 {
-  rpl_instance_t *instance;
+  rpl_instance_t *instance = (rpl_instance_t *)ptr;
+
 #if RPL_WITH_MULTICAST
   uip_mcast6_route_t *mcast_route;
   uint8_t i;
 #endif
-
-  instance = (rpl_instance_t *)ptr;
 
   if(!dio_send_ok && uip_ds6_get_link_local(ADDR_PREFERRED) == NULL) {
     LOG_INFO("Postpone DAO transmission\n");
@@ -282,27 +283,28 @@ handle_dao_timer(void *ptr)
   if(instance->current_dag->preferred_parent != NULL) {
     LOG_INFO("handle_dao_timer - sending DAO\n");
     /* Set the route lifetime to the default value. */
-    dao_output(instance->current_dag->preferred_parent, instance->default_lifetime);
+    dao_output(instance->current_dag->preferred_parent,
+               instance->default_lifetime);
 
 #if RPL_WITH_MULTICAST
-    /* Send DAOs for multicast prefixes only if the instance is in MOP 3 */
+    /* Send DAOs for multicast prefixes only if the instance is in MOP 3. */
     if(instance->mop == RPL_MOP_STORING_MULTICAST) {
-      /* Send a DAO for own multicast addresses */
+      /* Send a DAO for own multicast addresses. */
       for(i = 0; i < UIP_DS6_MADDR_NB; i++) {
         if(uip_ds6_if.maddr_list[i].isused
-            && uip_is_addr_mcast_global(&uip_ds6_if.maddr_list[i].ipaddr)) {
+           && uip_is_addr_mcast_global(&uip_ds6_if.maddr_list[i].ipaddr)) {
           dao_output_target(instance->current_dag->preferred_parent,
-              &uip_ds6_if.maddr_list[i].ipaddr, instance->default_lifetime);
+                            &uip_ds6_if.maddr_list[i].ipaddr, instance->default_lifetime);
         }
       }
 
       /* Iterate over multicast routes and send DAOs */
       mcast_route = uip_mcast6_route_list_head();
       while(mcast_route != NULL) {
-        /* Don't send if it's also our own address, done that already */
+        /* Don't send if it's also our own address, done that already. */
         if(uip_ds6_maddr_lookup(&mcast_route->group) == NULL) {
           dao_output_target(instance->current_dag->preferred_parent,
-                     &mcast_route->group, instance->default_lifetime);
+                            &mcast_route->group, instance->default_lifetime);
         }
         mcast_route = list_item_next(mcast_route);
       }
@@ -340,7 +342,7 @@ schedule_dao(rpl_instance_t *instance, clock_time_t latency)
       expiration_time = 0;
     }
     LOG_DBG("Scheduling DAO timer %u ticks in the future\n",
-           (unsigned)expiration_time);
+            (unsigned)expiration_time);
     ctimer_set(&instance->dao_timer, expiration_time,
                handle_dao_timer, instance);
 
@@ -382,7 +384,7 @@ void
 rpl_schedule_unicast_dio_immediately(rpl_instance_t *instance)
 {
   ctimer_set(&instance->unicast_dio_timer, 0,
-                  handle_unicast_dio_timer, instance);
+             handle_unicast_dio_timer, instance);
 }
 /*---------------------------------------------------------------------------*/
 #if RPL_WITH_PROBING
@@ -395,11 +397,14 @@ get_probing_delay(rpl_dag_t *dag)
 rpl_parent_t *
 get_probing_target(rpl_dag_t *dag)
 {
-  /* Returns the next probing target. The current implementation probes the urgent
-   * probing target if any, or the preferred parent if its link statistics need refresh.
+  /*
+   * Returns the next probing target. The current implementation
+   * probes the urgent probing target if any, or the preferred parent
+   * if its link statistics need refresh.
+   *
    * Otherwise, it picks at random between:
-   * (1) selecting the best parent with non-fresh link statistics
-   * (2) selecting the least recently updated parent
+   * (1) selecting the best parent with non-fresh link statistics.
+   * (2) selecting the least recently updated parent.
    */
 
   rpl_parent_t *p;
@@ -408,30 +413,29 @@ get_probing_target(rpl_dag_t *dag)
   clock_time_t probing_target_age = 0;
   clock_time_t clock_now = clock_time();
 
-  if(dag == NULL ||
-      dag->instance == NULL) {
+  if(dag == NULL || dag->instance == NULL) {
     return NULL;
   }
 
-  /* There is an urgent probing target */
+  /* There is an urgent probing target. */
   if(dag->instance->urgent_probing_target != NULL) {
     return dag->instance->urgent_probing_target;
   }
 
-  /* The preferred parent needs probing */
-  if(dag->preferred_parent != NULL && !rpl_parent_is_fresh(dag->preferred_parent)) {
+  /* The preferred parent needs probing. */
+  if(dag->preferred_parent != NULL
+     && !rpl_parent_is_fresh(dag->preferred_parent)) {
     return dag->preferred_parent;
   }
 
-  /* With 50% probability: probe best non-fresh parent */
+  /* With 50% probability: probe best non-fresh parent. */
   if(random_rand() % 2 == 0) {
     p = nbr_table_head(rpl_parents);
     while(p != NULL) {
       if(p->dag == dag && !rpl_parent_is_fresh(p)) {
-        /* p is in our dag and needs probing */
+        /* p is in our DAG and needs probing. */
         rpl_rank_t p_rank = rpl_rank_via_parent(p);
-        if(probing_target == NULL
-            || p_rank < probing_target_rank) {
+        if(probing_target == NULL || p_rank < probing_target_rank) {
           probing_target = p;
           probing_target_rank = p_rank;
         }
@@ -440,14 +444,15 @@ get_probing_target(rpl_dag_t *dag)
     }
   }
 
-  /* If we still do not have a probing target: pick the least recently updated parent */
+  /* If we still do not have a probing target:
+     pick the least recently updated parent. */
   if(probing_target == NULL) {
     p = nbr_table_head(rpl_parents);
     while(p != NULL) {
-      const struct link_stats *stats =rpl_get_parent_link_stats(p);
+      const struct link_stats *stats = rpl_get_parent_link_stats(p);
       if(p->dag == dag && stats != NULL) {
         if(probing_target == NULL
-            || clock_now - stats->last_tx_time > probing_target_age) {
+           || clock_now - stats->last_tx_time > probing_target_age) {
           probing_target = p;
           probing_target_age = clock_now - stats->last_tx_time;
         }
@@ -464,6 +469,7 @@ get_next_dag(rpl_instance_t *instance)
 {
   rpl_dag_t *dag = NULL;
   int new_dag = instance->last_dag;
+
   do {
     new_dag++;
     if(new_dag >= RPL_MAX_DAG_PER_INSTANCE) {
@@ -484,22 +490,22 @@ handle_probing_timer(void *ptr)
   rpl_parent_t *probing_target = RPL_PROBING_SELECT_FUNC(get_next_dag(instance));
   uip_ipaddr_t *target_ipaddr = rpl_parent_get_ipaddr(probing_target);
 
-  /* Perform probing */
+  /* Perform probing. */
   if(target_ipaddr != NULL) {
     const struct link_stats *stats = rpl_get_parent_link_stats(probing_target);
     const linkaddr_t *lladdr = rpl_get_parent_lladdr(probing_target);
     LOG_INFO("probing %u %s last tx %u min ago\n",
-          lladdr != NULL ? lladdr->u8[7] : 0x0,
-          instance->urgent_probing_target != NULL ? "(urgent)" : "",
-          probing_target != NULL && stats != NULL ?
-           (unsigned)((clock_time() - stats->last_tx_time) / (60 * CLOCK_SECOND)) : 0
-      );
+             lladdr != NULL ? lladdr->u8[7] : 0x0,
+             instance->urgent_probing_target != NULL ? "(urgent)" : "",
+             probing_target != NULL && stats != NULL ?
+             (unsigned)((clock_time() - stats->last_tx_time) / (60 * CLOCK_SECOND)) : 0
+             );
 
-    /* Send probe, e.g. unicast DIO or DIS */
+    /* Send probe, e.g., a unicast DIO or DIS. */
     RPL_PROBING_SEND_FUNC(instance, target_ipaddr);
   }
 
-  /* Schedule next probing */
+  /* Schedule next probing. */
   rpl_schedule_probing(instance);
 
   if(LOG_DBG_ENABLED) {
@@ -510,15 +516,17 @@ handle_probing_timer(void *ptr)
 void
 rpl_schedule_probing(rpl_instance_t *instance)
 {
-  ctimer_set(&instance->probing_timer, RPL_PROBING_DELAY_FUNC(instance->current_dag),
-                  handle_probing_timer, instance);
+  ctimer_set(&instance->probing_timer,
+             RPL_PROBING_DELAY_FUNC(instance->current_dag),
+             handle_probing_timer, instance);
 }
 /*---------------------------------------------------------------------------*/
 void
 rpl_schedule_probing_now(rpl_instance_t *instance)
 {
   ctimer_set(&instance->probing_timer, random_rand() % (CLOCK_SECOND * 4),
-                  handle_probing_timer, instance);
+             handle_probing_timer, instance);
 }
 #endif /* RPL_WITH_PROBING */
+
 /** @}*/

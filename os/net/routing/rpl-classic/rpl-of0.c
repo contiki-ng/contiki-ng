@@ -56,12 +56,15 @@
 #define MIN_STEP_OF_RANK   1
 #define MAX_STEP_OF_RANK   9
 
-/* OF0 computes rank increase as follows:
- * rank_increase = (RANK_FACTOR * STEP_OF_RANK + RANK_STRETCH) * min_hop_rank_increase
- * STEP_OF_RANK is an implementation-specific scalar value in the range [1;9].
- * RFC6552 provides a default value of 3 but recommends to use a dynamic link metric
- * such as ETX.
- * */
+/*
+ * OF0 computes rank increase as follows:
+ *
+ * rank_increase = (RANK_FACTOR * STEP_OF_RANK + RANK_STRETCH) *
+ * min_hop_rank_increase
+ *
+ * STEP_OF_RANK is an implementation-specific scalar value in the
+ * range [1;9]. RFC6552 provides a default value of 3, but recommends
+ * to use a dynamic link metric such as ETX. */
 
 #define RPL_OF0_FIXED_SR      0
 #define RPL_OF0_ETX_BASED_SR  1
@@ -75,8 +78,8 @@
 #if RPL_OF0_SR == RPL_OF0_FIXED_SR
 #define STEP_OF_RANK(p)       (3)
 #elif RPL_OF0_SR == RPL_OF0_ETX_BASED_SR
-/* Numbers suggested by P. Thubert for in the 6TiSCH WG. Anything that maps ETX to
- * a step between 1 and 9 works. */
+/* Numbers suggested by P. Thubert for in the 6TiSCH WG. Anything that
+   maps ETX to a step between 1 and 9 works. */
 #define STEP_OF_RANK(p)       (((3 * parent_link_metric(p)) / LINK_STATS_ETX_DIVISOR) - 2)
 #endif /* RPL_OF0_SR */
 
@@ -94,13 +97,13 @@ dao_ack_callback(rpl_parent_t *p, int status)
   if(status == RPL_DAO_ACK_UNABLE_TO_ADD_ROUTE_AT_ROOT) {
     return;
   }
-  /* here we need to handle failed DAO's and other stuff */
+  /* Here we need to handle failed DAO's and other stuff. */
   LOG_DBG("OF0 - DAO ACK received with status: %d\n", status);
   if(status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT) {
-    /* punish the ETX as if this was 10 packets lost */
+    /* Punish the ETX as if this was 10 packets lost. */
     link_stats_packet_sent(rpl_get_parent_lladdr(p), MAC_TX_OK, 10);
   } else if(status == RPL_DAO_ACK_TIMEOUT) { /* timeout = no ack */
-    /* punish the total lack of ACK with a similar punishment */
+    /* Punish the total lack of ACK with a similar punishment. */
     link_stats_packet_sent(rpl_get_parent_lladdr(p), MAC_TX_OK, 10);
   }
 }
@@ -109,7 +112,7 @@ dao_ack_callback(rpl_parent_t *p, int status)
 static uint16_t
 parent_link_metric(rpl_parent_t *p)
 {
-  /* OF0 operates without metric container; the only metric we have is ETX */
+  /* OF0 operates without metric container; the only metric we have is ETX. */
   const struct link_stats *stats = rpl_get_parent_link_stats(p);
   return stats != NULL ? stats->etx : 0xffff;
 }
@@ -131,7 +134,7 @@ parent_path_cost(rpl_parent_t *p)
   if(p == NULL) {
     return 0xffff;
   }
-  /* path cost upper bound: 0xffff */
+  /* Path cost upper bound: 0xffff */
   return MIN((uint32_t)p->rank + parent_link_metric(p), 0xffff);
 }
 /*---------------------------------------------------------------------------*/
@@ -149,7 +152,7 @@ static int
 parent_is_acceptable(rpl_parent_t *p)
 {
   return STEP_OF_RANK(p) >= MIN_STEP_OF_RANK
-      && STEP_OF_RANK(p) <= MAX_STEP_OF_RANK;
+         && STEP_OF_RANK(p) <= MAX_STEP_OF_RANK;
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -181,18 +184,18 @@ best_parent(rpl_parent_t *p1, rpl_parent_t *p2)
   p1_cost = parent_path_cost(p1);
   p2_cost = parent_path_cost(p2);
 
-  /* Paths costs coarse-grained (multiple of min_hoprankinc), we operate without hysteresis */
+  /* Coarse-grained path costs (multiple of min_hoprankinc), we
+     operate without hysteresis. */
   if(p1_cost != p2_cost) {
     /* Pick parent with lowest path cost */
     return p1_cost < p2_cost ? p1 : p2;
   } else {
-    /* We have a tie! */
-    /* Stik to current preferred parent if possible */
+    /* We have a tie! Stick to the current preferred parent if possible. */
     if(p1 == dag->preferred_parent || p2 == dag->preferred_parent) {
       return dag->preferred_parent;
     }
-    /* None of the nodes is the current preferred parent,
-     * choose parent with best link metric */
+    /* None of the nodes is the current preferred parent; choose the
+       parent with best link metric. */
     return parent_link_metric(p1) < parent_link_metric(p2) ? p1 : p2;
   }
 }

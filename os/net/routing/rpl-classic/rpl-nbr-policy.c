@@ -29,22 +29,21 @@
  *
  */
 
- /**
-  * \addtogroup uip
-  * @{
-  */
+/**
+ * \addtogroup uip
+ * @{
+ */
 
-
- /**
-  * \file
-  *
-  * Default RPL NBR policy
-  * decides when to add a new discovered node to the nbr table from RPL.
-  *
-  * \author Joakim Eriksson <joakime@sics.se>
-  * Contributors: Niclas Finne <nfi@sics.se>, Oriol Piñol <oriol@yanzi.se>,
-  *
-  */
+/**
+ * \file
+ *
+ * Default RPL NBR policy
+ * decides when to add a new discovered node to the nbr table from RPL.
+ *
+ * \author Joakim Eriksson <joakime@sics.se>
+ * Contributors: Niclas Finne <nfi@sics.se>, Oriol Piñol <oriol@yanzi.se>,
+ *
+ */
 
 #include "net/routing/rpl-classic/rpl-nbr-policy.h"
 #include "net/routing/rpl-classic/rpl-private.h"
@@ -65,7 +64,8 @@ get_rank(const linkaddr_t *lladdr)
     return RPL_INFINITE_RANK;
   } else {
     rpl_instance_t *instance = rpl_get_default_instance();
-    return instance != NULL ? instance->of->rank_via_parent(p) : RPL_INFINITE_RANK;
+    return instance != NULL ?
+           instance->of->rank_via_parent(p) : RPL_INFINITE_RANK;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -79,7 +79,8 @@ static bool
 can_accept_new_parent(const linkaddr_t *candidate_for_removal, rpl_dio_t *dio)
 {
   rpl_rank_t rank_candidate;
-  /* There's space left in the table or the worst entry has no rank: accept */
+
+  /* There's space left in the table or the worst entry has no rank: accept. */
   if(candidate_for_removal == NULL
      || (rank_candidate = get_rank(candidate_for_removal)) == RPL_INFINITE_RANK) {
     return true;
@@ -97,7 +98,8 @@ can_accept_new_parent(const linkaddr_t *candidate_for_removal, rpl_dio_t *dio)
 }
 /*---------------------------------------------------------------------------*/
 bool
-rpl_nbr_can_accept_new(const linkaddr_t *new, const linkaddr_t *candidate_for_removal,
+rpl_nbr_can_accept_new(const linkaddr_t *new,
+                       const linkaddr_t *candidate_for_removal,
                        nbr_table_reason_t reason, const void *data)
 {
   bool accept;
@@ -107,8 +109,8 @@ rpl_nbr_can_accept_new(const linkaddr_t *new, const linkaddr_t *candidate_for_re
     break;
   case NBR_TABLE_REASON_ROUTE:
   case NBR_TABLE_REASON_RPL_DAO:
-    /* Stop adding children if there is no space for nexthop neighbors,
-     * regardless of whether the table if full or not */
+    /* Stop adding children if there is no space for nexthop
+       neighbors, regardless of whether the table if full or not. */
     accept = rpl_nbr_policy_get_free_nexthop_neighbors() > 0;
     break;
   case NBR_TABLE_REASON_RPL_DIS:
@@ -119,7 +121,8 @@ rpl_nbr_can_accept_new(const linkaddr_t *new, const linkaddr_t *candidate_for_re
   case NBR_TABLE_REASON_LINK_STATS:
   case NBR_TABLE_REASON_IPV6_ND_AUTOFILL:
   default:
-    /* Behavior for all but new RPL parents/children: accept anything until table is full. */
+    /* Behavior for all but new RPL parents/children: accept anything
+       until table is full. */
     accept = (candidate_for_removal == NULL);
     break;
   }
