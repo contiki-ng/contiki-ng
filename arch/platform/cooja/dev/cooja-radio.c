@@ -54,6 +54,8 @@
 #define COOJA_RADIO_BUFSIZE 125
 #endif
 
+#define MIN_CHANNEL 11
+#define MAX_CHANNEL 26
 #define CCA_SS_THRESHOLD -95
 
 const struct simInterface radio_interface;
@@ -88,7 +90,7 @@ char simRadioHWOn = 1;
 int simSignalStrength       = RSSI_NO_SIGNAL;
 int simLastSignalStrength   = RSSI_NO_SIGNAL;
 char simPower = 100;
-int simRadioChannel = 26;
+int simRadioChannel = MAX_CHANNEL;
 int simLQI      = LQI_NO_SIGNAL;
 int simLastLQI  = LQI_NO_SIGNAL;
 
@@ -394,6 +396,15 @@ get_value(radio_param_t param, radio_value_t *value)
 
   case RADIO_CONST_MAX_PAYLOAD_LEN:
     *value = (radio_value_t)COOJA_RADIO_BUFSIZE;
+    return RADIO_RESULT_OK;
+  case RADIO_PARAM_CHANNEL:
+    *value = simRadioChannel;
+    return RADIO_RESULT_OK;
+  case RADIO_CONST_CHANNEL_MIN:
+    *value = MIN_CHANNEL;
+    return RADIO_RESULT_OK;
+  case RADIO_CONST_CHANNEL_MAX:
+    *value = MAX_CHANNEL;
     return RADIO_RESULT_OK;
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
