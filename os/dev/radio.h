@@ -978,6 +978,36 @@ struct radio_driver {
 };
 /** @} */
 /*---------------------------------------------------------------------------*/
+
+extern const uint8_t radio_shr[RADIO_SHR_LEN];
+
+/**
+ * \brief Converts the RSSI packetbuf attribute to int16_t
+ */
+int16_t radio_get_rssi(void);
+
+/**
+ * \brief Gets the current radio channel
+ */
+uint8_t radio_get_channel(void);
+
+/**
+ * \brief  Reads the PHY header and initializes the packetbuf's datalen
+ * \return The frame's length in bytes
+ */
+uint8_t radio_read_phy_header_to_packetbuf(void);
+
+/**
+ * \brief        Reads payload bytes and appends them to the packetbuf
+ * \retval false if an error occurred
+ */
+bool radio_read_payload_to_packetbuf(uint8_t bytes);
+
+/**
+ * \brief Provides the number of payload bytes that were not read, yet
+ */
+uint8_t radio_remaining_payload_bytes(void);
+
 #endif /* RADIO_H_ */
 /*---------------------------------------------------------------------------*/
 /** @} */
