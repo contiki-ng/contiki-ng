@@ -59,6 +59,97 @@
 
 #include <stddef.h>
 
+/*---------------------------------------------------------------------------*/
+/** \name PHY-specific constants and macros
+ * @{
+ */
+
+/**
+ * TX-to-RX turnaround time in symbol periods - 12 for most PHYs.
+ */
+#ifdef RADIO_CONF_RECEIVE_CALIBRATION_SYMBOL_PERIODS
+#define RADIO_RECEIVE_CALIBRATION_SYMBOL_PERIODS \
+    RADIO_CONF_RECEIVE_CALIBRATION_SYMBOL_PERIODS
+#else /* RADIO_CONF_RECEIVE_CALIBRATION_SYMBOL_PERIODS */
+#define RADIO_RECEIVE_CALIBRATION_SYMBOL_PERIODS (12)
+#endif /* RADIO_CONF_RECEIVE_CALIBRATION_SYMBOL_PERIODS */
+
+/**
+ * RX-to-TX turnaround time in symbol periods - 12 for most PHYs.
+ */
+#ifdef RADIO_CONF_TRANSMIT_CALIBRATION_SYMBOL_PERIODS
+#define RADIO_TRANSMIT_CALIBRATION_SYMBOL_PERIODS \
+    RADIO_CONF_TRANSMIT_CALIBRATION_SYMBOL_PERIODS
+#else /* RADIO_CONF_TRANSMIT_CALIBRATION_SYMBOL_PERIODS */
+#define RADIO_TRANSMIT_CALIBRATION_SYMBOL_PERIODS (12)
+#endif /* RADIO_CONF_TRANSMIT_CALIBRATION_SYMBOL_PERIODS */
+
+/**
+ * \brief Length of the synchronization header in bytes.
+ */
+#ifdef RADIO_CONF_SHR_LEN
+#define RADIO_SHR_LEN RADIO_CONF_SHR_LEN
+#else /* RADIO_CONF_SHR_LEN */
+#define RADIO_SHR_LEN (5)
+#endif /* RADIO_CONF_SHR_LEN */
+
+/**
+ * \brief The number of symbols per byte.
+ */
+#ifdef RADIO_CONF_SYMBOLS_PER_BYTE
+#define RADIO_SYMBOLS_PER_BYTE RADIO_CONF_SYMBOLS_PER_BYTE
+#else /* RADIO_CONF_SYMBOLS_PER_BYTE */
+#define RADIO_SYMBOLS_PER_BYTE 2
+#endif /* RADIO_CONF_SYMBOLS_PER_BYTE */
+
+/**
+ * \brief Air time of a symbol in microseconds.
+ */
+#ifdef RADIO_CONF_SYMBOL_PERIOD
+#define RADIO_SYMBOL_PERIOD RADIO_CONF_SYMBOL_PERIOD
+#else /* RADIO_CONF_SYMBOL_PERIOD */
+#define RADIO_SYMBOL_PERIOD 16
+#endif /* RADIO_CONF_SYMBOL_PERIOD */
+
+/**
+ * \brief Maximum length of the PHY payload in bytes.
+ */
+#ifdef RADIO_CONF_MAX_PAYLOAD
+#define RADIO_MAX_PAYLOAD RADIO_CONF_MAX_PAYLOAD
+#else /* RADIO_CONF_MAX_PAYLOAD */
+#define RADIO_MAX_PAYLOAD 127
+#endif /* RADIO_CONF_MAX_PAYLOAD */
+
+/**
+ * \brief Length of the PHY header in bytes.
+ */
+#ifdef RADIO_CONF_HEADER_LEN
+#define RADIO_HEADER_LEN RADIO_CONF_HEADER_LEN
+#else /* RADIO_CONF_HEADER_LEN */
+#define RADIO_HEADER_LEN 1
+#endif /* RADIO_CONF_HEADER_LEN */
+
+/** @} */
+/*---------------------------------------------------------------------------*/
+/** \name PHY-independent constants and macros
+ * @{
+ */
+
+#define RADIO_BYTE_PERIOD (RADIO_SYMBOL_PERIOD * RADIO_SYMBOLS_PER_BYTE)
+#define RADIO_TIME_TO_TRANSMIT(symbols) ((rtimer_clock_t) \
+    (((((uint64_t)(symbols)) * RADIO_SYMBOL_PERIOD * RTIMER_SECOND) \
+        / 1000000) + 1))
+#define RADIO_SHR_TIME \
+    RADIO_TIME_TO_TRANSMIT(RADIO_SHR_LEN * RADIO_SYMBOLS_PER_BYTE)
+#define RADIO_CCA_TIME \
+    RADIO_TIME_TO_TRANSMIT(8)
+#define RADIO_RECEIVE_CALIBRATION_TIME \
+    RADIO_TIME_TO_TRANSMIT(RADIO_RECEIVE_CALIBRATION_SYMBOL_PERIODS)
+#define RADIO_TRANSMIT_CALIBRATION_TIME \
+    RADIO_TIME_TO_TRANSMIT(RADIO_TRANSMIT_CALIBRATION_SYMBOL_PERIODS)
+/** @} */
+/*---------------------------------------------------------------------------*/
+
 /**
  * Each radio has a set of parameters that designate the current
  * configuration and state of the radio. Parameters can either have

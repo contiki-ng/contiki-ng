@@ -55,9 +55,9 @@
 /*---------------------------------------------------------------------------*/
 #define RADIO_PHY_OVERHEAD            3
 #define RADIO_BYTE_AIR_TIME          32
-#define RADIO_SHR_LEN                 5 /* Synch word + SFD */
+#define RADIO_CONF_SHR_LEN            5 /* Synch word + SFD */
 #define RADIO_DELAY_BEFORE_TX         \
-  ((unsigned)US_TO_RTIMERTICKS(RADIO_SHR_LEN * RADIO_BYTE_AIR_TIME))
+  ((unsigned)US_TO_RTIMERTICKS(RADIO_CONF_SHR_LEN * RADIO_BYTE_AIR_TIME))
 /* Very conservative value moved over from CC2538 */
 #define RADIO_DELAY_BEFORE_RX         ((unsigned)US_TO_RTIMERTICKS(250))
 #define RADIO_DELAY_BEFORE_DETECT     0
