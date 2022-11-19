@@ -85,15 +85,9 @@ void linkaddr_copy(linkaddr_t *dest, const linkaddr_t *from);
  * \brief      Compare two link-layer addresses
  * \param addr1 The first address
  * \param addr2 The second address
- * \return     Non-zero if the addresses are the same, zero if they are different
- *
- *             This function compares two link-layer addresses and returns
- *             the result of the comparison. The function acts like
- *             the '==' operator and returns non-zero if the addresses
- *             are the same, and zero if the addresses are different.
- *
+ * \return     True if the addresses are the same, false if they are different
  */
-int linkaddr_cmp(const linkaddr_t *addr1, const linkaddr_t *addr2);
+bool linkaddr_cmp(const linkaddr_t *addr1, const linkaddr_t *addr2);
 
 
 /**

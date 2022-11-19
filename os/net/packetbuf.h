@@ -265,10 +265,10 @@ int               packetbuf_set_addr(uint8_t type, const linkaddr_t *addr);
 const linkaddr_t *packetbuf_addr(uint8_t type);
 
 /**
- * \brief      Checks whether the current packet is a broadcast.
- * \retval 0   iff current packet is not a broadcast
+ * \brief       Checks whether the current packet is a broadcast.
+ * \retval true iff the current packet is a broadcast
  */
-int               packetbuf_holds_broadcast(void);
+bool              packetbuf_holds_broadcast(void);
 
 void              packetbuf_attr_clear(void);
 
