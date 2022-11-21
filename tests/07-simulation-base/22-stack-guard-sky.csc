@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<simconf>
+<simconf version="2022112801">
   <simulation>
     <title>Stack guard test (Sky)</title>
     <randomseed>1</randomseed>
@@ -16,12 +16,11 @@
     </events>
     <motetype>
       org.contikios.cooja.mspmote.SkyMoteType
-      <identifier>sky1</identifier>
       <description>Sky Mote Type #1</description>
-      <source EXPORT="discard">[CONTIKI_DIR]/examples/libs/stack-check/example-stack-check.c</source>
-      <commands EXPORT="discard">make TARGET=sky clean
+      <source>[CONTIKI_DIR]/examples/libs/stack-check/example-stack-check.c</source>
+      <commands>make TARGET=sky clean
 make -j$(CPUS) example-stack-check.sky TARGET=sky</commands>
-      <firmware EXPORT="copy">[CONTIKI_DIR]/examples/libs/stack-check/example-stack-check.sky</firmware>
+      <firmware>[CONTIKI_DIR]/examples/libs/stack-check/example-stack-check.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
@@ -32,20 +31,17 @@ make -j$(CPUS) example-stack-check.sky TARGET=sky</commands>
       <moteinterface>org.contikios.cooja.mspmote.interfaces.Msp802154Radio</moteinterface>
       <moteinterface>org.contikios.cooja.mspmote.interfaces.MspSerial</moteinterface>
       <moteinterface>org.contikios.cooja.mspmote.interfaces.SkyLED</moteinterface>
+      <mote>
+        <interface_config>
+          org.contikios.cooja.interfaces.Position
+          <pos x="64.11203103628397" y="93.06735634828134" />
+        </interface_config>
+        <interface_config>
+          org.contikios.cooja.mspmote.interfaces.MspMoteID
+          <id>1</id>
+        </interface_config>
+      </mote>
     </motetype>
-    <mote>
-      <interface_config>
-        org.contikios.cooja.interfaces.Position
-        <x>64.11203103628397</x>
-        <y>93.06735634828134</y>
-        <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.mspmote.interfaces.MspMoteID
-        <id>1</id>
-      </interface_config>
-      <motetype_identifier>sky1</motetype_identifier>
-    </mote>
   </simulation>
   <plugin>
     org.contikios.cooja.plugins.ScriptRunner
@@ -53,19 +49,7 @@ make -j$(CPUS) example-stack-check.sky TARGET=sky</commands>
       <scriptfile>[CONFIG_DIR]/js/22-stack-check.js</scriptfile>
       <active>true</active>
     </plugin_config>
-    <width>541</width>
-    <z>0</z>
-    <height>448</height>
-    <location_x>299</location_x>
-    <location_y>7</location_y>
-  </plugin>
-  <plugin>
-    org.contikios.cooja.plugins.SimControl
-    <width>280</width>
-    <z>2</z>
-    <height>160</height>
-    <location_x>7</location_x>
-    <location_y>10</location_y>
+    <bounds x="299" y="7" height="448" width="541" z="1" />
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.LogListener
@@ -74,11 +58,6 @@ make -j$(CPUS) example-stack-check.sky TARGET=sky</commands>
       <formatted_time />
       <coloring />
     </plugin_config>
-    <width>680</width>
-    <z>1</z>
-    <height>240</height>
-    <location_x>51</location_x>
-    <location_y>288</location_y>
+    <bounds x="51" y="288" height="240" width="680" />
   </plugin>
 </simconf>
-

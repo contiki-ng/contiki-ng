@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<simconf>
+<simconf version="2022112801">
   <simulation>
     <title>NullNet Broadcast Example</title>
     <randomseed>1</randomseed>
@@ -16,7 +16,6 @@
     </events>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
-      <identifier>mtype634</identifier>
       <description>Cooja Mote Type #1</description>
       <source>[CONTIKI_DIR]/examples/nullnet/nullnet-broadcast.c</source>
       <commands>make TARGET=cooja clean
@@ -28,7 +27,7 @@ make -j$(CPUS) nullnet-broadcast.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiRS232</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiBeeper</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
-      <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiIPAddress</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiRadio</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiButton</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiPIR</moteinterface>
@@ -38,55 +37,38 @@ make -j$(CPUS) nullnet-broadcast.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
+      <mote>
+        <interface_config>
+          org.contikios.cooja.interfaces.Position
+          <pos x="41.086521947449974" y="65.60589922041163" />
+        </interface_config>
+        <interface_config>
+          org.contikios.cooja.contikimote.interfaces.ContikiMoteID
+          <id>1</id>
+        </interface_config>
+      </mote>
+      <mote>
+        <interface_config>
+          org.contikios.cooja.interfaces.Position
+          <pos x="28.458497515673685" y="52.43866085432446" />
+        </interface_config>
+        <interface_config>
+          org.contikios.cooja.contikimote.interfaces.ContikiMoteID
+          <id>2</id>
+        </interface_config>
+      </mote>
+      <mote>
+        <interface_config>
+          org.contikios.cooja.interfaces.Position
+          <pos x="6.830522087791668" y="77.15936959931379" />
+        </interface_config>
+        <interface_config>
+          org.contikios.cooja.contikimote.interfaces.ContikiMoteID
+          <id>3</id>
+        </interface_config>
+      </mote>
     </motetype>
-    <mote>
-      <interface_config>
-        org.contikios.cooja.interfaces.Position
-        <x>41.086521947449974</x>
-        <y>65.60589922041163</y>
-        <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiMoteID
-        <id>1</id>
-      </interface_config>
-      <motetype_identifier>mtype634</motetype_identifier>
-    </mote>
-    <mote>
-      <interface_config>
-        org.contikios.cooja.interfaces.Position
-        <x>28.458497515673685</x>
-        <y>52.43866085432446</y>
-        <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiMoteID
-        <id>2</id>
-      </interface_config>
-      <motetype_identifier>mtype634</motetype_identifier>
-    </mote>
-    <mote>
-      <interface_config>
-        org.contikios.cooja.interfaces.Position
-        <x>6.830522087791668</x>
-        <y>77.15936959931379</y>
-        <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiMoteID
-        <id>3</id>
-      </interface_config>
-      <motetype_identifier>mtype634</motetype_identifier>
-    </mote>
   </simulation>
-  <plugin>
-    org.contikios.cooja.plugins.SimControl
-    <width>280</width>
-    <z>5</z>
-    <height>160</height>
-    <location_x>400</location_x>
-    <location_y>0</location_y>
-  </plugin>
   <plugin>
     org.contikios.cooja.plugins.Visualizer
     <plugin_config>
@@ -95,11 +77,7 @@ make -j$(CPUS) nullnet-broadcast.cooja TARGET=cooja</commands>
       <skin>org.contikios.cooja.plugins.skins.UDGMVisualizerSkin</skin>
       <viewport>6.180735450568881 0.0 0.0 6.180735450568881 49.41871362245591 -238.19717905203652</viewport>
     </plugin_config>
-    <width>400</width>
-    <z>2</z>
-    <height>400</height>
-    <location_x>1</location_x>
-    <location_y>1</location_y>
+    <bounds x="1" y="1" height="400" width="400" z="4" />
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.LogListener
@@ -108,11 +86,7 @@ make -j$(CPUS) nullnet-broadcast.cooja TARGET=cooja</commands>
       <formatted_time />
       <coloring />
     </plugin_config>
-    <width>1179</width>
-    <z>1</z>
-    <height>704</height>
-    <location_x>679</location_x>
-    <location_y>0</location_y>
+    <bounds x="679" y="0" height="704" width="1179" z="3" />
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.TimeLine
@@ -125,11 +99,7 @@ make -j$(CPUS) nullnet-broadcast.cooja TARGET=cooja</commands>
       <showLEDs />
       <zoomfactor>1.7067792216977151</zoomfactor>
     </plugin_config>
-    <width>1858</width>
-    <z>4</z>
-    <height>166</height>
-    <location_x>9</location_x>
-    <location_y>723</location_y>
+    <bounds x="9" y="723" height="166" width="1858" z="2" />
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.RadioLogger
@@ -137,11 +107,7 @@ make -j$(CPUS) nullnet-broadcast.cooja TARGET=cooja</commands>
       <split>150</split>
       <formatted_time />
     </plugin_config>
-    <width>500</width>
-    <z>3</z>
-    <height>300</height>
-    <location_x>109</location_x>
-    <location_y>408</location_y>
+    <bounds x="109" y="408" height="300" width="500" z="1" />
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.ScriptRunner
@@ -161,11 +127,6 @@ WAIT_UNTIL(id == 1 &amp;&amp; msg.contains("Received"));
 log.testOK(); /* Report test success and quit */</script>
       <active>true</active>
     </plugin_config>
-    <width>600</width>
-    <z>0</z>
-    <height>700</height>
-    <location_x>902</location_x>
-    <location_y>108</location_y>
+    <bounds x="902" y="108" height="700" width="600" />
   </plugin>
 </simconf>
-
