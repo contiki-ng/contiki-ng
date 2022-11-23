@@ -1122,14 +1122,7 @@ send_packet(mac_callback_t sent, void *ptr)
   tsch_security_set_packetbuf_attr(FRAME802154_DATAFRAME);
 #endif /* LLSEC802154_ENABLED */
 
-#if !NETSTACK_CONF_BRIDGE_MODE
-  /*
-   * In the Contiki stack, the source address of a frame is set at the RDC
-   * layer. Since TSCH doesn't use any RDC protocol and bypasses the layer to
-   * transmit a frame, it should set the source address by itself.
-   */
   packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);
-#endif
 
   max_transmissions = packetbuf_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS);
   if(max_transmissions == 0) {

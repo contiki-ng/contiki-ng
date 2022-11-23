@@ -1553,11 +1553,6 @@ send_packet(linkaddr_t *dest)
    */
   packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, dest);
 
-#if NETSTACK_CONF_BRIDGE_MODE
-  /* This needs to be explicitly set here for bridge mode to work */
-  packetbuf_set_addr(PACKETBUF_ADDR_SENDER,(void*)&uip_lladdr);
-#endif
-
   /* Provide a callback function to receive the result of
      a packet transmission. */
   NETSTACK_MAC.send(&packet_sent, NULL);
