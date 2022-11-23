@@ -22,7 +22,7 @@ By default the UDP port is `60001`.
 Now click *Start* in the *Serial Socket* plugin, and then also in the simulation control to start the simulation.
 From a terminal in the same host that runs Cooja, go to `examples/rpl-border-router`, and run:
 ```bash
-$ make TARGET=cooja connect-router-cooja 
+$ make TARGET=zoul connect-router-cooja
 ```
 
 This will start `tunslip6` and will create a virtual tunnel interface (commonly `tun0`) in the "outside world" environment: your operating system, virtual machine or docker container. `tunslip6` will then start acting as a bridge between this tunnel interface and the serial socket inside Cooja:
