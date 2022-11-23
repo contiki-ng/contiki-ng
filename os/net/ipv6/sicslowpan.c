@@ -589,7 +589,8 @@ addr_context_lookup_by_number(uint8_t number)
 }
 /*--------------------------------------------------------------------*/
 static uint8_t
-compress_addr_64(uint8_t bitpos, uip_ipaddr_t *ipaddr, uip_lladdr_t *lladdr)
+compress_addr_64(uint8_t bitpos, uip_ipaddr_t *ipaddr,
+    const uip_lladdr_t *lladdr)
 {
   if(uip_is_addr_mac_addr_based(ipaddr, lladdr)) {
     return 3 << bitpos; /* 0-bits */
@@ -680,12 +681,10 @@ uncompress_addr(uip_ipaddr_t *ipaddr, uint8_t const prefix[],
  * \note The context number 00 is reserved for the link local prefix.
  * For unicast addresses, if we cannot compress the prefix, we neither
  * compress the IID.
- * \param link_destaddr L2 destination address, needed to compress IP
- * dest
  * \return 1 if success, else 0
  */
 static int
-compress_hdr_iphc(linkaddr_t *link_destaddr)
+compress_hdr_iphc(void)
 {
   uint8_t tmp, iphc0, iphc1, *next_hdr, *next_nhc;
   int ext_hdr_len;
@@ -893,15 +892,16 @@ compress_hdr_iphc(linkaddr_t *link_destaddr)
       /* compession compare with link adress (destination) */
 
       iphc1 |= compress_addr_64(SICSLOWPAN_IPHC_DAM_BIT,
-                                &UIP_IP_BUF->destipaddr,
-                                (uip_lladdr_t *)link_destaddr);
+          &UIP_IP_BUF->destipaddr,
+          (const uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
       /* No context found for this address */
     } else if(uip_is_addr_linklocal(&UIP_IP_BUF->destipaddr) &&
               UIP_IP_BUF->destipaddr.u16[1] == 0 &&
               UIP_IP_BUF->destipaddr.u16[2] == 0 &&
               UIP_IP_BUF->destipaddr.u16[3] == 0) {
       iphc1 |= compress_addr_64(SICSLOWPAN_IPHC_DAM_BIT,
-               &UIP_IP_BUF->destipaddr, (uip_lladdr_t *)link_destaddr);
+          &UIP_IP_BUF->destipaddr,
+          (const uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
     } else {
       /* send the full address */
       iphc1 |= SICSLOWPAN_IPHC_DAM_00; /* 128-bits */
@@ -1494,7 +1494,7 @@ digest_6lorh_hdr(void)
  */
 #if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6
 static void
-compress_hdr_ipv6(linkaddr_t *link_destaddr)
+compress_hdr_ipv6(void)
 {
   *packetbuf_ptr = SICSLOWPAN_DISPATCH_IPV6;
   packetbuf_hdr_len += SICSLOWPAN_IPV6_HDR_LEN;
@@ -1542,17 +1542,10 @@ packet_sent(void *ptr, int status, int transmissions)
 /**
  * \brief This function is called by the 6lowpan code to send out a
  * packet.
- * \param dest the link layer destination address of the packet
  */
 static void
-send_packet(linkaddr_t *dest)
+send_packet(void)
 {
-  /* Set the link layer destination address for the packet as a
-   * packetbuf attribute. The MAC layer can access the destination
-   * address with the function packetbuf_addr(PACKETBUF_ADDR_RECEIVER).
-   */
-  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, dest);
-
 #if NETSTACK_CONF_BRIDGE_MODE
   /* This needs to be explicitly set here for bridge mode to work */
   packetbuf_set_addr(PACKETBUF_ADDR_SENDER,(void*)&uip_lladdr);
@@ -1576,7 +1569,8 @@ send_packet(linkaddr_t *dest)
  * \return 1 if success, 0 otherwise
  */
 static int
-fragment_copy_payload_and_send(uint16_t uip_offset, linkaddr_t *dest) {
+fragment_copy_payload_and_send(uint16_t uip_offset)
+{
   struct queuebuf *q;
 
   /* Now copy fragment payload from uip_buf */
@@ -1592,7 +1586,7 @@ fragment_copy_payload_and_send(uint16_t uip_offset, linkaddr_t *dest) {
   }
 
   /* Send fragment */
-  send_packet(dest);
+  send_packet();
 
   /* Restore packetbuf from queuebuf */
   queuebuf_to_packetbuf(q);
@@ -1622,9 +1616,6 @@ output(const linkaddr_t *localdest)
 {
   int frag_needed;
 
-  /* The MAC address of the destination of the packet */
-  linkaddr_t dest;
-
   /* init */
   uncomp_hdr_len = 0;
   packetbuf_hdr_len = 0;
@@ -1639,25 +1630,16 @@ output(const linkaddr_t *localdest)
     set_packet_attrs();
   }
 
-  /*
-   * The destination address will be tagged to each outbound
-   * packet. If the argument localdest is NULL, we are sending a
-   * broadcast packet.
-   */
-  if(localdest == NULL) {
-    linkaddr_copy(&dest, &linkaddr_null);
-  } else {
-    linkaddr_copy(&dest, localdest);
-  }
-
   LOG_INFO("output: sending IPv6 packet with len %d\n", uip_len);
 
   /* copy over the retransmission count from uipbuf attributes */
   packetbuf_set_attr(PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS,
                      uipbuf_get_attr(UIPBUF_ATTR_MAX_MAC_TRANSMISSIONS));
 
-/* Calculate NETSTACK_FRAMER's header length, that will be added in the NETSTACK_MAC */
-  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &dest);
+  /* Copy destination address to packetbuf */
+  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER,
+      localdest ? localdest : &linkaddr_null);
+
 #if LLSEC802154_USES_AUX_HEADER
   /* copy LLSEC level */
   packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL,
@@ -1668,6 +1650,7 @@ output(const linkaddr_t *localdest)
 #endif /* LLSEC802154_USES_EXPLICIT_KEYS */
 #endif /*  LLSEC802154_USES_AUX_HEADER */
 
+  /* Calculate NETSTACK_FRAMER's header length, that will be added in the NETSTACK_MAC */
   mac_max_payload = NETSTACK_MAC.max_payload();
 
   if(mac_max_payload <= 0) {
@@ -1678,7 +1661,7 @@ output(const linkaddr_t *localdest)
 
   /* Try to compress the headers */
 #if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6
-  compress_hdr_ipv6(&dest);
+  compress_hdr_ipv6();
 #endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_IPV6 */
 #if SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_6LORH
   /* Add 6LoRH headers before IPHC. Only needed on routed traffic
@@ -1689,7 +1672,7 @@ output(const linkaddr_t *localdest)
   }
 #endif /* SICSLOWPAN_COMPRESSION == SICSLOWPAN_COMPRESSION_6LORH */
 #if SICSLOWPAN_COMPRESSION >= SICSLOWPAN_COMPRESSION_IPHC
-  if(compress_hdr_iphc(&dest) == 0) {
+  if(compress_hdr_iphc() == 0) {
     /* Warning should already be issued by function above */
     return 0;
   }
@@ -1698,8 +1681,6 @@ output(const linkaddr_t *localdest)
   /* Use the mac_max_payload to understand what is the max payload in a MAC
    * packet. We calculate it here only to make a better decision of whether
    * the outgoing packet needs to be fragmented or not. */
-
-  packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, &dest);
 
   frag_needed = (int)uip_len - (int)uncomp_hdr_len + (int)packetbuf_hdr_len > mac_max_payload;
   LOG_INFO("output: header len %d -> %d, total len %d -> %d, MAC max payload %d, frag_needed %d\n",
@@ -1781,7 +1762,7 @@ output(const linkaddr_t *localdest)
     LOG_INFO("output: fragment %d/%d (tag %d, payload %d)\n",
              curr_frag + 1, fragment_count,
              frag_tag, packetbuf_payload_len);
-    if(fragment_copy_payload_and_send(uncomp_hdr_len, &dest) == 0) {
+    if(fragment_copy_payload_and_send(uncomp_hdr_len) == 0) {
       return 0;
     }
 
@@ -1815,7 +1796,7 @@ output(const linkaddr_t *localdest)
       LOG_INFO("output: fragment %d/%d (tag %d, payload %d, offset %d)\n",
                curr_frag + 1, fragment_count,
                frag_tag, packetbuf_payload_len, processed_ip_out_len);
-      if(fragment_copy_payload_and_send(processed_ip_out_len, &dest) == 0) {
+      if(fragment_copy_payload_and_send(processed_ip_out_len) == 0) {
         return 0;
       }
 
@@ -1840,7 +1821,7 @@ output(const linkaddr_t *localdest)
     memcpy(packetbuf_ptr + packetbuf_hdr_len, (uint8_t *)UIP_IP_BUF + uncomp_hdr_len,
            uip_len - uncomp_hdr_len);
     packetbuf_set_datalen(uip_len - uncomp_hdr_len + packetbuf_hdr_len);
-    send_packet(&dest);
+    send_packet();
   }
   return 1;
 }
