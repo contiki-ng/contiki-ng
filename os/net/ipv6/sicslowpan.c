@@ -83,8 +83,8 @@
 
 #define GET16(ptr,index) (((uint16_t)((ptr)[index] << 8)) | ((ptr)[(index) + 1]))
 #define SET16(ptr,index,value) do {     \
-  (ptr)[index] = ((value) >> 8) & 0xff; \
-  (ptr)[index + 1] = (value) & 0xff;    \
+  (ptr)[(index)] = ((value) >> 8) & 0xff; \
+  (ptr)[(index) + 1] = (value) & 0xff;    \
 } while(0)
 
 /** \name Pointers in the packetbuf buffer
