@@ -49,34 +49,45 @@
 #include "net/mac/mac-sequence.h"
 #include "net/packetbuf.h"
 
-struct seqno {
-  linkaddr_t sender;
-  clock_time_t timestamp;
-  uint8_t seqno;
-};
-
-static void mac_sequence_register_seqno(void);
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "mac-sequence"
+#define LOG_LEVEL LOG_LEVEL_MAC
 
 #ifdef NETSTACK_CONF_MAC_SEQNO_MAX_AGE
 #define SEQNO_MAX_AGE NETSTACK_CONF_MAC_SEQNO_MAX_AGE
 #else /* NETSTACK_CONF_MAC_SEQNO_MAX_AGE */
-#define SEQNO_MAX_AGE (20 * CLOCK_SECOND)
+#define SEQNO_MAX_AGE (20 /* seconds */)
 #endif /* NETSTACK_CONF_MAC_SEQNO_MAX_AGE */
 
-#ifdef NETSTACK_CONF_MAC_SEQNO_HISTORY
-#define MAX_SEQNOS NETSTACK_CONF_MAC_SEQNO_HISTORY
-#else /* NETSTACK_CONF_MAC_SEQNO_HISTORY */
-#define MAX_SEQNOS 16
-#endif /* NETSTACK_CONF_MAC_SEQNO_HISTORY */
-static struct seqno received_seqnos[MAX_SEQNOS];
+#ifdef MAC_SEQUENCE_CONF_WITH_BROADCAST_DEDUPLICATION
+#define WITH_BROADCAST_DEDUPLICATION MAC_SEQUENCE_CONF_WITH_BROADCAST_DEDUPLICATION
+#else /* MAC_SEQUENCE_CONF_WITH_BROADCAST_DEDUPLICATION */
+#define WITH_BROADCAST_DEDUPLICATION 0
+#endif /* MAC_SEQUENCE_CONF_WITH_BROADCAST_DEDUPLICATION */
+
+#define BEFORE(a, b) ((int16_t)((a) - (b)) < 0)
+
+struct deduplication_record {
+#if WITH_BROADCAST_DEDUPLICATION
+  uint16_t last_broadcast_seqno_timeout;
+#endif /* WITH_BROADCAST_DEDUPLICATION */
+  uint16_t last_unicast_seqno_timeout;
+#if WITH_BROADCAST_DEDUPLICATION
+  uint8_t last_broadcast_seqno;
+#endif /* WITH_BROADCAST_DEDUPLICATION */
+  uint8_t last_unicast_seqno;
+};
 
 static uint8_t mac_dsn;
+NBR_TABLE(struct deduplication_record, deduplication_table);
 
 /*---------------------------------------------------------------------------*/
 void
 mac_sequence_init(void)
 {
   mac_dsn = random_rand();
+  nbr_table_register(deduplication_table, NULL);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -85,57 +96,64 @@ mac_sequence_set_dsn(void)
   packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, mac_dsn++);
 }
 /*---------------------------------------------------------------------------*/
-int
+enum mac_sequence_result
 mac_sequence_is_duplicate(void)
 {
-  int i;
-  clock_time_t now = clock_time();
+  uint16_t now;
+  uint8_t seqno;
+  const linkaddr_t *source_address;
+  struct deduplication_record *record;
 
-  /*
-   * Check for duplicate packet by comparing the sequence number of the incoming
-   * packet with the last few ones we saw.
-   */
-  for(i = 0; i < MAX_SEQNOS; ++i) {
-    if(linkaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER),
-                    &received_seqnos[i].sender)) {
-      if(packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO) == received_seqnos[i].seqno) {
-#if SEQNO_MAX_AGE > 0
-        if(now - received_seqnos[i].timestamp <= SEQNO_MAX_AGE) {
-          /* Duplicate packet. */
-          return 1;
-        }
-#else /* SEQNO_MAX_AGE > 0 */
-        return 1;
-#endif /* SEQNO_MAX_AGE > 0 */
-      }
-      break;
+#if !WITH_BROADCAST_DEDUPLICATION
+  if(packetbuf_holds_broadcast()) {
+    return MAC_SEQUENCE_NO_DUPLICATE;
+  }
+#endif /* !WITH_BROADCAST_DEDUPLICATION */
+
+  now = clock_seconds() & 0xFFFF;
+  seqno = packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO);
+  source_address = packetbuf_addr(PACKETBUF_ADDR_SENDER);
+  record = nbr_table_get_from_lladdr(deduplication_table, source_address);
+
+  if(!record) {
+    /* allocate new deduplication record */
+    record = nbr_table_add_lladdr(deduplication_table,
+        source_address,
+        NBR_TABLE_REASON_MAC,
+        NULL);
+    if(!record) {
+      LOG_WARN("Could not allocate deduplication record\n");
+      return MAC_SEQUENCE_ERROR;
     }
-  }
-  mac_sequence_register_seqno();
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
-static void
-mac_sequence_register_seqno(void)
-{
-  int i, j;
-
-  /* Locate possible previous sequence number for this address. */
-  for(i = 0; i < MAX_SEQNOS; ++i) {
-    if(linkaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER),
-                    &received_seqnos[i].sender)) {
-      i++;
-      break;
+    record->last_unicast_seqno
+#if WITH_BROADCAST_DEDUPLICATION
+        = record->last_broadcast_seqno
+#endif /* WITH_BROADCAST_DEDUPLICATION */
+        = seqno;
+    record->last_unicast_seqno_timeout
+#if WITH_BROADCAST_DEDUPLICATION
+        = record->last_broadcast_seqno_timeout
+#endif /* WITH_BROADCAST_DEDUPLICATION */
+        = now + SEQNO_MAX_AGE;
+#if WITH_BROADCAST_DEDUPLICATION
+  } else if(packetbuf_holds_broadcast()) {
+    /* check for duplicate broadcast frame */
+    if((record->last_broadcast_seqno == seqno)
+        && BEFORE(record->last_broadcast_seqno_timeout, now)) {
+      return MAC_SEQUENCE_DUPLICATE;
     }
+    record->last_broadcast_seqno = seqno;
+    record->last_broadcast_seqno_timeout = now + SEQNO_MAX_AGE;
+#endif /* WITH_BROADCAST_DEDUPLICATION */
+  } else {
+    /* check for duplicate unicast frame */
+    if((record->last_unicast_seqno == seqno)
+        && BEFORE(record->last_unicast_seqno_timeout, now)) {
+      return MAC_SEQUENCE_DUPLICATE;
+    }
+    record->last_unicast_seqno = seqno;
+    record->last_unicast_seqno_timeout = now + SEQNO_MAX_AGE;
   }
-
-  /* Keep the last sequence number for each address as per 802.15.4e. */
-  for(j = i - 1; j > 0; --j) {
-    memcpy(&received_seqnos[j], &received_seqnos[j - 1], sizeof(struct seqno));
-  }
-  received_seqnos[0].seqno = packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO);
-  received_seqnos[0].timestamp = clock_time();
-  linkaddr_copy(&received_seqnos[0].sender,
-                packetbuf_addr(PACKETBUF_ADDR_SENDER));
+  return MAC_SEQUENCE_NO_DUPLICATE;
 }
 /*---------------------------------------------------------------------------*/

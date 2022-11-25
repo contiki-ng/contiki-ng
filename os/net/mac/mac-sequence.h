@@ -45,6 +45,12 @@
 #ifndef MAC_SEQUENCE_H
 #define MAC_SEQUENCE_H
 
+enum mac_sequence_result {
+  MAC_SEQUENCE_NO_DUPLICATE = 0,
+  MAC_SEQUENCE_DUPLICATE,
+  MAC_SEQUENCE_ERROR,
+};
+
 /**
  * brief       Initializes.
  */
@@ -56,13 +62,14 @@ void mac_sequence_init(void);
 void mac_sequence_set_dsn(void);
 
 /**
- * \brief      Tell whether the packetbuf is a duplicate packet
- * \return     Non-zero if the packetbuf is a duplicate packet, zero otherwise
+ * \brief      Detects duplicates and updates deduplication data in one go.
  *
- *             This function is used to check for duplicate packet by comparing
- *             the sequence number of the incoming packet with the last few ones
- *             we saw, filtering with the link-layer address.
+ *             This function detects duplicate frames by comparing the
+ *             sequence number of the incoming unicast or broadcast frame
+ *             with that of the last unicast or broadcast frame from the
+ *             sender, respectively. The internal deduplication data is
+ *             updated when the incoming frame turns out to be no duplicate.
  */
-int mac_sequence_is_duplicate(void);
+enum mac_sequence_result mac_sequence_is_duplicate(void);
 
 #endif /* MAC_SEQUENCE_H */
