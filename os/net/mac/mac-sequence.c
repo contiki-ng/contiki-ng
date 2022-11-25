@@ -51,7 +51,7 @@
 
 struct seqno {
   linkaddr_t sender;
-  clock_time_t timestamp;
+  clock_time_t timeout;
   uint8_t seqno;
 };
 
@@ -98,7 +98,7 @@ mac_sequence_is_duplicate(void)
                     &received_seqnos[i].sender)) {
       if(packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO) == received_seqnos[i].seqno) {
 #if SEQNO_MAX_AGE > 0
-        if(now - received_seqnos[i].timestamp <= SEQNO_MAX_AGE) {
+        if(CLOCK_LT(now, received_seqnos[i].timeout)) {
           /* Duplicate packet. */
           return 1;
         }
@@ -131,7 +131,7 @@ mac_sequence_register_seqno(void)
     memcpy(&received_seqnos[j], &received_seqnos[j - 1], sizeof(struct seqno));
   }
   received_seqnos[0].seqno = packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO);
-  received_seqnos[0].timestamp = clock_time();
+  received_seqnos[0].timeout = clock_time() + SEQNO_MAX_AGE;
   linkaddr_copy(&received_seqnos[0].sender,
                 packetbuf_addr(PACKETBUF_ADDR_SENDER));
 }
