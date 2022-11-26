@@ -45,6 +45,7 @@
 #include <string.h>
 
 #include "contiki-net.h"
+#include "lib/random.h"
 #include "net/mac/mac-sequence.h"
 #include "net/packetbuf.h"
 
@@ -67,6 +68,20 @@ struct seqno {
 #endif /* NETSTACK_CONF_MAC_SEQNO_HISTORY */
 static struct seqno received_seqnos[MAX_SEQNOS];
 
+static uint8_t mac_dsn;
+
+/*---------------------------------------------------------------------------*/
+void
+mac_sequence_init(void)
+{
+  mac_dsn = random_rand();
+}
+/*---------------------------------------------------------------------------*/
+void
+mac_sequence_set_dsn(void)
+{
+  packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, mac_dsn++);
+}
 /*---------------------------------------------------------------------------*/
 int
 mac_sequence_is_duplicate(void)

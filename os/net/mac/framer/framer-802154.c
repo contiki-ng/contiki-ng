@@ -47,14 +47,6 @@
 #define LOG_MODULE "Frame 15.4"
 #define LOG_LEVEL LOG_LEVEL_FRAMER
 
-/**  \brief The sequence number (0x00 - 0xff) added to the transmitted
- *   data or MAC command frame. The default is a random value within
- *   the range.
- */
-static uint8_t mac_dsn;
-
-static uint8_t initialized = 0;
-
 /*---------------------------------------------------------------------------*/
 static int
 create_frame(int do_create)
@@ -68,26 +60,6 @@ create_frame(int do_create)
 
   /* init to zeros */
   memset(&params, 0, sizeof(params));
-
-  if(!initialized) {
-    initialized = 1;
-    mac_dsn = random_rand() & 0xff;
-  }
-
-  /*
-   * Before setting up "params", make sure we won't use 0 as the sequence number
-   * of a newly created frame.
-   *
-   * The case when do_create is 0 is ignored since it's for only length
-   * calculation. No sequence number is needed and should not be consumed.
-   */
-  if(do_create != 0 && packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO) == 0) {
-    if(mac_dsn == 0) {
-      mac_dsn++;
-    }
-    packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, mac_dsn);
-    mac_dsn++;
-  }
 
   framer_802154_setup_params(packetbuf_attr, packetbuf_holds_broadcast(),
                              &params);
