@@ -158,6 +158,7 @@ init(void)
   }
 #endif
 
+  mac_sequence_init();
 
 #if LLSEC802154_USES_AUX_HEADER
 #ifdef CSMA_LLSEC_DEFAULT_KEY0
