@@ -99,8 +99,6 @@ input_packet(void)
       LOG_WARN("drop duplicate link layer packet from ");
       LOG_WARN_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
       LOG_WARN_(", seqno %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
-    } else {
-      mac_sequence_register_seqno();
     }
 
 #if CSMA_SEND_SOFT_ACK

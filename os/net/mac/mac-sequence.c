@@ -55,6 +55,8 @@ struct seqno {
   uint8_t seqno;
 };
 
+static void mac_sequence_register_seqno(void);
+
 #ifdef NETSTACK_CONF_MAC_SEQNO_MAX_AGE
 #define SEQNO_MAX_AGE NETSTACK_CONF_MAC_SEQNO_MAX_AGE
 #else /* NETSTACK_CONF_MAC_SEQNO_MAX_AGE */
@@ -109,10 +111,11 @@ mac_sequence_is_duplicate(void)
       break;
     }
   }
+  mac_sequence_register_seqno();
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-void
+static void
 mac_sequence_register_seqno(void)
 {
   int i, j;

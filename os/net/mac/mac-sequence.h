@@ -65,12 +65,4 @@ void mac_sequence_set_dsn(void);
  */
 int mac_sequence_is_duplicate(void);
 
-/**
- * \brief      Register the sequence number of the packetbuf
- *
- *             This function is used to add the sequence number of the incoming
- *             packet to the history.
- */
-void mac_sequence_register_seqno(void);
-
 #endif /* MAC_SEQUENCE_H */
