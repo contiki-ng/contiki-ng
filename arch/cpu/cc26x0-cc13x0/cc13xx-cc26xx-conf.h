@@ -150,17 +150,26 @@
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
+
+/* Deprecation warning for UART config */
+#ifdef CC26XX_UART_CONF_ENABLE
+#error CC26XX_UART_CONF_ENABLE is deprecated. Use TI_UART_CONF_ENABLE.
+#endif
+#ifdef CC26XX_UART_CONF_BAUD_RATE
+#error CC26XX_UART_CONF_BAUD_RATE is deprecated. Use TI_UART_CONF_BAUD_RATE.
+#endif
+
 /**
  * \name Character I/O Configuration
  *
  * @{
  */
-#ifndef CC26XX_UART_CONF_ENABLE
-#define CC26XX_UART_CONF_ENABLE            1 /**< Enable/Disable UART I/O */
+#ifndef TI_UART_CONF_ENABLE
+#define TI_UART_CONF_ENABLE                1 /**< Enable/Disable UART I/O */
 #endif
 
-#ifndef CC26XX_UART_CONF_BAUD_RATE
-#define CC26XX_UART_CONF_BAUD_RATE    115200 /**< Default UART0 baud rate */
+#ifndef TI_UART_CONF_BAUD_RATE
+#define TI_UART_CONF_BAUD_RATE        115200 /**< Default UART0 baud rate */
 #endif
 
 /* Enable I/O over the Debugger Devpack - Only relevant for the SensorTag */

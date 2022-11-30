@@ -65,7 +65,7 @@ static int (*input_handler)(unsigned char c);
 /*---------------------------------------------------------------------------*/
 static bool
 usable(uint32_t pin) {
-  if(CC26XX_UART_CONF_ENABLE == 0 || pin == IOID_UNUSED) {
+  if(TI_UART_CONF_ENABLE == 0 || pin == IOID_UNUSED) {
     return false;
   }
 
@@ -161,7 +161,7 @@ configure(void)
 
   /* Configure the UART for 115,200, 8-N-1 operation. */
   ti_lib_uart_config_set_exp_clk(UART0_BASE, ti_lib_sys_ctrl_clock_get(),
-                                 CC26XX_UART_CONF_BAUD_RATE,
+                                 TI_UART_CONF_BAUD_RATE,
                                  (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
                                   UART_CONFIG_PAR_NONE));
 
