@@ -49,15 +49,18 @@
 void
 gpio_hal_arch_no_port_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
 {
-  uint32_t config;
-  gpio_hal_pin_cfg_t tmp;
+  /* Get current settings */
+  uint32_t config = ti_lib_ioc_port_configure_get(pin);
+
+  /* Check if we are enabling interrupts now */
+  bool enabling_interrupts =
+      (config & IOC_INT_ENABLE) == 0 && (cfg & GPIO_HAL_PIN_CFG_INT_ENABLE);
 
   /* Clear settings that we are about to change, keep everything else */
-  config = ti_lib_ioc_port_configure_get(pin);
   config &= ~CONFIG_MASK;
 
   /* Hysteresis */
-  tmp = cfg & GPIO_HAL_PIN_CFG_HYSTERESIS;
+  gpio_hal_pin_cfg_t tmp = cfg & GPIO_HAL_PIN_CFG_HYSTERESIS;
   if(tmp == GPIO_HAL_PIN_CFG_HYSTERESIS) {
     config |= IOC_HYST_ENABLE;
   } else {
@@ -94,6 +97,9 @@ gpio_hal_arch_no_port_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
     config |= IOC_INT_ENABLE;
   }
 
+  if(enabling_interrupts) {
+    ti_lib_gpio_clear_event_dio(pin);
+  }
   ti_lib_ioc_port_configure_set(pin, IOC_PORT_GPIO, config);
 }
 /*---------------------------------------------------------------------------*/
