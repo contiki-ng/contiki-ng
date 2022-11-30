@@ -43,7 +43,8 @@
 
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
-#define CONFIG_MASK (IOC_IOPULL_M | IOC_INT_M | IOC_IOMODE_OPEN_SRC_INV)
+#define CONFIG_MASK (IOC_IOPULL_M | IOC_INT_M | \
+                     IOC_IOMODE_OPEN_SRC_INV | IOC_HYST_ENABLE)
 /*---------------------------------------------------------------------------*/
 void
 gpio_hal_arch_no_port_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
@@ -55,6 +56,15 @@ gpio_hal_arch_no_port_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
   config = ti_lib_ioc_port_configure_get(pin);
   config &= ~CONFIG_MASK;
 
+  /* Hysteresis */
+  tmp = cfg & GPIO_HAL_PIN_CFG_HYSTERESIS;
+  if(tmp == GPIO_HAL_PIN_CFG_HYSTERESIS) {
+    config |= IOC_HYST_ENABLE;
+  } else {
+    config |= IOC_HYST_DISABLE;
+  }
+
+  /* Edge detection */
   tmp = cfg & GPIO_HAL_PIN_CFG_EDGE_BOTH;
   if(tmp == GPIO_HAL_PIN_CFG_EDGE_NONE) {
     config |= IOC_NO_EDGE;
@@ -66,6 +76,7 @@ gpio_hal_arch_no_port_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
     config |= IOC_BOTH_EDGES;
   }
 
+  /* Pull */
   tmp = cfg & GPIO_HAL_PIN_CFG_PULL_MASK;
   if(tmp == GPIO_HAL_PIN_CFG_PULL_NONE) {
     config |= IOC_NO_IOPULL;
@@ -75,6 +86,7 @@ gpio_hal_arch_no_port_pin_cfg_set(gpio_hal_pin_t pin, gpio_hal_pin_cfg_t cfg)
     config |= IOC_IOPULL_UP;
   }
 
+  /* Interrupt enable/disable */
   tmp = cfg & GPIO_HAL_PIN_CFG_INT_MASK;
   if(tmp == GPIO_HAL_PIN_CFG_INT_DISABLE) {
     config |= IOC_INT_DISABLE;
@@ -94,6 +106,12 @@ gpio_hal_arch_no_port_pin_cfg_get(gpio_hal_pin_t pin)
 
   cfg = 0;
   config = ti_lib_ioc_port_configure_get(pin);
+
+  /* Hysteresis */
+  tmp = config & IOC_HYST_ENABLE;
+  if(tmp == IOC_HYST_ENABLE) {
+    cfg |= GPIO_HAL_PIN_CFG_HYSTERESIS;
+  }
 
   /* Pull */
   tmp = config & IOC_IOPULL_M;
