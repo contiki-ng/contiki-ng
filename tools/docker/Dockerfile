@@ -10,6 +10,7 @@ USER root
 # gdb: development tools.
 # git: development tools.
 # git-lfs: development tools (used by Gecko SDK).
+# gosu: used for UID-remapping.
 # iputils-ping: used by regression tests.
 # less: convenience tool.
 # lib32z1: 32-bit libz, probably used by some old 32-bit binary.
@@ -35,6 +36,7 @@ RUN apt-get -qq update && \
     gdb \
     git \
     git-lfs \
+    gosu \
     iputils-ping \
     less \
     lib32z1 \
@@ -147,6 +149,8 @@ WORKDIR                 ${HOME}
 COPY --chown=user:user files/cooja ${HOME}/.local/bin/cooja
 # Add aliases for CI. Use a file to avoid quoting issues.
 COPY --chown=user:user files/bash_aliases ${HOME}/.bash_aliases
+# Add login-script for UID/GID-remapping.
+COPY --chown=root:root files/remap-user.sh /usr/local/bin/remap-user.sh
 
 # Doxygen 1.8.17 in Ubuntu 20.04 gives (false) warnings on mqtt.h.
 # Use a binary from the Doxygen homepage, static linking started with 1.9.3.
@@ -172,4 +176,6 @@ RUN wget -nv https://sourceforge.net/projects/doxygen/files/rel-1.9.4/doxygen-1.
 WORKDIR ${CONTIKI_NG}
 
 # Start a bash
+USER root
+ENTRYPOINT ["/usr/local/bin/remap-user.sh"]
 CMD bash --login
