@@ -30,15 +30,21 @@
  *
  */
 #include "ip64/ip64-addrmap.h"
-
+#include "ip64/ip64.h"
 #include "lib/memb.h"
 #include "lib/list.h"
-
 #include "ip64-conf.h"
-
 #include "lib/random.h"
 
 #include <string.h>
+
+/*---------------------------------------------------------------------------*/
+
+#include "sys/log.h"
+#define LOG_MODULE  "IP64"
+#define LOG_LEVEL   LOG_LEVEL_IP64
+
+/*---------------------------------------------------------------------------*/
 
 #ifdef IP64_ADDRMAP_CONF_ENTRIES
 #define NUM_ENTRIES IP64_ADDRMAP_CONF_ENTRIES
@@ -52,8 +58,6 @@ LIST(entrylist);
 #define FIRST_MAPPED_PORT 10000
 #define LAST_MAPPED_PORT  20000
 static uint16_t mapped_port = FIRST_MAPPED_PORT;
-
-#define printf(...)
 
 /*---------------------------------------------------------------------------*/
 struct ip64_addrmap_entry *
@@ -134,11 +138,11 @@ ip64_addrmap_lookup(const uip_ip6addr_t *ip6addr,
 {
   struct ip64_addrmap_entry *m;
 
-  printf("lookup ip4port %d ip6port %d\n", uip_htons(ip4port),
+  LOG_DBG("lookup ip4port %d ip6port %d\n", uip_htons(ip4port),
 	 uip_htons(ip6port));
   check_age();
   for(m = list_head(entrylist); m != NULL; m = list_item_next(m)) {
-    printf("protocol %d %d, ip4port %d %d, ip6port %d %d, ip4 %d ip6 %d\n",
+    LOG_DBG("protocol %d %d, ip4port %d %d, ip6port %d %d, ip4 %d ip6 %d\n",
 	   m->protocol, protocol,
 	   m->ip4port, ip4port,
 	   m->ip6port, ip6port,
@@ -163,7 +167,7 @@ ip64_addrmap_lookup_port(uint16_t mapped_port, uint8_t protocol)
 
   check_age();
   for(m = list_head(entrylist); m != NULL; m = list_item_next(m)) {
-    printf("mapped port %d %d, protocol %d %d\n",
+    LOG_DBG("mapped port %d %d, protocol %d %d\n",
 	   m->mapped_port, mapped_port,
 	   m->protocol, protocol);
     if(m->mapped_port == mapped_port &&
