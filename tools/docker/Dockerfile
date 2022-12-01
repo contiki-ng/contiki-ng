@@ -91,10 +91,10 @@ RUN wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 &
   rm -rf /tmp/msp430 mspgcc*.tar.bz2
 
 # Install nRF Command Line tools
-RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-17-3/nrf-command-line-tools_10.17.3_amd64.deb && \
-  wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-17-3/nrf-command-line-tools-10.17.3_Linux-amd64.tar.gz && \
+RUN wget -nv https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-17-3/nrf-command-line-tools_10.17.3_amd64.deb && \
+  wget -nv https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-17-3/nrf-command-line-tools-10.17.3_linux-amd64.tar.gz && \
   apt-get -qq -y --no-install-recommends install ./nrf-command-line-tools_10.17.3_amd64.deb > /dev/null && \
-  tar zxf nrf-command-line-tools-10.17.3_Linux-amd64.tar.gz ./JLink_Linux_V766a_x86_64.deb && \
+  tar zxf nrf-command-line-tools-10.17.3_linux-amd64.tar.gz ./JLink_Linux_V766a_x86_64.deb && \
   apt-get -qq -y --no-install-recommends install ./JLink_Linux_V766a_x86_64.deb > /dev/null && \
   rm -f *.deb *.tar.gz && \
   apt-get -qq clean
