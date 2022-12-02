@@ -63,7 +63,7 @@ endif
 # Successful simulations do nothing, failures appends test+seed to summary.
 tests: $(TESTS)
 	@for (( SEED=$(BASESEED); SEED < $$(( $(BASESEED) + $(RUNCOUNT) )); SEED++ )); do \
-          $(GRADLE) --no-watch-fs --parallel --build-cache -p $(CONTIKI)/tools/cooja run --args="$(addprefix -nogui=,$(realpath $^)) -contiki=$(realpath $(CONTIKI)) -logdir=$(dir $(realpath $<)) -random-seed=$$SEED" || \
+          $(GRADLE) --no-watch-fs --parallel --build-cache -p $(CONTIKI)/tools/cooja run --args="--no-gui --contiki=$(realpath $(CONTIKI)) --logdir=$(dir $(realpath $<)) --random-seed=$$SEED $(realpath $^)" || \
             echo "TEST FAIL: $^ seed $$SEED" >> summary; \
          done
 

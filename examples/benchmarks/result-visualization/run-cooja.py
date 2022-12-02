@@ -51,7 +51,7 @@ def execute_test(cooja_file):
         return False
 
     filename = os.path.join(SELF_PATH, cooja_file)
-    args = " ".join([COOJA_PATH + "/gradlew --no-watch-fs --parallel --build-cache -p", COOJA_PATH, "run --args='-nogui=" + filename, "-contiki=" + CONTIKI_PATH, "-logdir=" + SELF_PATH + "'"])
+    args = " ".join([COOJA_PATH + "/gradlew --no-watch-fs --parallel --build-cache -p", COOJA_PATH, "run --args='--contiki=" + CONTIKI_PATH, "--no-gui", "--logdir=" + SELF_PATH, filename + "'"])
     sys.stdout.write("  Running Cooja, args={}\n".format(args))
 
     (retcode, output) = run_subprocess(args, '')
