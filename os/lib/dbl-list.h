@@ -81,9 +81,15 @@
   static dbl_list_t name = (dbl_list_t)&name##_dbl_list
 /*---------------------------------------------------------------------------*/
 /**
- * \brief The doubly-linked list datatype
+ * The doubly-linked list datatype.
  */
 typedef void **dbl_list_t;
+
+/**
+ * The non-modifiable doubly-linked list type.
+ */
+typedef void *const *const_dbl_list_t;
+
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Initialise a doubly-linked list.
@@ -96,14 +102,14 @@ void dbl_list_init(dbl_list_t dll);
  * \param dll The doubly-linked list.
  * \return A pointer to the list's head, or NULL if the list is empty
  */
-void *dbl_list_head(const dbl_list_t dll);
+void *dbl_list_head(const_dbl_list_t dll);
 
 /**
  * \brief Return the tail of a doubly-linked list.
  * \param dll The doubly-linked list.
  * \return A pointer to the list's tail, or NULL if the list is empty
  */
-void *dbl_list_tail(const dbl_list_t dll);
+void *dbl_list_tail(const_dbl_list_t dll);
 
 /**
  * \brief Add an element to the head of a doubly-linked list.
@@ -175,7 +181,7 @@ void dbl_list_remove(dbl_list_t dll, const void *element);
  * \param dll The doubly-linked list.
  * \return The number of elements in the list
  */
-unsigned long dbl_list_length(const dbl_list_t dll);
+unsigned long dbl_list_length(const_dbl_list_t dll);
 
 /**
  * \brief Determine whether a doubly-linked list is empty.
@@ -183,7 +189,7 @@ unsigned long dbl_list_length(const dbl_list_t dll);
  * \retval true The list is empty
  * \retval false The list is not empty
  */
-bool dbl_list_is_empty(const dbl_list_t dll);
+bool dbl_list_is_empty(const_dbl_list_t dll);
 /*---------------------------------------------------------------------------*/
 #endif /* DBL_LIST_H_ */
 /*---------------------------------------------------------------------------*/
