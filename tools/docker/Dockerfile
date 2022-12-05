@@ -9,11 +9,13 @@ USER root
 # build-essential: development tools.
 # gdb: development tools.
 # git: development tools.
+# git-lfs: development tools (used by Gecko SDK).
 # iputils-ping: used by regression tests.
 # less: convenience tool.
 # lib32z1: 32-bit libz, probably used by some old 32-bit binary.
 # libcanberra-gtk-module: remove warning message from renode.
 # libcoap2-bin: used by regression tests.
+# libgl1-mesa-glx: required by Simplicity Commander
 # libxtst6: required for GraalVM/Java17 to run Cooja in GUI mode.
 # mosquitto: used by the regression tests.
 # mtr-tiny: used by the regression tests.
@@ -21,6 +23,7 @@ USER root
 # python3: used by scripts.
 # snmp: used by the regression tests.
 # sudo: used by the regression tests.
+# udev: needed for jlink deb postinst script.
 # unzip: required during docker image build for software installation.
 # valgrind: used by the regression tests.
 # wget: used by the regression tests.
@@ -31,11 +34,13 @@ RUN apt-get -qq update && \
     build-essential \
     gdb \
     git \
+    git-lfs \
     iputils-ping \
     less \
     lib32z1 \
     libcanberra-gtk-module \
     libcoap2-bin \
+    libgl1-mesa-glx \
     libpng-dev \
     libxtst6 \
     mosquitto \
@@ -50,6 +55,7 @@ RUN apt-get -qq update && \
     sudo \
     screen \
     srecord \
+    udev \
     unzip \
     libusb-1.0-0 \
     valgrind \
@@ -84,21 +90,13 @@ RUN wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 &
   cp -f -r /tmp/msp430/* /usr/local/ && \
   rm -rf /tmp/msp430 mspgcc*.tar.bz2
 
-## Install nRF52 SDK
-RUN wget -nv https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/nrf5_iot_sdk_3288530.zip && \
-    mkdir /usr/nrf52-sdk && \
-    unzip -q nrf5_iot_sdk_3288530.zip -d /usr/nrf52-sdk && \
-    rm nrf5_iot_sdk_3288530.zip
-
-ENV NRF52_SDK_ROOT /usr/nrf52-sdk
-
 # Install nRF Command Line tools
-RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-12-1/nRFCommandLineTools10121Linuxamd64.tar.gz && \
-  mkdir /tmp/nrf-cli-tools && \
-  tar xzf nRFCommandLineTools10121Linuxamd64.tar.gz -C /tmp/nrf-cli-tools && \
-  apt-get -qq -y --no-install-recommends install /tmp/nrf-cli-tools/JLink_Linux_V688a_x86_64.deb && \
-  apt-get -qq -y --no-install-recommends install /tmp/nrf-cli-tools/nRF-Command-Line-Tools_10_12_1_Linux-amd64.deb && \
-  rm -rf nRFCommandLineTools10121Linuxamd64.tar.gz /tmp/nrf-cli-tools && \
+RUN wget -nv https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-17-3/nrf-command-line-tools_10.17.3_amd64.deb && \
+  wget -nv https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-17-3/nrf-command-line-tools-10.17.3_linux-amd64.tar.gz && \
+  apt-get -qq -y --no-install-recommends install ./nrf-command-line-tools_10.17.3_amd64.deb > /dev/null && \
+  tar zxf nrf-command-line-tools-10.17.3_linux-amd64.tar.gz ./JLink_Linux_V766a_x86_64.deb && \
+  apt-get -qq -y --no-install-recommends install ./JLink_Linux_V766a_x86_64.deb > /dev/null && \
+  rm -f *.deb *.tar.gz && \
   apt-get -qq clean
 
 # Install Renode from github releases
@@ -107,6 +105,15 @@ RUN wget -nv https://github.com/renode/renode/releases/download/v${RENODE_VERSIO
   && apt-get -qq -y --no-install-recommends install ./renode_${RENODE_VERSION}_amd64.deb > /dev/null \
   && rm renode_${RENODE_VERSION}_amd64.deb \
   && apt-get -qq clean
+
+RUN wget -nv https://www.silabs.com/documents/public/software/SimplicityCommander-Linux.zip && \
+  unzip -q SimplicityCommander-Linux.zip && \
+  mkdir /opt/SimplicityCommander && \
+  tar xf SimplicityCommander-Linux/Commander_linux_x86_64_*.tar.bz \
+    -C /opt/SimplicityCommander --strip-components=1 --no-same-owner && \
+  rm -rf SimplicityCommander-Linux.zip SimplicityCommander-Linux
+
+ENV PATH="/opt/SimplicityCommander:${PATH}"
 
 # Sphinx is required for building the readthedocs API documentation.
 # RTD requirements are shared with .readthedocs.yaml for build consistency - check RTD build if modifying.
@@ -146,12 +153,12 @@ COPY --chown=user:user files/bash_aliases ${HOME}/.bash_aliases
 # Remove the PDF manual and html directory to reduce image size.
 # Use the most recent version of ccache to ensure it supports the compiler
 # versions in the docker image.
-RUN wget -nv https://www.doxygen.nl/files/doxygen-1.9.4.linux.bin.tar.gz && \
+RUN wget -nv https://sourceforge.net/projects/doxygen/files/rel-1.9.4/doxygen-1.9.4.linux.bin.tar.gz/download -O doxygen-1.9.4.linux.bin.tar.gz && \
     tar zxf doxygen-1.9.4.linux.bin.tar.gz -C ${HOME}/.local && \
     rm -rf ${HOME}/.local/doxygen-1.9.4/html ${HOME}/.local/doxygen-1.9.4/*.pdf doxygen-1.9.4.linux.bin.tar.gz && \
     (cd ${HOME}/.local/bin && ln -s ../doxygen-1.9.4/bin/doxygen .) && \
-    wget -nv https://github.com/ccache/ccache/releases/download/v4.6.2/ccache-4.6.2-linux-x86_64.tar.xz && \
-    tar xf ccache-4.6.2-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.6.2-linux-x86_64/ccache && \
+    wget -nv https://github.com/ccache/ccache/releases/download/v4.7.4/ccache-4.7.4-linux-x86_64.tar.xz && \
+    tar xf ccache-4.7.4-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.7.4-linux-x86_64/ccache && \
     rm ccache-*-linux-x86_64.tar.xz
 
 # By default, we use a Docker bind mount to share the repo with the host,

@@ -74,8 +74,14 @@
 #ifndef HEAPMEM_H
 #define HEAPMEM_H
 
-#include <stdlib.h>
+#include "contiki.h"
 
+#include <stdlib.h>
+/*****************************************************************************/
+#ifndef HEAPMEM_DEBUG
+#define HEAPMEM_DEBUG 0
+#endif
+/*****************************************************************************/
 typedef struct heapmem_stats {
   size_t allocated;
   size_t overhead;
@@ -83,24 +89,43 @@ typedef struct heapmem_stats {
   size_t footprint;
   size_t chunks;
 } heapmem_stats_t;
+/*****************************************************************************/
+typedef uint8_t heapmem_zone_t;
+
+#define HEAPMEM_ZONE_INVALID (heapmem_zone_t)-1
+#define HEAPMEM_ZONE_GENERAL 0
+/*****************************************************************************/
+
+/**
+ * \brief      Register a zone with a reserved subdivision of the heap.
+ * \param name A pointer to a chunk that has been allocated using
+ *             heapmem_alloc() or heapmem_realloc().
+ * \param zone_size The number of bytes to reserve for the zone.
+ * \return     A zone ID if the allocation succeeds, or HEAPMEM_ZONE_INVALID if it fails.
+ */
+heapmem_zone_t heapmem_zone_register(const char *name, size_t zone_size);
+/*****************************************************************************/
 
 #if HEAPMEM_DEBUG
 
-#define heapmem_alloc(size) heapmem_alloc_debug((size), __FILE__, __LINE__)
+#define heapmem_alloc(size) heapmem_zone_alloc_debug(HEAPMEM_ZONE_GENERAL, (size), __FILE__, __LINE__)
+#define heapmem_zone_alloc(size) heapmem_zone_alloc_debug((zone), (size), __FILE__, __LINE__)
 #define heapmem_realloc(ptr, size) heapmem_realloc_debug((ptr), (size), __FILE__, __LINE__)
 #define heapmem_free(ptr) heapmem_free_debug((ptr), __FILE__, __LINE__)
 
 void *heapmem_alloc_debug(size_t size,
 			  const char *file, const unsigned line);
+void *heapmem_zone_alloc_debug(heapmem_zone_t, size_t size,
+			  const char *file, const unsigned line);
 void *heapmem_realloc_debug(void *ptr, size_t size,
 			    const char *file, const unsigned line);
-void heapmem_free_debug(void *ptr,
+bool heapmem_free_debug(void *ptr,
 			const char *file, const unsigned line);
 
 #else
 
 /**
- * \brief      Allocate a chunk of memory in the heap.
+ * \brief      Allocate a chunk of memory in the general zone of the heap.
  * \param size The number of bytes to allocate.
  * \return     A pointer to the allocated memory chunk,
  *             or NULL if the allocation failed.
@@ -109,7 +134,19 @@ void heapmem_free_debug(void *ptr,
  * \sa         heapmem_free
  */
 
-void *heapmem_alloc(size_t size);
+#define heapmem_alloc(size) heapmem_zone_alloc(HEAPMEM_ZONE_GENERAL, (size))
+
+/**
+ * \brief      Allocate a chunk of memory in the heap.
+ * \param zone The zone in which to allocate the memory.
+ * \param size The number of bytes to allocate.
+ * \return     A pointer to the allocated memory chunk,
+ *             or NULL if the allocation failed.
+ *
+ * \sa         heapmem_realloc
+ * \sa         heapmem_free
+ */
+void *heapmem_zone_alloc(heapmem_zone_t zone, size_t size);
 
 /**
  * \brief      Reallocate a chunk of memory in the heap.
@@ -144,7 +181,7 @@ void *heapmem_realloc(void *ptr, size_t size);
 
 bool heapmem_free(void *ptr);
 
-#endif /* HEAMMEM_DEBUG */
+#endif /* HEAPMEM_DEBUG */
 
 /**
  * \brief       Obtain internal heapmem statistics regarding the

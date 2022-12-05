@@ -692,7 +692,7 @@ PROCESS_THREAD(ecdsa_verify_test, ev, data) {
   time = RTIMER_NOW();
   PT_SPAWN(&(ecdsa_verify_test.pt), &(state.pt), ecc_dsa_verify(&state));
   time = RTIMER_NOW() - time;
-  printf("ecc_dsa_verify(), %lu ms\n",
+  printf("ecc_dsa_verify(), %" PRIu32 " ms\n",
          (uint32_t)((uint64_t)time * 1000 / RTIMER_SECOND));
 
   if(state.result) {
@@ -724,7 +724,7 @@ PROCESS_THREAD(ecdsa_verify_test, ev, data) {
     time = RTIMER_NOW();
     PT_SPAWN(&(ecdsa_verify_test.pt), &(state.pt), ecc_dsa_verify(&state));
     time = RTIMER_NOW() - time;
-    printf("ecc_dsa_verify(), %lu ms\n",
+    printf("ecc_dsa_verify(), %" PRIu32 " ms\n",
            (uint32_t)((uint64_t)time * 1000 / RTIMER_SECOND));
 
     if(state.result == PKA_STATUS_SUCCESS && tests[i].result) {

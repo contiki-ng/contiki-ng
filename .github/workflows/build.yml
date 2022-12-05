@@ -115,8 +115,8 @@ jobs:
     # Install in /usr/bin so the ccache action gets the expected environment.
     - name: install ccache
       run: |
-        wget -nv https://github.com/ccache/ccache/releases/download/v4.6.2/ccache-4.6.2-linux-x86_64.tar.xz
-        sudo tar xf ccache-4.6.2-linux-x86_64.tar.xz -C /usr/bin --strip-components=1 --no-same-owner ccache-4.6.2-linux-x86_64/ccache
+        wget -nv https://github.com/ccache/ccache/releases/download/v4.7.4/ccache-4.7.4-linux-x86_64.tar.xz
+        sudo tar xf ccache-4.7.4-linux-x86_64.tar.xz -C /usr/bin --strip-components=1 --no-same-owner ccache-4.7.4-linux-x86_64/ccache
         rm -f ccache-*-linux-x86_64.tar.xz
 
     # Set the max-size according to the output from "ccache -v -s" after
@@ -125,10 +125,10 @@ jobs:
     #
     # IMPORTANT: cache size must also be updated in the "Execute tests" section.
     - name: ccache
-      uses: hendrikmuhs/ccache-action@v1.2.2
+      uses: hendrikmuhs/ccache-action@v1.2.5
       with:
         key: compilation-${{ matrix.test }}
-        max-size: 120M
+        max-size: 140M
 
     # Keep a cache of the Cooja build files and gradle files. Keyed on Cooja
     # repo commit to ensure clean rebuild when updating Cooja submodule.
@@ -139,7 +139,7 @@ jobs:
           tools/cooja/build
           tools/cooja/.gradle
           tools/cooja/.gradle_home
-        key: ${{ runner.os }}-cooja-gradle-deps-${{ env.COOJA_COMMIT }}
+        key: cooja-${{ runner.os }}-gradle-deps-${{ env.COOJA_COMMIT }}
 
     # Fire up the container and run corresponding tests
     - name: Execute tests
@@ -153,7 +153,7 @@ jobs:
         # Run test
         # FIXME: (2023) Remove "ccache -c", workaround for cache growing
         #        too large from ccache CI/ccache configuration mismatch.
-        docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 -e GITHUB_JOB -e GITHUB_REF -e GITHUB_SHA -e GITHUB_REPOSITORY -e GITHUB_REPOSITORY_OWNER -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e GITHUB_RETENTION_DAYS -e GITHUB_ACTOR -e GITHUB_WORKFLOW -e GITHUB_HEAD_REF -e GITHUB_BASE_REF -e GITHUB_EVENT_NAME -e GITHUB_SERVER_URL -e GITHUB_API_URL -e GITHUB_GRAPHQL_URL -e GITHUB_WORKSPACE -e GITHUB_ACTION -e GITHUB_EVENT_PATH -e GITHUB_ACTION_REPOSITORY -e GITHUB_ACTION_REF -e GITHUB_PATH -e GITHUB_ENV -e RUNNER_OS -e RUNNER_TOOL_CACHE -e RUNNER_TEMP -e RUNNER_WORKSPACE -e ACTIONS_RUNTIME_URL -e ACTIONS_RUNTIME_TOKEN -e ACTIONS_CACHE_URL -e GITHUB_ACTIONS=true -e CI=true -e GRADLE_USER_HOME=/home/user/contiki-ng/tools/cooja/.gradle_home $DOCKER_ARGS -v `pwd`:/home/user/contiki-ng -v $GITHUB_WORKSPACE/.ccache:/home/user/.ccache $DOCKER_IMG bash --login -c "source ../.bash_aliases && ccache --set-config=max_size='120M' && cimake -C tests/??-${{ matrix.test }}; ccache -c"
+        docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 -e GITHUB_JOB -e GITHUB_REF -e GITHUB_SHA -e GITHUB_REPOSITORY -e GITHUB_REPOSITORY_OWNER -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e GITHUB_RETENTION_DAYS -e GITHUB_ACTOR -e GITHUB_WORKFLOW -e GITHUB_HEAD_REF -e GITHUB_BASE_REF -e GITHUB_EVENT_NAME -e GITHUB_SERVER_URL -e GITHUB_API_URL -e GITHUB_GRAPHQL_URL -e GITHUB_WORKSPACE -e GITHUB_ACTION -e GITHUB_EVENT_PATH -e GITHUB_ACTION_REPOSITORY -e GITHUB_ACTION_REF -e GITHUB_PATH -e GITHUB_ENV -e RUNNER_OS -e RUNNER_TOOL_CACHE -e RUNNER_TEMP -e RUNNER_WORKSPACE -e ACTIONS_RUNTIME_URL -e ACTIONS_RUNTIME_TOKEN -e ACTIONS_CACHE_URL -e GITHUB_ACTIONS=true -e CI=true -e GRADLE_USER_HOME=/home/user/contiki-ng/tools/cooja/.gradle_home $DOCKER_ARGS -v `pwd`:/home/user/contiki-ng -v $GITHUB_WORKSPACE/.ccache:/home/user/.ccache $DOCKER_IMG bash --login -c "source ../.bash_aliases && ccache --set-config=max_size='140M' && cimake -C tests/??-${{ matrix.test }}; ccache -c"
         # Restore permissions for gradle_home so the cache action can work.
         [ -d tools/cooja/.gradle_home ] && sudo chown -R 1001:1001 tools/cooja/.gradle_home || true
         # Check outcome of the test

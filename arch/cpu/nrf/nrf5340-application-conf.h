@@ -44,10 +44,6 @@
 #ifndef NRF5340_APPLICATION_CONF_H_
 #define NRF5340_APPLICATION_CONF_H_
 /*---------------------------------------------------------------------------*/
-#ifndef NETSTACK_CONF_RADIO
-#define NETSTACK_CONF_RADIO        nullradio_driver
-#endif /* NETSTACK_CONF_RADIO */
-/*---------------------------------------------------------------------------*/
 #endif /* NRF5340_APPLICATION_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /** 

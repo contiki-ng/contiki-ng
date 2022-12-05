@@ -10,7 +10,7 @@ This page describes how to do so, for a Linux development environment.
 Start by installing some necessary packages:
 ```bash
 $ sudo apt update
-$ sudo apt install build-essential doxygen git curl wireshark python-serial srecord rlwrap
+$ sudo apt install build-essential doxygen git git-lfs curl wireshark python-serial srecord rlwrap
 ```
 
 On recent Ubuntu releases, you may get an error `ifconfig: not found` and `netstat: not found` when trying to run `tunslip6`. If this is the case, use apt to install `net-tools`.
@@ -54,9 +54,6 @@ wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 && \
 
 If desired, a script to compile MSP430 GCC 4.7.2 from source can be found [here](https://github.com/contiki-ng/contiki-ng/blob/develop/tools/toolchain/msp430/buildmsp.sh). 
 
-### Installing NRF sdk
-To get the NRF52dk platform to work you will need to add SDK and programming tools, see
-[Platform-nrf52dk](/doc/platforms/nrf52dk).
 
 ### Install Java for the Cooja network simulator
 

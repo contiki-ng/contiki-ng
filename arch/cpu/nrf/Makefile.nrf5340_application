@@ -1,4 +1,4 @@
-include $(CONTIKI_CPU)/Makefile.nrfx  
+include $(CONTIKI_CPU)/Makefile.libs  
 
 LDSCRIPT ?= $(NRFX_ROOT)/mdk/nrf5340_xxaa_application.ld
 CFLAGS += -DNRF5340_XXAA_APPLICATION
@@ -12,6 +12,8 @@ EXTERNALDIRS += $(NRFX_ROOT)/mdk/
 NRFJPROG_OPTIONS=-f NRF53 --coprocessor CP_APPLICATION 
 
 CFLAGS += -DCPU_CONF_PATH=\"nrf5340-application-conf.h\"
+CFLAGS += -DCPU_DEF_PATH=\"nrf5340-application-def.h\"
+CFLAGS += -DNRFX_USBREG_ENABLED
 
 CFLAGS += -mfloat-abi=hard 
 CFLAGS += -mfpu=fpv5-sp-d16

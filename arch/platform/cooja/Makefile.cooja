@@ -5,7 +5,7 @@
 ## The purpose of this file is to compile a shared library that
 ## can be loaded into the Java part of COOJA.
 
-EXPECTED_COOJA_VERSION = 2022052601
+EXPECTED_COOJA_VERSION = 2022071901
 
 ifndef CONTIKI
   $(error CONTIKI not defined!)
@@ -35,29 +35,16 @@ endif
 MODULES += os/lib/dbg-io
 WRAPPED_FUNS = printf putchar puts snprintf sprintf vsnprintf
 
-JAVA_INCDIR := $(shell $(JAVA) -XshowSettings:properties -version 2>&1 | grep java.home | awk -F"= " '{print $$2}')
-ifneq ($(MAKECMDGOALS),clean)
-  ifeq ($(JAVA_INCDIR),)
-    $(error No java.home found from "$(JAVA) -XshowSettings:properties -version")
-  endif
-endif
-
-JAVA_FRAMEWORK ?= JavaNativeFoundation
+CC = gcc
 
 ifeq ($(HOST_OS),Darwin)
-  JAVA_OS_NAME = darwin
-  CC = gcc
   CFLAGS += -fno-common -DHAVE_SNPRINTF
   LDFLAGS_WERROR = -Wl,-fatal_warnings
-  LDFLAGS += -dynamiclib -fno-common -framework $(JAVA_FRAMEWORK)
+  LDFLAGS += -dynamiclib -fno-common
 else
-  JAVA_OS_NAME = linux
-  CC = gcc
-  CFLAGS += -fPIC -fcommon
-  LDFLAGS += -shared -Wl,-zdefs -Wl,-Map=$(MAPFILE)
-endif
-
-ifneq ($(HOST_OS),Darwin)
+  CFLAGS += -fPIC
+  LDFLAGS += -shared -Wl,-zdefs
+  LDFLAGS += -Wl,-T$(CONTIKI_NG_RELOC_PLATFORM_DIR)/cooja/cooja.ld
   # Use the printf-family replacement functions in dbg-io.
   LDFLAGS += $(addprefix -Wl$(COMMA)--wrap$(COMMA), $(WRAPPED_FUNS))
 endif
@@ -68,8 +55,6 @@ SIZE = size
 # Cooja need. Just disable the final copy so Cooja can share the build
 # system with the rest of Contiki-NG.
 CP = true
-
-JAVA_CFLAGS = -I"$(JAVA_INCDIR)/include" -I"$(JAVA_INCDIR)/include/$(JAVA_OS_NAME)"
 
 # No stack end symbol available, code does not work on 64-bit architectures.
 MODULES_SOURCES_EXCLUDES += stack-check.c
@@ -97,21 +82,14 @@ $(COOJA_BASE) $(COOJA_INTFS) $(COOJA_CORE) $(COOJA_NET) $(COOJA_SOURCEFILES)
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
 
-CLEAN += COOJA.log
-
 ### Compiler arguments
-CFLAGSNO = $(JAVA_CFLAGS) $(EXTRA_CC_ARGS) -Wall -DCLASSNAME=$(CLASSNAME)
+CFLAGSNO = $(EXTRA_CC_ARGS) -Wall
 ifeq ($(WERROR),1)
 CFLAGSNO += -Werror
 endif
 CFLAGS   += $(CFLAGSNO)
 
-# Set build/cooja/mtype<NNN>.map as mapfile for the final link. The rest
-# of the rule resides in Makefile.include.
-$(BUILD_DIR_BOARD)/%.$(TARGET): MAPFILE = $(LIBNAME:.cooja=.map)
-
-# This is mtype<NNN>.o which is built from mtype.c with
-# CLASSNAME passed from the environment by Cooja.
+# This is mtype<NNN>.o which is built from mtype.c.
 MTYPE_OBJ = $(LIBNAME:.cooja=.o)
 MTYPE_DEP = $(DEPDIR)/$(notdir $(LIBNAME:.cooja=.d))
 

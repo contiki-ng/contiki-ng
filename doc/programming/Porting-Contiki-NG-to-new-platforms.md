@@ -103,7 +103,7 @@ Let's assume that your platform is called `my-platform` and that it is powered b
   * `platform.c`: This is where you will provide platform-specific functions needed by Contiki-NG's `main()` routine. Using `platform.c` as the filename is a convention, not a strictly technical requirement.
   * `contiki-conf.h`: This is where you will put platform-specific macros that users are expected to be able to modify.
   * `my-platform-def.h` (optionally): This is where you will put platform-specific macros that users should _not_ modify (for example, LED pin mappings).
-  * `doxygen-group.txt`: This is where you will define where your platform code's documentation will be located in the API doc structure. See for example [`arch/platform/nrf52dk/doxygen-group.txt`](https://github.com/contiki-ng/contiki-ng/tree/develop/arch/platform/nrf52dk/doxygen-group.txt).
+  * `doxygen-group.txt`: This is where you will define where your platform code's documentation will be located in the API doc structure. See for example [`arch/platform/nrf/doxygen-group.txt`](https://github.com/contiki-ng/contiki-ng/tree/develop/arch/platform/nrf/doxygen-group.txt).
 
 #### Prepare the configuration system
 Open `contiki-conf.h` and:

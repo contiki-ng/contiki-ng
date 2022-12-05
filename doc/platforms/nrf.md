@@ -92,6 +92,10 @@ set on the compilation command line:
   The default board is `nrf5340/dk/application`
   Dongle images are built with a bootloader-specific linker file and should be flashed using the `.dfu-upload` target.
 
+* `NRF_NATIVE_USB=<0,1>`  
+  Enables or disables the native USB support on boards that have USB support. 
+  This will automatically change the debug and the slip from UART to USB.
+ 
 ## Compilation Targets
 
 Invoking make solely with the `TARGET` variable set will build all

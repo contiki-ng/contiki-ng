@@ -58,6 +58,8 @@ NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_rtc.c
 NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_gpiote.c
 NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_power.c
 NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_uarte.c
+NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_usbreg.c
+NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_ipc.c
 
 NRFX_C_SRCS += $(NRFX_ROOT)/soc/nrfx_atomic.c
 
@@ -73,8 +75,53 @@ NRFX_INC_PATHS += templates
 NRFX_INC_PATHS += drivers/src
 NRFX_INC_PATHS += drivers/include
 NRFX_INC_PATHS += soc
+NRFX_INC_PATHS += hal
 
 EXTERNALDIRS += $(addprefix $(NRFX_ROOT)/, $(NRFX_INC_PATHS))
+
+## Tinyusb
+ifeq ($(NRF_NATIVE_USB),1)
+  CFLAGS += -DCFG_TUSB_MCU=OPT_MCU_NRF5X
+  #nrf specific
+  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/portable/nordic/nrf5x/dcd_nrf5x.c
+
+  TINYUSB_INC_PATHS += src/portable/nordic/nrf5x/
+
+  #source common
+  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/tusb.c
+  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/common/tusb_fifo.c
+  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/device/usbd.c
+  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/device/usbd_control.c
+  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/class/cdc/cdc_device.c
+
+  #assembly files
+  TINYUSB_ASM_SRCS += 
+
+  CONTIKI_SOURCEFILES += $(notdir $(TINYUSB_C_SRCS))
+  CONTIKI_SOURCEFILES += $(notdir $(TINYUSB_ASM_SRCS))
+
+  #includes common to all targets
+  TINYUSB_INC_PATHS += src/
+  TINYUSB_INC_PATHS += src/common/
+  TINYUSB_INC_PATHS += src/device/
+  TINYUSB_INC_PATHS += src/class/cdc/
+
+  EXTERNALDIRS += $(addprefix $(TINYUSB_ROOT)/, $(TINYUSB_INC_PATHS))
+
+  # USB
+
+  CONTIKI_CPU_SOURCEFILES += usb.c
+  CONTIKI_CPU_SOURCEFILES += usb_descriptors.c
+  CONTIKI_CPU_SOURCEFILES += usb-arch.c
+
+  CFLAGS += -DPLATFORM_DBG_CONF_USB=1
+  CFLAGS += -DPLAFTORM_SLIP_ARCH_CONF_USB=1
+  CFLAGS += -DNRF_NATIVE_USB=1
+endif
+
+CONTIKI_CPU_DIRS += usb/
+
+CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
 
 # Upload via J-Link using nrfjprog 
 

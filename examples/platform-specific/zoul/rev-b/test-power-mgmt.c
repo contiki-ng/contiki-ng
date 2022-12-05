@@ -124,7 +124,7 @@ PROCESS_THREAD(test_remote_pm, ev, data)
    */
 
   cycles = pm_get_num_cycles();
-  printf("PM: cycle number %lu\n", cycles);
+  printf("PM: cycle number %" PRIu32 "\n", cycles);
 
   if((cycles % 2) == 0) {
     /* Set the timeout */
@@ -133,7 +133,7 @@ PROCESS_THREAD(test_remote_pm, ev, data)
       TEST_LEDS_FAIL;
     }
 
-    printf("PM: Soft shutdown, timeout set to %lu\n", pm_get_timeout());
+    printf("PM: Soft shutdown, timeout set to %" PRIu32 "\n", pm_get_timeout());
 
     leds_off(LEDS_ALL);
     leds_on(LEDS_RED);

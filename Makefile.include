@@ -48,11 +48,12 @@ endif
 
 HOST_OS := $(shell uname)
 
-#More debug information when running in CI
-ifdef CI
-  ifeq ($(CI),true)
-    V = 1
-  endif
+# Display more build information when running in CI, less when quiet.
+ifeq ($(CI),true)
+  V = 1
+else ifeq ($(QUIET),1)
+  V = 1
+  Q = @
 endif
 
 ifneq (, $(shell which ccache))
@@ -68,7 +69,7 @@ COOJA_PATH ?= $(CONTIKI_NG_TOOLS_DIR)/cooja
 JAVA = java
 GRADLE = $(COOJA_PATH)/gradlew
 
-BUILD_DIR = build
+BUILD_DIR ?= build
 BUILD_DIR_TARGET = $(BUILD_DIR)/$(TARGET)
 BUILD_DIR_TARGET_BOARD = $(BUILD_DIR_TARGET)/$(BOARD)
 # If BOARD was empty, make sure we don't end up with a sequence of slashes

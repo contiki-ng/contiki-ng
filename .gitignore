@@ -32,7 +32,6 @@ COOJA.testlog
 *.cc2538dk
 *.cooja
 *.native
-*.nrf52dk
 *.nrf52840
 *.openmote
 *.simplelink
@@ -42,18 +41,19 @@ COOJA.testlog
 *.z1
 *.zoul
 *.nrf
+*.gecko
 
 # do not ignore platform makefiles
 !Makefile.cc2538dk
 !Makefile.cooja
 !Makefile.native
-!Makefile.nrf52dk
 !Makefile.nrf52840
 !Makefile.openmote
 !Makefile.sky
 !Makefile.cc26x0-cc13x0
 !Makefile.zoul
 !Makefile.nrf
+!Makefile.gecko
 
 # do not ignore images in documentation
 !tools/readthedocs/**/*.png

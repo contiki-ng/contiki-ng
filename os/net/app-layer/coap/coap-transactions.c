@@ -46,6 +46,7 @@
 #include "coap-timer.h"
 #include "lib/memb.h"
 #include "lib/list.h"
+#include "lib/random.h"
 #include <stdlib.h>
 
 /* Log configuration */
@@ -109,7 +110,7 @@ coap_send_transaction(coap_transaction_t *t)
         coap_timer_set_callback(&t->retrans_timer, coap_retransmit_transaction);
         coap_timer_set_user_data(&t->retrans_timer, t);
         t->retrans_interval =
-          COAP_RESPONSE_TIMEOUT_TICKS + (rand() %
+          COAP_RESPONSE_TIMEOUT_TICKS + (random_rand() %
                                          COAP_RESPONSE_TIMEOUT_BACKOFF_MASK);
         LOG_DBG("Initial interval %lu msec\n",
                 (unsigned long)t->retrans_interval);
