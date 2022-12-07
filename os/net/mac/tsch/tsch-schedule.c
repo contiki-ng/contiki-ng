@@ -228,10 +228,15 @@ tsch_schedule_add_link(struct tsch_slotframe *slotframe,
     }
 
     if(do_remove) {
-      /* Start with removing the link currently installed at this timeslot and
-       * channel offset (needed to keep neighbor state in sync with link options
-       * etc.) */
-      tsch_schedule_remove_link_by_offsets(slotframe, timeslot, channel_offset);
+      /* Start with removing any link currently installed at this timeslot
+       * (needed to keep neighbor state in sync with link options etc.). We
+       * don't check for channel offset because only one link per timeslot
+       * is allowed in a given slotframe */
+      l = tsch_schedule_get_link_by_timeslot(slotframe, timeslot);
+      if(l != NULL) {
+        tsch_schedule_remove_link(slotframe, l);
+        l = NULL;
+      }
     }
     if(!tsch_get_lock()) {
       LOG_ERR("! add_link memb_alloc couldn't take lock\n");
