@@ -105,8 +105,6 @@ jobs:
         git clone --depth 1 https://github.com/contiki-ng/out-of-tree-tests $OUT_OF_TREE_TEST_PATH
         # Check out desired hash
         (cd $OUT_OF_TREE_TEST_PATH && git checkout $OUT_OF_TREE_TEST_VER)
-        # Set permissions for Docker mount
-        sudo chown -R 1000:1000 $OUT_OF_TREE_TEST_PATH
         # Set up docker mount
         echo DOCKER_ARGS=-v `pwd`/$OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests >> $GITHUB_ENV
 
@@ -144,8 +142,6 @@ jobs:
     # Fire up the container and run corresponding tests
     - name: Execute tests
       run: |
-        # Set permissions for Docker mount
-        sudo chown -R 1000:1000 .
         # Cache restores write-time timestamps, update timestamps to be more
         # recent than the files that were just checked out. Ensure the command
         # is successful with empty cache.
@@ -153,8 +149,6 @@ jobs:
         # Run test
         # FIXME: (2023) Remove "ccache -c", workaround for cache growing
         #        too large from ccache CI/ccache configuration mismatch.
-        docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 -e GITHUB_JOB -e GITHUB_REF -e GITHUB_SHA -e GITHUB_REPOSITORY -e GITHUB_REPOSITORY_OWNER -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e GITHUB_RETENTION_DAYS -e GITHUB_ACTOR -e GITHUB_WORKFLOW -e GITHUB_HEAD_REF -e GITHUB_BASE_REF -e GITHUB_EVENT_NAME -e GITHUB_SERVER_URL -e GITHUB_API_URL -e GITHUB_GRAPHQL_URL -e GITHUB_WORKSPACE -e GITHUB_ACTION -e GITHUB_EVENT_PATH -e GITHUB_ACTION_REPOSITORY -e GITHUB_ACTION_REF -e GITHUB_PATH -e GITHUB_ENV -e RUNNER_OS -e RUNNER_TOOL_CACHE -e RUNNER_TEMP -e RUNNER_WORKSPACE -e ACTIONS_RUNTIME_URL -e ACTIONS_RUNTIME_TOKEN -e ACTIONS_CACHE_URL -e GITHUB_ACTIONS=true -e CI=true -e GRADLE_USER_HOME=/home/user/contiki-ng/tools/cooja/.gradle_home $DOCKER_ARGS -v `pwd`:/home/user/contiki-ng -v $GITHUB_WORKSPACE/.ccache:/home/user/.ccache $DOCKER_IMG bash --login -c "source ../.bash_aliases && ccache --set-config=max_size='140M' && cimake -C tests/??-${{ matrix.test }}; ccache -c"
-        # Restore permissions for gradle_home so the cache action can work.
-        [ -d tools/cooja/.gradle_home ] && sudo chown -R 1001:1001 tools/cooja/.gradle_home || true
+        docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 -e GITHUB_JOB -e GITHUB_REF -e GITHUB_SHA -e GITHUB_REPOSITORY -e GITHUB_REPOSITORY_OWNER -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e GITHUB_RETENTION_DAYS -e GITHUB_ACTOR -e GITHUB_WORKFLOW -e GITHUB_HEAD_REF -e GITHUB_BASE_REF -e GITHUB_EVENT_NAME -e GITHUB_SERVER_URL -e GITHUB_API_URL -e GITHUB_GRAPHQL_URL -e GITHUB_WORKSPACE -e GITHUB_ACTION -e GITHUB_EVENT_PATH -e GITHUB_ACTION_REPOSITORY -e GITHUB_ACTION_REF -e GITHUB_PATH -e GITHUB_ENV -e RUNNER_OS -e RUNNER_TOOL_CACHE -e RUNNER_TEMP -e RUNNER_WORKSPACE -e ACTIONS_RUNTIME_URL -e ACTIONS_RUNTIME_TOKEN -e ACTIONS_CACHE_URL -e GITHUB_ACTIONS=true -e CI=true -e GRADLE_USER_HOME=/home/user/contiki-ng/tools/cooja/.gradle_home -e LOCAL_UID=$(id -u $USER) -e LOCAL_GID=$(id -g $USER) $DOCKER_ARGS -v `pwd`:/home/user/contiki-ng -v $GITHUB_WORKSPACE/.ccache:/home/user/.ccache $DOCKER_IMG bash --login -c "source ../.bash_aliases && ccache --set-config=max_size='140M' && cimake -C tests/??-${{ matrix.test }}; ccache -c"
         # Check outcome of the test
         ./tests/check-test.sh `pwd`/tests/??-${{ matrix.test }}
