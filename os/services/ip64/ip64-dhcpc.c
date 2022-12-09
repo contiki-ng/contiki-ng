@@ -31,14 +31,21 @@
  * @(#)$Id: dhcpc.c,v 1.9 2010/10/19 18:29:04 adamdunkels Exp $
  */
 
-#include <stdio.h>
 #include <string.h>
 
 #include "contiki.h"
 #include "contiki-net.h"
+#include "ip64/ip64.h"
 #include "ip64/ip64-dhcpc.h"
-
 #include "ipv6/ip64-addr.h"
+
+/*---------------------------------------------------------------------------*/
+
+#include "sys/log.h"
+#define LOG_MODULE  "IP64"
+#define LOG_LEVEL   LOG_LEVEL_IP64
+
+/*---------------------------------------------------------------------------*/
 
 #define STATE_INITIAL         0
 #define STATE_SENDING         1
@@ -332,15 +339,13 @@ PT_THREAD(handle_dhcp(process_event_t ev, void *data))
   } while(s.state != STATE_CONFIG_RECEIVED);
 
  bound:
-#if 0
-  printf("Got IP address %d.%d.%d.%d\n", uip_ipaddr_to_quad(&s.ipaddr));
-  printf("Got netmask %d.%d.%d.%d\n",	 uip_ipaddr_to_quad(&s.netmask));
-  printf("Got DNS server %d.%d.%d.%d\n", uip_ipaddr_to_quad(&s.dnsaddr));
-  printf("Got default router %d.%d.%d.%d\n",
+  LOG_DBG("Got IP address %d.%d.%d.%d\n", uip_ipaddr_to_quad(&s.ipaddr));
+  LOG_DBG("Got netmask %d.%d.%d.%d\n",	 uip_ipaddr_to_quad(&s.netmask));
+  LOG_DBG("Got DNS server %d.%d.%d.%d\n", uip_ipaddr_to_quad(&s.dnsaddr));
+  LOG_DBG("Got default router %d.%d.%d.%d\n",
 	 uip_ipaddr_to_quad(&s.default_router));
-  printf("Lease expires in %ld seconds\n",
+  LOG_DBG("Lease expires in %ld seconds\n",
 	 uip_ntohs(s.lease_time[0])*65536ul + uip_ntohs(s.lease_time[1]));
-#endif
 
   ip64_dhcpc_configured(&s);
 
