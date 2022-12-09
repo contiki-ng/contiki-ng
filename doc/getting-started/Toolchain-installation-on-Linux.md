@@ -10,7 +10,7 @@ This page describes how to do so, for a Linux development environment.
 Start by installing some necessary packages:
 ```bash
 $ sudo apt update
-$ sudo apt install build-essential doxygen git git-lfs curl wireshark python-serial srecord rlwrap
+$ sudo apt install build-essential doxygen git git-lfs curl wireshark python3-serial srecord rlwrap
 ```
 
 On recent Ubuntu releases, you may get an error `ifconfig: not found` and `netstat: not found` when trying to run `tunslip6`. If this is the case, use apt to install `net-tools`.
