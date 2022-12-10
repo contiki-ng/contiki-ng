@@ -58,8 +58,6 @@
 /*---------------------------------------------------------------------------*/
 PROCESS(soc_trng_process, "CC13xx/CC26xx TRNG process");
 /*---------------------------------------------------------------------------*/
-static process_event_t rng_ready_event = PROCESS_EVENT_NONE;
-/*---------------------------------------------------------------------------*/
 static soc_trng_callback_t notify_cb = NULL;
 /*---------------------------------------------------------------------------*/
 #define soc_trng_isr TRNGIntHandler
@@ -261,7 +259,7 @@ PROCESS_THREAD(soc_trng_process, ev, data)
   PROCESS_BEGIN();
 
   while(1) {
-    PROCESS_YIELD_UNTIL(ev == rng_ready_event);
+    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
 
     if(notify_cb) {
       uint64_t ran = read_number();
@@ -291,18 +289,12 @@ soc_trng_isr(void)
   ti_lib_trng_configure(MIN_REFILL_CYCLES_MAX, SOC_TRNG_REFILL_CYCLES_MIN, 0);
   ti_lib_trng_enable();
 
-  process_post(&soc_trng_process, rng_ready_event, NULL);
+  process_poll(&soc_trng_process);
 }
 /*---------------------------------------------------------------------------*/
 void
 soc_trng_init()
 {
-  if(rng_ready_event != PROCESS_EVENT_NONE) {
-    return;
-  }
-
-  /* Register the RNG ready event */
-  rng_ready_event = process_alloc_event();
   process_start(&soc_trng_process, NULL);
 }
 /*---------------------------------------------------------------------------*/
