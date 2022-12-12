@@ -452,7 +452,7 @@ $(GENDIR)/%: $(GENDIR)/%.diffupdate | $(GENDIR)
 
 # Start cooja through "make file.csc", where the real target is defined through the csc.
 %.csc %.csc.gz: FORCE
-	$(Q)$(GRADLE) --no-watch-fs --parallel --build-cache -p $(COOJA_PATH) run --args="-quickstart=$(addprefix $(CURDIR)/,$@) -contiki=$(realpath $(CONTIKI)) -logdir=$(CURDIR)"
+	$(Q)$(GRADLE) --no-watch-fs --parallel --build-cache -p $(COOJA_PATH) run --args="--contiki=$(realpath $(CONTIKI)) --logdir=$(CURDIR) $(addprefix $(CURDIR)/,$@)"
 
 ### Automatic dependency generation, see
 ### http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/#advanced
