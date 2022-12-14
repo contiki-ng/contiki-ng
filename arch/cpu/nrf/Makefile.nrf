@@ -63,6 +63,8 @@ NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_ipc.c
 
 NRFX_C_SRCS += $(NRFX_ROOT)/soc/nrfx_atomic.c
 
+NRFX_C_SRCS += $(NRFX_ROOT)/helpers/nrfx_flag32_allocator.c
+
 #assembly files common to all targets
 NRFX_ASM_SRCS += 
 
@@ -76,6 +78,7 @@ NRFX_INC_PATHS += drivers/src
 NRFX_INC_PATHS += drivers/include
 NRFX_INC_PATHS += soc
 NRFX_INC_PATHS += hal
+NRFX_INC_PATHS += helpers
 
 EXTERNALDIRS += $(addprefix $(NRFX_ROOT)/, $(NRFX_INC_PATHS))
 
