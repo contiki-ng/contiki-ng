@@ -1,7 +1,6 @@
 ifndef SOURCE_LDSCRIPT
 SOURCE_LDSCRIPT = $(CONTIKI_CPU)/cc2538.lds
 endif
-LDSCRIPT = $(OBJECTDIR)/cc2538.ld
 
 CFLAGS += -DCMSIS_DEV_HDR=\"cc2538_cm3.h\"
 
@@ -50,10 +49,5 @@ LDGENFLAGS += $(CFLAGS)
 LDGENFLAGS += -imacros "contiki-conf.h" -imacros "dev/cc2538-dev.h"
 LDGENFLAGS += -imacros "dev/flash.h" -imacros "cfs-coffee-arch.h"
 LDGENFLAGS += -x c -P -E
-
-# NB: Assumes LDSCRIPT was not overridden and is in $(OBJECTDIR)
-$(LDSCRIPT): $(SOURCE_LDSCRIPT) $(DEPDIR)/$(notdir $(LDSCRIPT)).d | $(DEPDIR)
-	$(TRACE_CC)
-	$(Q)$(CCACHE) $(CC) $(LDGENFLAGS) -MT $@ -MMD -MP -MF $(DEPDIR)/$(@F).d $< | grep -v '^\s*#\s*pragma\>' > $@
 
 include $(CONTIKI)/$(CONTIKI_NG_CM3_DIR)/Makefile.cm3
