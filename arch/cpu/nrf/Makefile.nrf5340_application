@@ -1,6 +1,6 @@
 include $(CONTIKI_CPU)/Makefile.libs  
 
-LDSCRIPT ?= $(NRFX_ROOT)/mdk/nrf5340_xxaa_application.ld
+SOURCE_LDSCRIPT ?= $(NRFX_ROOT)/mdk/nrf5340_xxaa_application.ld
 CFLAGS += -DNRF5340_XXAA_APPLICATION
 
 NRFX_ASM_SRCS += $(NRFX_ROOT)/mdk/gcc_startup_nrf5340_application.s
@@ -24,6 +24,9 @@ ifeq ($(CLANG),1)
 endif
 LDFLAGS += -mfloat-abi=hard 
 LDFLAGS += -mfpu=fpv5-sp-d16
+
+LDGENFLAGS += $(CFLAGS)
+LDGENFLAGS += -x c -P -E
 
 include $(CONTIKI)/$(CONTIKI_NG_CM33_DIR)/Makefile.cm33
 
