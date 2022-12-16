@@ -41,6 +41,7 @@
 
 #include "net/mac/csma/csma.h"
 #include "net/mac/csma/csma-security.h"
+#include "net/mac/mac-sequence.h"
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 #include "dev/watchdog.h"
@@ -442,22 +443,9 @@ csma_output_packet(mac_callback_t sent, void *ptr)
 {
   struct packet_queue *q;
   struct neighbor_queue *n;
-  static uint8_t initialized = 0;
-  static uint8_t seqno;
   const linkaddr_t *addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
 
-  if(!initialized) {
-    initialized = 1;
-    /* Initialize the sequence number to a random value as per 802.15.4. */
-    seqno = random_rand();
-  }
-
-  if(seqno == 0) {
-    /* PACKETBUF_ATTR_MAC_SEQNO cannot be zero, due to a pecuilarity
-       in framer-802154.c. */
-    seqno++;
-  }
-  packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, seqno++);
+  mac_sequence_set_dsn();
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
 
   /* Look for the neighbor entry */

@@ -40,6 +40,7 @@
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 #include "net/netstack.h"
+#include "net/mac/mac-sequence.h"
 #include "packetutils.h"
 #include "border-router.h"
 #include <string.h>
@@ -126,6 +127,9 @@ send_packet(mac_callback_t sent, void *ptr)
   /* Will make it send only DATA packets... for now */
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
 
+  /* set destination sequence number */
+  mac_sequence_set_dsn();
+
   LOG_INFO("sending packet (%u bytes)\n", packetbuf_datalen());
 
   if(NETSTACK_FRAMER.create() < 0) {
@@ -189,6 +193,7 @@ static void
 init(void)
 {
   callback_pos = 0;
+  mac_sequence_init();
 }
 /*---------------------------------------------------------------------------*/
 const struct mac_driver border_router_mac_driver = {

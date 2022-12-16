@@ -127,8 +127,6 @@ struct tsch_asn_t tsch_current_asn;
 /* Device rank or join priority:
  * For PAN coordinator: 0 -- lower is better */
 uint8_t tsch_join_priority;
-/* The current TSCH sequence number, used for unicast data frames only */
-static uint8_t tsch_packet_seqno;
 /* Current period for EB output */
 static clock_time_t tsch_current_eb_period;
 /* Current period for keepalive output */
@@ -1063,7 +1061,7 @@ tsch_init(void)
   ringbufindex_init(&input_ringbuf, TSCH_MAX_INCOMING_PACKETS);
   ringbufindex_init(&dequeued_ringbuf, TSCH_DEQUEUED_ARRAY_SIZE);
 
-  tsch_packet_seqno = random_rand();
+  mac_sequence_init();
   tsch_is_initialized = 1;
 
 #if TSCH_AUTOSTART
@@ -1102,12 +1100,7 @@ send_packet(mac_callback_t sent, void *ptr)
 
   /* Ask for ACK if we are sending anything other than broadcast */
   if(!linkaddr_cmp(addr, &linkaddr_null)) {
-    /* PACKETBUF_ATTR_MAC_SEQNO cannot be zero, due to a pecuilarity
-           in framer-802154.c. */
-    if(++tsch_packet_seqno == 0) {
-      tsch_packet_seqno++;
-    }
-    packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, tsch_packet_seqno);
+    mac_sequence_set_dsn();
     packetbuf_set_attr(PACKETBUF_ATTR_MAC_ACK, 1);
   } else {
     /* Broadcast packets shall be added to broadcast queue
@@ -1143,7 +1136,8 @@ send_packet(mac_callback_t sent, void *ptr)
       LOG_ERR("! can't send packet to ");
       LOG_ERR_LLADDR(addr);
       LOG_ERR_(" with seqno %u, queue %u/%u %u/%u\n",
-          tsch_packet_seqno, tsch_queue_nbr_packet_count(n),
+          packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
+          tsch_queue_nbr_packet_count(n),
           TSCH_QUEUE_NUM_PER_NEIGHBOR, tsch_queue_global_packet_count(),
           QUEUEBUF_NUM);
       ret = MAC_TX_QUEUE_FULL;
@@ -1152,7 +1146,8 @@ send_packet(mac_callback_t sent, void *ptr)
       LOG_INFO("send packet to ");
       LOG_INFO_LLADDR(addr);
       LOG_INFO_(" with seqno %u, queue %u/%u %u/%u, len %u %u\n",
-             tsch_packet_seqno, tsch_queue_nbr_packet_count(n),
+             packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
+             tsch_queue_nbr_packet_count(n),
              TSCH_QUEUE_NUM_PER_NEIGHBOR, tsch_queue_global_packet_count(),
              QUEUEBUF_NUM, p->header_len, queuebuf_datalen(p->qb));
     }
