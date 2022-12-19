@@ -505,17 +505,21 @@ tsch_rx_process_pending()
       && frame.fcf.frame_type == FRAME802154_BEACONFRAME;
 
     if(is_data) {
-      /* Skip EBs and other control messages */
-      /* Copy to packetbuf for processing */
+      /* Copy payload to packetbuf for processing */
       packetbuf_copyfrom(current_input->payload, current_input->len);
       packetbuf_set_attr(PACKETBUF_ATTR_RSSI, current_input->rssi);
       packetbuf_set_attr(PACKETBUF_ATTR_CHANNEL, current_input->channel);
-    }
 
-    if(is_data) {
       /* Pass to upper layers */
       packet_input();
+
     } else if(is_eb) {
+      /* Don't pass to upper layers, but still count it in link stats */
+      packetbuf_set_attr(PACKETBUF_ATTR_RSSI, current_input->rssi);
+      packetbuf_set_attr(PACKETBUF_ATTR_CHANNEL, current_input->channel);
+      link_stats_input_callback((const linkaddr_t *)frame.src_addr);
+
+      /* Process EB without copying the payload to packetbuf */
       eb_input(current_input);
     }
 
