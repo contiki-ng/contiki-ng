@@ -48,6 +48,7 @@ struct orchestra_rule {
   int  (* select_packet)(uint16_t *slotframe, uint16_t *timeslot, uint16_t *channel_offset);
   void (* child_added)(const linkaddr_t *addr);
   void (* child_removed)(const linkaddr_t *addr);
+  void (* neighbor_updated)(const linkaddr_t *addr, uint8_t is_added);
   void (* root_node_updated)(const linkaddr_t *addr, uint8_t is_added);
   const char *const name;
   const int16_t slotframe_size;
@@ -74,10 +75,12 @@ void orchestra_callback_new_time_source(const struct tsch_neighbor *old, const s
 void orchestra_callback_child_added(const linkaddr_t *addr);
 /* Set with #define NETSTACK_CONF_ROUTING_NEIGHBOR_REMOVED_CALLBACK orchestra_callback_child_removed */
 void orchestra_callback_child_removed(const linkaddr_t *addr);
-/* Set with #define TSCH_CALLBACK_ROOT_NODE_UPDATED orchestra_callback_root_node_updated */
-void orchestra_callback_root_node_updated(const linkaddr_t *root, uint8_t is_added);
 
 /* Returns nonzero if the root slotframe should be used to transmit to the specific address */
 uint8_t orchestra_is_root_schedule_active(const linkaddr_t *addr);
+/* Set with #define TSCH_CALLBACK_ROOT_NODE_UPDATED orchestra_callback_root_node_updated */
+void orchestra_callback_root_node_updated(const linkaddr_t *root, uint8_t is_added);
+/* Set with #define NETSTACK_CONF_DS6_NEIGHBOR_UPDATED_CALLBACK orchestra_callback_neighbor_updated */
+void orchestra_callback_neighbor_updated(const linkaddr_t *, uint8_t is_added);
 
 #endif /* ORCHESTRA_H_ */

@@ -88,15 +88,27 @@ get_node_channel_offset(const linkaddr_t *addr)
 static int
 neighbor_has_uc_link(const linkaddr_t *linkaddr)
 {
-  if(linkaddr != NULL && !linkaddr_cmp(linkaddr, &linkaddr_null)) {
-    if((orchestra_parent_knows_us || !ORCHESTRA_UNICAST_SENDER_BASED)
-       && linkaddr_cmp(&orchestra_parent_linkaddr, linkaddr)) {
-      return 1;
-    }
-    if(nbr_table_get_from_lladdr(nbr_routes, (linkaddr_t *)linkaddr) != NULL) {
-      return 1;
-    }
+  if(linkaddr == NULL || linkaddr_cmp(linkaddr, &linkaddr_null)) {
+    return 0;
   }
+
+  if(!ORCHESTRA_UNICAST_SENDER_BASED) {
+    /* With the receiver-based Orchestra,
+     * all nodes have a link installed at their own timeslot */
+    return 1;
+  }
+
+  if(linkaddr_cmp(&orchestra_parent_linkaddr, linkaddr)) {
+    /* The node is our parent */
+    return orchestra_parent_knows_us ? 1 : 0;
+  }
+
+  if(nbr_table_get_from_lladdr(nbr_routes, (linkaddr_t *)linkaddr) != NULL) {
+    /* We have a route to this node;
+     * it should have selected us as its parent and installed a link */
+    return 1;
+  }
+
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -246,6 +258,7 @@ struct orchestra_rule unicast_per_neighbor_rpl_storing = {
   select_packet,
   child_added,
   child_removed,
+  NULL,
   NULL,
   "unicast per neighbor storing",
   ORCHESTRA_UNICAST_PERIOD,

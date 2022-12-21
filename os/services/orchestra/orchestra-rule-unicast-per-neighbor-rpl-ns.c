@@ -30,12 +30,14 @@
 /**
  * \file
  *         Orchestra: a slotframe dedicated to unicast data transmission. Designed primarily
- *         for RPL non-storing mode but would work with any mode-of-operation. Does not require
- *         any knowledge of the children. Works only as received-base, and as follows:
+ *         for RPL non-storing mode but would work with any mode-of-operation.
+ *         Uses uIPv6 DS6 neighhbor tables to obtain knowledge of the children.
+ *         Only supports the receiver based mode, and works as follows:
  *           Nodes listen at a timeslot defined as hash(MAC) % ORCHESTRA_SB_UNICAST_PERIOD
  *           Nodes transmit at: for any neighbor, hash(nbr.MAC) % ORCHESTRA_SB_UNICAST_PERIOD
  *
  * \author Simon Duquennoy <simon.duquennoy@inria.fr>
+ *         Atis Elsts <atis.elsts@edi.lv>
  */
 
 #include "contiki.h"
@@ -69,13 +71,39 @@ get_node_channel_offset(const linkaddr_t *addr)
 }
 /*---------------------------------------------------------------------------*/
 static void
-child_added(const linkaddr_t *linkaddr)
+add_uc_link(const linkaddr_t *linkaddr)
 {
+  if(linkaddr != NULL) {
+    uint16_t timeslot = get_node_timeslot(linkaddr);
+
+    /* Add a Tx link to the neighbor; do not replace any existing links
+     * at that cell. The channel offset here does not matter:
+     * select_packet() always sets the right channel offset per packet. */
+    tsch_schedule_add_link(sf_unicast,
+        LINK_OPTION_SHARED | LINK_OPTION_TX,
+        LINK_TYPE_NORMAL, &tsch_broadcast_address,
+        timeslot, 0, 0);
+  }
 }
 /*---------------------------------------------------------------------------*/
 static void
-child_removed(const linkaddr_t *linkaddr)
+remove_uc_link(const linkaddr_t *linkaddr)
 {
+  if(linkaddr != NULL) {
+    uint16_t timeslot = get_node_timeslot(linkaddr);
+    tsch_schedule_remove_link_by_timeslot(sf_unicast, timeslot, 0);
+    tsch_queue_free_packets_to(linkaddr);
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+neighbor_updated(const linkaddr_t *linkaddr, uint8_t is_added)
+{
+  if(is_added) {
+    add_uc_link(linkaddr);
+  } else {
+    remove_uc_link(linkaddr);
+  }
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -104,12 +132,17 @@ select_packet(uint16_t *slotframe, uint16_t *timeslot, uint16_t *channel_offset)
 static void
 new_time_source(const struct tsch_neighbor *old, const struct tsch_neighbor *new)
 {
+  if(new != old) {
+    const linkaddr_t *old_addr = tsch_queue_get_nbr_address(old);
+    const linkaddr_t *new_addr = tsch_queue_get_nbr_address(new);
+    remove_uc_link(old_addr);
+    add_uc_link(new_addr);
+  }
 }
 /*---------------------------------------------------------------------------*/
 static void
 init(uint16_t sf_handle)
 {
-  int i;
   uint16_t rx_timeslot;
   linkaddr_t *local_addr = &linkaddr_node_addr;
 
@@ -117,21 +150,20 @@ init(uint16_t sf_handle)
   /* Slotframe for unicast transmissions */
   sf_unicast = tsch_schedule_add_slotframe(slotframe_handle, ORCHESTRA_UNICAST_PERIOD);
   rx_timeslot = get_node_timeslot(local_addr);
-  /* Add a Tx link at each available timeslot. Make the link Rx at our own timeslot. */
-  for(i = 0; i < ORCHESTRA_UNICAST_PERIOD; i++) {
-    tsch_schedule_add_link(sf_unicast,
-        LINK_OPTION_SHARED | LINK_OPTION_TX | ( i == rx_timeslot ? LINK_OPTION_RX : 0 ),
-        LINK_TYPE_NORMAL, &tsch_broadcast_address,
-        i, get_node_channel_offset(local_addr), 1);
-  }
+  /* Add a Rx link at our own timeslot. */
+  tsch_schedule_add_link(sf_unicast,
+      LINK_OPTION_RX,
+      LINK_TYPE_NORMAL, &tsch_broadcast_address,
+      rx_timeslot, get_node_channel_offset(local_addr), 1);
 }
 /*---------------------------------------------------------------------------*/
 struct orchestra_rule unicast_per_neighbor_rpl_ns = {
   init,
   new_time_source,
   select_packet,
-  child_added,
-  child_removed,
+  NULL,
+  NULL,
+  neighbor_updated,
   NULL,
   "unicast per neighbor non-storing",
   ORCHESTRA_UNICAST_PERIOD,
