@@ -81,9 +81,15 @@
   static dbl_list_t name = (dbl_circ_list_t)&name##_dbl_circ_list
 /*---------------------------------------------------------------------------*/
 /**
- * \brief The doubly-linked list datatype
+ * The doubly-linked circular list datatype
  */
 typedef void **dbl_circ_list_t;
+
+/**
+ * The non-modifiable doubly-linked circular list type.
+ */
+typedef void *const *const_dbl_circ_list_t;
+
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Initialise a circular, doubly-linked list.
@@ -96,14 +102,14 @@ void dbl_circ_list_init(dbl_circ_list_t dblcl);
  * \param dblcl The circular, doubly-linked list.
  * \return A pointer to the list's head, or NULL if the list is empty
  */
-void *dbl_circ_list_head(const dbl_circ_list_t dblcl);
+void *dbl_circ_list_head(const_dbl_circ_list_t dblcl);
 
 /**
  * \brief Return the tail of a circular, doubly-linked list.
  * \param dblcl The circular, doubly-linked list.
  * \return A pointer to the list's tail, or NULL if the list is empty
  */
-void *dbl_circ_list_tail(const dbl_circ_list_t dblcl);
+void *dbl_circ_list_tail(const_dbl_circ_list_t dblcl);
 
 /**
  * \brief Add an element to the head of a circular, doubly-linked list.
@@ -177,7 +183,7 @@ void dbl_circ_list_remove(dbl_circ_list_t dblcl, const void *element);
  * \param dblcl The circular, doubly-linked list.
  * \return The number of elements in the list
  */
-unsigned long dbl_circ_list_length(const dbl_circ_list_t dblcl);
+unsigned long dbl_circ_list_length(const_dbl_circ_list_t dblcl);
 
 /**
  * \brief Determine whether a circular, doubly-linked list is empty.
@@ -185,7 +191,7 @@ unsigned long dbl_circ_list_length(const dbl_circ_list_t dblcl);
  * \retval true The list is empty
  * \retval false The list is not empty
  */
-bool dbl_circ_list_is_empty(const dbl_circ_list_t dblcl);
+bool dbl_circ_list_is_empty(const_dbl_circ_list_t dblcl);
 /*---------------------------------------------------------------------------*/
 #endif /* DBL_CIRC_LIST_H_ */
 /*---------------------------------------------------------------------------*/

@@ -56,13 +56,13 @@ circular_list_init(circular_list_t cl)
 }
 /*---------------------------------------------------------------------------*/
 void *
-circular_list_head(const circular_list_t cl)
+circular_list_head(const_circular_list_t cl)
 {
   return *cl;
 }
 /*---------------------------------------------------------------------------*/
 void *
-circular_list_tail(const circular_list_t cl)
+circular_list_tail(const_circular_list_t cl)
 {
   struct cl *this;
 
@@ -132,7 +132,7 @@ circular_list_add(circular_list_t cl, void *element)
 }
 /*---------------------------------------------------------------------------*/
 unsigned long
-circular_list_length(const circular_list_t cl)
+circular_list_length(const_circular_list_t cl)
 {
   unsigned long len = 1;
   struct cl *this;
@@ -149,7 +149,7 @@ circular_list_length(const circular_list_t cl)
 }
 /*---------------------------------------------------------------------------*/
 bool
-circular_list_is_empty(const circular_list_t cl)
+circular_list_is_empty(const_circular_list_t cl)
 {
   return *cl == NULL ? true : false;
 }
