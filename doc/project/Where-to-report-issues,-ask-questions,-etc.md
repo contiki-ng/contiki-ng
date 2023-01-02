@@ -36,5 +36,6 @@ Please _do_ open a [Github issue](https://github.com/contiki-ng/contiki-ng/issue
 
 When opening an issue:
 * Check if a similar issue wasn't already opened (and maybe resolved);
-* Polish your message, use punctuation, proof-read the text, etc.;
 * For bug reports, please provide enough information for the reader to be able reproduce the problem;
+* Use English language only;
+* Polish your message, use punctuation, proof-read the text, etc.;
