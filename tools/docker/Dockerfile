@@ -105,7 +105,9 @@ RUN wget -nv https://nsscprodmedia.blob.core.windows.net/prod/software-and-other
 ARG RENODE_VERSION=1.13.0
 RUN wget -nv https://github.com/renode/renode/releases/download/v${RENODE_VERSION}/renode_${RENODE_VERSION}_amd64.deb \
   && apt-get -qq -y --no-install-recommends install ./renode_${RENODE_VERSION}_amd64.deb > /dev/null \
+  && python3 -m pip -q install -r /opt/renode/tests/requirements.txt \
   && rm renode_${RENODE_VERSION}_amd64.deb \
+  && rm -rf /root/.cache \
   && apt-get -qq clean
 
 RUN wget -nv https://www.silabs.com/documents/public/software/SimplicityCommander-Linux.zip && \

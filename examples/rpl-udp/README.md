@@ -17,3 +17,9 @@ emulation in the Renode framework. For further instructions on installing and
 using Renode please refer to [the documentation][1].
 
 [1]: https://docs.contiki-ng.org/en/develop/doc/tutorials/Running-Contiki-NG-in-Renode.html
+
+The rpl-udp.robot is a Robot framework test for renode. To run that do:
+
+    >make TARGET=cc2538dk
+    >renode-test rpl-udp.robot
+
