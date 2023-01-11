@@ -113,6 +113,7 @@ sfrb(P5SEL2, P5SEL2_);
 #define LEDS_CONF_YELLOW 0x20
 #endif /* Z1_IS_Z1SP */
 
+#define LEDS_CONF_ALL ((LEDS_CONF_RED) | (LEDS_CONF_GREEN) | (LEDS_CONF_YELLOW))
 #define LEDS_CONF_LEGACY_API 1
 
 /* DCO speed resynchronization for more robust UART, etc. */
