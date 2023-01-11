@@ -62,7 +62,14 @@ PROCESS_THREAD(leds_example, ev, data)
         leds_on(LEDS_ALL);
       } else if((counter & 7) == 3) {
         leds_toggle(LEDS_ALL);
-#if !LEDS_LEGACY_API
+#if LEDS_LEGACY_API
+      } else if((counter & 7) == 4) {
+        leds_on(LEDS_RED);
+      } else if((counter & 7) == 5) {
+        leds_off(LEDS_RED);
+      } else if((counter & 7) == 6) {
+        leds_toggle(LEDS_RED);
+#else /* LEDS_LEGACY_API */
       } else if((counter & 7) == 4) {
         leds_single_on(LEDS_LED1);
       } else if((counter & 7) == 5) {
