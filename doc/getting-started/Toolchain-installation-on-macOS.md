@@ -25,7 +25,7 @@ $ brew tap caskroom/cask
 $ brew cask install tuntap
 ```
 ### Install some python packages
-Those are used/needed by some of the Contiki-NG python scripts.
+Those are used/needed by some Contiki-NG Python scripts.
 
 ```bash
 $ pip install intelhex pyserial python-magic

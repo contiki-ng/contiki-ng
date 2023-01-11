@@ -4,7 +4,7 @@ This tutorial shows how to use Cooja, a network simulator.
 First, make sure you have Cooja installed (see [doc:toolchain-installation]).
 Make sure the right Java virtual machine is installed, and the Cooja submodule downloaded (`git submodule update --init --recursive`).
 
-Go to the Cooja directory, build and start it with `ant`.
+Go to the Cooja directory, build and start it with `Gradle`.
 
 ```
 $ cd tools/cooja
@@ -19,8 +19,8 @@ Choose a name for the simulation, set other optional parameters, and click `Crea
 You should see a new empty simulation window:
 ![Cooja](https://contiki-ng.github.io/images/Cooja2.png)
 
-By default, the simulation contains an number of panels:
-* The 'Network' panel will show the network toplogy.
+By default, the simulation contains a number of panels:
+* The 'Network' panel will show the network topology.
 * The 'Simulation control' panel is used to start/pause/reload simulations.
 * The 'Notes' panel is for your own notes.
 * The 'Mote output' panel shows the serial line output of every node in the network.
@@ -29,7 +29,7 @@ By default, the simulation contains an number of panels:
 There are many other views available, try for instance `Tools->Radio messages` to add a panel that shows all packets sent during a simulation.
 
 You can save your simulation with `File->Save simulation as...`.
-Cooja simluation files are have the extension `.csc`.
+Cooja simulation files are have the extension `.csc`.
 Many of the examples provided in Contiki-NG come with their own `.csc` file, which one can open with `File->Open simulation`.
 
 We will now create a simple simulation, with just one node running the `hello-world` example.
