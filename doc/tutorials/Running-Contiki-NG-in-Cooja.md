@@ -58,4 +58,15 @@ You can also try the `.csc` files provided with some examples.
 Also note that many of our continuous integration tests run on Cooja.
 For your next contribution, consider including your own test to ensure non-regression!
 
+## Running Cooja without GUI
+
+Cooja can also run simulations without using a GUI. Only simulations with a timeout can run without GUI as the
+simulations must have an end point. Timeouts can be configured using the simulation script plugin by
+including `TIMEOUT(milliseconds);` in the simulation script.
+
+```
+cd tools/cooja
+./gradlew run --args='--no-gui ../../tests/07-simulation-base/02-ringbufindex.csc`
+```
+
 [doc:toolchain-installation]: https://github.com/contiki-ng/contiki-ng/wiki#setting-up-contiki-ng
