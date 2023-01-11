@@ -25,7 +25,7 @@ $ brew tap caskroom/cask
 $ brew cask install tuntap
 ```
 ### Install some python packages
-Those are used/needed by some of the Contiki-NG python scripts.
+Those are used/needed by some Contiki-NG Python scripts.
 
 ```bash
 $ pip install intelhex pyserial python-magic
@@ -68,15 +68,7 @@ You can also try using the latest version, but be prepared to get compilation wa
 The best way to achieve this on OS X is through homebrew, using a formula provided in a tap. Follow the instructions here: https://github.com/tgtakaoka/homebrew-mspgcc
 
 ### Install Java JDK for the Cooja network simulator
-Nothing exciting here, just download and install Java for OSX. You will need the JDK 8, not just the runtime. 
-
-Then, install `ant`.
-
-```bash
-$ brew install ant
-```
-
-Note Cooja doesn't work with JDK 9 since it uses a deprecated API, `javax.xml.bind.DatatypeConverter`, by JDK 9.
+Nothing exciting here, just download and install Java for OSX. You will need the JDK 17, not just the runtime.
 
 ### Install a CoAP client (libcoap)
 Optionally and if you want to use CoAP examples, you can install the CoAP client distributed with [libcoap].
