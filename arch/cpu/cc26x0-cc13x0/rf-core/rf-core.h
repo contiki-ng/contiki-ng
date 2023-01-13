@@ -320,8 +320,6 @@ typedef struct rf_core_primary_mode_s {
 /* Make the main driver process visible to mode drivers */
 PROCESS_NAME(rf_core_process);
 /*---------------------------------------------------------------------------*/
-/* Buffer full flag */
-extern volatile bool rf_core_rx_is_full;
 /*---------------------------------------------------------------------------*/
 /* RSSI of the last read frame */
 extern volatile int8_t rf_core_last_rssi;
