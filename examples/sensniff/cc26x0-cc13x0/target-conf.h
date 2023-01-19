@@ -34,7 +34,7 @@
 /*---------------------------------------------------------------------------*/
 #define TI_UART_CONF_BAUD_RATE         460800
 #define RF_BLE_CONF_ENABLED                 0
-#define CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE 1
+#define CCFG_CONF_ROM_BOOTLOADER_ENABLE     1
 /*---------------------------------------------------------------------------*/
 #define SENSNIFF_IO_DRIVER_H "pool/cc13xx-cc26xx-io.h"
 /*---------------------------------------------------------------------------*/

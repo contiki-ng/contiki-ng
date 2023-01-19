@@ -193,12 +193,12 @@
  * \name JTAG interface configuration
  *
  * Enable/Disable the JTAG DAP and TAP interfaces on the chip.
- * Setting this to 0 will disable access to the debug interface
+ * Setting this to 1 will disable access to the debug interface
  * to secure deployed images.
  * @{
  */
-#ifndef CCXXWARE_CONF_JTAG_INTERFACE_ENABLE
-#define CCXXWARE_CONF_JTAG_INTERFACE_ENABLE              1
+#ifndef CCFG_CONF_JTAG_INTERFACE_DISABLE
+#define CCFG_CONF_JTAG_INTERFACE_DISABLE             0
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -213,11 +213,11 @@
 
 /* Backward compatibility */
 #ifdef ROM_BOOTLOADER_ENABLE
-#define CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE ROM_BOOTLOADER_ENABLE
+#define CCFG_CONF_ROM_BOOTLOADER_ENABLE ROM_BOOTLOADER_ENABLE
 #endif
 
-#ifndef CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE
-#define CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE              1
+#ifndef CCFG_CONF_ROM_BOOTLOADER_ENABLE
+#define CCFG_CONF_ROM_BOOTLOADER_ENABLE              1
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/

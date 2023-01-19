@@ -69,7 +69,7 @@ $(GENDIR)/ieee-addr-id.h.diffupdate: FORCE
 $(OBJECTDIR)/ieee-addr.o: CFLAGS += -I$(GENDIR)
 $(OBJECTDIR)/ieee-addr.o: $(GENDIR)/ieee-addr-id.h
 
-$(OBJECTDIR)/ccfg.o: CFLAGS += -include "ccxxware-conf.h"
+$(OBJECTDIR)/ccfg.o: CFLAGS += -include "ccfg-conf.h"
 
 # a target that gives a user-friendly memory profile, taking into account the RAM
 # that is statically occupied by the stack as defined in the linker script

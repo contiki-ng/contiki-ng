@@ -219,7 +219,7 @@ For more information on the serial bootloader, see its README under the `tools/c
 For deployment/production images, it is _strongly_ recommended to:
 
 * Disable the ROM bootloader by defining `ROM_BOOTLOADER_ENABLE` as 0. In doing so, it is impossible to enter bootloader mode unless one first erases the device's flash.
-* Disable the JTAG interface, by defining `CCXXWARE_CONF_JTAG_INTERFACE_ENABLE` as 0. In doing so, the only JTAG operation available will be a device forced mass erase (using SmartRF Flash Programmer or UniFlash).
+* Disable the JTAG interface, by defining `CCFG_CONF_JTAG_INTERFACE_DISABLE` as 1. In doing so, the only JTAG operation available will be a device forced mass erase (using SmartRF Flash Programmer or UniFlash).
 
 Both macros have default values set in `arch/cpu/cc26xx-cc13xx/cc13xx-cc26xx-conf.h`. You can change this file, or you can override the defaults in `contiki-conf.h` or `project-conf.h`.
 
