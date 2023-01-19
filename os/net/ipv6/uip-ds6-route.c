@@ -310,7 +310,7 @@ uip_ds6_route_lookup(const uip_ipaddr_t *addr)
     LOG_INFO_6ADDR(uip_ds6_route_nexthop(found_route));
     LOG_INFO_("\n");
   } else {
-    LOG_WARN("No route found\n");
+    LOG_INFO("No route found\n");
   }
 
   if(found_route != NULL && found_route != list_head(routelist)) {
