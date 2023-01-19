@@ -1250,7 +1250,7 @@ uip_process(uint8_t flag)
         goto send;
       }
 
-      LOG_INFO("Forwarding packet to next hop ");
+      LOG_INFO("Forwarding packet to next hop, dest: ");
       LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
       LOG_INFO_("\n");
       UIP_STAT(++uip_stat.ip.forwarded);
@@ -1368,7 +1368,7 @@ uip_process(uint8_t flag)
             goto send;
           }
 
-          LOG_INFO("Forwarding packet to next hop ");
+          LOG_INFO("Forwarding packet to next hop, dest: ");
           LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
           LOG_INFO_("\n");
           UIP_STAT(++uip_stat.ip.forwarded);

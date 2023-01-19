@@ -65,7 +65,7 @@
  * result, MRHOF will favor good links over short paths. Without this
  * feature, a hop with 50% PRR (ETX=2) is equivalent to two perfect
  * hops with 100% PRR (ETX=1+1=2). With this feature, the former path
- * obtains ETX=2*2=4 and the former ETX=1*1+1*1=2.
+ * obtains ETX=2*2=4 and the latter ETX=1*1+1*1=2.
  *
  * While this feature helps achieve extra reliability, it also results
  * in added churn. In networks with high congestion or poor links,

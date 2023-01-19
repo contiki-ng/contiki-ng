@@ -94,7 +94,7 @@ struct routing_driver {
    * \param node The source routing node
    * \return 1 if the global node address was copied, 0 otherwise
   */
-  int (* get_sr_node_ipaddr)(uip_ipaddr_t *addr, const uip_sr_node_t *node);
+  int (* get_sr_node_ipaddr)(uip_ipaddr_t *ipaddr, const uip_sr_node_t *node);
   /**
    * Leave the network the node is part of
    *
@@ -171,9 +171,7 @@ struct routing_driver {
   /**
    * Called by uIP to notify addition/removal of IPv6 neighbor entries
    *
-   * \param addr The link-layer addrress of the packet destination
-   * \param status The transmission status (see os/net/mac/mac.h)
-   * \param numtx The total number of transmission attempts
+   * \param nbr The neighbor entry
    */
   void (* neighbor_state_changed)(uip_ds6_nbr_t *nbr);
   /**

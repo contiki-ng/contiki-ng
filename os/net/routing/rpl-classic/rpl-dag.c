@@ -1423,7 +1423,8 @@ rpl_process_parent_event(rpl_instance_t *instance, rpl_parent_t *p)
   if(RPL_IS_STORING(instance)
      && uip_ds6_route_is_nexthop(rpl_parent_get_ipaddr(p))
      && !rpl_parent_is_reachable(p) && instance->mop > RPL_MOP_NON_STORING) {
-    LOG_WARN("Unacceptable link %u, removing routes via: ", rpl_get_parent_link_metric(p));
+    LOG_WARN("Unacceptable link %u, removing routes via: ",
+             rpl_get_parent_link_metric(p));
     LOG_WARN_6ADDR(rpl_parent_get_ipaddr(p));
     LOG_WARN_("\n");
     rpl_remove_routes_by_nexthop(rpl_parent_get_ipaddr(p), p->dag);
