@@ -31,7 +31,7 @@ In order to compile need:
 
 * An ARM compatible toolchain
   * The toolchain used to build Contiki-NG is arm-gcc, also used by other arm-based Contiki-NG ports.
-  * If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-Linux) / [native mac OS](https://github.com/contiki-ng/contiki-ng/wiki/Toolchain-installation-on-macOS)).
+  * If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](/doc/getting-started/Toolchain-installation-on-Linux.md) / [native macOS](/doc/getting-started/Toolchain-installation-on-macOS.md)).
 
 * GNU make
 

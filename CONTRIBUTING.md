@@ -1,3 +1,3 @@
 For contribution guidelines, see [doc:contributing].
 
-[doc:contributing]: https://github.com/contiki-ng/contiki-ng/wiki/Contributing
+[doc:contributing]: https://docs.contiki-ng.org/en/develop/doc/project/Contributing.html

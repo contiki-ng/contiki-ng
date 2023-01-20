@@ -19,7 +19,7 @@ If you are coming from Contiki, this is what you need to know:
 * The build system is overall unchanged, but offers a number of new handy commands (configuration inspection, intermediate build file generation). It is documented at [doc:build-system]
 
 [doxygen]: https://contiki-ng.readthedocs.io/en/develop/_api/index.html
-[doc:home]: https://github.com/contiki-ng/contiki-ng/wiki
-[doc:configuration-system]: /doc/getting-started/The-Contiki-NG-configuration-system
-[doc:build-system]: /doc/getting-started/The-Contiki-NG-build-system
+[doc:home]: https://docs.contiki-ng.org/
+[doc:configuration-system]: /doc/getting-started/The-Contiki-NG-configuration-system.md
+[doc:build-system]: /doc/getting-started/The-Contiki-NG-build-system.md
 [doc:releases]: https://github.com/contiki-ng/contiki-ng/releases

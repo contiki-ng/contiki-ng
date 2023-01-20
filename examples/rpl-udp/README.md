@@ -14,6 +14,6 @@ for cooja motes.
 
 For this example a "renode" make target is available, to run a 3 node
 emulation in the Renode framework. For further instructions on installing and
-using Renode please refer to [Contiki-NG wiki][1].
+using Renode please refer to [the documentation][1].
 
-[1]: https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-Running-Contiki%E2%80%90NG-in-Renode
+[1]: https://docs.contiki-ng.org/en/develop/doc/tutorials/Running-Contiki-NG-in-Renode.html

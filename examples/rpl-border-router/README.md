@@ -4,7 +4,7 @@ This is the Contiki-NG border router. It supports two main modes of operation:
 embedded and native. In both cases, the border router runs a simple Web server
 that exposes a list of currently connected nodes via HTTP.
 
-See https://github.com/contiki-ng/contiki-ng/wiki/Tutorial:-RPL-border-router
+See the [RPL border router tutorial](https://docs.contiki-ng.org/en/develop/doc/tutorials/RPL-border-router.html)
 
 ## Embedded border router
 

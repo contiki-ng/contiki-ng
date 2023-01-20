@@ -7,7 +7,7 @@ This tutorial will help you understand and get started with Contiki-NG's MQTT cl
 
 The tutorial assumes you have basic understanding of [MQTT][mqtt-3-1] (also see [doc:mqtt]).
 
-Firstly, make sure you have mosquitto correctly set up on your system by following [the wiki guide](https://github.com/contiki-ng/contiki-ng/wiki#setting-up-contiki-ng) that corresponds to your system.
+Firstly, make sure you have mosquitto correctly set up on your system by following [the instructions][doc:setup] that correspond to your system.
 
 ## On your Linux / OS X device
 
@@ -142,7 +142,8 @@ You will then need to configure the example such that it attempts to use the Wat
 By default, the example will attempt to use the quickstart service. In this mode of operation, the device will _not_ subscribe to any topic. It is possible to get the device to use the full version of the IoT platform, but at the time of writing this guide this can only be done by changing the example's source code. Note that you will need to configure your Organisation / Registered device on Watson such that TLS is optional. Note that your device's authentication token will be transported in cleartext!
 
 [mqtt-3-1]: http://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/mqtt-v3r1.html
-[doc:mqtt]: /doc/programming/MQTT
-[tutorial:rpl-br]: /doc/tutorials/RPL-border-router
+[doc:setup]: /doc/Home.md
+[doc:mqtt]: /doc/programming/MQTT.md
+[tutorial:rpl-br]: /doc/tutorials/RPL-border-router.md
 [mosquitto]: https://mosquitto.org/
-[nat64]: /doc/getting-started/NAT64-for-Contiki-NG
+[nat64]: /doc/getting-started/NAT64-for-Contiki-NG.md
