@@ -80,22 +80,22 @@ Also feel free to download our [cheat sheet](https://contiki-ng.github.io/resour
 Basics:
 * [Hello, World!](/doc/tutorials/Hello,-World!.md)
 * [Logging](/doc/tutorials/Logging.md)
-* [NG shell](/doc/tutorials/Shell.md)
 * [RAM and ROM usage](/doc/tutorials/RAM-and-ROM-usage.md)
+* [NG shell](/doc/tutorials/Shell.md)
+* [Timers and events](/doc/tutorials/Timers-and-events.md)
 * [Simple energy usage estimation](/doc/tutorials/Instrumenting-Contiki-NG-applications-with-energy-usage-estimation.md)
 * [Custom Energest application](/doc/tutorials/Energy-monitoring.md)
-* [Timers and events](/doc/tutorials/Timers-and-events.md)
 
 Networking:
+* [CoAP](/doc/tutorials/CoAP.md)
 * [IPv6 ping](/doc/tutorials/IPv6-ping.md)
 * [RPL basics](/doc/tutorials/RPL.md)
 * [RPL with border router](/doc/tutorials/RPL-border-router.md)
-* [TSCH and 6TiSCH](/doc/tutorials/TSCH-and-6TiSCH.md)
-* [Switching from CSMA to TSCH](/doc/tutorials/Switching-to-TSCH.md)
-* [CoAP](/doc/tutorials/CoAP.md)
 * [LWM2M, IPSO objects, and NAT64](/doc/tutorials/LWM2M-and-IPSO-Objects.md)
 * [LWM2M Queue Mode](/doc/tutorials/LWM2M-and-IPSO-Objects-with-Queue-Mode.md)
 * [MQTT](/doc/tutorials/MQTT.md)
+* [Switching from CSMA to TSCH](/doc/tutorials/Switching-to-TSCH.md)
+* [TSCH and 6TiSCH](/doc/tutorials/TSCH-and-6TiSCH.md)
 
 Simulation:
 * [Cooja: getting started](/doc/tutorials/Running-Contiki-NG-in-Cooja.md)
