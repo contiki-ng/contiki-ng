@@ -26,7 +26,7 @@ Contiki-NG started as a fork of the Contiki OS and retains some of its original 
 Find out more:
 
 * GitHub repository: https://github.com/contiki-ng/contiki-ng
-* Documentation: https://github.com/contiki-ng/contiki-ng/wiki
+* Documentation: https://docs.contiki-ng.org/
 * List of releases and changes: https://github.com/contiki-ng/contiki-ng/releases
 * Web site: http://contiki-ng.org
 

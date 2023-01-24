@@ -14,7 +14,7 @@ demonstrate the CC26xx capability. The applications are:
 
 The example has been configured to run for all CC26xx-based boards.
 
-To change between target boards, follow the instructions in the wiki.
+To change between target boards, follow the instructions in the documentation.
 Do not forget to `make clean` when switching between the boards.
 
 Specifically for some older CC2650 SensorTags, you may also need to change
@@ -64,7 +64,7 @@ tab, as per the image below.
 
 For this functionality to work, you will need to install a CoAP client.
 You can achieve this by following the guides on how to set up your system
-[in the wiki](https://github.com/contiki-ng/contiki-ng/wiki#setting-up-contiki-ng).
+[in the documentation](https://docs.contiki-ng.org/).
 
 You should start by sending a CoAP GET request for the `.well-known/core`
 resource. If you are using libcoap's CoAP client, this can be achieved by:

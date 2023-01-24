@@ -69,4 +69,4 @@ cd tools/cooja
 ./gradlew run --args='--no-gui ../../tests/07-simulation-base/02-ringbufindex.csc`
 ```
 
-[doc:toolchain-installation]: https://github.com/contiki-ng/contiki-ng/wiki#setting-up-contiki-ng
+[doc:toolchain-installation]: /doc/Home.md
