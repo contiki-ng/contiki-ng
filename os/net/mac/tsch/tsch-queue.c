@@ -507,10 +507,12 @@ tsch_queue_backoff_inc(struct tsch_neighbor *n)
   /* Pick a window (number of shared slots to skip). Ignore least significant
    * few bits, which, on some embedded implementations of rand (e.g. msp430-libc),
    * are known to have poor pseudo-random properties. */
-  n->backoff_window = (random_rand() >> 6) % (1 << n->backoff_exponent);
+  n->backoff_window = (random_rand() >> 6) % (1ul << n->backoff_exponent);
   /* Add one to the window as we will decrement it at the end of the current slot
    * through tsch_queue_update_all_backoff_windows */
-  n->backoff_window++;
+  if(n->backoff_window < UINT16_MAX) {
+    n->backoff_window++;
+  }
 }
 /*---------------------------------------------------------------------------*/
 /* Decrement backoff window for all queues directed at dest_addr */
