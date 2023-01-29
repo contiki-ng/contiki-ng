@@ -45,6 +45,11 @@
 #else
 #define HAVE_LONGLONG   PRINTF_CONF_HAVE_LONGLONG
 #endif
+
+/*  HAVE_NETADDR provides pointer format specifier %p with more info:
+ *      %pL - dumps pointer as linkaddr_t*
+ *      %pI - dumps pointer as uip_ipaddr_t*
+ * */
 #ifndef PRINTF_CONF_HAVE_NETADDR
 #define HAVE_NETADDR    1
 #else
