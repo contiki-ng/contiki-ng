@@ -123,7 +123,7 @@ jobs:
     #
     # IMPORTANT: cache size must also be updated in the "Execute tests" section.
     - name: ccache
-      uses: hendrikmuhs/ccache-action@v1.2.5
+      uses: hendrikmuhs/ccache-action@v1.2.8
       with:
         key: compilation-${{ matrix.test }}
         max-size: 140M
