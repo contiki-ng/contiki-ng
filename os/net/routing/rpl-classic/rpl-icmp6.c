@@ -51,7 +51,7 @@
 #include "net/routing/rpl-classic/rpl-private.h"
 #include "net/packetbuf.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
-#include "random.h"
+#include "lib/random.h"
 
 #include "sys/log.h"
 
