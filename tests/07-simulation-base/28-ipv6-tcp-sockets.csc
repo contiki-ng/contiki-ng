@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<simconf>
+<simconf version="2022112801">
   <simulation>
     <title>TCP socket test</title>
     <randomseed>generated</randomseed>
@@ -16,7 +16,6 @@
     </events>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
-      <identifier>mtype782</identifier>
       <description>Server</description>
       <source>[CONFIG_DIR]/code-ipv6/tcp-server/tcp-server.c</source>
       <commands>make TARGET=cooja clean
@@ -28,7 +27,7 @@ make -j$(CPUS) tcp-server.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiRS232</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiBeeper</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
-      <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiIPAddress</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiRadio</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiButton</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiPIR</moteinterface>
@@ -38,10 +37,19 @@ make -j$(CPUS) tcp-server.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
+      <mote>
+        <interface_config>
+          org.contikios.cooja.interfaces.Position
+          <pos x="100.0" y="25.0" />
+        </interface_config>
+        <interface_config>
+          org.contikios.cooja.contikimote.interfaces.ContikiMoteID
+          <id>1</id>
+        </interface_config>
+      </mote>
     </motetype>
     <motetype>
       org.contikios.cooja.contikimote.ContikiMoteType
-      <identifier>mtype74</identifier>
       <description>Client</description>
       <source>[CONFIG_DIR]/code-ipv6/tcp-client/tcp-client.c</source>
       <commands>make TARGET=cooja clean
@@ -53,7 +61,7 @@ make -j$(CPUS) tcp-client.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiRS232</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiBeeper</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
-      <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiIPAddress</moteinterface>
+      <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiRadio</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiButton</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiPIR</moteinterface>
@@ -63,42 +71,18 @@ make -j$(CPUS) tcp-client.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
+      <mote>
+        <interface_config>
+          org.contikios.cooja.interfaces.Position
+          <pos x="94.96401380574989" y="21.247662337471553" />
+        </interface_config>
+        <interface_config>
+          org.contikios.cooja.contikimote.interfaces.ContikiMoteID
+          <id>2</id>
+        </interface_config>
+      </mote>
     </motetype>
-    <mote>
-      <interface_config>
-        org.contikios.cooja.interfaces.Position
-        <x>100.0</x>
-        <y>25.0</y>
-        <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiMoteID
-        <id>1</id>
-      </interface_config>
-      <motetype_identifier>mtype782</motetype_identifier>
-    </mote>
-    <mote>
-      <interface_config>
-        org.contikios.cooja.interfaces.Position
-        <x>94.96401380574989</x>
-        <y>21.247662337471553</y>
-        <z>0.0</z>
-      </interface_config>
-      <interface_config>
-        org.contikios.cooja.contikimote.interfaces.ContikiMoteID
-        <id>2</id>
-      </interface_config>
-      <motetype_identifier>mtype74</motetype_identifier>
-    </mote>
   </simulation>
-  <plugin>
-    org.contikios.cooja.plugins.SimControl
-    <width>280</width>
-    <z>4</z>
-    <height>160</height>
-    <location_x>38</location_x>
-    <location_y>13</location_y>
-  </plugin>
   <plugin>
     org.contikios.cooja.plugins.LogListener
     <plugin_config>
@@ -106,11 +90,7 @@ make -j$(CPUS) tcp-client.cooja TARGET=cooja</commands>
       <formatted_time />
       <coloring />
     </plugin_config>
-    <width>680</width>
-    <z>1</z>
-    <height>240</height>
-    <location_x>380</location_x>
-    <location_y>769</location_y>
+    <bounds x="380" y="769" height="240" width="680" z="3" />
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.ScriptRunner
@@ -118,11 +98,7 @@ make -j$(CPUS) tcp-client.cooja TARGET=cooja</commands>
       <scriptfile>[CONFIG_DIR]/ipv6-tcp.js</scriptfile>
       <active>true</active>
     </plugin_config>
-    <width>600</width>
-    <z>0</z>
-    <height>700</height>
-    <location_x>421</location_x>
-    <location_y>12</location_y>
+    <bounds x="421" y="12" height="700" width="600" z="2" />
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.Visualizer
@@ -134,11 +110,7 @@ make -j$(CPUS) tcp-client.cooja TARGET=cooja</commands>
       <skin>org.contikios.cooja.plugins.skins.UDGMVisualizerSkin</skin>
       <viewport>70.04135021855352 0.0 0.0 70.04135021855352 -6633.771385491715 -1446.6243572841263</viewport>
     </plugin_config>
-    <width>400</width>
-    <z>3</z>
-    <height>400</height>
-    <location_x>1</location_x>
-    <location_y>1</location_y>
+    <bounds x="1" y="1" height="400" width="400" z="1" />
   </plugin>
   <plugin>
     org.contikios.cooja.plugins.RadioLogger
@@ -147,11 +119,6 @@ make -j$(CPUS) tcp-client.cooja TARGET=cooja</commands>
       <formatted_time />
       <analyzers name="6lowpan" />
     </plugin_config>
-    <width>1068</width>
-    <z>2</z>
-    <height>300</height>
-    <location_x>547</location_x>
-    <location_y>40</location_y>
+    <bounds x="547" y="40" height="300" width="1068" />
   </plugin>
 </simconf>
-
