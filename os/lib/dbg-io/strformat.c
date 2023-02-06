@@ -693,20 +693,31 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
           ++pos;
           const linkaddr_t* lladdr = (const linkaddr_t *)va_arg(ap, void *);
           if(lladdr == NULL) {
-              conv_pos = "(NULL LL addr)";
-              conv_len = 14;
+              conv_pos = "(LL nil)";
+              conv_len = 8;
           } else {
-            conv_pos = buffer;
+            conv_pos = buffer + sizeof(buffer)-1;
             conv_len = 0;
             unsigned int i;
-            for(i = 0; i < LINKADDR_SIZE; i++) {
-              if(i > 0 && i % 2 == 0) {
+            const uint8_t* adrch = lladdr->u8 + LINKADDR_SIZE-1;
+            for(i = 0; i < LINKADDR_SIZE; ++i, --adrch) {
+
+              if ( (i > 0) && ((i % 2 )== 0) && (LINKADDR_SIZE > 2)) {
                 conv_len++;
-                *conv_pos++ = '.';
+                *(--conv_pos) = '.';
               }
-              conv_len += output_uint_hex(&conv_pos, lladdr->u8[i], flags);
+
+              unsigned olen = output_uint_hex(&conv_pos, *adrch, flags);
+              if ( olen == 0){
+                  *(--conv_pos) = '0';
+                  ++olen;
+              }
+              if ( olen == 1){
+                  *(--conv_pos) = '0';
+                  ++olen;
+              }
+              conv_len += olen;
             }
-            conv_pos = buffer;
           }
       }
 #if NETSTACK_CONF_WITH_IPV6
