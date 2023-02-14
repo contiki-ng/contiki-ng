@@ -393,6 +393,11 @@
 #define TSCH_MAC_MAX_BE 5
 #endif
 
+/* Avoid potential 16-bit integer overflow */
+#if TSCH_MAC_MAX_BE > 16
+#error TSCH_MAC_MAX_BE must be 16 or lower to avoid uint16_t overflows
+#endif
+
 /* Max number of re-transmissions */
 #ifdef TSCH_CONF_MAC_MAX_FRAME_RETRIES
 #define TSCH_MAC_MAX_FRAME_RETRIES TSCH_CONF_MAC_MAX_FRAME_RETRIES
