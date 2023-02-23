@@ -67,6 +67,18 @@
 /* Initial ETX value */
 #define ETX_DEFAULT                      2
 
+#define RSSI_DIFF (LINK_STATS_RSSI_HIGH - LINK_STATS_RSSI_LOW)
+
+/* Generate error on incorrect link stats configuration values */
+#if RSSI_DIFF <= 0
+#error "RSSI_HIGH must be greater then RSSI_LOW"
+#endif
+
+/* Generate error if the initial ETX calculation would overflow uint16_t */
+#if ETX_DIVISOR * RSSI_DIFF >= 0x10000
+#error "RSSI math overflow"
+#endif
+
 /* Per-neighbor link statistics table */
 NBR_TABLE(struct link_stats, link_stats);
 
@@ -98,30 +110,26 @@ link_stats_is_fresh(const struct link_stats *stats)
 }
 /*---------------------------------------------------------------------------*/
 #if LINK_STATS_INIT_ETX_FROM_RSSI
-uint16_t
+/*
+ * Returns initial ETX value from an RSSI value.
+ *    RSSI >= RSSI_HIGH           -> use default ETX
+ *    RSSI_LOW < RSSI < RSSI_HIGH -> ETX is a linear function of RSSI
+ *    RSSI <= RSSI_LOW            -> use minimal initial ETX
+ **/
+static uint16_t
 guess_etx_from_rssi(const struct link_stats *stats)
 {
   if(stats != NULL) {
     if(stats->rssi == LINK_STATS_RSSI_UNKNOWN) {
       return ETX_DEFAULT * ETX_DIVISOR;
     } else {
-      /* A rough estimate of PRR from RSSI, as a linear function where:
-       *      RSSI >= -60 results in PRR of 1
-       *      RSSI <= -90 results in PRR of 0
-       * prr = (bounded_rssi - RSSI_LOW) / (RSSI_DIFF)
-       * etx = ETX_DIVOSOR / ((bounded_rssi - RSSI_LOW) / RSSI_DIFF)
-       * etx = (RSSI_DIFF * ETX_DIVOSOR) / (bounded_rssi - RSSI_LOW)
-       * */
-#define ETX_INIT_MAX 3
-#define RSSI_HIGH -60
-#define RSSI_LOW  -90
-#define RSSI_DIFF (RSSI_HIGH - RSSI_LOW)
-      uint16_t etx;
-      int16_t bounded_rssi = stats->rssi;
-      bounded_rssi = MIN(bounded_rssi, RSSI_HIGH);
-      bounded_rssi = MAX(bounded_rssi, RSSI_LOW + 1);
-      etx = RSSI_DIFF * ETX_DIVISOR / (bounded_rssi - RSSI_LOW);
-      return MIN(etx, ETX_INIT_MAX * ETX_DIVISOR);
+      const int16_t rssi_delta = stats->rssi - LINK_STATS_RSSI_LOW;
+      const int16_t bounded_rssi_delta = BOUND(rssi_delta, 0, RSSI_DIFF);
+      /* Penalty is in the range from 0 to ETX_DIVISOR */
+      const uint16_t penalty = ETX_DIVISOR * bounded_rssi_delta / RSSI_DIFF;
+      /* ETX is the default ETX value + penalty */
+      const uint16_t etx = ETX_DIVISOR * ETX_DEFAULT + penalty;
+      return MIN(etx, LINK_STATS_ETX_INIT_MAX * ETX_DIVISOR);
     }
   }
   return 0xffff;
