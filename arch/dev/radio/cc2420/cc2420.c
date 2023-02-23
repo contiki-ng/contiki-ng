@@ -899,7 +899,6 @@ PROCESS_THREAD(cc2420_process, ev, data)
     PRINTF("cc2420_process: calling receiver callback\n");
 
     packetbuf_clear();
-    packetbuf_set_attr(PACKETBUF_ATTR_TIMESTAMP, last_packet_timestamp);
     len = cc2420_read(packetbuf_dataptr(), PACKETBUF_SIZE);
 
     packetbuf_set_datalen(len);
