@@ -593,6 +593,10 @@ PROCESS_THREAD(ble_l2cap_tx_process, ev, data)
         }
 
         /* copy payload */
+        if(data_len > PACKETBUF_SIZE - packetbuf_hdrlen()) {
+          LOG_WARN("Not enough packetbuf space to copy buffer\n");
+          continue;
+        }
         memcpy(packetbuf_dataptr(),
                &channel->tx_buffer.sdu[channel->tx_buffer.current_index],
                data_len);
