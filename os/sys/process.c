@@ -145,7 +145,11 @@ exit_process(struct process *p, const struct process *fromprocess)
      * deallocate state associated with this process.
      */
     for(q = process_list; q != NULL; q = q->next) {
-      if(p != q) {
+      /*
+       * since p is set to PROCESS_STATE_NONE above, it will
+       * automatically be excluded from this call list
+       */
+      if(q->state == PROCESS_STATE_RUNNING) {
         call_process(q, PROCESS_EVENT_EXITED, (process_data_t)p);
       }
     }
