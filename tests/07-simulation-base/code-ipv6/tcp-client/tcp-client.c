@@ -56,6 +56,7 @@ static uint8_t in_buf[SOCKET_BUF_SIZE];
 static uint8_t out_buf[SOCKET_BUF_SIZE];
 static size_t bytes_received;
 static size_t bytes_sent;
+static size_t last_sent;
 static volatile bool can_send;
 static volatile bool shutdown_test;
 /*****************************************************************************/
@@ -93,6 +94,9 @@ event_callback(struct tcp_socket *sock, void *ptr, tcp_socket_event_t event)
     break;
   case TCP_SOCKET_DATA_SENT:
     LOG_INFO_("DATA SENT\n");
+    bytes_sent += last_sent;
+    LOG_INFO("SENT %zu bytes (total %zu)\n", last_sent, bytes_sent);
+    last_sent = 0;
     can_send = true;
     break;
   default:
@@ -159,8 +163,7 @@ PROCESS_THREAD(test_tcp_client, ev, data)
         LOG_ERR("Failed to send %zu bytes\n", sizeof(buf));
         break;
       }
-      bytes_sent += ret;
-      LOG_INFO("SENT %d bytes (total %zu)\n", ret, bytes_sent);
+      last_sent = ret;
       can_send = false;
     }
   }
