@@ -61,7 +61,7 @@ PROCESS_THREAD(remote_grove_light_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  uint16_t ldr;
+  int ldr;
 
   /* Use pin number not mask, for example if using the PA5 pin then use 5 */
   adc_sensors.configure(ANALOG_GROVE_LIGHT, 5);

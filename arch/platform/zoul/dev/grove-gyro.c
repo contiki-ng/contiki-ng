@@ -623,7 +623,7 @@ configure(int type, int value)
     return grove_gyro_dlpf(value);
 
   case GROVE_GYRO_SAMPLE_RATE_DIVIDER:
-    if((value < 0) && (value > 0xFF)) {
+    if((value < 0) || (value > 0xFF)) {
       PRINTF("Gyro: invalid sampling rate div, it must be an 8-bit value\n");
       return GROVE_GYRO_ERROR;
     }

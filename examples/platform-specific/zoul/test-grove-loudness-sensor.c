@@ -61,7 +61,7 @@ PROCESS_THREAD(remote_grove_loudness_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  uint16_t loudness;
+  int loudness;
 
   /* Use pin number not mask, for example if using the PA5 pin then use 5 */
   adc_sensors.configure(ANALOG_GROVE_LOUDNESS, ADC_PIN);
