@@ -85,10 +85,58 @@ populate_link_address(void)
   memcpy(&linkaddr_node_addr, &device_address[8 - LINKADDR_SIZE],
          LINKADDR_SIZE);
 }
+
+void
+approtect_device(bool lock)
+{
+  uint32_t PALL;
+  if (lock)
+  {
+    PALL = UICR_APPROTECT_PALL_Enabled;
+  }
+  else
+  {
+    PALL = UICR_APPROTECT_PALL_Disabled;
+  }
+  
+  uint32_t variant = NRF_FICR->INFO.VARIANT;
+  if ((uint8_t)(variant >> 8) >= (uint8_t)'F')
+  {
+  	if ((NRF_UICR->APPROTECT & UICR_APPROTECT_PALL_Msk) !=
+        (PALL << UICR_APPROTECT_PALL_Pos))
+    {
+        NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Wen;
+        while (NRF_NVMC->READY == NVMC_READY_READY_Busy) {}
+
+        NRF_UICR->APPROTECT = 
+          ((NRF_UICR->APPROTECT & ~((uint32_t)UICR_APPROTECT_PALL_Msk)) |
+          (PALL << UICR_APPROTECT_PALL_Pos));
+
+        NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Ren;
+        while (NRF_NVMC->READY == NVMC_READY_READY_Busy) {}
+    }
+  }
+}
+
 /*---------------------------------------------------------------------------*/
 void
 platform_init_stage_one(void)
 {
+#ifdef NRF52840_ENABLE_APPROTECT
+  /*
+   * Check the variant of the board. nRF52840 with revision 3 have an 
+   * improved APPROTECT ("hardware and software controlled access port
+   * protection") wich needs explicit action by the firmware to keep it
+   * unlocked. If it is locked, we are unable to flash new firmware.
+   *
+   * Chips with a build code F and higher have this improved protection.
+  */
+  approtect_device(true);
+#else
+  approtect_device(false);
+#endif
+
+
   gpio_hal_init();
   leds_init();
 }
