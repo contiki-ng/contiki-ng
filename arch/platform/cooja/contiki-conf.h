@@ -153,8 +153,8 @@ typedef unsigned long clock_time_t;
 /*---------------------------------------------------------------------------*/
 /* Virtual LED colors */
 #define LEDS_CONF_COUNT                  3
-#define LEDS_CONF_GREEEN                 1
-#define LEDS_CONF_RED                    2
-#define LEDS_CONF_YELLOW                 4
+#define LEDS_CONF_GREEN                 1
+#define LEDS_CONF_RED                    4
+#define LEDS_CONF_YELLOW                 2
 /*---------------------------------------------------------------------------*/
 #endif /* CONTIKI_CONF_H_ */
