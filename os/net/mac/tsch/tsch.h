@@ -113,22 +113,22 @@ frequency hopping for enhanced reliability.
 
 /* Called by TSCH when joining a network */
 #ifdef TSCH_CALLBACK_JOINING_NETWORK
-void TSCH_CALLBACK_JOINING_NETWORK();
+void TSCH_CALLBACK_JOINING_NETWORK(void);
 #endif
 
 /* Called by TSCH when leaving a network */
 #ifdef TSCH_CALLBACK_LEAVING_NETWORK
-void TSCH_CALLBACK_LEAVING_NETWORK();
+void TSCH_CALLBACK_LEAVING_NETWORK(void);
 #endif
 
 /* Called by TSCH after sending a keep-alive */
 #ifdef TSCH_CALLBACK_KA_SENT
-void TSCH_CALLBACK_KA_SENT();
+void TSCH_CALLBACK_KA_SENT(int status, int transmissions);
 #endif
 
 /* Called by TSCH before sending a EB */
 #ifdef TSCH_RPL_CHECK_DODAG_JOINED
-int TSCH_RPL_CHECK_DODAG_JOINED();
+int TSCH_RPL_CHECK_DODAG_JOINED(void);
 #endif
 
 /* Called by TSCH form interrupt after receiving a frame, enabled upper-layer to decide
