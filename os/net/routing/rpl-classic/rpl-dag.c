@@ -1606,9 +1606,9 @@ rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
   /* The DIO comes from a valid DAG, so we can refresh its lifetime. */
   dag->lifetime = (1UL << (instance->dio_intmin + instance->dio_intdoubl)) *
     RPL_DAG_LIFETIME / 1000;
-  LOG_INFO("Set DAG ");
-  LOG_INFO_6ADDR(&dag->dag_id);
-  LOG_INFO_(" lifetime to %ld\n", (long int)dag->lifetime);
+  LOG_DBG("Set DAG ");
+  LOG_DBG_6ADDR(&dag->dag_id);
+  LOG_DBG_(" lifetime to %ld\n", (long int)dag->lifetime);
 
   /*
    * At this point, we know that this DIO pertains to a DAG that we
