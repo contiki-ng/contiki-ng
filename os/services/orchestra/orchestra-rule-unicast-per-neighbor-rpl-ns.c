@@ -91,7 +91,7 @@ remove_uc_link(const linkaddr_t *linkaddr)
 {
   if(linkaddr != NULL) {
     uint16_t timeslot = get_node_timeslot(linkaddr);
-    tsch_schedule_remove_link_by_timeslot(sf_unicast, timeslot, 0);
+    tsch_schedule_remove_link_by_offsets(sf_unicast, timeslot, 0);
     tsch_queue_free_packets_to(linkaddr);
   }
 }
