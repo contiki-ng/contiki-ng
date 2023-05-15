@@ -191,7 +191,7 @@ root_node_updated(const linkaddr_t *root, uint8_t is_added)
         LINK_TYPE_NORMAL, root,
         timeslot_tx, get_node_channel_offset(root), 0);
   } else {
-    tsch_schedule_remove_link_by_timeslot(sf_tx, timeslot_tx, get_node_channel_offset(root));
+    tsch_schedule_remove_link_by_offsets(sf_tx, timeslot_tx, get_node_channel_offset(root));
     tsch_queue_free_packets_to(root);
   }
 }

@@ -112,14 +112,23 @@ struct tsch_link *tsch_schedule_add_link(struct tsch_slotframe *slotframe,
 struct tsch_link *tsch_schedule_get_link_by_handle(uint16_t handle);
 
 /**
- * \brief Looks within a slotframe for a link with a given timeslot
+ * \brief Looks within a slotframe for a link with a given timeslot and channel offset
  * \param slotframe The desired slotframe
  * \param timeslot The desired timeslot
  * \param channel_offset The desired channel offset 
  * \return The link if found, NULL otherwise
  */
+struct tsch_link *tsch_schedule_get_link_by_offsets(struct tsch_slotframe *slotframe,
+                                                    uint16_t timeslot, uint16_t channel_offset);
+
+/**
+ * \brief Looks within a slotframe for a link with a given timeslot
+ * \param slotframe The desired slotframe
+ * \param timeslot The desired timeslot
+ * \return The link if found, NULL otherwise
+ */
 struct tsch_link *tsch_schedule_get_link_by_timeslot(struct tsch_slotframe *slotframe,
-                                                     uint16_t timeslot, uint16_t channel_offset);
+                                                     uint16_t timeslot);
 
 /**
  * \brief Removes a link
@@ -130,14 +139,14 @@ struct tsch_link *tsch_schedule_get_link_by_timeslot(struct tsch_slotframe *slot
 int tsch_schedule_remove_link(struct tsch_slotframe *slotframe, struct tsch_link *l);
 
 /**
- * \brief Removes a link from a slotframe and timeslot
+ * \brief Removes a link from a slotframe and timeslot + channel offset
  * \param slotframe The slotframe where to look for the link
  * \param timeslot The timeslot where to look for the link within the target slotframe
  * \param channel_offset The channel offset where to look for the link within the target slotframe
  * \return 1 if success, 0 if failure
  */
-int tsch_schedule_remove_link_by_timeslot(struct tsch_slotframe *slotframe,
-                                          uint16_t timeslot, uint16_t channel_offset);
+int tsch_schedule_remove_link_by_offsets(struct tsch_slotframe *slotframe,
+                                         uint16_t timeslot, uint16_t channel_offset);
 
 /**
  * \brief Returns the next active link after a given ASN, and a backup link (for the same ASN, with Rx flag)

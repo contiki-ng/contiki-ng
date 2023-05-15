@@ -145,7 +145,7 @@ remove_uc_link(const linkaddr_t *linkaddr)
   }
 
   timeslot = get_node_timeslot(linkaddr);
-  l = tsch_schedule_get_link_by_timeslot(sf_unicast, timeslot, local_channel_offset);
+  l = tsch_schedule_get_link_by_offsets(sf_unicast, timeslot, local_channel_offset);
   if(l == NULL) {
     return;
   }
