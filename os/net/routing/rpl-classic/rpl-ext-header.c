@@ -119,7 +119,7 @@ rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
   sender = nbr_table_get_from_lladdr(rpl_parents, packetbuf_addr(PACKETBUF_ADDR_SENDER));
 
   if(sender != NULL && (rpl_opt->flags & RPL_HDR_OPT_RANK_ERR)) {
-    /* A rank error was signalled -- attempt to repair it by updating
+    /* A rank error was signaled -- attempt to repair it by updating
        the sender's rank from the ext header. */
     sender->rank = sender_rank;
     if(RPL_IS_NON_STORING(instance)) {
@@ -135,9 +135,10 @@ rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
 
   sender_closer = sender_rank < instance->current_dag->rank;
 
-  LOG_DBG("Packet going %s, sender closer %d (%d < %d)\n",
+
+  LOG_DBG("Packet going %s, sender%s closer (%d < %d)\n",
           down == 1 ? "down" : "up",
-          sender_closer,
+          sender_closer ? "" : " not",
           sender_rank,
           instance->current_dag->rank);
 
@@ -154,14 +155,14 @@ rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
 
     if(rpl_opt->flags & RPL_HDR_OPT_RANK_ERR) {
       RPL_STAT(rpl_stats.loop_errors++);
-      LOG_ERR(" Rank error signalled in RPL option!\n");
+      LOG_ERR("Rank error signaled in RPL option!\n");
       /* Packet must be dropped and dio trickle timer reset, see
          RFC6550 - 11.2.2.2 */
       rpl_reset_dio_timer(instance);
       return 0;
     }
 
-    LOG_WARN("Single error tolerated\n");
+    LOG_WARN("One inconsistency along path is tolerated\n");
     RPL_STAT(rpl_stats.loop_warnings++);
     rpl_opt->flags |= RPL_HDR_OPT_RANK_ERR;
     return 1;

@@ -282,7 +282,7 @@ uip_ds6_prefix_add(uip_ipaddr_t *ipaddr, uint8_t ipaddrlen,
     locprefix->plifetime = ptime;
     LOG_INFO("Adding prefix ");
     LOG_INFO_6ADDR(&locprefix->ipaddr);
-    LOG_INFO_("length %u, flags %x, Valid lifetime %lx, Preffered lifetime %lx\n",
+    LOG_INFO_(" len %u, flags %x, valid/preferred lifetime %lx/%lx\n",
        ipaddrlen, flags, vtime, ptime);
     return locprefix;
   } else {
@@ -312,7 +312,7 @@ uip_ds6_prefix_add(uip_ipaddr_t *ipaddr, uint8_t ipaddrlen,
     }
     LOG_INFO("Adding prefix ");
     LOG_INFO_6ADDR(&locprefix->ipaddr);
-    LOG_INFO_("length %u, vlifetime %lu\n", ipaddrlen, interval);
+    LOG_INFO_(" len %u, valid lifetime %lu\n", ipaddrlen, interval);
     return locprefix;
   }
   return NULL;

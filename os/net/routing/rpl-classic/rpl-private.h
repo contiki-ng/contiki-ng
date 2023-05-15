@@ -150,7 +150,9 @@
 #define RPL_ROUTE_INFINITE_LIFETIME           0xFFFFFFFF
 
 #define RPL_LIFETIME(instance, lifetime) \
-          (((lifetime) == RPL_INFINITE_LIFETIME) ? RPL_ROUTE_INFINITE_LIFETIME : (unsigned long)(instance)->lifetime_unit * (lifetime))
+          (((lifetime) == RPL_INFINITE_LIFETIME) ? \
+              RPL_ROUTE_INFINITE_LIFETIME : \
+              (unsigned long)(instance)->lifetime_unit * (lifetime))
 
 
 #ifndef RPL_CONF_MIN_HOPRANKINC
