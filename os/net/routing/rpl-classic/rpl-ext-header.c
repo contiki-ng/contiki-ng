@@ -159,6 +159,10 @@ rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
       /* Packet must be dropped and dio trickle timer reset, see
          RFC6550 - 11.2.2.2 */
       rpl_reset_dio_timer(instance);
+      /* Don't drop packet if it was for us. Workaround for issue #2285 */
+      if(uip_ds6_is_my_addr(&UIP_IP_BUF->destipaddr)) {
+        return 1;
+      }
       return 0;
     }
 
