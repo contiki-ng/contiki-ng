@@ -153,8 +153,17 @@ ifneq ($(MAKECMDGOALS),clean)
   GCC_MAJOR_VERSION := $(word 1,$(subst ., ,$(GCC_VERSION)))
   GCC_MINOR_VERSION := $(word 2,$(subst ., ,$(GCC_VERSION)))
 
-  # Warn if using version 6.3.x of arm-none-eabi-gcc
   ifeq ("$(CC)","arm-none-eabi-gcc")
+    # Silence some warnings when using GCC 12.
+    ifeq (12,$(GCC_MAJOR_VERSION))
+      # Disable -Warray-bounds false positives in GCC 12, GCC 13 has better
+      # precision (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99578).
+      CFLAGS += --param=min-pagesize=0
+      # FIXME: Investigate if the warning can be re-enabled.
+      # https://www.redhat.com/en/blog/linkers-warnings-about-executable-stacks-and-segments
+      LDFLAGS += -Wl,--no-warn-rwx-segments
+    endif
+    # Warn if using version 6.3.x of arm-none-eabi-gcc
     ifeq (6,$(GCC_MAJOR_VERSION))
       ifeq (3,$(GCC_MINOR_VERSION))
         $(warning Warning: $(CC) version 6.3.x may create broken Contiki-NG executables.)
