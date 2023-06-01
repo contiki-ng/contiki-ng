@@ -52,6 +52,10 @@
  * heapmem_realloc(), because the chunk structure immediately precedes
  * the memory of the chunk.
  *
+ * \note If the HEAPMEM_CONF_ARENA_SIZE parameter is not set, the
+ * heapmem implementation will not be compiled, which could lead to a
+ * linking error if other modules call heapmem functions.
+ *
  * \note This module does not contain a corresponding function to the
  *       standard C function calloc().
  *
