@@ -328,6 +328,10 @@ PT_THREAD(cmd_log(struct pt *pt, shell_output_func output, char *args))
   /* Get and parse argument: module name */
   SHELL_ARGS_NEXT(args, next_args);
   module = args;
+  if(module == NULL) {
+    SHELL_OUTPUT(output, "Module is not specified\n");
+    PT_EXIT(pt);
+  }
   prev_level = log_get_level(module);
   if(module == NULL || (strcmp("all", module) && prev_level == -1)) {
     SHELL_OUTPUT(output, "Invalid first argument: %s\n", module)
@@ -401,6 +405,10 @@ PT_THREAD(cmd_rpl_set_root(struct pt *pt, shell_output_func output, char *args))
 
   /* Get first arg (0/1) */
   SHELL_ARGS_NEXT(args, next_args);
+  if(args == NULL) {
+    SHELL_OUTPUT(output, "On-flag (0 or 1) is not specified\n");
+    PT_EXIT(pt);
+  }
 
   if(!strcmp(args, "1")) {
     is_on = 1;
@@ -547,6 +555,10 @@ PT_THREAD(cmd_tsch_set_coordinator(struct pt *pt, shell_output_func output, char
 
   /* Get first arg (0/1) */
   SHELL_ARGS_NEXT(args, next_args);
+  if(args == NULL) {
+    SHELL_OUTPUT(output, "On-flag (0 or 1) is not specified\n");
+    PT_EXIT(pt);
+  }
 
   if(!strcmp(args, "1")) {
     is_on = 1;
@@ -904,6 +916,10 @@ PT_THREAD(cmd_llsec_setkey(struct pt *pt, shell_output_func output, char *args))
   } else {
     int key;
     SHELL_ARGS_NEXT(args, next_args);
+    if(args == NULL) {
+      SHELL_OUTPUT(output, "Key index is not specified\n");
+      PT_EXIT(pt);
+    }
     key = atoi(args);
     if(key < 0) {
       SHELL_OUTPUT(output, "Illegal LLSEC Key index %d\n", key);
