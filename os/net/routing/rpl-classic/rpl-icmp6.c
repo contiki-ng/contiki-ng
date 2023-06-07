@@ -816,8 +816,7 @@ dao_input_storing(void)
         uint8_t out_seq;
         out_seq = prepare_for_dao_fwd(sequence, rep);
 
-        LOG_DBG("Forwarding No-path DAO to parent - out_seq:%d",
-                out_seq);
+        LOG_DBG("Forwarding No-path DAO out_seq:%d to parent ", out_seq);
         LOG_DBG_6ADDR(rpl_parent_get_ipaddr(dag->preferred_parent));
         LOG_DBG_("\n");
 

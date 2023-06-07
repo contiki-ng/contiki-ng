@@ -672,6 +672,7 @@ tcpip_ipv6_output(void)
 
   /* Look for a next hop */
   if((nexthop = get_nexthop(&ipaddr)) == NULL) {
+    LOG_WARN("output: No next-hop found, dropping packet\n");
     goto exit;
   }
   annotate_transmission(nexthop);

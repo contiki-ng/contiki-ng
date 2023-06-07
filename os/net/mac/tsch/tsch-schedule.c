@@ -91,8 +91,7 @@ tsch_schedule_add_slotframe(uint16_t handle, uint16_t size)
       /* Add the slotframe to the global list */
       list_add(slotframe_list, sf);
     }
-    LOG_INFO("add_slotframe %u %u\n",
-           handle, size);
+    LOG_INFO("Adding slotframe %u, size %u\n", handle, size);
     tsch_release_lock();
     return sf;
   }
@@ -125,7 +124,8 @@ tsch_schedule_remove_slotframe(struct tsch_slotframe *slotframe)
 
     /* Now that the slotframe has no links, remove it. */
     if(tsch_get_lock()) {
-      LOG_INFO("remove slotframe %u %u\n", slotframe->handle, slotframe->size.val);
+      LOG_INFO("Remove slotframe %u, size %u\n",
+               slotframe->handle, slotframe->size.val);
       memb_free(&slotframe_memb, slotframe);
       list_remove(slotframe_list, slotframe);
       tsch_release_lock();
