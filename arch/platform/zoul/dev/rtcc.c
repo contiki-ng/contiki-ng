@@ -421,7 +421,7 @@ rtcc_set_alarm_time_date(simple_td_map *data, uint8_t state, uint8_t repeat,
     return AB08_ERROR;
   }
 
-  if((state >= RTCC_ALARM_MAX) || (repeat >= RTCC_REPEAT_100THS)) {
+  if((state >= RTCC_ALARM_MAX) || (repeat > RTCC_REPEAT_100THS)) {
     PRINTF("RTC: invalid alarm config type or state\n");
     return AB08_ERROR;
   }

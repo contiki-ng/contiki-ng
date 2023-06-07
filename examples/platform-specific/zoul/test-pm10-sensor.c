@@ -66,7 +66,7 @@ PROCESS_THREAD(test_pm10_sensor_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  static uint16_t pm10_value;
+  static int pm10_value;
 
   /* Use pin number not mask, for example if using the PA5 pin then use 2 */
   pm10.configure(SENSORS_ACTIVE, ADC_PIN);
