@@ -243,8 +243,6 @@ static uint16_t my_tag;
 struct sicslowpan_frag_info {
   /** When reassembling, the source address of the fragments being merged */
   linkaddr_t sender;
-  /** The destination address of the fragments being merged */
-  linkaddr_t receiver;
   /** When reassembling, the tag in the fragments being merged. */
   uint16_t tag;
   /** Total length of the fragmented packet */
