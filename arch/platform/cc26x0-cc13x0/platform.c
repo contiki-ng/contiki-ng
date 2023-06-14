@@ -175,7 +175,7 @@ platform_init_stage_two()
   random_init(0x1234);
 
   /* Character I/O Initialisation */
-#if CC26XX_UART_CONF_ENABLE
+#if TI_UART_CONF_ENABLE
   cc26xx_uart_init();
 #endif
 
