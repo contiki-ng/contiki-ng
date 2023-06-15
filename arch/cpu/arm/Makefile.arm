@@ -48,6 +48,7 @@ LDFLAGS += -mthumb -mabi=aapcs -mlittle-endian
 
 # Disallow undefined symbols in object files.
 LDFLAGS += -Wl,-zdefs
+LDFLAGS += -Wl,--warn-common
 
 OBJDUMP_FLAGS += --disassemble --source --disassembler-options=force-thumb
 
