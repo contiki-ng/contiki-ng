@@ -6,6 +6,7 @@ TOOLSDIR=../../tools
 
 EXAMPLES = \
 hello-world/native \
+hello-world/native:DEFINES=UIP_CONF_UDP=0 \
 hello-world/native:MAKE_NET=MAKE_NET_NULLNET \
 hello-world/native:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 hello-world/z1 \

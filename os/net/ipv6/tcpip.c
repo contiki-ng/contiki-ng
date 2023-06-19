@@ -94,12 +94,14 @@ enum {
 };
 
 /*---------------------------------------------------------------------------*/
+#if UIP_TCP || UIP_UDP
 static void
 init_appstate(uip_tcp_appstate_t *as, void *state)
 {
   as->p = PROCESS_CURRENT();
   as->state = state;
 }
+#endif /* UIP_TCP || UIP_UDP */
 /*---------------------------------------------------------------------------*/
 
 uint8_t
@@ -316,51 +318,45 @@ eventhandler(process_event_t ev, process_data_t data)
   unsigned char i;
   register struct listenport *l;
 #endif /*UIP_TCP*/
-  struct process *p;
-
   switch(ev) {
+#if UIP_TCP || UIP_UDP
   case PROCESS_EVENT_EXITED:
     /* This is the event we get if a process has exited. We go through
          the TCP/IP tables to see if this process had any open
          connections or listening TCP ports. If so, we'll close those
          connections. */
-
-    p = (struct process *)data;
-#if UIP_TCP
-    l = s.listenports;
-    for(i = 0; i < UIP_LISTENPORTS; ++i) {
-      if(l->p == p) {
-        uip_unlisten(l->port);
-        l->port = 0;
-        l->p = PROCESS_NONE;
-      }
-      ++l;
-    }
-
     {
-      struct uip_conn *cptr;
+      struct process *p = (struct process *)data;
+#if UIP_TCP
+      l = s.listenports;
+      for(i = 0; i < UIP_LISTENPORTS; ++i) {
+        if(l->p == p) {
+          uip_unlisten(l->port);
+          l->port = 0;
+          l->p = PROCESS_NONE;
+        }
+        ++l;
+      }
 
-      for(cptr = &uip_conns[0]; cptr < &uip_conns[UIP_TCP_CONNS]; ++cptr) {
+      for(struct uip_conn *cptr = &uip_conns[0];
+          cptr < &uip_conns[UIP_TCP_CONNS]; ++cptr) {
         if(cptr->appstate.p == p) {
           cptr->appstate.p = PROCESS_NONE;
           cptr->tcpstateflags = UIP_CLOSED;
         }
       }
-    }
 #endif /* UIP_TCP */
 #if UIP_UDP
-    {
-      struct uip_udp_conn *cptr;
-
-      for(cptr = &uip_udp_conns[0];
+      for(struct uip_udp_conn *cptr = &uip_udp_conns[0];
           cptr < &uip_udp_conns[UIP_UDP_CONNS]; ++cptr) {
         if(cptr->appstate.p == p) {
           cptr->lport = 0;
         }
       }
-    }
 #endif /* UIP_UDP */
+    }
     break;
+#endif /* UIP_TCP || UIP_UDP */
 
   case PROCESS_EVENT_TIMER:
     /* We get this event if one of our timers have expired. */
