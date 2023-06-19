@@ -316,7 +316,6 @@ eventhandler(process_event_t ev, process_data_t data)
 {
 #if UIP_TCP
   unsigned char i;
-  register struct listenport *l;
 #endif /*UIP_TCP*/
   switch(ev) {
 #if UIP_TCP || UIP_UDP
@@ -328,7 +327,7 @@ eventhandler(process_event_t ev, process_data_t data)
     {
       struct process *p = (struct process *)data;
 #if UIP_TCP
-      l = s.listenports;
+      struct listenport *l = s.listenports;
       for(i = 0; i < UIP_LISTENPORTS; ++i) {
         if(l->p == p) {
           uip_unlisten(l->port);
