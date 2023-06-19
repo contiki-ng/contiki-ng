@@ -314,9 +314,6 @@ tcpip_icmp6_call(uint8_t type)
 static void
 eventhandler(process_event_t ev, process_data_t data)
 {
-#if UIP_TCP
-  unsigned char i;
-#endif /*UIP_TCP*/
   switch(ev) {
 #if UIP_TCP || UIP_UDP
   case PROCESS_EVENT_EXITED:
@@ -328,7 +325,7 @@ eventhandler(process_event_t ev, process_data_t data)
       struct process *p = (struct process *)data;
 #if UIP_TCP
       struct listenport *l = s.listenports;
-      for(i = 0; i < UIP_LISTENPORTS; ++i) {
+      for(uint8_t i = 0; i < UIP_LISTENPORTS; ++i) {
         if(l->p == p) {
           uip_unlisten(l->port);
           l->port = 0;
@@ -365,7 +362,7 @@ eventhandler(process_event_t ev, process_data_t data)
     if(data == &periodic &&
         etimer_expired(&periodic)) {
 #if UIP_TCP
-      for(i = 0; i < UIP_TCP_CONNS; ++i) {
+      for(uint8_t i = 0; i < UIP_TCP_CONNS; ++i) {
         if(uip_conn_active(i)) {
           /* Only restart the timer if there are active
                  connections. */
