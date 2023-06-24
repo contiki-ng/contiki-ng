@@ -15,7 +15,7 @@ In most cases you will not need to change this address (details later on in this
 You can now build this example for the native platform and run it:
 ```bash
 $ make TARGET=native
-$ sudo ./example-ipso-objects.native 
+$ sudo build/native/example-ipso-objects.native
 ```
 
 When this process starts, it will create a virtual tunnel interface `tun0`. It will then register with the default LWM2M server address: `fd00::1`, which is the address of the `tun0` interface.

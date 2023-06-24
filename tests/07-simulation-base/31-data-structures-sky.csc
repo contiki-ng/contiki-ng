@@ -20,7 +20,7 @@
       <source>[CONFIG_DIR]/code-data-structures/test-data-structures.c</source>
       <commands>$(MAKE) clean TARGET=sky
 $(MAKE) -j$(CPUS) test-data-structures.sky TARGET=sky</commands>
-      <firmware>[CONFIG_DIR]/code-data-structures/test-data-structures.sky</firmware>
+      <firmware>[CONFIG_DIR]/code-data-structures/build/sky/test-data-structures.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>

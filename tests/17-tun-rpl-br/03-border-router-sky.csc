@@ -21,7 +21,7 @@
       <source>[CONTIKI_DIR]/examples/rpl-border-router/border-router.c</source>
       <commands>$(MAKE) clean TARGET=sky
 $(MAKE) -j$(CPUS) border-router.sky TARGET=sky</commands>
-      <firmware>[CONTIKI_DIR]/examples/rpl-border-router/border-router.sky</firmware>
+      <firmware>[CONTIKI_DIR]/examples/rpl-border-router/build/sky/border-router.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -54,7 +54,7 @@ $(MAKE) -j$(CPUS) border-router.sky TARGET=sky</commands>
       <source>[CONTIKI_DIR]/examples/hello-world/hello-world.c</source>
       <commands>$(MAKE) clean TARGET=sky
 $(MAKE) -j$(CPUS) hello-world.sky TARGET=sky</commands>
-      <firmware>[CONTIKI_DIR]/examples/hello-world/hello-world.sky</firmware>
+      <firmware>[CONTIKI_DIR]/examples/hello-world/build/sky/hello-world.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>

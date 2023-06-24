@@ -9,16 +9,16 @@ all: $(CONTIKI_PROJECT)
 CONTIKI = ../..
 include $(CONTIKI)/Makefile.include
 ```
-After defining the project name and Contiki-NG path, the common makefile is simply included. By running `make` from this directory, the `hello-world` system will be build for the default target: `native`. The `native` target is a special platform that builds Contiki-NG as a program able to run on the development system (e.g. Linux). Just run the file `hello-world.native` after compiling it.
+After defining the project name and Contiki-NG path, the common makefile is simply included. By running `make` from this directory, the `hello-world` system will be build for the default target: `native`. The `native` target is a special platform that builds Contiki-NG as a program able to run on the development system (e.g. Linux). Just run the file `build/native/hello-world.native` after compiling it.
 
 To compile the hello-world application for a different platform, use the flag `TARGET`, e.g. with `TARGET=zoul`. On some platforms, an additional `BOARD` is necessary to further specify the target.
 
 ## Build system output structure
 The build system will generate a number of files that will be placed in a number of locations. This guide uses the `hello-world` example as a use-case, but the output will be the same for all other examples.
 
-The build system will always put the final build output file (firmware) in the example's `.` directory. This is the firmware to use to programme your device (embedded targets) or to execute (native paltform). For the hello-world example, this will be called `hello-world.$(TARGET)` (e.g. `hello-world.native` or `hello-world.zoul`.
+The build system will always put the final build output file (firmware) in the example's `build/$(TARGET)/[ $(BOARD) ]` directory. This is the firmware to use to programme your device (embedded targets) or to execute (native paltform). For the hello-world example, this will be called `build/$(TARGET)[ /$(BOARD) ]/hello-world.$(TARGET)` (e.g. `build/native/hello-world.native` or `build/zoul/hello-world.zoul`.
 
-The build system will also generate a `build/` directory, and within it various sub-directories, where it will place intermediate files. The logic is as follows:
+The build system will create a `build/` directory, and within it various sub-directories, where it will place intermediate files as well as the final build output file (firmware). The logic is as follows:
 
 * A directory named `build/$(TARGET)` will always be created (e.g. `build/native` or `build/zoul`).
 * If the platform supports the `BOARD` make variable, then a board-specific sub-directory will also be created under `build/$(TARGET)`. For example `build/zoul/remote-reva` or `build/cc26x0-cc13x0/launchpad/cc2650`.
@@ -27,7 +27,7 @@ The build system will also generate a `build/` directory, and within it various 
 
 With the above sub-directory structure in mind, the build system will output files as follows:
 * All compilation output files (`.o`) and dependency files (`.d`) will be placed under the `obj/` dir.
-* All link and post-processing out files (e.g. `hello-world.elf`, `hello-world.hex`, `hello-world.bin`) will be placed in `build/$(TARGET)/[ $(BOARD) ]/[ $(BUILD_DIR_CONFIG) ]`. In the same directory, you will often also file a `.map` file. Lastly, this directory will also always host a copy of the `hello-world.$(TARGET)` file.
+* All link and post-processing out files (e.g. `hello-world.elf`, `hello-world.hex`, `hello-world.bin`) will be placed in `build/$(TARGET)/[ $(BOARD) ]/[ $(BUILD_DIR_CONFIG) ]`. In the same directory, you will often also file a `.map` file. Lastly, this directory also holds the `hello-world.$(TARGET)` file.
 
 ## Cleaning
 To clean built artifacts, use:

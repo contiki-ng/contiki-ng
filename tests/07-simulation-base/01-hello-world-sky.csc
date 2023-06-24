@@ -20,7 +20,7 @@
       <source>[CONTIKI_DIR]/examples/hello-world/hello-world.c</source>
       <commands>$(MAKE) TARGET=sky clean
 $(MAKE) -j$(CPUS) hello-world.sky TARGET=sky</commands>
-      <firmware>[CONTIKI_DIR]/examples/hello-world/hello-world.sky</firmware>
+      <firmware>[CONTIKI_DIR]/examples/hello-world/build/sky/hello-world.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>

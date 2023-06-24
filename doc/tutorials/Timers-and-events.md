@@ -75,7 +75,7 @@ or desktop computer.
 ```bash
 $ cd examples/libs/timers
 $ make
-$ ./all-timers.native
+$ build/native/all-timers.native
 [INFO: Main      ] Starting Contiki-NG-4.0
 [INFO: Main      ]  Net: tun6
 [INFO: Main      ]  MAC: nullmac
