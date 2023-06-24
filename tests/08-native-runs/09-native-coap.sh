@@ -13,7 +13,7 @@ declare -i TESTCOUNT=0
 
 # Starting Contiki-NG native node
 echo "Starting native CoAP server"
-sudo $CONTIKI/examples/coap/coap-example-server/coap-example-server.native &
+sudo $CONTIKI/examples/coap/coap-example-server/build/native/coap-example-server.native &
 CPID=$!
 sleep 2
 

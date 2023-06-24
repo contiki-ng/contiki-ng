@@ -10,7 +10,7 @@ test_init
 
 echo "-- Starting test $1"
 
-for TEST in ./${BIN_PREFIX}*.native; do
+for TEST in ./build/native/${BIN_PREFIX}*.native; do
   RUNLOG=$(basename $TEST .native).run.log
   register_logfile $RUNLOG
 

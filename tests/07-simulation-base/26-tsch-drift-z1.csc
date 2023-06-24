@@ -20,7 +20,7 @@
       <source>[CONTIKI_DIR]/examples/6tisch/simple-node/node.c</source>
       <commands>$(MAKE) TARGET=z1 clean
       $(MAKE) -j$(CPUS) node.z1 TARGET=z1</commands>
-      <firmware>[CONTIKI_DIR]/examples/6tisch/simple-node/node.z1</firmware>
+      <firmware>[CONTIKI_DIR]/examples/6tisch/simple-node/build/z1/node.z1</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>

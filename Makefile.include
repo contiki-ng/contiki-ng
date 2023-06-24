@@ -492,12 +492,11 @@ PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_FILTERE
 .PHONY: all clean distclean usage help targets boards savetarget savedefines viewconf
 
 clean:
-	$(Q)rm -f *.d *.e *.o $(CLEAN) \
-		$(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
+	$(Q)rm -f *.e $(CLEAN)
 	$(Q)rm -rf $(BUILD_DIR_TARGET)
 
 distclean:
-	$(Q)for TARG in `ls $(CONTIKI_NG_RELOC_PLATFORM_DIR) $(TARGETDIRS)`; do \
+	$(Q)[ $(TARGETDIRS) = "" ] || for TARG in `ls $(TARGETDIRS)`; do \
 		$(MAKE) TARGET=$$TARG clean; \
 	done
 	$(Q)rm -rf $(BUILD_DIR)
@@ -657,9 +656,9 @@ ifdef BINARY_SIZE_LOGFILE
 endif
 endif
 
+# Keep an empty command so this is a rule, not just a prerequisite.
 %.$(TARGET): $(BUILD_DIR_BOARD)/%.$(TARGET)
-	$(TRACE_CP)
-	$(Q)$(CP) $< $@
+	@
 
 %.ramprof: $(BUILD_DIR_BOARD)/%.$(TARGET)
 	$(NM) -S -td --size-sort $< | grep -i " [abdrw] " | cut -d' ' -f2,4
@@ -744,6 +743,6 @@ else
 # Match-anything pattern rule to allow the project makefiles to
 # abstract from the actual binary name. It needs to contain some
 # command in order to be a rule, not just a prerequisite.
-%: %.$(TARGET)
+%: $(BUILD_DIR_BOARD)/%.$(TARGET)
 	@
 endif

@@ -28,33 +28,6 @@ tools/coffee-manager/build/
 tools/coffee-manager/coffee.jar
 COOJA.testlog
 
-# platform build artifacts
-*.cc2538dk
-*.cooja
-*.native
-*.nrf52840
-*.openmote
-*.simplelink
-*.sky
-*.firmware
-*.cc26x0-cc13x0
-*.z1
-*.zoul
-*.nrf
-*.gecko
-
-# do not ignore platform makefiles
-!Makefile.cc2538dk
-!Makefile.cooja
-!Makefile.native
-!Makefile.nrf52840
-!Makefile.openmote
-!Makefile.sky
-!Makefile.cc26x0-cc13x0
-!Makefile.zoul
-!Makefile.nrf
-!Makefile.gecko
-
 # do not ignore images in documentation
 !tools/readthedocs/**/*.png
 !doc/**/*.png
