@@ -376,6 +376,9 @@ init()
   /* Register the ICMPv6 input handler */
   uip_icmp6_register_input_handler(&esmrf_icmp_handler);
   c = udp_new(NULL, 0, NULL);
+  if(c == NULL) {
+    PRINTF("ESMRF: No UDP connection available\n");
+  }
 }
 /*---------------------------------------------------------------------------*/
 static void
