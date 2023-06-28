@@ -44,6 +44,7 @@ ifeq ($(HOST_OS),Darwin)
 else
   CFLAGS += -fPIC
   LDFLAGS += -shared -Wl,-zdefs
+  LDFLAGS += -Wl,--warn-common
   LDFLAGS += -Wl,-T$(CONTIKI_NG_RELOC_PLATFORM_DIR)/cooja/cooja.ld
   # Use the printf-family replacement functions in dbg-io.
   LDFLAGS += $(addprefix -Wl$(COMMA)--wrap$(COMMA), $(WRAPPED_FUNS))
