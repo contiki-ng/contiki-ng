@@ -684,6 +684,11 @@ dao_input_storing(void)
   pos = 0;
   instance_id = buffer[pos++];
   instance = rpl_get_instance(instance_id);
+  if(instance == NULL) {
+    LOG_ERR("Cannot get RPL instance\n");
+    return;
+  }
+
   lifetime = instance->default_lifetime;
 
   flags = buffer[pos++];

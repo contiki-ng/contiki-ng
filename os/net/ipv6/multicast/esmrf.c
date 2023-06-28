@@ -151,6 +151,11 @@ icmp_output()
   payload_len = UIP_ICMP_MOB + uip_slen;
 
   dag_t = rpl_get_any_dag();
+  if(!dag_t) {
+    PRINTF("ESMRF: No DODAG\n");
+    return;
+  }
+
   uip_ipaddr_copy(&UIP_IP_BUF->destipaddr, &dag_t->dag_id);
   uip_ds6_select_src(&UIP_IP_BUF->srcipaddr, &UIP_IP_BUF->destipaddr);
 

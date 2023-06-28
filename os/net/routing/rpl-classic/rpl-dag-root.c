@@ -125,6 +125,10 @@ rpl_dag_root_start(void)
 
   rpl_set_root(RPL_DEFAULT_INSTANCE, ipaddr);
   rpl_dag_t *dag = rpl_get_any_dag();
+  if(dag == NULL) {
+    LOG_ERR("failed to create a DAG: cannot get any DAG\n");
+    return -3;
+  }
 
   /* If there are routes in this DAG, we remove them all as we are
      from now on the new dag root and the old routes are wrong. */

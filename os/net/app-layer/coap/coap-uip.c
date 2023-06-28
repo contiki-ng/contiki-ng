@@ -414,6 +414,11 @@ PROCESS_THREAD(coap_engine, ev, data)
 
   /* new connection with remote host */
   udp_conn = udp_new(NULL, 0, NULL);
+  if(udp_conn == NULL) {
+    LOG_ERR("No UDP connection available, exiting the process!\n");
+    PROCESS_EXIT();
+  }
+
   udp_bind(udp_conn, SERVER_LISTEN_PORT);
   LOG_INFO("Listening on port %u\n", uip_ntohs(udp_conn->lport));
 
