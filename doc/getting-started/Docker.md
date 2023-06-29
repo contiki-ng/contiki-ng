@@ -9,7 +9,7 @@ As all Continuous Integration tests are run in a Docker container, it is easy to
 
 To get started, install Docker. On Ubuntu for instance (you'll need set up the repository; see [install-docker-ce] for details):
 ```bash
-$ sudo apt-get install docker-ce
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
 Make sure your user is added to the unix group `docker`:
