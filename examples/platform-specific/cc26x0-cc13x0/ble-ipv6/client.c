@@ -115,6 +115,11 @@ PROCESS_THREAD(ipv6_ble_client_process, ev, data)
   } while(!echo_received);
 
   conn = udp_new(&server_addr, UIP_HTONS(SERVER_PORT), NULL);
+  if(conn == NULL) {
+    PRINTF("No UDP connection available, exiting the process!\n");
+    PROCESS_EXIT();
+  }
+
   udp_bind(conn, UIP_HTONS(CLIENT_PORT));
 
   etimer_set(&timer, CLIENT_SEND_INTERVAL);

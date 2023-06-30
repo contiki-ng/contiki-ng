@@ -70,6 +70,11 @@ PROCESS_THREAD(snmp_process, ev, data)
 
   /* new connection with remote host */
   snmp_udp_conn = udp_new(NULL, 0, NULL);
+  if(snmp_udp_conn == NULL) {
+    LOG_ERR("No UDP connection available, exiting the process!\n");
+    PROCESS_EXIT();
+  }
+
   udp_bind(snmp_udp_conn, SNMP_SERVER_PORT);
   LOG_DBG("Listening on port %u\n", uip_ntohs(snmp_udp_conn->lport));
 
