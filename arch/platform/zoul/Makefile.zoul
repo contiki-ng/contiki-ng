@@ -74,9 +74,9 @@ endif
 ### $$$$ Double escapes $s that need to be passed to the shell - once for when
 ### make parses UPLOAD_RULE, and once for when the expanded rule is parsed by make.
 define UPLOAD_RULE
-%.$(MOTE): $(OUT_BIN) $(OUT_ELF)
+%.$(MOTE): $(OUT_BIN) $(BUILD_DIR_BOARD)/%.$(TARGET)
 	@echo "Flashing $(MOTE)"
-	@BSL_ADDRESS=`$(OBJDUMP) -h $(BUILD_DIR_BOARD)/$$*.elf | grep -B1 LOAD | \
+	@BSL_ADDRESS=`$(OBJDUMP) -h $(BUILD_DIR_BOARD)/$$*.$(TARGET) | grep -B1 LOAD | \
 	             grep -Ev 'LOAD|\-\-' | awk '{print "0x" $$$$5}' | \
 	             sort -g | head -1`; \
 	$(BSL) $(BSL_FLAGS) -b $(BSL_SPEED) -a $$$${BSL_ADDRESS} -p $(MOTE) $$<
