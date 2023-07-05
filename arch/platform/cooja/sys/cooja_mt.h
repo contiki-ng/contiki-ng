@@ -38,92 +38,46 @@
 #ifndef COOJA_MT_H_
 #define COOJA_MT_H_
 
-#include "contiki.h"
-
-#include <stdint.h>
-
-/**
- * An opaque structure that is used for holding the state of a thread.
- *
- * This structure typically holds the entire stack for the thread.
- */
-struct cooja_mtarch_thread;
-
-/**
- * Setup the stack frame for a thread that is being started.
- *
- * This function is called by the mt_start() function in order to set
- * up the architecture specific stack of the thread to be started.
- *
- * \param thread A pointer to a struct mtarch_thread for the thread to
- * be started.
- *
- * \param function A pointer to the function that the thread will
- * start executing the first time it is scheduled to run.
- *
- * \param data A pointer to the argument that the function should be
- * passed.
- */
-void cooja_mtarch_start(struct cooja_mtarch_thread *thread,
-		  void (* function)(void *data),
-		  void *data);
-
-/**
- * Yield the processor.
- *
- * This function is called by the mt_yield() function, which is called
- * from the running thread in order to give up the processor.
- *
- */
-void cooja_mtarch_yield(void);
-
-/**
- * Start executing a thread.
- *
- * This function is called from mt_exec() and the purpose of the
- * function is to start execution of the thread. The function should
- * switch in the stack of the thread, and does not return until the
- * thread has explicitly yielded (using mt_yield()) or until it is
- * preempted.
- *
- */
-void cooja_mtarch_exec(struct cooja_mtarch_thread *thread);
-
+#ifndef _XOPEN_SOURCE
+/* Enable POSIX.1-2001, required on OS X. */
+#define _XOPEN_SOURCE 600
+#endif
+#include <ucontext.h>
 
 #ifndef COOJA_MTARCH_STACKSIZE
-#define COOJA_MTARCH_STACKSIZE 1024
+#ifdef __APPLE__
+#define COOJA_MTARCH_STACKSIZE 32768
+#else
+#define COOJA_MTARCH_STACKSIZE 8192
+#endif
 #endif /* COOJA_MTARCH_STACKSIZE */
 
-struct cooja_mtarch_thread {
-  uintptr_t sp;  /* Note: stack pointer must be first var in struct! */
-  uintptr_t stack[COOJA_MTARCH_STACKSIZE];
-} __attribute__ ((aligned (16)));
-
 struct cooja_mt_thread {
+  char stack[COOJA_MTARCH_STACKSIZE];
+  ucontext_t ctxt;
   int state;
-  struct cooja_mtarch_thread thread;
 };
 
 /**
- * No error.
+ * Inintializes the main thread structure.
  *
- * \hideinitializer
+ * \param thread Pointer to the (implicit) main thread.
  */
-#define MT_OK 1
+int cooja_mt_init(struct cooja_mt_thread *thread);
 
 /**
  * Starts a multithreading thread.
+ *
+ * \param caller Pointer to a struct for the calling thread.
  *
  * \param thread Pointer to an mt_thread struct that must have been
  * previously allocated by the caller.
  *
  * \param function A pointer to the entry function of the thread that is
  * to be set up.
- *
- * \param data A pointer that will be passed to the entry function.
- *
  */
-void cooja_mt_start(struct cooja_mt_thread *thread, void (* function)(void *), void *data);
+void cooja_mt_start(struct cooja_mt_thread *caller,
+                    struct cooja_mt_thread *thread, void (*function)(void));
 
 /**
  * Execute parts of a thread.
@@ -132,13 +86,16 @@ void cooja_mt_start(struct cooja_mt_thread *thread, void (* function)(void *), v
  * thread. The function does not return until the thread has yielded,
  * or is preempted.
  *
- * \note The thread must first be initialized with the mt_init() function.
+ * \note The thread must first be initialized with the cooja_mt_start() function.
+ *
+ * \param caller Pointer to a struct for the calling thread.
  *
  * \param thread A pointer to a struct mt_thread block that must be
  * allocated by the caller.
  *
  */
-void cooja_mt_exec(struct cooja_mt_thread *thread);
+void cooja_mt_exec(struct cooja_mt_thread *caller,
+                   struct cooja_mt_thread *thread);
 
 /**
  * Voluntarily give up the processor.

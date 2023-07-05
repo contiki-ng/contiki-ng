@@ -40,7 +40,6 @@
 #include <string.h>
 
 #include "contiki.h"
-#include "sys/cc.h"
 #include "sys/cooja_mt.h"
 
 /* The main function, implemented in contiki-main.c */
@@ -55,11 +54,12 @@ intptr_t referenceVar;
 /*
  * Contiki and rtimer threads.
  */
+static struct cooja_mt_thread cooja_thread;
 static struct cooja_mt_thread rtimer_thread;
 static struct cooja_mt_thread process_run_thread;
 /*---------------------------------------------------------------------------*/
 static void
-rtimer_thread_loop(void *data)
+rtimer_thread_loop(void)
 {
   while(1) {
     rtimer_arch_check();
@@ -70,22 +70,26 @@ rtimer_thread_loop(void *data)
 }
 /*---------------------------------------------------------------------------*/
 static void
-process_run_thread_loop(void *data)
+process_run_thread_loop(void)
 {
   /* Yield once during bootup */
   simProcessRunValue = 1;
   cooja_mt_yield();
-
   /* Then call common Contiki-NG main function */
   main();
 }
 /*---------------------------------------------------------------------------*/
-void
+int
 cooja_init(void)
 {
+  int rv;
   /* Create rtimers and Contiki threads */
-  cooja_mt_start(&rtimer_thread, &rtimer_thread_loop, NULL);
-  cooja_mt_start(&process_run_thread, &process_run_thread_loop, NULL);
+  if((rv = cooja_mt_init(&cooja_thread))) {
+    return rv;
+  }
+  cooja_mt_start(&cooja_thread, &rtimer_thread, rtimer_thread_loop);
+  cooja_mt_start(&cooja_thread, &process_run_thread, process_run_thread_loop);
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -103,12 +107,12 @@ cooja_tick(void)
 
   /* Let rtimers run.
    * Sets simProcessRunValue */
-  cooja_mt_exec(&rtimer_thread);
+  cooja_mt_exec(&cooja_thread, &rtimer_thread);
 
   if(simProcessRunValue == 0) {
     /* Rtimers done: Let Contiki handle a few events.
      * Sets simProcessRunValue */
-    cooja_mt_exec(&process_run_thread);
+    cooja_mt_exec(&cooja_thread, &process_run_thread);
   }
 
   /* Let all simulation interfaces act before returning to java */
