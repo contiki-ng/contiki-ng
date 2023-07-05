@@ -103,8 +103,6 @@ dbg_putchar(int c)
   static char debug_frame = 0;
 
   if(log_putchar_with_slip) {
-    simlog_char(SLIP_END);
-
     if(!debug_frame) {		/* Start of debug output */
       simlog_char(SLIP_END);
       simlog_char('\r');	/* Type debug line == '\r' */
