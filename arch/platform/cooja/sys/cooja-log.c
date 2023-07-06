@@ -37,6 +37,10 @@
 #define MAX_LOG_LENGTH 8192
 #endif /* MAX_LOG_LENGTH */
 
+#ifndef COOJA_LOG_WITH_SLIP
+#define COOJA_LOG_WITH_SLIP 0
+#endif /* COOJA_LOG_WITH_SLIP */
+
 const struct simInterface simlog_interface;
 
 /* Variables shared between COOJA and Contiki */
@@ -89,7 +93,7 @@ doInterfaceActionsAfterTick(void)
 {
 }
 /*-----------------------------------------------------------------------------------*/
-static int log_putchar_with_slip;
+static int log_putchar_with_slip = COOJA_LOG_WITH_SLIP != 0;
 void
 log_set_putchar_with_slip(int with)
 {
@@ -103,8 +107,6 @@ dbg_putchar(int c)
   static char debug_frame = 0;
 
   if(log_putchar_with_slip) {
-    simlog_char(SLIP_END);
-
     if(!debug_frame) {		/* Start of debug output */
       simlog_char(SLIP_END);
       simlog_char('\r');	/* Type debug line == '\r' */
