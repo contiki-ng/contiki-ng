@@ -50,6 +50,7 @@ Examples for PowerTracker and other plugins can be found in the PR
 ### Contiki-NG
 
 * Support for link-time-optimization in the build system ([#2077](https://github.com/contiki-ng/contiki-ng/pull/2077))
+* Consolidate configuration defines of TI platforms. Prefixes `CCXXWARE_CONF` and `CC26XX_UART_CONF` are deprecated in favor of `CCFG_CONF` and `TI_UART_CONF`. ([#2311](https://github.com/contiki-ng/contiki-ng/pull/2311), [#2387](https://github.com/contiki-ng/contiki-ng/pull/2387))
 
 All [commits](https://github.com/contiki-ng/contiki-ng/compare/release/v4.8...develop) since v4.8.
 

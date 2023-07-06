@@ -31,18 +31,33 @@
  * \addtogroup cc26xx
  * @{
  *
- * \defgroup cc26xx-ccxxware-conf CCxxware-specific configuration
+ * \defgroup cc13xx-cc26xx-ccfg Customer Configuration (CCFG)
  *
  * @{
  *
  * \file
- *  CCxxware-specific configuration for the cc26x0-cc13x0 CPU family
+ *  CCFG configuration for the cc26x0-cc13x0 CPU family
  */
-#ifndef CCXXWARE_CONF_H_
-#define CCXXWARE_CONF_H_
+#ifndef CCFG_CONF_H_
+#define CCFG_CONF_H_
 
 #include "contiki-conf.h"
 
+/*---------------------------------------------------------------------------*/
+#ifdef CCXXWARE_CONF_JTAG_INTERFACE_ENABLE
+#error CCXXWARE_CONF_JTAG_INTERFACE_ENABLE is deprecated. Use \
+  CCFG_CONF_JTAG_INTERFACE_DISABLE.
+#endif
+#ifdef CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE
+#error CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE is deprecated. Use \
+  CCFG_CONF_ROM_BOOTLOADER_ENABLE.
+#endif
+#ifdef CCXXWARE_CONF_BL_PIN_NUMBER
+#error CCXXWARE_CONF_BL_PIN_NUMBER is deprecated. Use CCFG_CONF_BL_PIN_NUMBER.
+#endif
+#ifdef CCXXWARE_CONF_BL_LEVEL
+#error CCXXWARE_CONF_BL_LEVEL is deprecated. Use CCFG_CONF_BL_LEVEL.
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * \brief JTAG interface configuration
@@ -50,15 +65,7 @@
  * Those values are not meant to be modified by the user
  * @{
  */
-#if CCXXWARE_CONF_JTAG_INTERFACE_ENABLE
-#define SET_CCFG_CCFG_TI_OPTIONS_TI_FA_ENABLE           0xC5
-#define SET_CCFG_CCFG_TAP_DAP_0_CPU_DAP_ENABLE          0xC5
-#define SET_CCFG_CCFG_TAP_DAP_0_PRCM_TAP_ENABLE         0xC5
-#define SET_CCFG_CCFG_TAP_DAP_0_TEST_TAP_ENABLE         0xC5
-#define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE       0xC5
-#define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE       0xC5
-#define SET_CCFG_CCFG_TAP_DAP_1_WUC_TAP_ENABLE          0xC5
-#else
+#if CCFG_CONF_JTAG_INTERFACE_DISABLE
 #define SET_CCFG_CCFG_TI_OPTIONS_TI_FA_ENABLE           0x00
 #define SET_CCFG_CCFG_TAP_DAP_0_CPU_DAP_ENABLE          0x00
 #define SET_CCFG_CCFG_TAP_DAP_0_PRCM_TAP_ENABLE         0x00
@@ -66,6 +73,14 @@
 #define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE       0x00
 #define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE       0x00
 #define SET_CCFG_CCFG_TAP_DAP_1_WUC_TAP_ENABLE          0x00
+#else
+#define SET_CCFG_CCFG_TI_OPTIONS_TI_FA_ENABLE           0xC5
+#define SET_CCFG_CCFG_TAP_DAP_0_CPU_DAP_ENABLE          0xC5
+#define SET_CCFG_CCFG_TAP_DAP_0_PRCM_TAP_ENABLE         0xC5
+#define SET_CCFG_CCFG_TAP_DAP_0_TEST_TAP_ENABLE         0xC5
+#define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE       0xC5
+#define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE       0xC5
+#define SET_CCFG_CCFG_TAP_DAP_1_WUC_TAP_ENABLE          0xC5
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -75,10 +90,10 @@
  * Those values are not meant to be modified by the user
  * @{
  */
-#if CCXXWARE_CONF_ROM_BOOTLOADER_ENABLE
+#if CCFG_CONF_ROM_BOOTLOADER_ENABLE
 #define SET_CCFG_BL_CONFIG_BOOTLOADER_ENABLE      0xC5
-#define SET_CCFG_BL_CONFIG_BL_LEVEL               CCXXWARE_CONF_BL_LEVEL
-#define SET_CCFG_BL_CONFIG_BL_PIN_NUMBER          CCXXWARE_CONF_BL_PIN_NUMBER
+#define SET_CCFG_BL_CONFIG_BL_LEVEL               CCFG_CONF_BL_LEVEL
+#define SET_CCFG_BL_CONFIG_BL_PIN_NUMBER          CCFG_CONF_BL_PIN_NUMBER
 #define SET_CCFG_BL_CONFIG_BL_ENABLE              0xC5
 #else
 #define SET_CCFG_BL_CONFIG_BOOTLOADER_ENABLE      0x00
@@ -88,7 +103,7 @@
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
-#endif /* CCXXWARE_CONF_H_ */
+#endif /* CCFG_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /**
  * @}

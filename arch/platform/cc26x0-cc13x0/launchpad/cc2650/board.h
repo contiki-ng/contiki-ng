@@ -136,14 +136,14 @@
 /**
  * \brief ROM bootloader configuration
  *
- * Change CCXXWARE_CONF_BL_PIN_NUMBER to BOARD_IOID_KEY_xyz to select which
- * button triggers the bootloader on reset. Use CCXXWARE_CONF_BL_LEVEL to
+ * Change CCFG_CONF_BL_PIN_NUMBER to BOARD_IOID_KEY_xyz to select which
+ * button triggers the bootloader on reset. Use CCFG_CONF_BL_LEVEL to
  * control the pin level that enables the bootloader (0: low, 1: high). It is
  * also possible to use any other externally-controlled DIO.
  * @{
  */
-#define CCXXWARE_CONF_BL_PIN_NUMBER   BOARD_IOID_KEY_LEFT
-#define CCXXWARE_CONF_BL_LEVEL        0
+#define CCFG_CONF_BL_PIN_NUMBER   BOARD_IOID_KEY_LEFT
+#define CCFG_CONF_BL_LEVEL        0
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
