@@ -45,7 +45,7 @@
 #include <stdint.h>
 #include "contiki.h"
 
-void uart0_init();
+void uart0_init(void);
 void uart0_writeb(uint8_t byte);
 
 void uart0_set_input(int (*input)(unsigned char c));
