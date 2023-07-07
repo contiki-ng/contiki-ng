@@ -71,7 +71,7 @@ PROCESS_THREAD(remote_tsl256x_process, ev, data)
   PROCESS_BEGIN();
   static int light;
 
-  /* Print the sensor used, teh default is the TSL2561 (from Grove) */
+  /* Print the sensor used, the default is the TSL2561 (from Grove) */
   if(TSL256X_REF == TSL2561_SENSOR_REF) {
     printf("Light sensor test --> TSL2561\n");
   } else if(TSL256X_REF == TSL2563_SENSOR_REF) {
