@@ -197,7 +197,9 @@ CONTIKI_CPU_SOURCEFILES += cfs-coffee-arch.c
 ### common
 CONTIKI_CPU_SOURCEFILES += sl_uartdrv_init.c
 
-LDFLAGS += --specs=nosys.specs
+ifeq ($(CLANG),0)
+  LDFLAGS += --specs=nosys.specs
+endif
 LDFLAGS += -Wl,--defsym=_stack=__StackLimit
 LDFLAGS += -Wl,--defsym=_stack_origin=__StackTop
 LDFLAGS += -Wl,--defsym=_heap=__HeapBase
