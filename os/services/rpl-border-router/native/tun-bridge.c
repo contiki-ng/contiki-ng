@@ -71,7 +71,6 @@ extern const char *slip_config_ipaddr;
 extern char slip_config_tundev[32];
 extern uint16_t slip_config_basedelay;
 
-#ifndef __CYGWIN__
 static int tunfd;
 
 static int set_fd(fd_set *rset, fd_set *wset);
@@ -80,7 +79,6 @@ static const struct select_callback tun_select_callback = {
   set_fd,
   handle_fd
 };
-#endif /* __CYGWIN__ */
 
 int ssystem(const char *fmt, ...)
      __attribute__((__format__ (__printf__, 1, 2)));
@@ -182,17 +180,6 @@ tun_alloc(char *dev)
   return devopen(dev, O_RDWR);
 }
 #endif
-
-#ifdef __CYGWIN__
-/*wpcap process is used to connect to host interface */
-void
-tun_init()
-{
-  setvbuf(stdout, NULL, _IOLBF, 0); /* Line buffered output. */
-
-  slip_init();
-}
-#else
 
 static uint16_t delaymsec = 0;
 static uint32_t delaystartsec, delaystartmsec;
@@ -313,6 +300,4 @@ handle_fd(fd_set *rset, fd_set *wset)
     }
   }
 }
-#endif /*  __CYGWIN_ */
-
 /*---------------------------------------------------------------------------*/

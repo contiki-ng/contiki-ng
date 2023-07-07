@@ -48,10 +48,6 @@
 #include <sys/select.h>
 #include <errno.h>
 
-#ifdef __CYGWIN__
-#include "net/wpcap-drv.h"
-#endif /* __CYGWIN__ */
-
 #include "contiki.h"
 #include "net/netstack.h"
 
@@ -234,18 +230,6 @@ platform_process_args(int argc, char **argv)
   /* crappy way of remembering and accessing argc/v */
   contiki_argc = argc;
   contiki_argv = argv;
-
-  /* native under windows is hardcoded to use the first one or two args */
-  /* for wpcap configuration so this needs to be "removed" from         */
-  /* contiki_args (used by the native-border-router) */
-#ifdef __CYGWIN__
-  contiki_argc--;
-  contiki_argv++;
-#ifdef UIP_FALLBACK_INTERFACE
-  contiki_argc--;
-  contiki_argv++;
-#endif
-#endif
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -274,12 +258,7 @@ void
 platform_init_stage_three()
 {
 #if NETSTACK_CONF_WITH_IPV6
-#ifdef __CYGWIN__
-  process_start(&wpcap_process, NULL);
-#endif
-
   set_global_address();
-
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
   /* Make standard output unbuffered. */
