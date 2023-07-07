@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Swedish Institute of Computer Science.
+ * Copyright (c) 2015, Hasso-Plattner-Institut.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,43 +26,36 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * This file is part of the Contiki operating system.
+ *
  */
 
-#include "dev/moteid.h"
-#include "lib/simEnvChange.h"
-#include "lib/random.h"
+/**
+ * \addtogroup csprng
+ * @{
+ *
+ * \file
+ *         SRAM-based CSPRNG seeder.
+ * \author
+ *         Konrad Krentz <konrad.krentz@gmail.com>
+ */
+
+#ifndef CC2538_SRAM_SEEDER_H_
+#define CC2538_SRAM_SEEDER_H_
+
 #include "lib/csprng.h"
-#include <string.h>
 
-const struct simInterface moteid_interface;
+/**
+ * \brief This function will feed the CSPRNG with a new seed.
+ *
+ *        Its implementation leverages the fact that SRAM cells are partly
+ *        random due to manufacturing variations. For randomness extraction,
+ *        this function uses the well-known von Neumann extractor. Note that
+ *        this function can only be called at start up and only if
+ *        LPM_CONF_MAX_PM >= LPM_PM2.
+ */
+void cc2538_sram_seeder_seed(void);
 
-// COOJA variables
-int simMoteID;
-char simMoteIDChanged;
-int simRandomSeed;
+#endif /* CC2538_SRAM_SEEDER_H_ */
 
-/*-----------------------------------------------------------------------------------*/
-static void
-doInterfaceActionsBeforeTick(void)
-{
-  if (simMoteIDChanged) {
-    struct csprng_seed csprng_seed = { 0 };
-
-    simMoteIDChanged = 0;
-    random_init(simRandomSeed);
-    memcpy(csprng_seed.u8,
-        &simRandomSeed,
-        MIN(sizeof(simRandomSeed), sizeof(csprng_seed.u8)));
-    csprng_feed(&csprng_seed);
-  }
-}
-/*-----------------------------------------------------------------------------------*/
-static void
-doInterfaceActionsAfterTick(void)
-{
-}
-/*-----------------------------------------------------------------------------------*/
-
-SIM_INTERFACE(moteid_interface,
-	      doInterfaceActionsBeforeTick,
-	      doInterfaceActionsAfterTick);
+/** @} */

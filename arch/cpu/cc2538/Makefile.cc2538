@@ -32,6 +32,7 @@ CONTIKI_CPU_SOURCEFILES += slip-arch.c
 CONTIKI_CPU_SOURCEFILES += i2c.c cc2538-temp-sensor.c vdd3-sensor.c
 CONTIKI_CPU_SOURCEFILES += cfs-coffee-arch.c pwm.c
 CONTIKI_CPU_SOURCEFILES += startup-gcc.c
+CONTIKI_CPU_SOURCEFILES += cc2538-sram-seeder.c
 
 USB_SOURCEFILES += usb-core.c cdc-acm.c usb-arch.c usb-serial.c cdc-acm-descriptors.c
 
