@@ -177,6 +177,7 @@ storage_get_relation(relation_t *rel, char *name)
     }
   }
 
+  (void)i;
   PRINTF("DB: Read %d attributes\n", i);
 
   cfs_close(fd);
