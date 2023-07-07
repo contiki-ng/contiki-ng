@@ -844,7 +844,8 @@ state_machine(void)
       interval = connect_attempt < 3 ? RECONNECT_INTERVAL << connect_attempt :
         RECONNECT_INTERVAL << 3;
 
-      LOG_DBG("Disconnected. Attempt %u in %lu ticks\n", connect_attempt, interval);
+      LOG_DBG("Disconnected. Attempt %u in %lu ticks\n", connect_attempt,
+              (unsigned long)interval);
 
       etimer_set(&publish_periodic_timer, interval);
 
