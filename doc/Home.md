@@ -64,7 +64,7 @@ Also feel free to download our [cheat sheet](https://contiki-ng.github.io/resour
 ### The Contiki-NG platforms
 
 * [cc2538dk: TI cc2538 development kit](/doc/platforms/cc2538dk.md)
-* [cc26x0-cc13x0 / srf06-cc26xx: TI cc26x0 and cc13x0 platforms](/doc/platforms/srf06-cc26xx.md)
+* [cc26x0-cc13x0: TI cc26x0 and cc13x0 platforms](/doc/platforms/cc26x0-cc13x0.md)
 * [cooja: Cooja native motes platform](/doc/platforms/cooja.md)
 * [Gecko: Silicon Labs MCU Platform](/doc/platforms/gecko.md)
 * [native: Contiki-NG as a native process](/doc/platforms/native.md)
