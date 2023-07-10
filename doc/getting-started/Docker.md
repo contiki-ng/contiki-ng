@@ -11,6 +11,7 @@ To get started, install Docker. On Ubuntu for instance (you'll need set up the r
 ```shell
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
+NOTE: other docker versions than the one suggested above might now work well with the instructions below. Default docker runtimes in Ubuntu are typically not going to work well.
 
 Make sure your user is added to the unix group `docker`:
 ```shell
