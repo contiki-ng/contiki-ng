@@ -54,8 +54,6 @@
 #define EEPROM_CONF_SIZE				1024
 #endif
 
-#define w_memcpy memcpy
-
 #ifdef NETSTACK_CONF_H
 
 /* These header overrides the below default configuration */
