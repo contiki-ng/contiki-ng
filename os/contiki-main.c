@@ -151,7 +151,7 @@ main(void)
 #if BUILD_WITH_COAP
   coap_engine_init();
   LOG_DBG("With CoAP\n");
-#endif /* BUILD_WITH_SHELL */
+#endif /* BUILD_WITH_COAP */
 
 #if BUILD_WITH_SNMP
   snmp_init();
