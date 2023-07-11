@@ -99,12 +99,7 @@
 #define CC_CONF_VA_ARGS                1
 #define CC_CONF_INLINE inline
 
-/* These names are deprecated, use C99 names. */
 #include <inttypes.h>
-typedef uint8_t u8_t;
-typedef uint16_t u16_t;
-typedef uint32_t u32_t;
-typedef int32_t s32_t;
 
 typedef unsigned short uip_stats_t;
 
