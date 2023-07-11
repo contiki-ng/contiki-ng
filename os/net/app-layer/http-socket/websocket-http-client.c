@@ -229,22 +229,22 @@ websocket_http_client_register(struct websocket_http_client_state *s,
   if(host == NULL) {
     return -1;
   }
-  strncpy(s->host, host, sizeof(s->host));
+  strncpy(s->host, host, sizeof(s->host) - 1);
 
   if(file == NULL) {
     return -1;
   }
-  strncpy(s->file, file, sizeof(s->file));
+  strncpy(s->file, file, sizeof(s->file) - 1);
 
   if(subprotocol == NULL) {
     return -1;
   }
-  strncpy(s->subprotocol, subprotocol, sizeof(s->subprotocol));
+  strncpy(s->subprotocol, subprotocol, sizeof(s->subprotocol) - 1);
 
   if(header == NULL) {
-    strncpy(s->header, "", sizeof(s->header));
+    strncpy(s->header, "", sizeof(s->header) - 1);
   } else {
-    strncpy(s->header, header, sizeof(s->header));
+    strncpy(s->header, header, sizeof(s->header) - 1);
   }
 
   if(port == 0) {
