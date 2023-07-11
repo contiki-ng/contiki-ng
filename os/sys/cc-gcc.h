@@ -28,20 +28,5 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#ifndef CC_GCC_H_
-#define CC_GCC_H_
-#ifdef __GNUC__
+/* Dummy header to keep lwm2m building. */
 
-#ifndef CC_CONF_INLINE
-/* use __inline__ in case "inline" is not available for any reason */
-#define CC_CONF_INLINE __inline__
-#endif
-
-#define CC_CONF_ALIGN(n) __attribute__((__aligned__(n)))
-
-#define CC_CONF_NORETURN __attribute__((__noreturn__))
-
-#define CC_CONF_DEPRECATED(msg) __attribute__((deprecated(msg)))
-
-#endif /* __GNUC__ */
-#endif /* CC_GCC_H_ */

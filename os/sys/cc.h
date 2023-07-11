@@ -46,7 +46,21 @@
 #define CC_H_
 
 #include "contiki.h"
-#include "sys/cc-gcc.h"
+
+#ifdef __GNUC__
+
+#ifndef CC_CONF_INLINE
+/* use __inline__ in case "inline" is not available for any reason */
+#define CC_CONF_INLINE __inline__
+#endif
+
+#define CC_CONF_ALIGN(n) __attribute__((__aligned__(n)))
+
+#define CC_CONF_DEPRECATED(msg) __attribute__((deprecated(msg)))
+
+#define CC_CONF_NORETURN __attribute__((__noreturn__))
+
+#endif /* __GNUC__ */
 
 #ifdef CC_CONF_INLINE
 #define CC_INLINE CC_CONF_INLINE
