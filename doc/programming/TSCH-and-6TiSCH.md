@@ -53,9 +53,9 @@ The implemenation has been tested on the following platforms:
   * Zolertia Zoul CC2538 (`zoul`)
   * Zolertia Zoul CC1200 (`zoul`, sub-GHz, with timeslots ranging between 5.8 and 31.5ms)
   * OpenMote-CC2538 (`openmote-cc2538`)
-  * CC2650 (both `srf06-cc26xx` and `simplelink`)
+  * CC2650 (both `cc26x0-cc13x0` and `simplelink`)
   * CC2652R1 (`simplelink`)
-  * CC1310 (both `srf06-cc26xx` and `simplelink`, sub-GHz, with 40ms timeslots)
+  * CC1310 (both `cc26x0-cc13x0` and `simplelink`, sub-GHz, with 40ms timeslots)
   * CC1312R1 (`simplelink`, sub-GHz, with 40ms timeslots)
   * Cooja mote (`cooja`)
 
@@ -98,7 +98,7 @@ rank -> join priority) as defined in the 6TiSCH minimal configuration.
 
 A simple TSCH+RPL example is included under `examples/6tisch/simple-node`.
 To use TSCH, first make sure your platform supports it.
-Currently, `sky`, `cc2538dk`, `zoul`, `openmote-cc2538`, `srf06-cc26xx`, and `cooja` are the supported platforms.
+Currently, `sky`, `cc2538dk`, `zoul`, `openmote-cc2538`, `cc26x0-cc13x0`, and `cooja` are the supported platforms.
 To add your own, we refer the reader to the next section.
 
 To enable TSCH in your application, simple add the TSCH module from your Makefile with:
@@ -148,7 +148,7 @@ To fine-tune, experiment with the following defines:
 ## Porting TSCH to a new platform
 
 Porting TSCH to a new platform requires a few new features in the radio driver, a number of timing-related configuration parameters.
-The easiest is probably to start from one of the existing port: `sky`, `cc2538dk`, `zoul`, `openmote-cc2538`, `srf06-cc26xx`.
+The easiest is probably to start from one of the existing port: `sky`, `cc2538dk`, `zoul`, `openmote-cc2538`, `cc26x0-cc13x0`.
 
 ### Radio features required for TSCH
 

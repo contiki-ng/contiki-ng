@@ -51,6 +51,7 @@ Examples for PowerTracker and other plugins can be found in the PR
 
 * Support for link-time-optimization in the build system ([#2077](https://github.com/contiki-ng/contiki-ng/pull/2077))
 * Consolidate configuration defines of TI platforms. Prefixes `CCXXWARE_CONF` and `CC26XX_UART_CONF` are deprecated in favor of `CCFG_CONF` and `TI_UART_CONF`. ([#2311](https://github.com/contiki-ng/contiki-ng/pull/2311), [#2387](https://github.com/contiki-ng/contiki-ng/pull/2387))
+* Optimize channel offsets in Orchestra to reduce collisions. Note! This changes the default channel offsets in Orchestra. Deployments with a mix of nodes with default configuration at v4.9 and earlier releases may not work, or see poor performance. Adjustments to `ORCHESTRA_*_CHANNEL_OFFSET` may be needed. ([#1673](https://github.com/contiki-ng/contiki-ng/pull/1673))
 
 All [commits](https://github.com/contiki-ng/contiki-ng/compare/release/v4.8...develop) since v4.8.
 
