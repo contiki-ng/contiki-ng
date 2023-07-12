@@ -598,10 +598,10 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
 #if COAP_PROXY_OPTION_PROCESSING
       coap_pkt->proxy_uri = (char *)current_option;
       coap_pkt->proxy_uri_len = option_length;
-#endif /* COAP_PROXY_OPTION_PROCESSING */
       LOG_DBG_("Proxy-Uri NOT IMPLEMENTED [");
       LOG_DBG_COAP_STRING(coap_pkt->proxy_uri, coap_pkt->proxy_uri_len);
       LOG_DBG_("]\n");
+#endif /* COAP_PROXY_OPTION_PROCESSING */
 
       coap_error_message = "This is a constrained server (Contiki)";
       return PROXYING_NOT_SUPPORTED_5_05;
@@ -610,10 +610,10 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
 #if COAP_PROXY_OPTION_PROCESSING
       coap_pkt->proxy_scheme = (char *)current_option;
       coap_pkt->proxy_scheme_len = option_length;
-#endif
       LOG_DBG_("Proxy-Scheme NOT IMPLEMENTED [");
       LOG_DBG_COAP_STRING(coap_pkt->proxy_scheme, coap_pkt->proxy_scheme_len);
       LOG_DBG_("]\n");
+#endif
       coap_error_message = "This is a constrained server (Contiki)";
       return PROXYING_NOT_SUPPORTED_5_05;
       break;
