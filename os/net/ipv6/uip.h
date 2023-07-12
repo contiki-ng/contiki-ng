@@ -1478,15 +1478,6 @@ extern uint8_t uip_flags;
                                too many retransmissions. */
 
 
-/*
- * \brief process the options within a hop by hop or destination option header
- * \retval 0: nothing to send,
- * \retval 1: drop pkt
- * \retval 2: ICMP error message to send
- */
-/*static uint8_t
-uip_ext_hdr_options_process(); */
-
 /* uip_process(flag):
  *
  * The actual uIP function which does all the work.
