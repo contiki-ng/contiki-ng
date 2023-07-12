@@ -227,7 +227,7 @@ packetbuf_addr(uint8_t type)
   return &packetbuf_addrs[type - PACKETBUF_ADDR_FIRST].addr;
 }
 /*---------------------------------------------------------------------------*/
-int
+bool
 packetbuf_holds_broadcast(void)
 {
   return linkaddr_cmp(&packetbuf_addrs[PACKETBUF_ADDR_RECEIVER - PACKETBUF_ADDR_FIRST].addr, &linkaddr_null);

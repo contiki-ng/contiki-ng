@@ -147,13 +147,14 @@ typedef unsigned long clock_time_t;
 
 #define BUTTON_HAL_CONF_DEBOUNCE_DURATION 0
 
-/* Notify various examples that we have Buttons */
+/* Notify various examples that we have Buttons and LEDs */
 #define PLATFORM_HAS_BUTTON    1
 #define PLATFORM_SUPPORTS_BUTTON_HAL 1
+#define PLATFORM_HAS_LEDS    1
 /*---------------------------------------------------------------------------*/
 /* Virtual LED colors */
 #define LEDS_CONF_COUNT                  3
-#define LEDS_CONF_GREEEN                 1
+#define LEDS_CONF_GREEN                  1
 #define LEDS_CONF_RED                    2
 #define LEDS_CONF_YELLOW                 4
 /*---------------------------------------------------------------------------*/

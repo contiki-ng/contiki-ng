@@ -49,6 +49,7 @@
 #include "net/packetbuf.h"
 #include "lib/random.h"
 
+#include <inttypes.h>
 #include <limits.h>
 
 /* Log configuration */
@@ -172,7 +173,7 @@ static void
 dio_input(void)
 {
   unsigned char *buffer;
-  uint8_t buffer_length;
+  uint16_t buffer_length;
   rpl_dio_t dio;
   uint8_t subopt_type;
   int i;
@@ -194,6 +195,12 @@ dio_input(void)
   uip_ipaddr_copy(&from, &UIP_IP_BUF->srcipaddr);
 
   buffer_length = uip_len - uip_l3_icmp_hdr_len;
+
+  if(buffer_length < 8 + sizeof(dio.dag_id)) {
+    LOG_WARN("dio_input: invalid DIO header, len %"PRIu16", discard\n",
+             buffer_length);
+    goto discard;
+  }
 
   /* Process the DIO base option. */
   i = 0;
@@ -222,6 +229,10 @@ dio_input(void)
       len = 1;
     } else {
       /* Suboption with a two-byte header + payload */
+      if(i + 1 >= buffer_length) {
+        LOG_ERR("dio_input: malformed packet, discard\n");
+        goto discard;
+      }
       len = 2 + buffer[i + 1];
     }
 
@@ -246,8 +257,16 @@ dio_input(void)
         if(dio.mc.type == RPL_DAG_MC_NONE) {
           /* No metric container: do nothing */
         } else if(dio.mc.type == RPL_DAG_MC_ETX) {
+          if(len < 8) {
+            LOG_WARN("dio_input: invalid DAG MC, len %u, discard\n", len);
+            goto discard;
+          }
           dio.mc.obj.etx = get16(buffer, i + 6);
         } else if(dio.mc.type == RPL_DAG_MC_ENERGY) {
+          if(len < 8) {
+            LOG_WARN("dio_input: invalid DAG MC, len %u, discard\n", len);
+            goto discard;
+          }
           dio.mc.obj.energy.flags = buffer[i + 6];
           dio.mc.obj.energy.energy_est = buffer[i + 7];
         } else {
@@ -256,8 +275,9 @@ dio_input(void)
         }
         break;
       case RPL_OPTION_ROUTE_INFO:
-        if(len < 9) {
-          LOG_WARN("dio_input: invalid destination prefix option, len %u, discard\n", len);
+        if(len < 8) {
+          LOG_WARN("dio_input: invalid route info option, len %u, discard\n",
+                   len);
           goto discard;
         }
 
@@ -457,7 +477,7 @@ dao_input(void)
   struct rpl_dao dao;
   uint8_t subopt_type;
   unsigned char *buffer;
-  uint8_t buffer_length;
+  uint16_t buffer_length;
   int pos;
   int len;
   int i;
@@ -477,6 +497,12 @@ dao_input(void)
   buffer = UIP_ICMP_PAYLOAD;
   buffer_length = uip_len - uip_l3_icmp_hdr_len;
 
+  if(buffer_length < 4) {
+    LOG_WARN("dao_input: invalid DAO header, len %"PRIu16", discard\n",
+             buffer_length);
+    goto discard;
+  }
+
   pos = 0;
   pos++; /* instance ID */
   dao.lifetime = curr_instance.default_lifetime;
@@ -486,6 +512,11 @@ dao_input(void)
 
   /* Is the DAG ID present? */
   if(dao.flags & RPL_DAO_D_FLAG) {
+    if(buffer_length < 4 + sizeof(curr_instance.dag.dag_id)) {
+      LOG_WARN("dao_input: missing full DAG ID, len %"PRIu16", discard\n",
+               buffer_length);
+      goto discard;
+    }
     if(memcmp(&curr_instance.dag.dag_id, &buffer[pos], sizeof(curr_instance.dag.dag_id))) {
       LOG_ERR("dao_input: different DAG ID ");
       LOG_ERR_6ADDR((uip_ipaddr_t *)&buffer[pos]);
@@ -502,13 +533,31 @@ dao_input(void)
       len = 1;
     } else {
       /* The option consists of a two-byte header and a payload. */
+      if(i + 1 >= buffer_length) {
+        LOG_ERR("dao_input: malformed packet, discard\n");
+        goto discard;
+      }
       len = 2 + buffer[i + 1];
+    }
+
+    if(i + len > buffer_length) {
+      LOG_ERR("dao_input: malformed packet, discard\n");
+      goto discard;
     }
 
     switch(subopt_type) {
       case RPL_OPTION_TARGET:
         /* Handle the target option. */
+        if(len < 4) {
+          LOG_WARN("dao_input: invalid target option, len %u, discard\n", len);
+          goto discard;
+        }
         dao.prefixlen = buffer[i + 3];
+        if(4 + (dao.prefixlen + 7) / CHAR_BIT != len) {
+          LOG_WARN("dao_input: invalid target option, len %u != %u, discard\n",
+                   len, 4 + (dao.prefixlen + 7) / CHAR_BIT);
+          goto discard;
+        }
         memset(&dao.prefix, 0, sizeof(dao.prefix));
         memcpy(&dao.prefix, buffer + i + 4, (dao.prefixlen + 7) / CHAR_BIT);
         break;
@@ -516,6 +565,11 @@ dao_input(void)
         /* The path sequence and control are ignored. */
         /*      pathcontrol = buffer[i + 3];
                 pathsequence = buffer[i + 4];*/
+        if(len < 6) {
+          LOG_WARN("dao_input: invalid transit option, len %"PRIu16", discard\n",
+                   buffer_length);
+          goto discard;
+        }
         dao.lifetime = buffer[i + 5];
         if(len >= 20) {
           memcpy(&dao.parent_addr, buffer + i + 6, 16);

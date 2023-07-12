@@ -221,16 +221,16 @@ frame802154_check_dest_panid(frame802154_t *frame)
 }
 /*---------------------------------------------------------------------------*/
 /* Check is the address is a broadcast address, whatever its size */
-int
+bool
 frame802154_is_broadcast_addr(uint8_t mode, const uint8_t *addr)
 {
   int i = mode == FRAME802154_SHORTADDRMODE ? 2 : 8;
   while(i-- > 0) {
     if(addr[i] != 0xff) {
-      return 0;
+      return false;
     }
   }
-  return 1;
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 /* Check and extract source and destination linkaddr from frame */

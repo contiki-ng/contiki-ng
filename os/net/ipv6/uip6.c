@@ -919,6 +919,61 @@ ext_hdr_options_process(uint8_t *ext_buf)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
+#if UIP_TCP
+static void
+process_tcp_options(struct uip_conn *conn)
+{
+  if((UIP_TCP_BUF->tcpoffset & 0xf0) <= 0x50) {
+    return;
+  }
+
+  /* Parse the TCP MSS option, if present. */
+  for(unsigned c = 0; c < ((UIP_TCP_BUF->tcpoffset >> 4) - 5) << 2 ;) {
+    if(UIP_IPTCPH_LEN + c >= UIP_BUFSIZE) {
+      /* TCP option data out of bounds. */
+      return;
+    }
+    uint8_t opt = uip_buf[UIP_IPTCPH_LEN + c];
+    switch(opt) {
+    case TCP_OPT_END:
+      /* Stop processing options. */
+      return;
+    case TCP_OPT_NOOP:
+      c++;
+      break;
+    case TCP_OPT_MSS:
+      if(UIP_IPTCPH_LEN + 3 + c >= UIP_BUFSIZE ||
+         uip_buf[UIP_IPTCPH_LEN + 1 + c] != TCP_OPT_MSS_LEN) {
+	/* TCP option data out of bounds or invalid MSS option length. */
+	return;
+      }
+
+      /* An MSS option with the right option length. */
+      uint16_t tmp16 = (uip_buf[UIP_IPTCPH_LEN + 2 + c] << 8) |
+	uip_buf[UIP_IPTCPH_LEN + 3 + c];
+      conn->initialmss = conn->mss =
+	tmp16 > UIP_TCP_MSS ? UIP_TCP_MSS : tmp16;
+      /* Stop processing options. */
+      return;
+    default:
+      if(UIP_IPTCPH_LEN + 1 + c >= UIP_BUFSIZE) {
+	/* TCP option data out of bounds. */
+	return;
+      }
+      /* All other options have a length field, so that we easily
+	 can skip past them. */
+      if(uip_buf[UIP_IPTCPH_LEN + 1 + c] == 0) {
+	/* If the length field is zero, the options are malformed
+	   and we don't process them further. */
+	return;
+      }
+      c += uip_buf[UIP_IPTCPH_LEN + 1 + c];
+      break;
+    }
+  }
+}
+#endif /* UIP_TCP */
+/*---------------------------------------------------------------------------*/
 static bool
 uip_check_mtu(void)
 {
@@ -953,8 +1008,6 @@ uip_process(uint8_t flag)
   struct uip_ext_hdr *ext_ptr;
 #if UIP_TCP
   int c;
-  uint16_t tmp16;
-  uint8_t opt;
   register struct uip_conn *uip_connr = uip_conn;
 #endif /* UIP_TCP */
 #if UIP_UDP
@@ -1250,7 +1303,7 @@ uip_process(uint8_t flag)
         goto send;
       }
 
-      LOG_INFO("Forwarding packet to next hop ");
+      LOG_INFO("Forwarding packet to next hop, dest: ");
       LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
       LOG_INFO_("\n");
       UIP_STAT(++uip_stat.ip.forwarded);
@@ -1368,7 +1421,7 @@ uip_process(uint8_t flag)
             goto send;
           }
 
-          LOG_INFO("Forwarding packet to next hop ");
+          LOG_INFO("Forwarding packet to next hop, dest: ");
           LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
           LOG_INFO_("\n");
           UIP_STAT(++uip_stat.ip.forwarded);
@@ -1645,7 +1698,7 @@ uip_process(uint8_t flag)
     goto reset;
   }
 
-  tmp16 = UIP_TCP_BUF->destport;
+  uint16_t tmp16 = UIP_TCP_BUF->destport;
   /* Next, check listening connections. */
   for(c = 0; c < UIP_LISTENPORTS; ++c) {
     if(tmp16 == uip_listenports[c]) {
@@ -1766,38 +1819,7 @@ uip_process(uint8_t flag)
   uip_connr->rcv_nxt[3] = UIP_TCP_BUF->seqno[3];
   uip_add_rcv_nxt(1);
 
-  /* Parse the TCP MSS option, if present. */
-  if((UIP_TCP_BUF->tcpoffset & 0xf0) > 0x50) {
-    for(c = 0; c < ((UIP_TCP_BUF->tcpoffset >> 4) - 5) << 2 ;) {
-      opt = uip_buf[UIP_IPTCPH_LEN + c];
-      if(opt == TCP_OPT_END) {
-        /* End of options. */
-        break;
-      } else if(opt == TCP_OPT_NOOP) {
-        ++c;
-        /* NOP option. */
-      } else if(opt == TCP_OPT_MSS &&
-                uip_buf[UIP_IPTCPH_LEN + 1 + c] == TCP_OPT_MSS_LEN) {
-        /* An MSS option with the right option length. */
-        tmp16 = ((uint16_t)uip_buf[UIP_IPTCPH_LEN + 2 + c] << 8) |
-          (uint16_t)uip_buf[UIP_IPTCPH_LEN + 3 + c];
-        uip_connr->initialmss = uip_connr->mss =
-          tmp16 > UIP_TCP_MSS? UIP_TCP_MSS: tmp16;
-
-        /* And we are done processing options. */
-        break;
-      } else {
-        /* All other options have a length field, so that we easily
-           can skip past them. */
-        if(uip_buf[UIP_IPTCPH_LEN + 1 + c] == 0) {
-          /* If the length field is zero, the options are malformed
-             and we don't process them further. */
-          break;
-        }
-        c += uip_buf[UIP_IPTCPH_LEN + 1 + c];
-      }
-    }
-  }
+  process_tcp_options(uip_connr);
 
   /* Our response will be a SYNACK. */
 #if UIP_ACTIVE_OPEN
@@ -1962,38 +1984,8 @@ uip_process(uint8_t flag)
     if((uip_flags & UIP_ACKDATA) &&
         (UIP_TCP_BUF->flags & TCP_CTL) == (TCP_SYN | TCP_ACK)) {
 
-      /* Parse the TCP MSS option, if present. */
-      if((UIP_TCP_BUF->tcpoffset & 0xf0) > 0x50) {
-        for(c = 0; c < ((UIP_TCP_BUF->tcpoffset >> 4) - 5) << 2 ;) {
-          opt = uip_buf[UIP_IPTCPH_LEN + c];
-          if(opt == TCP_OPT_END) {
-            /* End of options. */
-            break;
-          } else if(opt == TCP_OPT_NOOP) {
-            ++c;
-            /* NOP option. */
-          } else if(opt == TCP_OPT_MSS &&
-              uip_buf[UIP_IPTCPH_LEN + 1 + c] == TCP_OPT_MSS_LEN) {
-            /* An MSS option with the right option length. */
-            tmp16 = (uip_buf[UIP_IPTCPH_LEN + 2 + c] << 8) |
-                uip_buf[UIP_IPTCPH_LEN + 3 + c];
-            uip_connr->initialmss =
-                uip_connr->mss = tmp16 > UIP_TCP_MSS? UIP_TCP_MSS: tmp16;
+      process_tcp_options(uip_connr);
 
-            /* And we are done processing options. */
-            break;
-          } else {
-            /* All other options have a length field, so that we easily
-                 can skip past them. */
-            if(uip_buf[UIP_IPTCPH_LEN + 1 + c] == 0) {
-              /* If the length field is zero, the options are malformed
-                   and we don't process them further. */
-              break;
-            }
-            c += uip_buf[UIP_IPTCPH_LEN + 1 + c];
-          }
-        }
-      }
       uip_connr->tcpstateflags = UIP_ESTABLISHED;
       uip_connr->rcv_nxt[0] = UIP_TCP_BUF->seqno[0];
       uip_connr->rcv_nxt[1] = UIP_TCP_BUF->seqno[1];

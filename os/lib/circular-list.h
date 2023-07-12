@@ -79,9 +79,15 @@
   static circular_list_t name = (circular_list_t)&name##_circular_list
 /*---------------------------------------------------------------------------*/
 /**
- * \brief The circular, singly-linked list datatype
+ * The circular, singly-linked list datatype.
  */
 typedef void **circular_list_t;
+
+/**
+ * The non-modifiable circular, singly-linked list datatype.
+ */
+typedef void *const *const_circular_list_t;
+
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Initialise a circular, singly-linked list.
@@ -94,14 +100,14 @@ void circular_list_init(circular_list_t cl);
  * \param cl The circular, singly-linked list.
  * \return A pointer to the list's head, or NULL if the list is empty
  */
-void *circular_list_head(const circular_list_t cl);
+void *circular_list_head(const_circular_list_t cl);
 
 /**
  * \brief Return the tail of a circular, singly-linked list.
  * \param cl The circular, singly-linked list.
  * \return A pointer to the list's tail, or NULL if the list is empty
  */
-void *circular_list_tail(const circular_list_t cl);
+void *circular_list_tail(const_circular_list_t cl);
 
 /**
  * \brief Add an element to a circular, singly-linked list.
@@ -139,7 +145,7 @@ void circular_list_remove(circular_list_t cl, const void *element);
  * \param cl The circular, singly-linked list.
  * \return The number of elements in the list
  */
-unsigned long circular_list_length(const circular_list_t cl);
+unsigned long circular_list_length(const_circular_list_t cl);
 
 /**
  * \brief Determine whether a circular, singly-linked list is empty.
@@ -147,7 +153,7 @@ unsigned long circular_list_length(const circular_list_t cl);
  * \retval true The list is empty
  * \retval false The list is not empty
  */
-bool circular_list_is_empty(const circular_list_t cl);
+bool circular_list_is_empty(const_circular_list_t cl);
 /*---------------------------------------------------------------------------*/
 #endif /* CIRCULAR_LIST_H_ */
 /*---------------------------------------------------------------------------*/

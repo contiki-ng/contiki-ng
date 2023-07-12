@@ -131,30 +131,165 @@
 
 /**
  * The linked list type.
- *
  */
 typedef void ** list_t;
 
+/**
+ * The non-modifiable linked list type.
+ */
+typedef void *const *const_list_t;
+
+/**
+ * Initialize a list.
+ *
+ * This function initalizes a list. The list will be empty after this
+ * function has been called.
+ *
+ * \param list The list to be initialized.
+ */
 void   list_init(list_t list);
-void * list_head(const list_t list);
-void * list_tail(const list_t list);
+
+/**
+ * Get a pointer to the first element of a list.
+ *
+ * This function returns a pointer to the first element of the
+ * list. The element will \b not be removed from the list.
+ *
+ * \param list The list.
+ * \return A pointer to the first element on the list.
+ *
+ * \sa list_tail()
+ */
+void * list_head(const_list_t list);
+
+/**
+ * Get the tail of a list.
+ *
+ * This function returns a pointer to the elements following the first
+ * element of a list. No elements are removed by this function.
+ *
+ * \param list The list
+ * \return A pointer to the element after the first element on the list.
+ *
+ * \sa list_head()
+ */
+void * list_tail(const_list_t list);
+
+/**
+ * Remove the first object on a list.
+ *
+ * This function removes the first object on the list and returns a
+ * pointer to it.
+ *
+ * \param list The list.
+ * \return Pointer to the removed element of list.
+ */
 void * list_pop (list_t list);
+
+/**
+ * Add an item to the start of the list.
+ */
 void   list_push(list_t list, void *item);
 
+/**
+ * Remove the last object on the list.
+ *
+ * This function removes the last object on the list and returns it.
+ *
+ * \param list The list
+ * \return The removed object
+ *
+ */
 void * list_chop(list_t list);
 
+/**
+ * Add an item at the end of a list.
+ *
+ * This function adds an item to the end of the list.
+ *
+ * \param list The list.
+ * \param item A pointer to the item to be added.
+ *
+ * \sa list_push()
+ *
+ */
 void   list_add(list_t list, void *item);
+
+/**
+ * Remove a specific element from a list.
+ *
+ * This function removes a specified element from the list.
+ *
+ * \param list The list.
+ * \param item The item that is to be removed from the list.
+ *
+ */
 void   list_remove(list_t list, const void *item);
 
-int    list_length(const list_t list);
+/**
+ * Get the length of a list.
+ *
+ * This function counts the number of elements on a specified list.
+ *
+ * \param list The list.
+ * \return The length of the list.
+ */
+int    list_length(const_list_t list);
 
-void   list_copy(list_t dest, const list_t src);
+/**
+ * Duplicate a list.
+ *
+ * This function duplicates a list by copying the list reference, but
+ * not the elements.
+ *
+ * \note This function does \b not copy the elements of the list, but
+ * merely duplicates the pointer to the first element of the list.
+ *
+ * \param dest The destination list.
+ * \param src The source list.
+ */
+void   list_copy(list_t dest, const_list_t src);
 
+/**
+ * \brief      Insert an item after a specified item on the list
+ * \param list The list
+ * \param previtem The item after which the new item should be inserted
+ * \param newitem  The new item that is to be inserted
+ * \author     Adam Dunkels
+ *
+ *             This function inserts an item right after a specified
+ *             item on the list. This function is useful when using
+ *             the list module to ordered lists.
+ *
+ *             If previtem is NULL, the new item is placed at the
+ *             start of the list.
+ *
+ */
 void   list_insert(list_t list, void *previtem, void *newitem);
 
+/**
+ * \brief      Get the next item following this item
+ * \param item A list item
+ * \returns    A next item on the list
+ *
+ *             This function takes a list item and returns the next
+ *             item on the list, or NULL if there are no more items on
+ *             the list. This function is used when iterating through
+ *             lists.
+ */
 void * list_item_next(const void *item);
 
-bool list_contains(const list_t list, const void *item);
+/**
+ * \brief      Check if the list contains an item
+ * \param list The list that is checked
+ * \param item An item to look for in the list
+ * \returns    0 if the list does not contains the item, and 1 otherwise
+ *
+ *             This function searches for an item in the list and returns
+ *         0 if the list does not contain the item, and 1 if the item
+ *         is present in the list.
+ */
+bool list_contains(const_list_t list, const void *item);
 
 #endif /* LIST_H_ */
 

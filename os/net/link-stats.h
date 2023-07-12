@@ -63,6 +63,27 @@
 #define LINK_STATS_PACKET_COUNTERS           0
 #endif /* LINK_STATS_PACKET_COUNTERS */
 
+/* Maximal initial ETX value when guessed from RSSI */
+#ifdef LINK_STATS_CONF_ETX_INIT_MAX
+#define LINK_STATS_ETX_INIT_MAX LINK_STATS_CONF_ETX_INIT_MAX
+#else /* LINK_STATS_CONF_ETX_INIT_MAX */
+#define LINK_STATS_ETX_INIT_MAX              3
+#endif /* LINK_STATS_ETX_INIT_MAX */
+
+/* "Good" RSSI value when ETX is guessed from RSSI */
+#ifdef LINK_STATS_CONF_RSSI_HIGH
+#define LINK_STATS_RSSI_HIGH LINK_STATS_CONF_RSSI_HIGH
+#else /* LINK_STATS_CONF_RSSI_HIGH */
+#define LINK_STATS_RSSI_HIGH               -60
+#endif /* LINK_STATS_RSSI_HIGH */
+
+/* "Bad" RSSI value when ETX is guessed from RSSI */
+#ifdef LINK_STATS_CONF_RSSI_LOW
+#define LINK_STATS_RSSI_LOW LINK_STATS_CONF_RSSI_LOW
+#else /* LINK_STATS_CONF_RSSI_LOW */
+#define LINK_STATS_RSSI_LOW                -90
+#endif /* LINK_STATS_RSSI_LOW */
+
 /* Special value that signal the RSSI is not initialized */
 #define LINK_STATS_RSSI_UNKNOWN 0x7fff
 

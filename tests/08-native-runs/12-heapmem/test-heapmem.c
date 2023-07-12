@@ -34,6 +34,7 @@
  *      Nicolas Tsiftes <nicolas.tsiftes@ri.se>
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -77,6 +78,14 @@ UNIT_TEST(do_many_allocations)
   char *ptrs[TEST_CONCURRENT] = { NULL };
   unsigned failed_allocations = 0;
   unsigned failed_deallocations = 0;
+  unsigned misalignments = 0;
+  unsigned min_alignment = heapmem_alignment();
+
+  /* The minimum alignment value must be a power of two */
+  UNIT_TEST_ASSERT(min_alignment != 0);
+  UNIT_TEST_ASSERT(!(min_alignment & (min_alignment - 1)));
+
+  printf("Using heapmem alignment of %u\n", min_alignment);
 
   /*
    * Do a number of allocations (TEST_LIMIT) of a random size in the range
@@ -103,6 +112,9 @@ UNIT_TEST(do_many_allocations)
     if(ptrs[alloc_index] == NULL) {
       failed_allocations++;
     } else {
+      if((uintptr_t)ptrs[alloc_index] & (min_alignment - 1)) {
+        misalignments++;
+      }
       memset(ptrs[alloc_index], '!', alloc_size);
     }
   }
@@ -118,8 +130,10 @@ UNIT_TEST(do_many_allocations)
 
   printf("Failed allocations: %u\n", failed_allocations);
   printf("Failed deallocations: %u\n", failed_deallocations);
+  printf("Misaligned addresses: %u\n", misalignments);
   UNIT_TEST_ASSERT(failed_allocations == 0);
   UNIT_TEST_ASSERT(failed_deallocations == 0);
+  UNIT_TEST_ASSERT(misalignments == 0);
 
   UNIT_TEST_END();
 }
@@ -133,6 +147,8 @@ UNIT_TEST(invalid_freeing)
   UNIT_TEST_ASSERT(heapmem_free(NULL) == false);
 
   char *ptr = heapmem_alloc(10);
+  /* This small allocation should succeed. */
+  UNIT_TEST_ASSERT(ptr != NULL);
   /* A single free operation on allocated memory should succeed. */
   UNIT_TEST_ASSERT(heapmem_free(ptr) == true);
 
@@ -155,7 +171,7 @@ UNIT_TEST(max_alloc)
 
   /* The test uses a much smaller size than the theoretical maximum because
      the heapmem module is not yet supporting such large allocations. */
-  printf("Allocate %zu bytes\n", stats_before.available/ 2);
+  printf("Allocate %zu bytes\n", stats_before.available / 2);
   char *ptr = heapmem_alloc(stats_before.available / 2);
 
   UNIT_TEST_ASSERT(ptr != NULL);
@@ -170,6 +186,50 @@ UNIT_TEST(max_alloc)
   UNIT_TEST_END();
 }
 /*****************************************************************************/
+UNIT_TEST_REGISTER(reallocations, "Heapmem reallocations");
+UNIT_TEST(reallocations)
+{
+#define INITIAL_SIZE 100
+
+  UNIT_TEST_BEGIN();
+
+  uint8_t *ptr1 = heapmem_realloc(NULL, INITIAL_SIZE);
+  UNIT_TEST_ASSERT(ptr1 != NULL);
+
+  for(size_t i = 0; i < INITIAL_SIZE; i++) {
+    ptr1[i] = i + 128;
+  }
+
+  /* Extend the initial array. */
+  uint8_t *ptr2 = heapmem_realloc(ptr1, INITIAL_SIZE * 2);
+  UNIT_TEST_ASSERT(ptr2 != NULL);
+
+  for(size_t i = 0; i < INITIAL_SIZE; i++) {
+    /* Check that the bytes of the lower half have been preserved. */
+    UNIT_TEST_ASSERT(ptr2[i] == (uint8_t)(i + 128));
+    /* Initialize the upper half of the reallocated area. */
+    ptr2[i + INITIAL_SIZE] = i * 2 + 128;
+  }
+
+  /* Reduce the extended array. */
+  uint8_t *ptr3 = heapmem_realloc(ptr2, (2 * INITIAL_SIZE) / 3);
+  UNIT_TEST_ASSERT(ptr3 != NULL);
+
+  /* Check that the array is correctly preserved after
+     the final reallocation. */
+  for(size_t i = 0; i < (2 * INITIAL_SIZE) / 3; i++) {
+    if(i < INITIAL_SIZE) {
+      UNIT_TEST_ASSERT(ptr2[i] == (uint8_t)(i + 128));
+    } else {
+      UNIT_TEST_ASSERT(ptr2[i] == (uint8_t)(i * 2 + 128));
+    }
+  }
+
+  UNIT_TEST_ASSERT(heapmem_realloc(ptr3, 0) == NULL);
+
+  UNIT_TEST_END();
+}
+/*****************************************************************************/
 UNIT_TEST_REGISTER(stats_check, "Heapmem statistics validation");
 UNIT_TEST(stats_check)
 {
@@ -178,7 +238,8 @@ UNIT_TEST(stats_check)
   heapmem_stats_t stats;
   heapmem_stats(&stats);
 
-  printf("* allocated %zu\n* overhead %zu\n* available %zu\n* footprint %zu\n* chunks %zu\n",
+  printf("* allocated %zu\n* overhead %zu\n* available %zu\n"
+	 "* footprint %zu\n* chunks %zu\n",
          stats.allocated, stats.overhead, stats.available,
          stats.footprint, stats.chunks);
 
@@ -187,6 +248,31 @@ UNIT_TEST(stats_check)
   UNIT_TEST_ASSERT(stats.available == HEAPMEM_CONF_ARENA_SIZE);
   UNIT_TEST_ASSERT(stats.footprint == 0);
   UNIT_TEST_ASSERT(stats.chunks == 0);
+
+  UNIT_TEST_END();
+}
+/*****************************************************************************/
+UNIT_TEST_REGISTER(zones, "Zone allocations");
+UNIT_TEST(zones)
+{
+  UNIT_TEST_BEGIN();
+
+  UNIT_TEST_ASSERT(heapmem_zone_register(NULL, 10) == HEAPMEM_ZONE_INVALID);
+  UNIT_TEST_ASSERT(heapmem_zone_register("A", 0) == HEAPMEM_ZONE_INVALID);
+
+  heapmem_zone_t zone = heapmem_zone_register("Test", 1000);
+  UNIT_TEST_ASSERT(zone != HEAPMEM_ZONE_INVALID);
+  UNIT_TEST_ASSERT(zone != HEAPMEM_ZONE_GENERAL);
+  UNIT_TEST_ASSERT(heapmem_zone_register("Test", 10) == HEAPMEM_ZONE_INVALID);
+
+  void *ptr = heapmem_zone_alloc(zone, 100);
+  UNIT_TEST_ASSERT(ptr != NULL);
+  UNIT_TEST_ASSERT(heapmem_free(ptr) != false);
+
+  UNIT_TEST_ASSERT(heapmem_zone_alloc(zone, 1001) == NULL);
+  ptr = heapmem_alloc(1001);
+  UNIT_TEST_ASSERT(ptr != NULL);
+  UNIT_TEST_ASSERT(heapmem_free(ptr) != false);
 
   UNIT_TEST_END();
 }
@@ -205,12 +291,15 @@ PROCESS_THREAD(test_heapmem_process, ev, data)
   UNIT_TEST_RUN(do_many_allocations);
   UNIT_TEST_RUN(max_alloc);
   UNIT_TEST_RUN(invalid_freeing);
+  UNIT_TEST_RUN(reallocations);
   UNIT_TEST_RUN(stats_check);
+  UNIT_TEST_RUN(zones);
 
   if(!UNIT_TEST_PASSED(do_many_allocations) ||
      !UNIT_TEST_PASSED(max_alloc) ||
      !UNIT_TEST_PASSED(invalid_freeing) ||
-     !UNIT_TEST_PASSED(stats_check)) {
+     !UNIT_TEST_PASSED(stats_check) ||
+     !UNIT_TEST_PASSED(zones)) {
     printf("=check-me= FAILED\n");
     printf("---\n");
   }

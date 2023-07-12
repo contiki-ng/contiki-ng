@@ -57,13 +57,13 @@ dbl_list_init(dbl_list_t dll)
 }
 /*---------------------------------------------------------------------------*/
 void *
-dbl_list_head(const dbl_list_t dll)
+dbl_list_head(const_dbl_list_t dll)
 {
   return *dll;
 }
 /*---------------------------------------------------------------------------*/
 void *
-dbl_list_tail(const dbl_list_t dll)
+dbl_list_tail(const_dbl_list_t dll)
 {
   struct dll *this;
 
@@ -201,7 +201,7 @@ dbl_list_add_before(dbl_list_t dll, void *existing, void *element)
 }
 /*---------------------------------------------------------------------------*/
 unsigned long
-dbl_list_length(const dbl_list_t dll)
+dbl_list_length(const_dbl_list_t dll)
 {
   unsigned long len = 0;
   struct dll *this;
@@ -218,7 +218,7 @@ dbl_list_length(const dbl_list_t dll)
 }
 /*---------------------------------------------------------------------------*/
 bool
-dbl_list_is_empty(const dbl_list_t dll)
+dbl_list_is_empty(const_dbl_list_t dll)
 {
   return *dll == NULL ? true : false;
 }

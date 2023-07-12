@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simconf>
-  <project EXPORT="discard">[CONTIKI_DIR]/tools/cooja/apps/mrm</project>
-  <project EXPORT="discard">[CONTIKI_DIR]/tools/cooja/apps/mspsim</project>
-  <project EXPORT="discard">[CONTIKI_DIR]/tools/cooja/apps/serial_socket</project>
   <simulation>
     <title>Stack checker example</title>
     <delaytime>0</delaytime>

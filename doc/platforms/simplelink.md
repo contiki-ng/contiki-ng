@@ -154,7 +154,7 @@ linker errors.
 To generate an assembly listing of the compiled firmware, supposing `BUILD_DIR_BOARD = <build-dir-board>` and `CONTIKI_PROJECT = <contiki-project>` in the respective Makefiles, run `make TARGET=simplelink BOARD=<board> <build-dir-board>/<contiki-project>.lst`. For example, considering the CC2650 SensorTag and the `hello-world` project, you can run `make TARGET=simplelink BOARD=sensortag/cc2650 build/simplelink/sensortag/cc2650/hello-world.lst`. This may be useful for debugging or optimizing your
 application code. To intersperse the C source code within the assembly
 listing, you must instruct the compiler to include debugging information by
-adding `CFLAGS += -g` to the project Makefile and rebuild by running `make
+adding `DEBUG = 1` to the project Makefile and rebuild by running `make
 clean && make`.
 
 There are currently no platform-specific examples for the SimpleLink platform.
@@ -613,10 +613,10 @@ In CCS, do the following steps:
             ```
             BOARD = launchpad/cc1310
             ```
-        * Add the compile flag `-g` to `CFLAGS` to enable debug symbols.
+        * Set `DEBUG` to 1 to enable debug symbols.
 
             ```
-            CFLAGS += -g
+            DEBUG = 1
             ```
 
 7. Build the project. In CCS:

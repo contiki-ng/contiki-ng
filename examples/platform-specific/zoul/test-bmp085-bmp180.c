@@ -60,7 +60,7 @@ static struct etimer et;
 PROCESS_THREAD(remote_bmpx8x_process, ev, data)
 {
   PROCESS_BEGIN();
-  static uint16_t pressure;
+  static int pressure;
   static int16_t temperature;
 
   /* Use Contiki's sensor macro to enable the sensor */

@@ -1,7 +1,0 @@
-# Symbols to redefine to ensure use of Contiki-NG implementations
-printf    log_printf
-sprintf   log_sprintf
-snprintf  log_snprintf
-vsnprintf log_vsnprintf
-puts      log_puts
-putchar   log_putchar

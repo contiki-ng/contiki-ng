@@ -73,7 +73,11 @@
 #ifdef BLE_L2CAP_CONF_NODE_MTU
 #define BLE_L2CAP_NODE_MTU      BLE_L2CAP_CONF_NODE_MTU
 #else
-#define BLE_L2CAP_NODE_MTU              1280
+#define BLE_L2CAP_NODE_MTU      PACKETBUF_SIZE
+#endif
+
+#if BLE_L2CAP_NODE_MTU > PACKETBUF_SIZE
+#error BLE_L2CAP_NODE_MTU exceeds the PACKETBUF_SIZE
 #endif
 
 /* the max. supported L2CAP fragment length */

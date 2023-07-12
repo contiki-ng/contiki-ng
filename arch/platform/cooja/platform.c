@@ -35,18 +35,13 @@
  *         Fredrik Osterlind <fros@sics.se>
  */
 
-#include <jni.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "contiki.h"
 #include "sys/cc.h"
-
-#include "sys/clock.h"
-#include "sys/etimer.h"
 #include "sys/cooja_mt.h"
-
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
@@ -78,26 +73,10 @@
 #include "serial-shell.h"
 #endif /* BUILD_WITH_SHELL */
 
-/* JNI-defined functions, depends on the environment variable CLASSNAME */
-#ifndef CLASSNAME
-#error CLASSNAME is undefined, required by platform.c
-#endif /* CLASSNAME */
-#define COOJA__QUOTEME(a,b,c) COOJA_QUOTEME(a,b,c)
-#define COOJA_QUOTEME(a,b,c) a##b##c
-#define COOJA_JNI_PATH Java_org_contikios_cooja_corecomm_
-#define Java_org_contikios_cooja_corecomm_CLASSNAME_init COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_init)
-#define Java_org_contikios_cooja_corecomm_CLASSNAME_getMemory COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_getMemory)
-#define Java_org_contikios_cooja_corecomm_CLASSNAME_setMemory COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setMemory)
-#define Java_org_contikios_cooja_corecomm_CLASSNAME_tick COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_tick)
-#define Java_org_contikios_cooja_corecomm_CLASSNAME_setReferenceAddress COOJA__QUOTEME(COOJA_JNI_PATH,CLASSNAME,_setReferenceAddress)
-
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
-
-/* The main function, implemented in contiki-main.c */
-int main(void);
 
 /* Simulation mote interfaces */
 SIM_INTERFACE_NAME(moteid_interface);
@@ -113,39 +92,13 @@ SIM_INTERFACE_NAME(leds_interface);
 SIM_INTERFACE_NAME(cfs_interface);
 SIM_INTERFACE_NAME(eeprom_interface);
 SIM_INTERFACES(&vib_interface, &moteid_interface, &rs232_interface, &simlog_interface, &beep_interface, &radio_interface, &button_interface, &pir_interface, &clock_interface, &leds_interface, &cfs_interface, &eeprom_interface);
-/* Example: manually add mote interfaces */
-//SIM_INTERFACE_NAME(dummy_interface);
-//SIM_INTERFACES(..., &dummy_interface);
 
 /* Sensors */
 SENSORS(&button_sensor, &pir_sensor, &vib_sensor);
 
-/*
- * referenceVar is used for comparing absolute and process relative memory.
- * (this must not be static due to memory locations)
- */
-intptr_t referenceVar;
-
-/*
- * Contiki and rtimer threads.
- */
-static struct cooja_mt_thread rtimer_thread;
-static struct cooja_mt_thread process_run_thread;
 /*---------------------------------------------------------------------------*/
 /* Needed since the new LEDs API does not provide this prototype */
 void leds_arch_init(void);
-/*---------------------------------------------------------------------------*/
-static void
-rtimer_thread_loop(void *data)
-{
-  while(1)
-  {
-    rtimer_arch_check();
-
-    /* Return to COOJA */
-    cooja_mt_yield();
-  }
-}
 /*---------------------------------------------------------------------------*/
 static void
 set_lladdr(void)
@@ -192,8 +145,7 @@ platform_init_stage_three()
 void
 platform_main_loop()
 {
-  while(1)
-  {
+  while(1) {
     simProcessRunValue = process_run();
     while(simProcessRunValue-- > 0) {
       process_run();
@@ -211,169 +163,3 @@ platform_main_loop()
   }
 }
 /*---------------------------------------------------------------------------*/
-static void
-process_run_thread_loop(void *data)
-{
-  /* Yield once during bootup */
-  simProcessRunValue = 1;
-  cooja_mt_yield();
-
-  /* Then call common Contiki-NG main function */
-  main();
-}
-
-/**
- * \brief           Callback on load of library.
- * \param vm        unused
- * \param reserved  unused
- *
- * This function is required to return at least the JNI version for
- * the functions we use.
- *
- * Java 11 is the oldest supported Java version so the function returns
- * JNI_VERSION_10 for now.
- */
-JNIEXPORT jint JNICALL
-JNI_OnLoad(JavaVM *vm, void *reserved)
-{
-  return JNI_VERSION_10;
-}
-
-/*---------------------------------------------------------------------------*/
-/**
- * \brief      Initialize a mote by starting processes etc.
- * \param env  JNI Environment interface pointer
- * \param obj  unused
- *
- *             This function initializes a mote by starting certain
- *             processes and setting up the environment.
- *
- *             This is a JNI function and should only be called via the
- *             responsible Java part (MoteType.java).
- */
-JNIEXPORT void JNICALL
-Java_org_contikios_cooja_corecomm_CLASSNAME_init(JNIEnv *env, jobject obj)
-{
-  /* Create rtimers and Contiki threads */
-  cooja_mt_start(&rtimer_thread, &rtimer_thread_loop, NULL);
-  cooja_mt_start(&process_run_thread, &process_run_thread_loop, NULL);
- }
-/*---------------------------------------------------------------------------*/
-/**
- * \brief      Get a segment from the process memory.
- * \param env      JNI Environment interface pointer
- * \param obj      unused
- * \param rel_addr Start address of segment
- * \param length   Size of memory segment
- * \param mem_arr  Byte array destination for the fetched memory segment
- * \return     Java byte array containing a copy of memory segment.
- *
- *             Fetches a memory segment from the process memory starting at
- *             (rel_addr), with size (length). This function does not perform
- *             ANY error checking, and the process may crash if addresses are
- *             not available/readable.
- *
- *             This is a JNI function and should only be called via the
- *             responsible Java part (MoteType.java).
- */
-JNIEXPORT void JNICALL
-Java_org_contikios_cooja_corecomm_CLASSNAME_getMemory(JNIEnv *env, jobject obj, jlong rel_addr, jint length, jbyteArray mem_arr)
-{
-  (*env)->SetByteArrayRegion(
-      env,
-      mem_arr,
-      0,
-      (size_t) length,
-      (jbyte *) (((intptr_t)rel_addr) + referenceVar)
-  );
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief      Replace a segment of the process memory with given byte array.
- * \param env      JNI Environment interface pointer
- * \param obj      unused
- * \param rel_addr Start address of segment
- * \param length   Size of memory segment
- * \param mem_arr  Byte array contaning new memory
- *
- *             Replaces a process memory segment with given byte array.
- *             This function does not perform ANY error checking, and the
- *             process may crash if addresses are not available/writable.
- *
- *             This is a JNI function and should only be called via the
- *             responsible Java part (MoteType.java).
- */
-JNIEXPORT void JNICALL
-Java_org_contikios_cooja_corecomm_CLASSNAME_setMemory(JNIEnv *env, jobject obj, jlong rel_addr, jint length, jbyteArray mem_arr)
-{
-  (*env)->GetByteArrayRegion(env, mem_arr, 0, length,
-                             (jbyte *)((intptr_t)rel_addr + referenceVar));
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief      Let mote execute one "block" of code (tick mote).
- * \param env  JNI Environment interface pointer
- * \param obj  unused
- *
- *             Let mote defined by the active contiki processes and current
- *             process memory execute some program code. This code must not block
- *             or else this function will never return. A typical contiki
- *             process will return when it executes PROCESS_WAIT..() statements.
- *
- *             Before the control is left to contiki processes, any messages
- *             from the Java part are handled. These may for example be
- *             incoming network data. After the contiki processes return control,
- *             messages to the Java part are also handled (those which may need
- *             special attention).
- *
- *             This is a JNI function and should only be called via the
- *             responsible Java part (MoteType.java).
- */
-JNIEXPORT void JNICALL
-Java_org_contikios_cooja_corecomm_CLASSNAME_tick(JNIEnv *env, jobject obj)
-{
-  simProcessRunValue = 0;
-
-  /* Let all simulation interfaces act first */
-  doActionsBeforeTick();
-
-  /* Poll etimer process */
-  if(etimer_pending()) {
-    etimer_request_poll();
-  }
-
-  /* Let rtimers run.
-   * Sets simProcessRunValue */
-  cooja_mt_exec(&rtimer_thread);
-
-  if(simProcessRunValue == 0) {
-    /* Rtimers done: Let Contiki handle a few events.
-     * Sets simProcessRunValue */
-    cooja_mt_exec(&process_run_thread);
-  }
-
-  /* Let all simulation interfaces act before returning to java */
-  doActionsAfterTick();
-
-  /* Do we have any pending timers */
-  simEtimerPending = etimer_pending();
-
-  /* Save nearest expiration time */
-  simEtimerNextExpirationTime = etimer_next_expiration_time();
-
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief      Set the relative memory address of the reference variable.
- * \param env  JNI Environment interface pointer
- * \param obj  unused
- * \param addr Relative memory address
- *
- *             This is a JNI function and should only be called via the
- *             responsible Java part (MoteType.java).
- */
-JNIEXPORT void JNICALL
-Java_org_contikios_cooja_corecomm_CLASSNAME_setReferenceAddress(JNIEnv *env, jobject obj, jlong addr)
-{
-  referenceVar = (((intptr_t)&referenceVar) - ((intptr_t)addr));
-}

@@ -105,9 +105,9 @@ get_channel_for_addr(const linkaddr_t *peer_addr)
 static l2cap_channel_t *
 get_channel_for_cid(uint16_t own_cid)
 {
-  uint8_t i = own_cid - L2CAP_FLOW_CHANNEL;
+  int16_t i = own_cid - L2CAP_FLOW_CHANNEL;
   if(i >= 0 && i < l2cap_channel_count) {
-    return &l2cap_channels[own_cid - L2CAP_FLOW_CHANNEL];
+    return &l2cap_channels[i];
   } else {
     return NULL;
   }
@@ -378,11 +378,16 @@ input_l2cap_credit(uint8_t *data)
   uint16_t credits;
   l2cap_channel_t *channel = get_channel_for_addr(packetbuf_addr(PACKETBUF_ADDR_SENDER));
 
+  if(channel == NULL) {
+    LOG_WARN("input_l2cap_credit: no channel found for sender address\n");
+    return;
+  }
+
 /*  uint8_t  identifier = data[0]; */
   memcpy(&len, &data[1], 2);
 
   if(len != 4) {
-    LOG_WARN("process_l2cap_credit: invalid len: %d\n", len);
+    LOG_WARN("input_l2cap_credit: invalid len: %d\n", len);
     return;
   }
 
@@ -452,6 +457,12 @@ input_l2cap_frame_flow_channel(l2cap_channel_t *channel, uint8_t *data, uint16_t
 
   if((channel->rx_buffer.sdu_length > 0) &&
      (channel->rx_buffer.sdu_length == channel->rx_buffer.current_index)) {
+    if(channel->rx_buffer.sdu_length > packetbuf_remaininglen()) {
+      LOG_WARN("l2cap_frame: illegal L2CAP frame sdu_length: %"PRIu16"\n",
+               channel->rx_buffer.sdu_length);
+      return;
+    }
+
     /* do not use packetbuf_copyfrom here because the packetbuf_attr
      * must not be cleared */
     memcpy(packetbuf_dataptr(), channel->rx_buffer.sdu, channel->rx_buffer.sdu_length);
@@ -582,6 +593,10 @@ PROCESS_THREAD(ble_l2cap_tx_process, ev, data)
         }
 
         /* copy payload */
+        if(data_len > PACKETBUF_SIZE - packetbuf_hdrlen()) {
+          LOG_WARN("Not enough packetbuf space to copy buffer\n");
+          continue;
+        }
         memcpy(packetbuf_dataptr(),
                &channel->tx_buffer.sdu[channel->tx_buffer.current_index],
                data_len);

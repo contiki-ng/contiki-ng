@@ -90,10 +90,10 @@ void rf_switch_power_down(void);
  */
 void rf_switch_select_path(uint8_t path);
 #else
-#define rf_switch_init()
-#define rf_switch_power_up()
-#define rf_switch_power_down()
-#define rf_switch_select_path(p)
+#define rf_switch_init() do {} while (0)
+#define rf_switch_power_up() do {} while (0)
+#define rf_switch_power_down() do {} while (0)
+#define rf_switch_select_path(p) do {} while (0)
 #endif /* RF_SWITCH_ENABLE */
 /*---------------------------------------------------------------------------*/
 #endif /* RF_SWITCH_H_ */

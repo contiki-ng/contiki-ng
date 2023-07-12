@@ -57,6 +57,12 @@ const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(0); /**< RTC instance used for platform
 static volatile uint32_t ticks;
 void clock_update(void);
 
+static void 
+clock_handler(nrfx_clock_evt_type_t event)
+{
+  (void) event;
+}
+
 /**
  * @brief Function for handling the RTC0 interrupts
  * @param int_type Type of interrupt to be handled
@@ -74,11 +80,13 @@ rtc_handler(nrfx_rtc_int_type_t int_type)
 static void
 lfclk_config(void)
 {
-  nrfx_err_t err_code = nrfx_clock_init(NULL);
+  nrfx_err_t err_code = nrfx_clock_init(clock_handler);
 
   if(err_code != NRFX_SUCCESS) {
     return;
   }
+
+  nrfx_clock_enable();
 
   nrfx_clock_lfclk_start();
 }

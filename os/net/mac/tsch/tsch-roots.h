@@ -30,8 +30,8 @@
  * \author Atis Elsts <atis.elsts@gmail.com>
  */
 
-#ifndef __TSCH_ROOTS_H__
-#define __TSCH_ROOTS_H__
+#ifndef TSCH_ROOTS_H_
+#define TSCH_ROOTS_H_
 
 /**
  * Add address as a potential RPL root that is a single-hop neighbor in the TSCH network.
@@ -64,4 +64,4 @@ int tsch_roots_is_root(const linkaddr_t *address);
  */
 void tsch_roots_init(void);
 
-#endif /* __TSCH_ROOTS_H__ */
+#endif /* TSCH_ROOTS_H_ */

@@ -39,8 +39,8 @@
  *         Simon Duquennoy <simonduq@sics.se>
  */
 
-#ifndef __TSCH_CONF_H__
-#define __TSCH_CONF_H__
+#ifndef TSCH_CONF_H_
+#define TSCH_CONF_H_
 
 /********** Includes **********/
 
@@ -393,6 +393,11 @@
 #define TSCH_MAC_MAX_BE 5
 #endif
 
+/* Avoid potential 16-bit integer overflow */
+#if TSCH_MAC_MAX_BE > 16
+#error TSCH_MAC_MAX_BE must be 16 or lower to avoid uint16_t overflows
+#endif
+
 /* Max number of re-transmissions */
 #ifdef TSCH_CONF_MAC_MAX_FRAME_RETRIES
 #define TSCH_MAC_MAX_FRAME_RETRIES TSCH_CONF_MAC_MAX_FRAME_RETRIES
@@ -450,5 +455,5 @@ by default, useful in case of duplicate seqno */
 #define TSCH_CONF_RX_WAIT 2200
 #endif /* TSCH_CONF_RX_WAIT */
 
-#endif /* __TSCH_CONF_H__ */
+#endif /* TSCH_CONF_H_ */
 /** @} */

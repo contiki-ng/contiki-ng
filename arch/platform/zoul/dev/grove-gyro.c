@@ -66,7 +66,7 @@ grove_gyro_values_t gyro_values;
 /*---------------------------------------------------------------------------*/
 void (*grove_gyro_int_callback)(uint8_t value);
 /*---------------------------------------------------------------------------*/
-static uint16_t
+static int
 grove_gyro_read_reg(uint8_t reg, uint8_t *buf, uint8_t num)
 {
   if((buf == NULL) || (num <= 0)) {
@@ -623,7 +623,7 @@ configure(int type, int value)
     return grove_gyro_dlpf(value);
 
   case GROVE_GYRO_SAMPLE_RATE_DIVIDER:
-    if((value < 0) && (value > 0xFF)) {
+    if((value < 0) || (value > 0xFF)) {
       PRINTF("Gyro: invalid sampling rate div, it must be an 8-bit value\n");
       return GROVE_GYRO_ERROR;
     }

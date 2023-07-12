@@ -123,6 +123,9 @@ aes_load_keys(const void *keys, uint8_t key_size, uint8_t count,
   /* Wait for operation to complete */
   while(!(REG(AES_CTRL_INT_STAT) & AES_CTRL_INT_STAT_RESULT_AV));
 
+  /* Clean up the keys */
+  REG(AES_DMAC_CH0_EXTADDR) = 0x00000000;
+
   /* Check for absence of errors in DMA and key store */
   if(REG(AES_CTRL_INT_STAT) & AES_CTRL_INT_STAT_DMA_BUS_ERR) {
     REG(AES_CTRL_INT_CLR) = AES_CTRL_INT_CLR_DMA_BUS_ERR;

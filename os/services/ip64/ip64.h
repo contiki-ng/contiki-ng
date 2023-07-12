@@ -59,6 +59,10 @@ extern uint16_t ip64_packet_buffer_maxlen;
 
 #include "ip64-conf.h"
 
+#ifndef LOG_LEVEL_IP64
+#define LOG_LEVEL_IP64  LOG_LEVEL_NONE
+#endif
+
 #ifndef IP64_CONF_ETH_DRIVER
 #error IP64_CONF_ETH_DRIVER must be #defined in ip64-conf.h
 #else /* IP64_CONF_ETH_DRIVER */

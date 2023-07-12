@@ -58,7 +58,7 @@ servo_position(uint16_t gptab, uint8_t port, uint8_t pin, uint16_t pos)
   uint8_t gpt_ab;
   uint32_t count = 0;
 
-  if((gptab < SERVO_CHANNEL_1) && (gptab > SERVO_CHANNEL_7)) {
+  if((gptab < SERVO_CHANNEL_1) || (gptab > SERVO_CHANNEL_7)) {
     PRINTF("Servo: invalid servo channel\n");
     return SERVO_ERROR;
   }
@@ -107,7 +107,7 @@ servo_stop(uint16_t gptab, uint8_t port, uint8_t pin)
   uint8_t gpt_num;
   uint8_t gpt_ab;
 
-  if((gptab < SERVO_CHANNEL_1) && (gptab > SERVO_CHANNEL_7)) {
+  if((gptab < SERVO_CHANNEL_1) || (gptab > SERVO_CHANNEL_7)) {
     PRINTF("Servo: invalid servo channel\n");
     return SERVO_ERROR;
   }

@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <simconf>
-  <project EXPORT="discard">[APPS_DIR]/mrm</project>
-  <project EXPORT="discard">[APPS_DIR]/mspsim</project>
-  <project EXPORT="discard">[APPS_DIR]/serial_socket</project>
-  <project EXPORT="discard">[APPS_DIR]/powertracker</project>
   <simulation>
     <title>ut</title>
     <randomseed>123456</randomseed>
@@ -42,7 +38,6 @@ make -j$(CPUS) test-examples.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiEEPROM</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.MoteAttributes</moteinterface>
-      <symbols>false</symbols>
     </motetype>
     <mote>
       <interface_config>

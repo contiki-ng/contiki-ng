@@ -1,6 +1,4 @@
-# $Id: Makefile.common,v 1.3 2010/08/24 16:24:11 joxe Exp $
-
-ARCH=spi-legacy.c ds2411.c xmem.c i2c.c sensors.c cfs-coffee.c \
+ARCH=spi-legacy.c ds2411.c xmem.c i2c.c sensors.c \
      cc2420.c cc2420-arch.c cc2420-arch-sfd.c \
      sky-sensors.c uip-ipchksum.c \
      uart1.c slip_uart1.c uart1-putchar.c platform.c
@@ -17,29 +15,6 @@ include $(CONTIKI_NG_RELOC_CPU_DIR)/msp430/Makefile.msp430
 
 NUMPAR=20
 
-# Check if we are running under Windows
-ifeq ($(HOST_OS),Windows)
-  USBDEVPREFIX=/dev/com
-  SERIALDUMP = $(CONTIKI_NG_TOOLS_DIR)/sky/serialdump-windows
-  MOTELIST = $(CONTIKI_NG_TOOLS_DIR)/sky/motelist-windows
-  TMOTE_BSL_FILE = tmote-bsl
-  TMOTE_BSL=$(if $(wildcard $(CONTIKI_NG_TOOLS_DIR)/sky/$(TMOTE_BSL_FILE).exe),1,0)
-  ifeq ($(TMOTE_BSL), 1)
-    NUMPAR = 1
-    BSL =  $(CONTIKI_NG_TOOLS_DIR)/sky/$(TMOTE_BSL_FILE)
-    MOTES = $(shell $(MOTELIST) | grep COM | \
-       cut -f 4 -d \  )
-  else
-    BSL = $(CONTIKI_NG_TOOLS_DIR)/sky/msp430-bsl-windows --telosb
-    BSL_FILETYPE = -I
-    MOTES = $(shell $(MOTELIST) | grep COM | \
-       cut -f 4 -d \  | \
-       perl -ne 'print $$1 - 1 . " " if(/COM(\d+)/);')
-  endif
-  CMOTES = $(shell $(MOTELIST) | grep COM | \
-     cut -f 4 -d \  | \
-     perl -ne 'print $$1 . " " if(/COM(\d+)/);')
-else
 ifeq ($(HOST_OS),Darwin)
   ifndef MOTELIST
     USBDEVPREFIX=
@@ -85,7 +60,6 @@ else
     endif
     CMOTES=$(MOTES)
   endif
-endif
 endif
 
 motelist: sky-motelist
@@ -142,14 +116,6 @@ sizeplot:
 	msp430-size $(OBJECTDIR)/*.o | $(CONTIKI_NG_TOOLS_DIR)/sky/check-size > size-data
 	gnuplot $(CONTIKI_NG_TOOLS_DIR)/sky/plot-size
 	gv size.pdf
-
-winslip:
-ifdef INTERFACE
-	$(CONTIKI_NG_TOOLS_DIR)/wpcapslip/wpcapslip -s $(USBDEVPREFIX)$(firstword $(CMOTES)) $(INTERFACE) 172.16.0.0 255.255.0.0
-else
-	@echo "Usage: \"$(MAKE) $@ INTERFACE=<the IP address of a local network interface>\""
-	@echo "Use the \"ipconfig\" command to find out the IP addresses of the local interfaces"
-endif
 
 ifdef MOTE
   PORT = $(USBDEVPREFIX)$(word $(MOTE), $(CMOTES))

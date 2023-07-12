@@ -1,5 +1,11 @@
 CUSTOM_RULE_LINK = 1
 
-$(OUT_ELF): $(CPU_STARTFILES) $(CONTIKI_OBJECTFILES) %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(LDSCRIPT) $(TARGET_LIBS)
+# Targets can define LD_START_GROUP and LD_END_GROUP to resolve circular
+# dependencies between linked libraries, see:
+# https://stackoverflow.com/questions/5651869/gcc-what-are-the-start-group-and-end-group-command-line-options/5651895
+# These are not defined by default since it has a significant performance cost.
+TARGET_LIBEXTRAS = $(LD_START_GROUP) $(TARGET_LIBFILES) $(LD_END_GROUP)
+
+$(OUT_ELF): $(CONTIKI_OBJECTFILES) $(OBJECTDIR)/%.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(LDSCRIPT)
 	$(TRACE_LD)
-	$(Q)$(LD) $(LDFLAGS) ${filter-out $(LDSCRIPT) %.a,$^} ${filter %.a,$^} $(TARGET_LIBFLAGS) -o $@
+	$(Q)$(LD) $(LDFLAGS) $(sort ${filter-out $(LDSCRIPT) %.a,$^}) ${filter %.a,$^} $(TARGET_LIBEXTRAS) -o $@

@@ -9,7 +9,7 @@ SELF_PATH = os.path.dirname(os.path.abspath(__file__))
 # move three levels up
 CONTIKI_PATH = os.path.dirname(os.path.dirname(os.path.dirname(SELF_PATH)))
 
-build_xml = os.path.normpath(os.path.join(CONTIKI_PATH, "tools", "cooja", "build.xml"))
+COOJA_PATH = os.path.normpath(os.path.join(CONTIKI_PATH, "tools", "cooja"))
 cooja_input = 'cooja.csc'
 cooja_output = 'COOJA.testlog'
 
@@ -51,7 +51,7 @@ def execute_test(cooja_file):
         return False
 
     filename = os.path.join(SELF_PATH, cooja_file)
-    args = " ".join(["ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f", build_xml, "run_bigmem -Dargs='-nogui=" + filename, "-contiki=" + CONTIKI_PATH, "-logdir=" + SELF_PATH + "'"])
+    args = " ".join([COOJA_PATH + "/gradlew --no-watch-fs --parallel --build-cache -p", COOJA_PATH, "run --args='--contiki=" + CONTIKI_PATH, "--no-gui", "--logdir=" + SELF_PATH, filename + "'"])
     sys.stdout.write("  Running Cooja, args={}\n".format(args))
 
     (retcode, output) = run_subprocess(args, '')

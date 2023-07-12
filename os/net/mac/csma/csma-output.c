@@ -41,6 +41,7 @@
 
 #include "net/mac/csma/csma.h"
 #include "net/mac/csma/csma-security.h"
+#include "net/mac/mac-sequence.h"
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 #include "dev/watchdog.h"
@@ -302,7 +303,7 @@ free_packet(struct neighbor_queue *n, struct packet_queue *p, int status)
     queuebuf_free(p->buf);
     memb_free(&metadata_memb, p->ptr);
     memb_free(&packet_memb, p);
-    LOG_DBG("free_queued_packet, queue length %d, free packets %d\n",
+    LOG_DBG("free_queued_packet, queue length %d, free packets %zu\n",
            list_length(n->packet_queue), memb_numfree(&packet_memb));
     if(list_head(n->packet_queue) != NULL) {
       /* There is a next packet. We reset current tx information */
@@ -442,22 +443,9 @@ csma_output_packet(mac_callback_t sent, void *ptr)
 {
   struct packet_queue *q;
   struct neighbor_queue *n;
-  static uint8_t initialized = 0;
-  static uint8_t seqno;
   const linkaddr_t *addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
 
-  if(!initialized) {
-    initialized = 1;
-    /* Initialize the sequence number to a random value as per 802.15.4. */
-    seqno = random_rand();
-  }
-
-  if(seqno == 0) {
-    /* PACKETBUF_ATTR_MAC_SEQNO cannot be zero, due to a pecuilarity
-       in framer-802154.c. */
-    seqno++;
-  }
-  packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, seqno++);
+  mac_sequence_set_dsn();
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
 
   /* Look for the neighbor entry */
@@ -499,7 +487,7 @@ csma_output_packet(mac_callback_t sent, void *ptr)
 
             LOG_INFO("sending to ");
             LOG_INFO_LLADDR(addr);
-            LOG_INFO_(", len %u, seqno %u, queue length %d, free packets %d\n",
+            LOG_INFO_(", len %u, seqno %u, queue length %d, free packets %zu\n",
                     packetbuf_datalen(),
                     packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
                     list_length(n->packet_queue), memb_numfree(&packet_memb));

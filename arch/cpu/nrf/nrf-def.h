@@ -45,6 +45,13 @@
 /*---------------------------------------------------------------------------*/
 #include "nrf.h"
 /*---------------------------------------------------------------------------*/
+/* Include CPU Specific defines */
+#ifdef CPU_DEF_PATH
+#include CPU_DEF_PATH
+#else
+#error "CPU_DEF_PATH undefined"
+#endif /* BOARD_CONF_PATH */
+/*---------------------------------------------------------------------------*/
 /* Path to headers with implementation of mutexes, atomic and memory barriers */
 #define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
 #define ATOMIC_CONF_ARCH_HEADER_PATH         "atomic-cortex.h"
@@ -97,6 +104,6 @@
 /*---------------------------------------------------------------------------*/
 #endif /* NRF_DEF_H_ */
 /*---------------------------------------------------------------------------*/
-/** 
- * @} 
+/**
+ * @}
  */

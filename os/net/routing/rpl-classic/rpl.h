@@ -25,14 +25,13 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
- *
+ */
+
+/*
  * \file
  *	Public API declarations for ContikiRPL.
  * \author
  *	Joakim Eriksson <joakime@sics.se> & Nicolas Tsiftes <nvt@sics.se>
- *
  */
 
 #ifndef RPL_H
@@ -49,8 +48,8 @@
 typedef uint16_t rpl_rank_t;
 typedef uint16_t rpl_ocp_t;
 /*---------------------------------------------------------------------------*/
-/* IANA Routing Metric/Constraint Type as defined in RFC6551 */
-#define RPL_DAG_MC_NONE			            0 /* Local identifier for empty MC */
+/* IANA Routing Metric/Constraint Type as defined in RFC6551. */
+#define RPL_DAG_MC_NONE                 0 /* Local identifier for empty MC */
 #define RPL_DAG_MC_NSA                  1 /* Node State and Attributes */
 #define RPL_DAG_MC_ENERGY               2 /* Node Energy */
 #define RPL_DAG_MC_HOPCOUNT             3 /* Hop Count */
@@ -60,29 +59,32 @@ typedef uint16_t rpl_ocp_t;
 #define RPL_DAG_MC_ETX                  7 /* Expected Transmission Count */
 #define RPL_DAG_MC_LC                   8 /* Link Color */
 
-/* IANA Routing Metric/Constraint Common Header Flag field as defined in RFC6551 (bit indexes) */
+/* IANA Routing Metric/Constraint Common Header Flag field as defined
+   in RFC6551. (bit indexes) */
 #define RPL_DAG_MC_FLAG_P               5
 #define RPL_DAG_MC_FLAG_C               6
 #define RPL_DAG_MC_FLAG_O               7
 #define RPL_DAG_MC_FLAG_R               8
 
-/* IANA Routing Metric/Constraint Common Header A Field as defined in RFC6551 */
+/* IANA Routing Metric/Constraint Common Header A Field as defined in
+   RFC6551. */
 #define RPL_DAG_MC_AGGR_ADDITIVE        0
 #define RPL_DAG_MC_AGGR_MAXIMUM         1
 #define RPL_DAG_MC_AGGR_MINIMUM         2
 #define RPL_DAG_MC_AGGR_MULTIPLICATIVE  3
 
-/* The bit index within the flags field of the rpl_metric_object_energy structure. */
-#define RPL_DAG_MC_ENERGY_INCLUDED	    3
-#define RPL_DAG_MC_ENERGY_TYPE		      1
-#define RPL_DAG_MC_ENERGY_ESTIMATION	  0
+/* The bit index within the flags field of the
+   rpl_metric_object_energy structure. */
+#define RPL_DAG_MC_ENERGY_INCLUDED      3
+#define RPL_DAG_MC_ENERGY_TYPE          1
+#define RPL_DAG_MC_ENERGY_ESTIMATION    0
 
-/* IANA Node Type Field as defined in RFC6551 */
-#define RPL_DAG_MC_ENERGY_TYPE_MAINS		   0
-#define RPL_DAG_MC_ENERGY_TYPE_BATTERY		 1
-#define RPL_DAG_MC_ENERGY_TYPE_SCAVENGING	 2
+/* IANA Node Type Field as defined in RFC6551. */
+#define RPL_DAG_MC_ENERGY_TYPE_MAINS      0
+#define RPL_DAG_MC_ENERGY_TYPE_BATTERY    1
+#define RPL_DAG_MC_ENERGY_TYPE_SCAVENGING 2
 
-/* IANA Objective Code Point as defined in RFC6550 */
+/* IANA Objective Code Point as defined in RFC6550. */
 #define RPL_OCP_OF0     0
 #define RPL_OCP_MRHOF   1
 
@@ -122,7 +124,7 @@ struct rpl_parent {
 };
 typedef struct rpl_parent rpl_parent_t;
 /*---------------------------------------------------------------------------*/
-/* RPL DIO prefix suboption */
+/* RPL DIO prefix suboption. */
 struct rpl_prefix {
   uip_ipaddr_t prefix;
   uint32_t lifetime;
@@ -131,7 +133,8 @@ struct rpl_prefix {
 };
 typedef struct rpl_prefix rpl_prefix_t;
 /*---------------------------------------------------------------------------*/
-/* Directed Acyclic Graph */
+/* Destination-Oriented Directed Acyclic Graph (DODAG). This name is
+   typically shortened to "DAG" within the ContikiRPL implementation. */
 struct rpl_dag {
   uip_ipaddr_t dag_id;
   rpl_rank_t min_rank; /* should be reset per DAG iteration! */
@@ -160,23 +163,23 @@ typedef struct rpl_instance rpl_instance_t;
  *
  * parent_link_metric(parent)
  *
- *  Returns the link metric of a parent
+ *  Returns the link metric of a parent.
  *
  * parent_has_usable_link(parent)
  *
- *  Returns 1 iff we have a usable link to this parent
+ *  Returns 1 iff we have a usable link to this parent.
  *
  * parent_path_cost(parent)
  *
- *  Returns the path cost of a parent
+ *  Returns the path cost of a parent.
  *
  * rank_via_parent(parent)
  *
- *  Returns our rank if we select a given parent as preferred parent
+ *  Returns our rank if we select a given parent as preferred parent.
  *
  * parent_is_acceptable
  *
- *  Returns 1 if a parent is usable as preferred parent, 0 otherwise
+ *  Returns 1 if a parent is usable as preferred parent, 0 otherwise.
  *
  * best_parent(parent1, parent2)
  *
@@ -215,14 +218,14 @@ struct rpl_of {
 typedef struct rpl_of rpl_of_t;
 
 /*---------------------------------------------------------------------------*/
-/* Instance */
+/* RPL Instance. */
 struct rpl_instance {
-  /* DAG configuration */
+  /* DAG configuration. */
   rpl_metric_container_t mc;
   rpl_of_t *of;
   rpl_dag_t *current_dag;
   rpl_dag_t dag_table[RPL_MAX_DAG_PER_INSTANCE];
-  /* The current default router - used for routing "upwards" */
+  /* The current default router -- used for routing "upwards". */
   uip_ds6_defrt_t *def_route;
   uint8_t instance_id;
   uint8_t used;
@@ -233,22 +236,22 @@ struct rpl_instance {
   uint8_t dio_redundancy;
   uint8_t default_lifetime;
   uint8_t dio_intcurrent;
-  uint8_t dio_send; /* for keeping track of which mode the timer is in */
+  uint8_t dio_send; /* For keeping track of which mode the timer is in. */
   uint8_t dio_counter;
-  /* my last registered DAO that I might be waiting for ACK on */
+  /* My last registered DAO that I might be waiting for an ACK on. */
   uint8_t my_dao_seqno;
   uint8_t my_dao_transmissions;
   /* this is intended to keep track if this instance have a route downward */
   uint8_t has_downward_route;
   rpl_rank_t max_rankinc;
   rpl_rank_t min_hoprankinc;
-  uint16_t lifetime_unit; /* lifetime in seconds = l_u * d_l */
+  uint16_t lifetime_unit; /* Lifetime in seconds = l_u * d_l. */
 #if RPL_CONF_STATS
   uint16_t dio_totint;
   uint16_t dio_totsend;
   uint16_t dio_totrecv;
 #endif /* RPL_CONF_STATS */
-  clock_time_t dio_next_delay; /* delay for completion of dio interval */
+  clock_time_t dio_next_delay; /* Delay for completion of the DIO interval. */
 #if RPL_WITH_PROBING
   struct ctimer probing_timer;
   rpl_parent_t *urgent_probing_target;
@@ -313,22 +316,22 @@ enum rpl_mode {
 };
 
 /**
- * Set the RPL mode
+ * Set the RPL mode.
  *
- * \param mode The new RPL mode
- * \retval The previous RPL mode
+ * \param mode The new RPL mode.
+ * \retval The previous RPL mode.
  */
 enum rpl_mode rpl_set_mode(enum rpl_mode mode);
 
 /**
- * Get the RPL mode
+ * Get the RPL mode.
  *
- * \retval The RPL mode
+ * \retval The RPL mode.
  */
 enum rpl_mode rpl_get_mode(void);
 
 /**
- * Tells whether the node has joined a network or not
+ * Tells whether the node has joined a network or not.
  *
  * \retval 1 if we have joined a network, 0 if not.
  */
@@ -342,7 +345,7 @@ int rpl_has_joined(void);
 int rpl_has_downward_route(void);
 
 /**
- * Tells whether the protocol is in leaf mode
+ * Tells whether the protocol is in leaf mode.
  *
  * \retval 1 if the protocol is in leaf mode, 0 if not.
  */

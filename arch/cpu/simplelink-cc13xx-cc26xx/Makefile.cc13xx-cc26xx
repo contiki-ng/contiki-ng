@@ -48,7 +48,7 @@ endif
 
 # Both ccfg-conf.c and startup_cc13xx_cc26xx_gcc.c is located locally in
 # the arch/cpu/cc13xx-cc26xx folder.
-CPU_START_SOURCEFILES += ccfg-conf.c startup_cc13xx_cc26xx_gcc.c
+CONTIKI_CPU_SOURCEFILES += ccfg-conf.c startup_cc13xx_cc26xx_gcc.c
 
 # CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += rtimer-arch.c    clock-arch.c
@@ -111,7 +111,9 @@ CFLAGS += -fno-common
 
 # Linker flags
 LDFLAGS += --entry resetISR
-LDFLAGS += --specs=nano.specs
+ifeq ($(CLANG),0)
+  LDFLAGS += --specs=nano.specs
+endif
 LDFLAGS += -nostartfiles
 LDFLAGS += -static
 
@@ -121,22 +123,28 @@ LDSCRIPT ?= $(CONTIKI_CPU)/$(SUBFAMILY)/$(SUBFAMILY).lds
 # Globally linked libraries
 TARGET_LIBFILES += -lc -lgcc -lnosys -lm
 
+LD_START_GROUP = -Wl,--start-group
+LD_END_GROUP = -Wl,--end-group
+
 ################################################################################
 ### Specialized build targets
 
-.PHONY: FORCE
-FORCE:
+### If the user-specified a Node ID, pass a define
+ifdef NODEID
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @DEFINE@=IEEE_ADDR_NODE_ID
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @NODEID@=$(NODEID)
+else
+  # Otherwise, define an unused define.
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @DEFINE@=BOGUS_NODE_ID
+  $(GENDIR)/ieee-addr-id.h.diffupdate: REPLACEMENTS += @NODEID@=1
+endif
 
-# Always re-build ieee-addr.o in case the command line passes a new NODEID
-$(OBJECTDIR)/ieee-addr.o: ieee-addr.c FORCE | $(OBJECTDIR)
-	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+# Always re-build ieee-addr.h in case the command line passes a new NODEID.
+# The build system will avoid writing a new file with identical NODEID.
+$(GENDIR)/ieee-addr-id.h.diffupdate: FORCE
 
-# Always re-build ccfg-conf.c so any changes to CCFG configuration
-# always applies
-$(OBJECTDIR)/ccfg-conf.o: ccfg-conf.c FORCE | $(OBJECTDIR)
-	$(TRACE_CC)
-	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+$(OBJECTDIR)/ieee-addr.o: CFLAGS += -I$(GENDIR)
+$(OBJECTDIR)/ieee-addr.o: $(GENDIR)/ieee-addr-id.h
 
 ################################################################################
 ### Sub-family Makefile

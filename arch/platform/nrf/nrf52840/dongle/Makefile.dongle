@@ -3,6 +3,10 @@ BOARD_SOURCEFILES += board-buttons.c
 BOARD_SOURCEFILES += board-sensors.c
 
 CFLAGS += -DBOARD_CONF_PATH=\"nrf52840-dongle-conf.h\"
+CFLAGS += -DBOARD_DEF_PATH=\"nrf52840-dongle-def.h\"
+
+# Dongle only has USB and not UART
+NRF_NATIVE_USB=1
 
 ### Include the common nrf52840 makefile
 include $(PLATFORM_ROOT_DIR)/nrf52840/Makefile.nrf52840

@@ -721,7 +721,7 @@ PARSER_ARG(domain, char *name)
     element_size = 2;
     break;
   default:
-    return NONE;
+    return PLE_ERROR;
   }
 
   AQL_ADD_ATTRIBUTE(adt, name, domain, element_size);

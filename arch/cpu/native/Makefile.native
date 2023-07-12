@@ -15,10 +15,11 @@ AS       = as
 NM       = nm
 OBJCOPY  = objcopy
 STRIP    = strip
+SIZE     = size
 ifeq ($(WERROR),1)
 CFLAGSWERROR=-Werror
 endif
-CFLAGSNO = -Wall -g $(CFLAGSWERROR)
+CFLAGSNO = -Wall $(CFLAGSWERROR)
 CFLAGS  += $(CFLAGSNO)
 
 ### Are we building with code size optimisations?
@@ -46,7 +47,6 @@ ifeq ($(NATIVE_CAN_OPTIIMIZE),1)
 endif
 
 ifeq ($(HOST_OS),Darwin)
-AROPTS = -rc
 LDFLAGS_WERROR := -Wl,-fatal_warnings
 LDFLAGS += -Wl,-flat_namespace
 CFLAGS += -DHAVE_SNPRINTF=1 -U__ASSERT_USE_STDERR
@@ -55,6 +55,7 @@ endif
 # Disallow undefined symbols in object files.
 ifeq ($(HOST_OS),Linux)
 LDFLAGS += -Wl,-zdefs
+LDFLAGS += -Wl,--warn-common
 endif
 
 MAKE_MAC ?= MAKE_MAC_NULLMAC

@@ -1,7 +1,7 @@
 CONTIKI_PROJECT = node
 all: $(CONTIKI_PROJECT)
 
-PLATFORMS_EXCLUDE = sky z1 nrf52dk native
+PLATFORMS_EXCLUDE = sky z1 native
 BOARDS_EXCLUDE = launchpad/cc1350-4 launchpad/cc2640r2
 
 MODULES_REL += ../testbeds

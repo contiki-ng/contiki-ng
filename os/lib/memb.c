@@ -104,11 +104,11 @@ memb_inmemb(struct memb *m, void *ptr)
     (char *)ptr < (char *)m->mem + (m->num * m->size);
 }
 /*---------------------------------------------------------------------------*/
-int
+size_t
 memb_numfree(struct memb *m)
 {
   int i;
-  int num_free = 0;
+  size_t num_free = 0;
 
   for(i = 0; i < m->num; ++i) {
     if(m->used[i] == false) {

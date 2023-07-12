@@ -120,7 +120,7 @@ check_leap_year(uint8_t val)
   return ((val % 4) && (val % 100)) || (val % 400);
 }
 /*---------------------------------------------------------------------------*/
-static uint16_t
+static int8_t
 ab08_read_reg(uint8_t reg, uint8_t *buf, uint8_t regnum)
 {
   i2c_master_enable();
@@ -421,7 +421,7 @@ rtcc_set_alarm_time_date(simple_td_map *data, uint8_t state, uint8_t repeat,
     return AB08_ERROR;
   }
 
-  if((state >= RTCC_ALARM_MAX) || (repeat >= RTCC_REPEAT_100THS)) {
+  if((state >= RTCC_ALARM_MAX) || (repeat > RTCC_REPEAT_100THS)) {
     PRINTF("RTC: invalid alarm config type or state\n");
     return AB08_ERROR;
   }

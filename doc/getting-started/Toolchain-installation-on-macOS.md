@@ -20,12 +20,12 @@ $ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/inst
 Using homebrew, install a bunch of helper tools, such as git, srecord, doxygen (to build the API documentation), mosquitto (to test Contiki-NG's MQTT functionality), tuntap (for tunslip and to run native examples with networking), rlwrap (for shell history), python (python 3 for running scripts and pip).
 
 ```bash
-$ brew install git srecord doxygen uncrustify ant mosquitto wget libmagic rlwrap python
+$ brew install git git-lfs srecord doxygen uncrustify ant mosquitto wget libmagic rlwrap python
 $ brew tap caskroom/cask
 $ brew cask install tuntap
 ```
 ### Install some python packages
-Those are used/needed by some of the Contiki-NG python scripts.
+Those are used/needed by some Contiki-NG Python scripts.
 
 ```bash
 $ pip install intelhex pyserial python-magic
@@ -46,7 +46,7 @@ $ brew tap contiki-ng/contiki-ng-arm
 $ brew install contiki-ng-arm-gcc-bin
 ```
 
-This will automatically install the same version as the one currently installed in the [docker image](/doc/getting-started/Docker) and used by our travis CI tests.
+This will automatically install the same version as the one currently installed in the [docker image](/doc/getting-started/Docker) and used by the CI tests.
 
 The formula itself is hosted under [contiki-ng/homebrew-contiki-ng-arm](https://github.com/contiki-ng/homebrew-contiki-ng-arm)
 
@@ -67,26 +67,8 @@ You can also try using the latest version, but be prepared to get compilation wa
 
 The best way to achieve this on OS X is through homebrew, using a formula provided in a tap. Follow the instructions here: https://github.com/tgtakaoka/homebrew-mspgcc
 
-### Installing JN compiler
-Untested on OS X, but start by reading the JN page for instruction on setting up the JN compiler:
-[Set up JN516x](/doc/platforms/jn516x)
-
-### Installing NRF sdk
-To get the NRF52dk platform to work you will need two things:
-
-* The ARM GCC toolchain (If you have installed it by following the steps above, you don't need to do anything extra).
-* The Nordic SDK, see [Platform-nrf52dk](/doc/platforms/nrf52dk).
-
 ### Install Java JDK for the Cooja network simulator
-Nothing exciting here, just download and install Java for OSX. You will need the JDK 8, not just the runtime. 
-
-Then, install `ant`.
-
-```bash
-$ brew install ant
-```
-
-Note Cooja doesn't work with JDK 9 since it uses a deprecated API, `javax.xml.bind.DatatypeConverter`, by JDK 9.
+Nothing exciting here, just download and install Java for OSX. You will need the JDK 17, not just the runtime.
 
 ### Install a CoAP client (libcoap)
 Optionally and if you want to use CoAP examples, you can install the CoAP client distributed with [libcoap].

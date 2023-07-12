@@ -259,12 +259,12 @@ PROCESS_THREAD(net_uart_process, ev, data)
   set_config_defaults();
 
   udp_conn = udp_new(NULL, UIP_HTONS(0), NULL);
-  udp_bind(udp_conn, UIP_HTONS(REMOTE_PORT));
-
   if(udp_conn == NULL) {
     printf("No UDP connection available, exiting the process!\n");
     PROCESS_EXIT();
   }
+
+  udp_bind(udp_conn, UIP_HTONS(REMOTE_PORT));
 
   httpd_simple_register_post_handler(&remote_port_handler);
   httpd_simple_register_post_handler(&remote_ipv6_handler);

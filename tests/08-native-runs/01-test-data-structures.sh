@@ -26,15 +26,14 @@ if grep -q "=check-me= FAILED" $CODE.log ; then
   echo "==== $CODE.err ====" ; cat $CODE.err;
 
   printf "%-32s TEST FAIL\n" "$CODE" | tee $CODE.testlog;
+  rm -f make.log make.err $CODE.log $CODE.err
+  exit 1
 else
   cp $CODE.log $CODE.testlog
   printf "%-32s TEST OK\n" "$CODE" | tee $CODE.testlog;
 fi
 
-rm make.log
-rm make.err
-rm $CODE.log
-rm $CODE.err
+rm -f make.log make.err $CODE.log $CODE.err
 
 # We do not want Make to stop -> Return 0
 # The Makefile will check if a log contains FAIL at the end

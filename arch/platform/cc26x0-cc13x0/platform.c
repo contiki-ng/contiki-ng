@@ -78,7 +78,7 @@
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
-#define LOG_MODULE "CC26xx/CC13xx"
+#define LOG_MODULE "CC26x0/CC13x0"
 #define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 /** \brief Board specific iniatialisation */
@@ -175,7 +175,7 @@ platform_init_stage_two()
   random_init(0x1234);
 
   /* Character I/O Initialisation */
-#if CC26XX_UART_CONF_ENABLE
+#if TI_UART_CONF_ENABLE
   cc26xx_uart_init();
 #endif
 

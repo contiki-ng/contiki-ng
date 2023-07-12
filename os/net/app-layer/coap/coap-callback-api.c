@@ -31,8 +31,8 @@
 
 /**
  * \file
- *      Callback API for doing CoAP requests
- *      Adapted from the blocking API
+ *      Callback API for doing CoAP requests.
+ *      Adapted from the blocking API.
  * \author
  *      Joakim Eriksson, joakime@sics.se
  */

@@ -36,5 +36,11 @@
 #define COFFEE_CONF_APPEND_ONLY       0
 #endif /* CONTIKI_TARGET_CC2538DK || CONTIKI_TARGET_ZOUL */
 
+#if CONTIKI_TARGET_GECKO
+#define COFFEE_CONF_SIZE              (FLASH_SIZE / 2)
+#define COFFEE_CONF_MICRO_LOGS        1
+#define COFFEE_CONF_APPEND_ONLY       0
+#endif /* CONTIKI_TARGET_GECKO */
+
 #endif /* PROJECT_CONF_H_ */
 /*---------------------------------------------------------------------------*/

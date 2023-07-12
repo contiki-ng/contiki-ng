@@ -335,7 +335,7 @@ mmc_status(uint8_t dev)
   struct mmc_priv *priv;
 
   if(dev >= MMC_CONF_DEV_COUNT) {
-    return DISK_RESULT_INVALID_ARG;
+    return DISK_STATUS_ERROR;
   }
 
   cd = mmc_arch_get_cd(dev);
@@ -357,7 +357,7 @@ mmc_initialize(uint8_t dev)
   struct mmc_priv *priv;
 
   if(dev >= MMC_CONF_DEV_COUNT) {
-    return DISK_RESULT_INVALID_ARG;
+    return DISK_STATUS_ERROR;
   }
   status = mmc_status(dev);
   if(!(status & DISK_STATUS_DISK)) {

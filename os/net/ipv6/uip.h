@@ -1855,6 +1855,7 @@ extern uip_lladdr_t uip_lladdr;
  * m type is uiplladdr_t
  */
 #if UIP_CONF_LL_802154
+#if UIP_LLADDR_LEN == UIP_802154_LONGADDR_LEN
 #define uip_is_addr_mac_addr_based(a, m) \
   ((((a)->u8[8])  == (((m)->addr[0]) ^ 0x02)) &&   \
    (((a)->u8[9])  == (m)->addr[1]) &&            \
@@ -1864,6 +1865,15 @@ extern uip_lladdr_t uip_lladdr;
    (((a)->u8[13]) == (m)->addr[5]) &&            \
    (((a)->u8[14]) == (m)->addr[6]) &&            \
    (((a)->u8[15]) == (m)->addr[7]))
+#else /* UIP_LLADDR_LEN == UIP_802154_LONGADDR_LEN */
+#define uip_is_addr_mac_addr_based(a, m) (((a)->u16[4] == 0x0000) \
+   && ((a)->u8[10] == 0x00) \
+   && ((a)->u8[11] == 0xff) \
+   && ((a)->u8[12] == 0xfe) \
+   && ((a)->u8[13] == 0x00) \
+   && ((a)->u8[14] == (m)->addr[0]) \
+   && ((a)->u8[15] == (m)->addr[1]))
+#endif /* UIP_LLADDR_LEN == UIP_802154_LONGADDR_LEN */
 #else
 
 #define uip_is_addr_mac_addr_based(a, m) \

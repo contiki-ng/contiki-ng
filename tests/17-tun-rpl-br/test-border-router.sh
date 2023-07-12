@@ -1,5 +1,4 @@
 #!/bin/bash
-source ../utils.sh
 
 # Contiki directory
 CONTIKI=$1
@@ -22,13 +21,6 @@ PING_DELAY=${6:-1}
 # ICMP request-reply count
 COUNT=5
 
-CURDIR=$(pwd)
-
-# Start simulation
-ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $CONTIKI/tools/cooja/build.xml run_bigmem -Dargs="-nogui=$CURDIR/$BASENAME.csc -contiki=$CONTIKI -logdir=$CURDIR" &
-JPID=$!
-sleep 30
-
 # Connect to the simulation
 echo "Starting tunslip6"
 make -C $CONTIKI/examples/rpl-border-router connect-router-cooja TARGET=zoul &
@@ -40,20 +32,13 @@ sleep $WAIT_TIME
 ping6 $IPADDR -c $COUNT -s $PING_SIZE -i $PING_DELAY
 STATUS=$?
 
-echo "Closing simulation and tunslip6"
-sleep 1
-kill_bg $JPID 15
-kill_bg $MPID 15
-sleep 1
-rm -f COOJA.testlog COOJA.log
+echo "Closing tunslip6"
+kill $MPID
 
 if [ $STATUS -eq 0 ]; then
-  printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
+  printf "%-32s TEST OK\n" "$BASENAME" > $BASENAME.testlog
+  exit 0
 else
-  printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
+  printf "%-32s TEST FAIL\n" "$BASENAME" > $BASENAME.testlog
+  exit 1
 fi
-
-# We do not want Make to stop -> Return 0
-# The Makefile will check if a log contains FAIL at the end
-
-exit 0

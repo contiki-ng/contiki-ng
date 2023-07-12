@@ -150,6 +150,11 @@ PROCESS_THREAD(trickle_protocol_process, ev, data)
   uip_create_linklocal_allnodes_mcast(&ipaddr); /* Store for later */
 
   trickle_conn = udp_new(NULL, UIP_HTONS(TRICKLE_PROTO_PORT), NULL);
+  if(trickle_conn == NULL) {
+    PRINTF("No UDP connection available, exiting the process!\n");
+    PROCESS_EXIT();
+  }
+
   udp_bind(trickle_conn, UIP_HTONS(TRICKLE_PROTO_PORT));
 
   PRINTF("Connection: local/remote port %u/%u\n",

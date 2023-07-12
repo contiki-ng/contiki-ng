@@ -14,7 +14,7 @@ echo "Downloading leshan with Q-Mode support"
 LESHAN_JAR=leshan-server-demo-qmode-support1.0.0-SNAPSHOT-jar-with-dependencies.jar
 wget -nv -nc https://carlosgp143.github.io/resources/$LESHAN_JAR
 echo "Starting leshan server with Q-Mode enabled"
-java -jar $LESHAN_JAR -lp 5686 -slp 5687 >leshan.log 2>leshan.err &
+java --add-opens java.base/java.util=ALL-UNNAMED -jar $LESHAN_JAR -lp 5686 -slp 5687 >leshan.log 2>leshan.err &
 LESHID=$!
 
 echo "Starting lwm2m standalone example"
@@ -54,6 +54,8 @@ else
   echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
 
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
+  rm -f make.log make.err node.log node.err leshan.log leshan.err
+  exit 1
 fi
 
 rm -f make.log make.err node.log node.err leshan.log leshan.err

@@ -51,12 +51,14 @@ CFLAGS += -DNRF52840_XXAA
 CFLAGS += -D__HEAP_SIZE=512
 CFLAGS += -DSWI_DISABLE0
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
-CFLAGS += -ggdb
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 LDFLAGS += -mabi=aapcs -mfloat-abi=hard -mfpu=fpv4-sp-d16
-LDFLAGS += --specs=nano.specs -lc -lnosys
+ifeq ($(CLANG),0)
+  LDFLAGS += --specs=nano.specs
+endif
 LDFLAGS += -L $(NRF5_SDK_ROOT)/modules/nrfx/mdk
+TARGET_LIBFILES += -lc -lnosys
 
 # nRF52 SDK sources
 NRF52_SDK_C_SRCS += components/boards/boards.c \

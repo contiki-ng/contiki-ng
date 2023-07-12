@@ -35,8 +35,8 @@
  * \author Simon Duquennoy <simonduq@sics.se>
  */
 
-#ifndef __ORCHESTRA_CONF_H__
-#define __ORCHESTRA_CONF_H__
+#ifndef ORCHESTRA_CONF_H_
+#define ORCHESTRA_CONF_H_
 
 #ifdef ORCHESTRA_CONF_RULES
 #define ORCHESTRA_RULES ORCHESTRA_CONF_RULES
@@ -126,32 +126,41 @@
 #define ORCHESTRA_COLLISION_FREE_HASH             0 /* Set to 1 if ORCHESTRA_LINKADDR_HASH returns unique hashes */
 #endif /* ORCHESTRA_CONF_COLLISION_FREE_HASH */
 
-/* Channel offset for the EB rule, default 0 */
-#ifdef ORCHESTRA_CONF_EB_CHANNEL_OFFSET
-#define ORCHESTRA_EB_CHANNEL_OFFSET               ORCHESTRA_CONF_EB_CHANNEL_OFFSET
-#else
-#define ORCHESTRA_EB_CHANNEL_OFFSET               0
-#endif
-
-/* Channel offset for the default common rule, default 1 */
+/* Channel offset for the default common rule, default 0 */
 #ifdef ORCHESTRA_CONF_DEFAULT_COMMON_CHANNEL_OFFSET
 #define ORCHESTRA_DEFAULT_COMMON_CHANNEL_OFFSET   ORCHESTRA_CONF_DEFAULT_COMMON_CHANNEL_OFFSET
 #else
-#define ORCHESTRA_DEFAULT_COMMON_CHANNEL_OFFSET   1
+#define ORCHESTRA_DEFAULT_COMMON_CHANNEL_OFFSET   0
 #endif
 
-/* Min channel offset for the unicast rules; the default min/max range is [2, 255] */
+/* Min channel offset for the unicast rules; the default min/max range is [2, sizeof(HS)-2].
+   If the HS has less then 3 channels [1, 1] is used instead.
+*/
 #ifdef ORCHESTRA_CONF_UNICAST_MIN_CHANNEL_OFFSET
 #define ORCHESTRA_UNICAST_MIN_CHANNEL_OFFSET       ORCHESTRA_CONF_UNICAST_MIN_CHANNEL_OFFSET
 #else
-#define ORCHESTRA_UNICAST_MIN_CHANNEL_OFFSET       2
+#define ORCHESTRA_UNICAST_MIN_CHANNEL_OFFSET       (sizeof(TSCH_DEFAULT_HOPPING_SEQUENCE) > 2 ? 2 : 1)
 #endif
 
 /* Max channel offset for the unicast rules */
 #ifdef ORCHESTRA_CONF_UNICAST_MAX_CHANNEL_OFFSET
 #define ORCHESTRA_UNICAST_MAX_CHANNEL_OFFSET       ORCHESTRA_CONF_UNICAST_MAX_CHANNEL_OFFSET
 #else
-#define ORCHESTRA_UNICAST_MAX_CHANNEL_OFFSET       255
+#define ORCHESTRA_UNICAST_MAX_CHANNEL_OFFSET       \
+  (MAX(ORCHESTRA_UNICAST_MIN_CHANNEL_OFFSET, sizeof(TSCH_DEFAULT_HOPPING_SEQUENCE) - 1))
 #endif
 
-#endif /* __ORCHESTRA_CONF_H__ */
+/* Channel offsets for the EB rule, default: 1 */
+#ifdef ORCHESTRA_CONF_EB_MIN_CHANNEL_OFFSET
+#define ORCHESTRA_EB_MIN_CHANNEL_OFFSET ORCHESTRA_CONF_EB_MIN_CHANNEL_OFFSET
+#else
+#define ORCHESTRA_EB_MIN_CHANNEL_OFFSET 1
+#endif
+
+#ifdef ORCHESTRA_CONF_EB_MAX_CHANNEL_OFFSET
+#define ORCHESTRA_EB_MAX_CHANNEL_OFFSET ORCHESTRA_CONF_EB_MAX_CHANNEL_OFFSET
+#else
+#define ORCHESTRA_EB_MAX_CHANNEL_OFFSET 1
+#endif
+
+#endif /* ORCHESTRA_CONF_H_ */

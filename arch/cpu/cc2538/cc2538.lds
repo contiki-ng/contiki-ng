@@ -68,7 +68,7 @@ SECTIONS
         *(.text*)
         *(.rodata*)
         _etext = .;
-    } > FLASH_FW= 0
+    } > FLASH_FW = 0
 
     .socdata (NOLOAD) :
     {

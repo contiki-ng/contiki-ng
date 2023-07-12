@@ -111,6 +111,18 @@ orchestra_callback_child_removed(const linkaddr_t *addr)
   }
 }
 /*---------------------------------------------------------------------------*/
+void
+orchestra_callback_neighbor_updated(const linkaddr_t *addr, uint8_t is_added)
+{
+  /* Notify all Orchestra rules that a neighbor was added or removed */
+  int i;
+  for(i = 0; i < NUM_RULES; i++) {
+    if(all_rules[i]->neighbor_updated != NULL) {
+      all_rules[i]->neighbor_updated(addr, is_added);
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
 int
 orchestra_callback_packet_ready(void)
 {

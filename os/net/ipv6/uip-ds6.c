@@ -282,7 +282,7 @@ uip_ds6_prefix_add(uip_ipaddr_t *ipaddr, uint8_t ipaddrlen,
     locprefix->plifetime = ptime;
     LOG_INFO("Adding prefix ");
     LOG_INFO_6ADDR(&locprefix->ipaddr);
-    LOG_INFO_("length %u, flags %x, Valid lifetime %lx, Preffered lifetime %lx\n",
+    LOG_INFO_(" len %u, flags %x, valid/preferred lifetime %lx/%lx\n",
        ipaddrlen, flags, vtime, ptime);
     return locprefix;
   } else {
@@ -312,7 +312,7 @@ uip_ds6_prefix_add(uip_ipaddr_t *ipaddr, uint8_t ipaddrlen,
     }
     LOG_INFO("Adding prefix ");
     LOG_INFO_6ADDR(&locprefix->ipaddr);
-    LOG_INFO_("length %u, vlifetime %lu\n", ipaddrlen, interval);
+    LOG_INFO_(" len %u, valid lifetime %lu\n", ipaddrlen, interval);
     return locprefix;
   }
   return NULL;
@@ -573,7 +573,7 @@ uip_ds6_select_src(uip_ipaddr_t *src, uip_ipaddr_t *dst)
 
 /*---------------------------------------------------------------------------*/
 void
-uip_ds6_set_addr_iid(uip_ipaddr_t *ipaddr, uip_lladdr_t *lladdr)
+uip_ds6_set_addr_iid(uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr)
 {
 #if (UIP_LLADDR_LEN == 8)
   memcpy(ipaddr->u8 + 8, lladdr, UIP_LLADDR_LEN);
@@ -600,7 +600,7 @@ uip_ds6_set_lladdr_from_iid(uip_lladdr_t *lladdr, const uip_ipaddr_t *ipaddr)
   memcpy(lladdr, ipaddr->u8 + 8, UIP_LLADDR_LEN);
   lladdr->addr[0] ^= 0x02;
 #elif (UIP_LLADDR_LEN == 2)
-  memcpy(lladdr, ipaddr->u8 + 6, UIP_LLADDR_LEN);
+  memcpy(lladdr, ipaddr->u8 + 8 + 6, UIP_LLADDR_LEN);
 #else
 #error uip-ds6.c cannot build lladdr address when UIP_LLADDR_LEN is not 8 or 2
 #endif

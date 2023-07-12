@@ -1,4 +1,6 @@
-all: test-examples
+CONTIKI_PROJECT = test-examples
+
+all: $(CONTIKI_PROJECT)
 
 MODULES += os/services/unit-test
 

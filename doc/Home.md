@@ -6,7 +6,7 @@ Contiki-NG is an operating system for resource-constrained devices in the Intern
 
 Online presence:
 * GitHub repository: https://github.com/contiki-ng/contiki-ng
-* Documentation: https://github.com/contiki-ng/contiki-ng/wiki
+* Documentation: https://contiki-ng.readthedocs.io/en/develop/
 * Gitter: https://gitter.im/contiki-ng
 * Contiki-NG tag on Stack Overflow: https://stackoverflow.com/questions/tagged/contiki-ng
 * Twitter: https://twitter.com/contiki_ng
@@ -64,13 +64,12 @@ Also feel free to download our [cheat sheet](https://contiki-ng.github.io/resour
 ### The Contiki-NG platforms
 
 * [cc2538dk: TI cc2538 development kit](/doc/platforms/cc2538dk.md)
-* [cc26x0-cc13x0 / srf06-cc26xx: TI cc26x0 and cc13x0 platforms](/doc/platforms/srf06-cc26xx.md)
+* [cc26x0-cc13x0: TI cc26x0 and cc13x0 platforms](/doc/platforms/cc26x0-cc13x0.md)
 * [cooja: Cooja native motes platform](/doc/platforms/cooja.md)
-* [jn516x: NXP jn516x series](/doc/platforms/jn516x.md)
+* [Gecko: Silicon Labs MCU Platform](/doc/platforms/gecko.md)
 * [native: Contiki-NG as a native process](/doc/platforms/native.md)
 * [nrf52840: Nordic Semiconductor nRF52840](/doc/platforms/nrf52840.md)
 * [nrf: Nordic Semiconductor nRF5340 and nRF52840 (using nRF MDK)](/doc/platforms/nrf.md)
-* [nrf52dk: Nordic Semiconductor nRF52 development kit](/doc/platforms/nrf52dk.md)
 * [openmote-cc2538: OpenMote cc2538](/doc/platforms/openmote-cc2538.md)
 * [simplelink: TI SimpleLink MCU Platform](/doc/platforms/simplelink.md)
 * [sky: Tmote Sky / TelosB](/doc/platforms/sky.md)
@@ -81,27 +80,27 @@ Also feel free to download our [cheat sheet](https://contiki-ng.github.io/resour
 Basics:
 * [Hello, World!](/doc/tutorials/Hello,-World!.md)
 * [Logging](/doc/tutorials/Logging.md)
-* [NG shell](/doc/tutorials/Shell.md)
 * [RAM and ROM usage](/doc/tutorials/RAM-and-ROM-usage.md)
+* [NG shell](/doc/tutorials/Shell.md)
+* [Timers and events](/doc/tutorials/Timers-and-events.md)
 * [Simple energy usage estimation](/doc/tutorials/Instrumenting-Contiki-NG-applications-with-energy-usage-estimation.md)
 * [Custom Energest application](/doc/tutorials/Energy-monitoring.md)
-* [Timers and events](/doc/tutorials/Timers-and-events.md)
 
 Networking:
+* [CoAP](/doc/tutorials/CoAP.md)
 * [IPv6 ping](/doc/tutorials/IPv6-ping.md)
 * [RPL basics](/doc/tutorials/RPL.md)
 * [RPL with border router](/doc/tutorials/RPL-border-router.md)
-* [TSCH and 6TiSCH](/doc/tutorials/TSCH-and-6TiSCH.md)
-* [Switching from CSMA to TSCH](/doc/tutorials/Switching-to-TSCH.md)
-* [CoAP](/doc/tutorials/CoAP.md)
 * [LWM2M, IPSO objects, and NAT64](/doc/tutorials/LWM2M-and-IPSO-Objects.md)
 * [LWM2M Queue Mode](/doc/tutorials/LWM2M-and-IPSO-Objects-with-Queue-Mode.md)
 * [MQTT](/doc/tutorials/MQTT.md)
+* [Switching from CSMA to TSCH](/doc/tutorials/Switching-to-TSCH.md)
+* [TSCH and 6TiSCH](/doc/tutorials/TSCH-and-6TiSCH.md)
 
 Simulation:
 * [Cooja: getting started](/doc/tutorials/Running-Contiki-NG-in-Cooja.md)
 * [Cooja: simulating a RPL network](/doc/tutorials/Running-a-RPL-network-in-Cooja.md)
-* [Cooja: simulating a RPL network with a border router](/doc/tutorials/Cooja:-simulating-a-border-router.md)
+* [Cooja: simulating a RPL network with a border router](/doc/tutorials/Cooja-simulating-a-border-router.md)
 * [Running Contiki-NG in Renode](/doc/tutorials/Running-Contiki-NG-in-Renode.md)
 
 ## Organization, etc.
@@ -113,7 +112,7 @@ Simulation:
 * [Releases](https://github.com/contiki-ng/contiki-ng/releases)
 * [Roadmap](/doc/project/Roadmap.md)
 * [Issue and PR labels](/doc/project/Issue-and-Pull-Request-Labels.md)
-* [Where to report issues, ask questions, etc.?](/doc/project/Where-to-report-issues,-ask-questions,-etc.%3F.md)
+* [Where to report issues, ask questions, etc.?](/doc/project/Where-to-report-issues,-ask-questions,-etc.md)
 * [Logo](/doc/project/Logo.md)
 
 

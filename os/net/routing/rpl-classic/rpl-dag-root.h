@@ -34,7 +34,6 @@
 
 void rpl_dag_root_set_prefix(uip_ipaddr_t *prefix, uip_ipaddr_t *iid);
 int rpl_dag_root_start(void);
-
 int rpl_dag_root_is_root(void);
 
 #endif /* RPL_DAG_ROOT_H_ */

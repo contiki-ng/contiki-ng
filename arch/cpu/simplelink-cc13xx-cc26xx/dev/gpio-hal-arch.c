@@ -54,6 +54,26 @@ static PIN_Config pin_config[] = { PIN_TERMINATE };
 static PIN_State pin_state;
 static PIN_Handle pin_handle;
 /*---------------------------------------------------------------------------*/
+/**< PIN standard input configuration mimicking IOC_STD_INPUT */
+#define GPIO_HAL_PIN_STD_INPUT      (PIN_INPUT_EN | PIN_GPIO_OUTPUT_DIS | \
+                                     PIN_NOPULL | PIN_DRVSTR_MIN | PIN_IRQ_DIS)
+
+/**< PIN standard input configuration bitmask */
+#define GPIO_HAL_PIN_STD_INPUT_BM   (PIN_BM_INPUT_EN | PIN_BM_GPIO_OUTPUT_EN | \
+                                     PIN_BM_PULLING | PIN_BM_INV_INOUT | \
+                                     PIN_BM_DRVSTR | PIN_BM_SLEWCTRL | \
+                                     PIN_BM_HYSTERESIS | PIN_BM_IRQ)
+
+/**< PIN standard input configuration mimicking IOC_STD_OUTPUT */
+#define GPIO_HAL_PIN_STD_OUTPUT     (PIN_INPUT_DIS | PIN_GPIO_OUTPUT_EN | \
+                                     PIN_NOPULL | PIN_DRVSTR_MIN | PIN_IRQ_DIS)
+
+/**< PIN standard output configuration bitmask */
+#define GPIO_HAL_PIN_STD_OUTPUT_BM  (PIN_BM_INPUT_EN | PIN_BM_GPIO_OUTPUT_EN | \
+                                     PIN_BM_PULLING | PIN_BM_INV_INOUT | \
+                                     PIN_BM_DRVSTR | PIN_BM_SLEWCTRL | \
+                                     PIN_BM_HYSTERESIS | PIN_BM_IRQ)
+/*---------------------------------------------------------------------------*/
 static void
 from_hal_cfg(gpio_hal_pin_cfg_t cfg, PIN_Config *pin_cfg, PIN_Config *pin_mask)
 {
@@ -101,7 +121,7 @@ to_hal_cfg(PIN_Config pin_cfg, gpio_hal_pin_cfg_t *cfg)
     }
 
     /* Pulling config */
-    switch(pin_cfg & PIN_BM_PULLING) {
+    switch(pin_cfg & (PIN_GEN | PIN_BM_PULLING)) {
     case PIN_NOPULL:   *cfg |= GPIO_HAL_PIN_CFG_PULL_NONE; break;
     case PIN_PULLUP:   *cfg |= GPIO_HAL_PIN_CFG_PULL_UP;   break;
     case PIN_PULLDOWN: *cfg |= GPIO_HAL_PIN_CFG_PULL_DOWN; break;
@@ -111,7 +131,7 @@ to_hal_cfg(PIN_Config pin_cfg, gpio_hal_pin_cfg_t *cfg)
   /* Interrupt config */
   if(pin_cfg & PIN_BM_IRQ) {
     /* Interrupt edge config */
-    switch(pin_cfg & PIN_BM_IRQ) {
+    switch(pin_cfg & (PIN_GEN | PIN_BM_IRQ)) {
     case PIN_IRQ_DIS:       *cfg |= GPIO_HAL_PIN_CFG_EDGE_NONE;
                             *cfg |= GPIO_HAL_PIN_CFG_INT_DISABLE;
                             break;
@@ -146,9 +166,37 @@ gpio_hal_arch_init(void)
   PIN_registerIntCb(pin_handle, gpio_int_cb);
 }
 /*---------------------------------------------------------------------------*/
+
+void
+gpio_hal_arch_no_port_pin_set_input(gpio_hal_pin_t pin)
+{
+  PIN_add(pin_handle, PIN_getConfig(pin));
+
+  /* Configure pin as standard input */
+  PIN_Config pin_cfg = GPIO_HAL_PIN_STD_INPUT | pin;
+  PIN_Config pin_mask = GPIO_HAL_PIN_STD_INPUT_BM;
+
+  PIN_setConfig(pin_handle, pin_mask, pin_cfg);
+}
+/*---------------------------------------------------------------------------*/
+void gpio_hal_arch_no_port_pin_set_output(gpio_hal_pin_t pin)
+{
+  PIN_add(pin_handle, PIN_getConfig(pin));
+
+  /* Configure pin as standard output */
+  PIN_Config pin_cfg = GPIO_HAL_PIN_STD_OUTPUT | pin;
+  PIN_Config pin_mask = GPIO_HAL_PIN_STD_OUTPUT_BM;
+  PIN_setConfig(pin_handle, pin_mask, pin_cfg);
+}
+/*---------------------------------------------------------------------------*/
 void
 gpio_hal_arch_no_port_interrupt_enable(gpio_hal_pin_t pin)
 {
+  /*
+   * This requires pin cfg already set with GPIO_HAL_PIN_CFG_INT_ENABLE,
+   * i.e. enabled interrupts, thus making this function redundant.
+   * Might be fixed if switching to GPIO or GPIO++ lib. instead of PIN.
+   */
   PIN_Config pin_cfg;
   PIN_Config irq_cfg;
 
@@ -164,6 +212,10 @@ gpio_hal_arch_no_port_interrupt_disable(gpio_hal_pin_t pin)
 {
   PIN_add(pin_handle, PIN_getConfig(pin));
 
+  /*
+   * This removes all IRQ config., thus pin cfg must be set again to
+   * re-enable interrupts.
+   */
   PIN_setInterrupt(pin_handle, pin | PIN_IRQ_DIS);
 }
 /*---------------------------------------------------------------------------*/

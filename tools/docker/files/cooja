@@ -11,6 +11,6 @@ function exit_cleanup() {
   kill $PID
 }
 
-ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $HOME/contiki-ng/tools/cooja/build.xml run_bigmem
+$HOME/contiki-ng/tools/cooja/gradlew --no-watch-fs --parallel --build-cache -p $HOME/contiki-ng/tools/cooja run "$@"
 
 exit_cleanup

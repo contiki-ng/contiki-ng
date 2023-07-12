@@ -39,7 +39,10 @@ int
 puts(const char *str)
 {
   dbg_send_bytes((unsigned char *)str, strlen(str));
-  dbg_putchar('\n');
-  return 0;
+  return dbg_putchar('\n');
 }
+
+#if defined(CONTIKI_TARGET_COOJA) && !defined(__APPLE__)
+extern int __wrap_puts(const char *str) __attribute__((nonnull, alias("puts")));
+#endif
 /*---------------------------------------------------------------------------*/

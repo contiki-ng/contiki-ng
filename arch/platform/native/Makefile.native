@@ -26,21 +26,18 @@ endif
 MODULES_SOURCES_EXCLUDES += stack-check.c
 # No Serial Peripheral Interface on Native.
 MODULES_SOURCES_EXCLUDES += spi.c
+# No slip driver on Native.
+MODULES_SOURCES_EXCLUDES += slip.c
+# No sensor drivers on Native.
+MODULES_SOURCES_EXCLUDES += sensors.c
 
-ifeq ($(HOST_OS),Windows)
-CONTIKI_TARGET_SOURCEFILES += wpcap-drv.c wpcap.c
-TARGET_LIBFILES = /lib/w32api/libws2_32.a /lib/w32api/libiphlpapi.a
-else
 CONTIKI_TARGET_SOURCEFILES += tun6-net.c
-endif
 
 ifeq ($(HOST_OS),Linux)
 TARGET_LIBFILES += -lrt
 endif
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
-
-.SUFFIXES:
 
 # Enable nullmac by default
 MAKE_MAC ?= MAKE_MAC_NULLMAC

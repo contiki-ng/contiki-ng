@@ -1,3 +1,7 @@
+CURDIR := $(abspath $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
+# FIXME: Uncomment the next line after the cortex-m customrules are removed.
+# BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
+
 EXAMPLESDIR=../../examples
 TOOLSDIR=../../tools
 
@@ -9,15 +13,20 @@ EXAMPLES = \
 6tisch/simple-node/nrf:BOARD=nrf52840/dongle \
 6tisch/simple-node/nrf:BOARD=nrf5340/dk/application \
 6tisch/simple-node/nrf:BOARD=nrf5340/dk/network \
+6tisch/simple-node/gecko:BOARD=brd4162a \
+6tisch/simple-node/gecko:BOARD=brd4166a \
 6tisch/sixtop/zoul \
 benchmarks/rpl-req-resp/zoul \
 coap/coap-example-client/zoul \
 coap/coap-example-server/zoul \
 dev/gpio-hal/zoul:BOARD=orion \
+dev/gpio-hal/gecko:BOARD=brd4162a \
+dev/gpio-hal/gecko:BOARD=brd4166a \
 dev/leds/simplelink:BOARD=srf06/cc26x0 \
+dev/leds/gecko:BOARD=brd4162a \
+dev/leds/gecko:BOARD=brd4166a \
 dev/rgb-led/zoul:BOARD=remote-reva \
 dev/dht11/nrf52840:BOARD=dk \
-hello-world/nrf52dk \
 hello-world/nrf52840:BOARD=dk \
 hello-world/nrf52840:BOARD=dongle \
 hello-world/openmote:BOARD=openmote-b \
@@ -44,6 +53,11 @@ hello-world/nrf:BOARD=nrf52840/dk \
 hello-world/nrf:BOARD=nrf52840/dongle \
 hello-world/nrf:BOARD=nrf5340/dk/application \
 hello-world/nrf:BOARD=nrf5340/dk/network \
+hello-world/nrf:BOARD=nrf52840/dk:NRF_NATIVE_USB=1 \
+hello-world/nrf:BOARD=nrf52840/dongle:NRF_NATIVE_USB=1 \
+hello-world/nrf:BOARD=nrf5340/dk/application:NRF_NATIVE_USB=1 \
+hello-world/gecko:BOARD=brd4162a \
+hello-world/gecko:BOARD=brd4166a \
 libs/data-structures/zoul \
 libs/deployment/openmote \
 libs/energest/zoul \
@@ -55,6 +69,7 @@ libs/shell/openmote \
 libs/simple-energest/openmote \
 libs/timers/zoul \
 libs/trickle-library/zoul \
+libs/csprng/openmote \
 lwm2m-ipso-objects/zoul:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1,LWM2M_Q_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1\
 lwm2m-ipso-objects/zoul:MAKE_WITH_DTLS=1 \
 mqtt-client/simplelink:BOARD=sensortag/cc2650:DEFINES=BOARD_CONF_SENSORS_DISABLE=1,TI_SPI_CONF_ENABLE=0 \
@@ -73,10 +88,6 @@ platform-specific/nrf/start-network-core/nrf:BOARD=nrf52840/dk \
 platform-specific/nrf/start-network-core/nrf:BOARD=nrf52840/dongle \
 platform-specific/nrf/start-network-core/nrf:BOARD=nrf5340/dk/application \
 platform-specific/nrf/start-network-core/nrf:BOARD=nrf5340/dk/network \
-platform-specific/nrf52dk/blink-hello/nrf52dk \
-platform-specific/nrf52dk/coap-demo/coap-client/nrf52dk:SERVER_IPV6_EP=ffff \
-platform-specific/nrf52dk/mqtt-demo/nrf52dk \
-platform-specific/nrf52dk/timer-test/nrf52dk \
 platform-specific/zoul/at-test/zoul \
 platform-specific/zoul/orion/client/zoul:BOARD=orion \
 platform-specific/zoul/orion/ip64-router/zoul:BOARD=orion \
@@ -99,6 +110,8 @@ slip-radio/nrf:BOARD=nrf5340/dk/network \
 snmp-server/cc2538dk \
 storage/antelope-shell/zoul \
 storage/cfs-coffee/zoul \
+storage/cfs-coffee/gecko:BOARD=brd4162a \
+storage/cfs-coffee/gecko:BOARD=brd4166a \
 websocket/zoul \
 
 TOOLS=

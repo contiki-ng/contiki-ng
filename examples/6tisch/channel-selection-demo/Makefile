@@ -3,7 +3,7 @@ all: $(CONTIKI_PROJECT)
 
 CONTIKI=../../..
 
-PLATFORMS_EXCLUDE = sky z1 nrf52dk native
+PLATFORMS_EXCLUDE = sky z1 native
 BOARDS_EXCLUDE = srf06/cc13x0 launchpad/cc1310 launchpad/cc1350 sensortag/cc2650 sensortag/cc1350
 
 include $(CONTIKI)/Makefile.dir-variables

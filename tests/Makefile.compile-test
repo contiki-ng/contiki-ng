@@ -45,8 +45,13 @@ ifndef CI
   Q ?= @
   MAKEOPTIONS ?= V=$(V) Q=$(Q)
 endif
+ifdef BINARY_SIZE_LOGFILE
+  SIZE_LOGFILE ?= BINARY_SIZE_LOGFILE=$(BINARY_SIZE_LOGFILE)
+  PRINT_LOGFILE = cat $(BINARY_SIZE_LOGFILE)
+endif
+PRINT_LOGFILE ?= true
 PRINT_DIR ?= --no-print-directory
-MAKEOPTIONS += $(PRINT_DIR) WERROR=1
+MAKEOPTIONS += $(PRINT_DIR) $(SIZE_LOGFILE) WERROR=1
 
 # The stuff below is some GNU make magic to automatically make make
 # give each compile test a number, prefixed with a 0 if the number is
@@ -59,13 +64,11 @@ get_target = $(firstword $(subst :, ,$1))
 get_target_vars = $(wordlist 2,15,$(subst :, ,$1))
 
 define dooneexample
-@echo -n Building example $(3): $(1) $(4) for target $(2)
+@echo Building example $(3): $(1) $(4) for target $(2)
 @((cd $(EXAMPLESDIR)/$(1) && \
    $(MAKE) $(4) TARGET=$(2) $(MAKEOPTIONS) clean && \
-   make -j$(CPUS) $(4) TARGET=$(2) $(MAKEOPTIONS)) 2>make.err && \
- (echo " -> OK" && printf "%-75s %-40s %-20s TEST OK\n" "$(1)" "$(4)" "$(2)" > $(3)-$(subst /,-,$(1))$(2).testlog) || \
- (echo " -> FAIL" && printf "%-75s %-40s %-20s TEST FAIL\n" "$(1)" "$(4)" "$(2)" > $(3)-$(subst /,-,$(1))$(2).testlog ; cat make.err))
-@rm -f make.err
+   make -j$(CPUS) $(4) TARGET=$(2) $(MAKEOPTIONS)) || \
+  printf "%-75s %-40s %-20s TEST FAIL\n" "$(1)" "$(4)" "$(2)" >> summary)
 endef
 
 define doexample
@@ -75,6 +78,7 @@ endef
 #end of GNU make magic
 
 examples: | $(EXAMPLESDIR)
+	@rm -f summary $(BINARY_SIZE_LOGFILE)
 	$(foreach ex, $(EXAMPLES), $(call doexample, ${ex}))
 
 $(EXAMPLESDIR):
@@ -85,12 +89,12 @@ $(EXAMPLESDIR):
 	@false
 
 summary: examples
-	@cat *.testlog > summary
 	@echo "========== Summary =========="
-	@cat summary
+	@([ ! -f summary ] && $(PRINT_LOGFILE) && echo "All tests OK" && touch summary) || \
+          (echo "Failures:" && cat summary && false)
 
 clean: | $(EXAMPLESDIR)
-	@rm -f *.testlog summary
+	@rm -f summary $(BINARY_SIZE_LOGFILE)
 	@$(foreach example, $(EXAMPLES), \
            $(foreach target, $(EXAMPLESTARGETS), \
              (cd $(EXAMPLESDIR)/$(example) && $(MAKE) TARGET=$(target) clean);))

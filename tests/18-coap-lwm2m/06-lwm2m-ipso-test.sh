@@ -20,7 +20,7 @@ LESHAN_JAR=leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar
 wget -nv -nc https://joakimeriksson.github.io/resources/$LESHAN_JAR
 sleep 10
 echo "Starting leshan server"
-java -jar $LESHAN_JAR >leshan.log 2>leshan.err &
+java --add-opens java.base/java.util=ALL-UNNAMED -jar $LESHAN_JAR >leshan.log 2>leshan.err &
 LESHID=$!
 
 COUNTER=10
@@ -53,6 +53,8 @@ else
   echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
 
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
+  rm -f make.log make.err node.log node.err leshan.log leshan.err
+  exit 1
 fi
 
 rm -f make.log make.err node.log node.err leshan.log leshan.err

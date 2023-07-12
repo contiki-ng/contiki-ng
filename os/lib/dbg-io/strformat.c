@@ -57,7 +57,7 @@
 #define POINTER_INT uintptr_t
 #endif
 /*---------------------------------------------------------------------------*/
-typedef unsigned int FormatFlags;
+typedef uint32_t FormatFlags;
 /*---------------------------------------------------------------------------*/
 #define MAKE_MASK(shift, size) (((1 << size) - 1) << (shift))
 /*---------------------------------------------------------------------------*/
@@ -126,10 +126,10 @@ typedef unsigned int FormatFlags;
 /*---------------------------------------------------------------------------*/
 #define FLOAT_SHIFT     (CAPS_SHIFT + CAPS_SIZE)
 #define FLOAT_SIZE      2
-#define FLOAT_NORMAL    (0x0000 << FLOAT_SHIFT)
-#define FLOAT_EXPONENT  (0x0001 << FLOAT_SHIFT)
-#define FLOAT_DEPENDANT (0x0002 << FLOAT_SHIFT)
-#define FLOAT_HEX       (0x0003 << FLOAT_SHIFT)
+#define FLOAT_NORMAL    (((uint32_t)0x0000) << FLOAT_SHIFT)
+#define FLOAT_EXPONENT  (((uint32_t)0x0001) << FLOAT_SHIFT)
+#define FLOAT_DEPENDANT (((uint32_t)0x0002) << FLOAT_SHIFT)
+#define FLOAT_HEX       (((uint32_t)0x0003) << FLOAT_SHIFT)
 #define FLOAT_MASK      MAKE_MASK(FLOAT_SHIFT, FLOAT_SIZE)
 /*---------------------------------------------------------------------------*/
 #define CHECKCB(res) { if((res) != STRFORMAT_OK) { va_end(ap); return -1; } }

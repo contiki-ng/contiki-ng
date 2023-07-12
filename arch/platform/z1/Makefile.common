@@ -7,9 +7,9 @@ SMALL=0
 
 ARCH = leds.c xmem.c i2cmaster.c \
        spi-legacy.c cc2420.c cc2420-arch.c cc2420-arch-sfd.c\
-       node-id-z1.c sensors.c button-sensor.c cfs-coffee.c \
+       node-id-z1.c sensors.c button-sensor.c \
        uart0.c uart0-putchar.c uip-ipchksum.c \
-       slip.c slip_uart0.c z1-sensors.c adxl345.c temperature-sensor.c \
+       slip_uart0.c z1-sensors.c adxl345.c temperature-sensor.c \
        z1-phidgets.c light-sensor.c battery-sensor.c sky-sensors.c tmp102.c \
        platform.c
 
@@ -28,8 +28,6 @@ LDFLAGS += -Wl,--defsym -Wl,__P1SEL2=0x0041 -Wl,--defsym -Wl,__P5SEL2=0x0045
 ifdef nodemac
 CFLAGS += -DMACID=$(nodemac)
 endif
-
-CFLAGS += -g
 
 include $(CONTIKI_NG_RELOC_CPU_DIR)/msp430/Makefile.msp430
 
@@ -122,14 +120,6 @@ sizeplot:
 	msp430-size $(OBJECTDIR)/*.o | $(CONTIKI_NG_TOOLS_DIR)/sky/check-size > size-data
 	gnuplot $(CONTIKI)/tools/sky/plot-size
 	gv size.pdf
-
-winslip:
-ifdef INTERFACE
-	$(CONTIKI_NG_TOOLS_DIR)/wpcapslip/wpcapslip -s $(USBDEVPREFIX)$(firstword $(CMOTES)) $(INTERFACE) 172.16.0.0 255.255.0.0
-else
-	@echo "Usage: \"$(MAKE) $@ INTERFACE=<the IP address of a local network interface>\""
-	@echo "Use the \"ipconfig\" command to find out the IP addresses of the local interfaces"
-endif
 
 ifdef MOTE
   PORT = $(USBDEVPREFIX)$(word $(MOTE), $(CMOTES))

@@ -109,6 +109,10 @@
 #define ABS(n)      (((n) < 0) ? -(n) : (n))
 #endif
 
+#ifndef BOUND
+#define BOUND(a, minimum, maximum)   MIN(MAX(a, minimum), maximum)
+#endif
+
 
 #define CC_CONCAT2(s1, s2) s1##s2
 /**
