@@ -1,7 +1,7 @@
 CONTIKI = ../../..
 
 CC = gcc
-CFLAGS += -Wall -g -I/user/local/include
+CFLAGS += -Wall -g
 CFLAGS += -I$(CONTIKI)/os
 
 all: test_lc_switch test_lc_addrlabels
