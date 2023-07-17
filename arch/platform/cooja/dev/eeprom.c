@@ -31,10 +31,6 @@
 #include <string.h>
 #include "dev/eeprom.h"
 
-#include "lib/simEnvChange.h"
-
-const struct simInterface eeprom_interface;
-
 /* Configure EEPROM size here and in ContikiEEPROM.java */
 #define EEPROM_BUF_SIZE 1024
 
@@ -85,19 +81,3 @@ eeprom_write(eeprom_addr_t addr, const unsigned char *buf, size_t len)
 
   return true;
 }
-
-/*-----------------------------------------------------------------------------------*/
-static void
-doInterfaceActionsBeforeTick(void)
-{
-}
-/*-----------------------------------------------------------------------------------*/
-static void
-doInterfaceActionsAfterTick(void)
-{
-}
-/*-----------------------------------------------------------------------------------*/
-
-SIM_INTERFACE(eeprom_interface,
-	      doInterfaceActionsBeforeTick,
-	      doInterfaceActionsAfterTick);

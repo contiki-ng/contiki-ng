@@ -33,8 +33,6 @@
 
 #include "net/ipv6/uip.h"
 
-const struct simInterface ip_interface;
-
 // COOJA variables
 
 #if NETSTACK_CONF_WITH_IPV6
@@ -42,25 +40,12 @@ const struct simInterface ip_interface;
 char simIPChanged;
 char simIP[16];
 
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-
 /*-----------------------------------------------------------------------------------*/
 static void
 doInterfaceActionsBeforeTick(void)
 {
-#if NETSTACK_CONF_WITH_IPV6
-
   /* check if IPv6 address should change */
-
+}
+/*-----------------------------------------------------------------------------------*/
+COOJA_PRE_TICK_ACTION(COOJA_IP_INIT_PRIO, doInterfaceActionsBeforeTick);
 #endif /* NETSTACK_CONF_WITH_IPV6 */
-}
-/*-----------------------------------------------------------------------------------*/
-static void
-doInterfaceActionsAfterTick(void)
-{
-}
-/*-----------------------------------------------------------------------------------*/
-
-SIM_INTERFACE(ip_interface,
-	      doInterfaceActionsBeforeTick,
-	      doInterfaceActionsAfterTick);

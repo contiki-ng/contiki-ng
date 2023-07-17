@@ -30,30 +30,8 @@
 
 #include "lib/simEnvChange.h"
 
-#include <stdio.h>
-#include <string.h>
-
-// All registered interfaces
-extern const struct simInterface *simInterfaces[];
-
 char simDontFallAsleep = 0;
 
 int simProcessRunValue;
 int simEtimerPending;
 clock_time_t simEtimerNextExpirationTime;
-
-void doActionsBeforeTick() {
-  // Poll all interfaces to do their thing before the tick
-  int i;
-  for(i = 0; simInterfaces[i] != NULL; ++i) {
-    simInterfaces[i]->doActionsBeforeTick();
-  }
-}
-
-void doActionsAfterTick() {
-  // Poll all interfaces to do their thing after the tick
-  int i;
-  for(i = 0; simInterfaces[i] != NULL; ++i) {
-    simInterfaces[i]->doActionsAfterTick();
-  }
-}
