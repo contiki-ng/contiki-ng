@@ -94,7 +94,7 @@ SIM_INTERFACE_NAME(eeprom_interface);
 SIM_INTERFACES(&vib_interface, &moteid_interface, &rs232_interface, &simlog_interface, &beep_interface, &radio_interface, &button_interface, &pir_interface, &clock_interface, &leds_interface, &cfs_interface, &eeprom_interface);
 
 /* Sensors */
-SENSORS(&button_sensor, &pir_sensor, &vib_sensor);
+SENSORS(&pir_sensor, &vib_sensor);
 
 /*---------------------------------------------------------------------------*/
 /* Needed since the new LEDs API does not provide this prototype */
