@@ -75,6 +75,12 @@ SENSORS(&pir_sensor, &vib_sensor);
 /* Needed since the new LEDs API does not provide this prototype */
 void leds_arch_init(void);
 /*---------------------------------------------------------------------------*/
+char simDontFallAsleep = 0;
+
+int simProcessRunValue;
+int simEtimerPending;
+clock_time_t simEtimerNextExpirationTime;
+/*---------------------------------------------------------------------------*/
 static void
 set_lladdr(void)
 {
