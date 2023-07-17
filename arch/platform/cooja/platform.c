@@ -123,7 +123,6 @@ platform_init_stage_one()
 {
   gpio_hal_init();
   leds_arch_init();
-  return;
 }
 /*---------------------------------------------------------------------------*/
 void
