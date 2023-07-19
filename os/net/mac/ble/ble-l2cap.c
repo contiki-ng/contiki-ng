@@ -158,7 +158,7 @@ init_scan_resp_data(char *scan_resp_data)
   scan_resp_data[scan_resp_data_len++] = 0x12;
   scan_resp_data[scan_resp_data_len++] = (BLE_SLAVE_CONN_INTERVAL_MIN & 0xFF);
   scan_resp_data[scan_resp_data_len++] = ((BLE_SLAVE_CONN_INTERVAL_MIN >> 8) & 0xFF);
-  scan_resp_data[scan_resp_data_len++] = (BLE_SLAVE_CONN_INTERVAL_MAX & 0xFF);
+  scan_resp_data[scan_resp_data_len++] = (char)(BLE_SLAVE_CONN_INTERVAL_MAX & 0xFF);
   scan_resp_data[scan_resp_data_len++] = ((BLE_SLAVE_CONN_INTERVAL_MAX >> 8) & 0xFF);
 
   return scan_resp_data_len;
