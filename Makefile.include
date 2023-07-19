@@ -136,7 +136,7 @@ ifneq ($(MAKECMDGOALS),clean)
       SYSROOT := $(shell $(CC) $(CFLAGS) --print-sysroot)
     endif
     # Default to the most recent Clang in Ubuntu.
-    CLANG_CC ?= clang-14
+    CLANG_CC ?= clang-15
     CC := $(CLANG_CC)
     AS := $(CC)
     LD := $(CC)
