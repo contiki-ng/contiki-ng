@@ -104,7 +104,7 @@
 typedef unsigned short uip_stats_t;
 
 #define CLOCK_CONF_SECOND 1000L
-typedef unsigned long clock_time_t;
+typedef uint64_t clock_time_t;
 
 /* Use 64-bit rtimer (default in Contiki-NG is 32) */
 #define RTIMER_CONF_CLOCK_SIZE 8
