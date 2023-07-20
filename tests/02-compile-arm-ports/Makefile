@@ -3,7 +3,6 @@ CURDIR := $(abspath $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
 # BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
 
 EXAMPLESDIR=../../examples
-TOOLSDIR=../../tools
 
 EXAMPLES = \
 6tisch/6p-packet/zoul \
@@ -138,7 +137,5 @@ storage/cfs-coffee/zoul \
 storage/cfs-coffee/gecko:BOARD=brd4162a \
 storage/cfs-coffee/gecko:BOARD=brd4166a \
 websocket/zoul \
-
-TOOLS=
 
 include ../Makefile.compile-test
