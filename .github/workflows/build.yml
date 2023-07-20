@@ -22,8 +22,6 @@ jobs:
     timeout-minutes: 45
     # Common environment variables
     env:
-        OUT_OF_TREE_TEST_PATH: out-of-tree-tests
-        OUT_OF_TREE_TEST_VER: 2869ae7
         DOCKER_BASE_IMG: contiker/contiki-ng
 
     strategy:
@@ -97,17 +95,6 @@ jobs:
           docker tag $DOCKER_IMG $DOCKER_BASE_IMG:latest
           docker push $DOCKER_BASE_IMG:latest
         fi
-
-    # Clone the repo used for out-of-tree builds if required
-    - name: Clone the repo used for out-of-tree builds if required
-      if: matrix.test == 'out-of-tree-build'
-      run: |
-        mkdir -p $OUT_OF_TREE_TEST_PATH
-        git clone --depth 1 https://github.com/contiki-ng/out-of-tree-tests $OUT_OF_TREE_TEST_PATH
-        # Check out desired hash
-        (cd $OUT_OF_TREE_TEST_PATH && git checkout $OUT_OF_TREE_TEST_VER)
-        # Set up docker mount
-        echo DOCKER_ARGS=-v `pwd`/$OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests >> $GITHUB_ENV
 
     # The docker image contains ccache, but the ccache action uses the ccache
     # outside docker for statistics, so install the same ccache version.

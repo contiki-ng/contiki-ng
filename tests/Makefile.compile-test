@@ -77,23 +77,16 @@ $(call dooneexample,$(dir $(call get_target,${1})),$(notdir $(call get_target,${
 endef
 #end of GNU make magic
 
-examples: | $(EXAMPLESDIR)
+examples:
 	@rm -f summary $(BINARY_SIZE_LOGFILE)
 	$(foreach ex, $(EXAMPLES), $(call doexample, ${ex}))
-
-$(EXAMPLESDIR):
-	@echo "Could not find examples directory $(EXAMPLESDIR).\n"
-	@echo "If this failure is when running 19-out-of-tree-builds, clone"
-	@echo "https://github.com/contiki-ng/out-of-tree-tests into"
-	@echo "$(EXAMPLESDIR) and run the test again.\n"
-	@false
 
 summary: examples
 	@echo "========== Summary =========="
 	@([ ! -f summary ] && $(PRINT_LOGFILE) && echo "All tests OK" && touch summary) || \
           (echo "Failures:" && cat summary && false)
 
-clean: | $(EXAMPLESDIR)
+clean:
 	@rm -f summary $(BINARY_SIZE_LOGFILE)
 	@$(foreach example, $(EXAMPLES), \
            $(foreach target, $(EXAMPLESTARGETS), \
