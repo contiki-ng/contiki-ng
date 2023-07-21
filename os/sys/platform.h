@@ -95,6 +95,95 @@
 #define PLATFORM_MAIN_ACCEPTS_ARGS 0
 #endif
 /*---------------------------------------------------------------------------*/
+#if PLATFORM_MAIN_ACCEPTS_ARGS
+#include <getopt.h>
+
+#define CONTIKI_MIN_INIT_PRIO 110
+#define CONTIKI_VERBOSE_PRIO 120
+
+#define CONTIKI_MAX_INIT_PRIO 998
+
+struct contiki_callback_option {
+  struct contiki_callback_option *next;
+  struct option opt_struct;
+  int (*callback)(const char *);
+  const char *help;
+};
+#endif /* PLATFORM_MAIN_ACCEPTS_ARGS */
+
+/**
+ * Add a command line option when the compilation unit is present.
+ *
+ * The second argument is the initialization of struct option
+ * for getopt_long.
+ *
+ * The third argument is a callback function of type int (*)(char *),
+ * or NULL. The callback will receieve optarg from getopt_long as
+ * parameter, and should return 0 on success. Any other
+ * return value will terminate main() with that exit code.
+ *
+ * The fourth argument is the string shown from --help. Pass NULL if
+ * the option should not be shown in the help.
+ *
+ * Example:
+ * @code
+ *  CONTIKI_OPTION(CONTIKI_VERBOSE_PRIO,
+ *                 { "v", optional_argument, NULL, 0 }, verbose_callback,
+ *                 "verbosity level (0-5)\n");
+ * @endcode
+ *
+ * \param prio Priority. Higher priority will appear later in --help.
+ */
+#if PLATFORM_MAIN_ACCEPTS_ARGS
+#define CONTIKI_OPTION(prio, ...) \
+  static struct contiki_callback_option CC_CONCAT(callback_option, __LINE__) = \
+    { NULL, __VA_ARGS__ }; \
+  CC_CONSTRUCTOR((prio)) static void \
+  CC_CONCAT(add_option, __LINE__)(void) \
+  { \
+    void contiki_add_option(struct contiki_callback_option *); \
+    contiki_add_option(&CC_CONCAT(callback_option, __LINE__)); \
+  }
+#else
+#define CONTIKI_OPTION(prio, ...)
+#endif /* PLATFORM_MAIN_ACCEPTS_ARGS */
+
+/**
+ * Set the usage string shown for --help.
+ * \param prio Priority. If multiple compilation units set the usage
+ * string, the one with the highest priority takes effect.
+ * \param msg The usage message.
+ */
+#if PLATFORM_MAIN_ACCEPTS_ARGS
+#define CONTIKI_USAGE(prio, msg)      \
+  CC_CONSTRUCTOR((prio)) static void \
+  CC_CONCAT(set_usage, __LINE__)(void) \
+  { \
+    void contiki_set_usage(const char *); \
+    contiki_set_usage((msg)); \
+  }
+#else
+#define CONTIKI_USAGE(prio, msg)
+#endif /* PLATFORM_MAIN_ACCEPTS_ARGS */
+
+/**
+ * Set extra usage help shown at the end of --help.
+ * \param prio Priority. If multiple compilation units set the extra
+ * usage help, the one with the highest priority takes effect.
+ * \param msg The usage message.
+ */
+#if PLATFORM_MAIN_ACCEPTS_ARGS
+#define CONTIKI_EXTRA_HELP(prio, msg) \
+  CC_CONSTRUCTOR((prio)) static void \
+  CC_CONCAT(set_extra_help, __LINE__)(void) \
+  { \
+    void contiki_set_extra_help(const char *); \
+    contiki_set_extra_help((msg)); \
+  }
+#else
+#define CONTIKI_EXTRA_HELP(prio, msg)
+#endif /* PLATFORM_MAIN_ACCEPTS_ARGS */
+/*---------------------------------------------------------------------------*/
 /**
  * \brief Basic (Stage 1) platform driver initialisation.
  *
