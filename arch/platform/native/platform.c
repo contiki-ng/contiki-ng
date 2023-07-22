@@ -230,17 +230,6 @@ set_global_address(void)
 }
 #endif
 /*---------------------------------------------------------------------------*/
-int contiki_argc = 0;
-char **contiki_argv;
-/*---------------------------------------------------------------------------*/
-void
-platform_process_args(int argc, char **argv)
-{
-  /* crappy way of remembering and accessing argc/v */
-  contiki_argc = argc;
-  contiki_argv = argv;
-}
-/*---------------------------------------------------------------------------*/
 void
 platform_init_stage_one()
 {
