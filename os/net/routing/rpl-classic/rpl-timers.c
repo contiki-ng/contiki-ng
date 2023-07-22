@@ -361,6 +361,30 @@ rpl_schedule_dao_immediately(rpl_instance_t *instance)
   schedule_dao(instance, 0);
 }
 /*---------------------------------------------------------------------------*/
+static void
+handle_unicast_dao_timer(void *ptr_instance)
+{
+  rpl_instance_t *instance = (rpl_instance_t *)ptr_instance;
+  if(instance->unicast_dao_prefix != NULL && instance->unicast_dao_target) {
+    dao_output_target(instance->unicast_dao_target,
+                      instance->unicast_dao_prefix,
+                      instance->unicast_dao_lifetime);
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+rpl_schedule_unicast_dao_immediately(rpl_instance_t *instance,
+                                     rpl_parent_t *parent,
+                                     uip_ipaddr_t *prefix,
+                                     uint8_t lifetime)
+{
+  instance->unicast_dao_target = parent;
+  instance->unicast_dao_prefix = prefix;
+  instance->unicast_dao_lifetime = lifetime;
+  ctimer_set(&instance->unicast_dao_timer, 0,
+             handle_unicast_dao_timer, instance);
+}
+/*---------------------------------------------------------------------------*/
 void
 rpl_cancel_dao(rpl_instance_t *instance)
 {
