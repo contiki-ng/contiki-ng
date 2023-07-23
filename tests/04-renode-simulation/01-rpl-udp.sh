@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-TESTNAME=05-test-renode
+TESTNAME=01-rpl-udp
 TEST_CODE_DIR=../../examples/rpl-udp
 TARGET=cc2538dk
 
