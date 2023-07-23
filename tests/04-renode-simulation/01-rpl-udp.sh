@@ -7,7 +7,7 @@ TARGET=cc2538dk
 make -C ${TEST_CODE_DIR} clean TARGET=${TARGET}
 make -C ${TEST_CODE_DIR} TARGET=${TARGET}
 
-renode-test ${TEST_CODE_DIR}/rpl-udp.robot > ${TESTNAME}.log
+renode-test --show-log ${TEST_CODE_DIR}/rpl-udp.robot
 
 if [ $? -eq 0 ]; then
     echo "${TESTNAME} TEST OK" > ${TESTNAME}.testlog
