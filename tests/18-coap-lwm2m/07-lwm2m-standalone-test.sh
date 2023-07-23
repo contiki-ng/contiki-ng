@@ -8,8 +8,8 @@ BASENAME=07-lwm2m-standalone-test
 
 # Building standalone posix example
 echo "Compiling standalone posix example"
-make CONTIKI_NG=$CONTIKI -C example-lwm2m-standalone/lwm2m clean >/dev/null
-make CONTIKI_NG=$CONTIKI -C example-lwm2m-standalone/lwm2m >make.log 2>make.err
+make CONTIKI_NG=$CONTIKI -C example-lwm2m-standalone/lwm2m clean || exit 1
+make -j4 CONTIKI_NG=$CONTIKI -C example-lwm2m-standalone/lwm2m || exit 1
 
 echo "Downloading leshan"
 LESHAN_JAR=leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar
@@ -19,7 +19,7 @@ java --add-opens java.base/java.util=ALL-UNNAMED -jar $LESHAN_JAR -lp 5686 -slp 
 LESHID=$!
 
 echo "Starting lwm2m standalone example"
-example-lwm2m-standalone/lwm2m/lwm2m-example coap://127.0.0.1:5686 > node.log 2> node.err &
+example-lwm2m-standalone/lwm2m/lwm2m-example coap://127.0.0.1:5686 &
 
 CPID=$!
 
@@ -41,25 +41,14 @@ echo "Closing leshan"
 kill_bg $LESHID
 
 
-if grep -q 'OK' leshan.err ; then
-  cp leshan.err $BASENAME.testlog;
-  printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
-else
-  echo "==== make.log ====" ; cat make.log;
-  echo "==== make.err ====" ; cat make.err;
-  echo "==== node.log ====" ; cat node.log;
-  echo "==== node.err ====" ; cat node.err;
+if ! grep -q 'OK' leshan.err ; then
   echo "==== leshan.log ====" ; cat leshan.log;
   echo "==== leshan.err ====" ; cat leshan.err;
   echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
 
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
-  rm -f make.log make.err node.log node.err leshan.log leshan.err
+  rm -f leshan.log leshan.err
   exit 1
 fi
 
-rm -f make.log make.err node.log node.err leshan.log leshan.err
-
-# We do not want Make to stop -> Return 0
-# The Makefile will check if a log contains FAIL at the end
-exit 0
+rm -f leshan.log leshan.err

@@ -9,9 +9,9 @@ IPADDR=fd00::302:304:506:708
 
 # Starting Contiki-NG native node
 echo "Starting native node - lwm2m/ipso objects with Q-Mode"
-make -C $CONTIKI/examples/lwm2m-ipso-objects clean >/dev/null
-make -C $CONTIKI/examples/lwm2m-ipso-objects DEFINES=LWM2M_QUEUE_MODE_CONF_ENABLED=1,LWM2M_QUEUE_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1,LWM2M_QUEUE_MODE_OBJECT_CONF_ENABLED=1 > make.log 2> make.err
-sudo $CONTIKI/examples/lwm2m-ipso-objects/example-ipso-objects.native > node.log 2> node.err &
+make -C $CONTIKI/examples/lwm2m-ipso-objects clean || exit 1
+make -j4 -C $CONTIKI/examples/lwm2m-ipso-objects DEFINES=LWM2M_QUEUE_MODE_CONF_ENABLED=1,LWM2M_QUEUE_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1,LWM2M_QUEUE_MODE_OBJECT_CONF_ENABLED=1 || exit 1
+sudo $CONTIKI/examples/lwm2m-ipso-objects/example-ipso-objects.native &
 CPID=$!
 
 echo "Downloading leshan with Q-Mode support"
@@ -46,21 +46,14 @@ then
   cp leshan.err $BASENAME.testlog;
   printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
 else
-  echo "==== make.log ====" ; cat make.log;
-  echo "==== make.err ====" ; cat make.err;
-  echo "==== node.log ====" ; cat node.log;
-  echo "==== node.err ====" ; cat node.err;
   echo "==== leshan.log ====" ; cat leshan.log;
   echo "==== leshan.err ====" ; cat leshan.err;
   echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
 
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
-  rm -f make.log make.err node.log node.err leshan.log leshan.err
+  rm -f leshan.log leshan.err
   exit 1
 fi
 
-rm -f make.log make.err node.log node.err leshan.log leshan.err
+rm -f leshan.log leshan.err
 
-# We do not want Make to stop -> Return 0
-# The Makefile will check if a log contains FAIL at the end
-exit 0

@@ -17,7 +17,7 @@ echo packet dir = $PACKET_DIR
 
 # Starting Contiki-NG native node
 echo "Starting native node"
-make -C $CODE_DIR TARGET=native
+make -j4 -C $CODE_DIR TARGET=native || exit 1
 
 for i in $PACKET_DIR/*
 do
@@ -60,12 +60,6 @@ if [ $((TIMEDOUT + FAILED)) -gt 0 ]; then
 
   sleep 3
   exit 1
-else
-  printf "%-32s TEST OK\n" "$CODE-$TEST_PROTOCOL"
 fi
 
 sleep 3
-
-# We do not want Make to stop -> Return 0
-# The Makefile will check if a log contains FAIL at the end
-exit 0

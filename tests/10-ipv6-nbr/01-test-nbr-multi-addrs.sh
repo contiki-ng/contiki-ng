@@ -12,10 +12,5 @@ SRC_DIR=${TEST_DIR}/nbr-multi-addrs
 EXEC_FILE_NAME=test.native
 
 make -C ${SRC_DIR} clean
-
-echo "build the test program..."
-make -C ${SRC_DIR} > ${TEST_NAME}.log
-
-echo "run the test..."
-${SRC_DIR}/${EXEC_FILE_NAME} | tee ${TEST_NAME}.log | \
-    grep -vE '^\[' >> ${TEST_NAME}.testlog
+make -j4 -C ${SRC_DIR}
+${SRC_DIR}/${EXEC_FILE_NAME}
