@@ -169,7 +169,7 @@ packet_input(void)
     check_for_tcp_syn();
 
 #if UIP_TAG_TC_WITH_VARIABLE_RETRANSMISSIONS
-    {
+    if(uip_len >= UIP_IPH_LEN) {
       uint8_t traffic_class = (UIP_IP_BUF->vtc << 4) | (UIP_IP_BUF->tcflow >> 4);
       if(traffic_class & UIP_TC_MAC_TRANSMISSION_COUNTER_BIT) {
         uint8_t max_mac_transmissions = traffic_class & UIP_TC_MAC_TRANSMISSION_COUNTER_MASK;
