@@ -61,7 +61,7 @@
 #define ZONIK_INT1_PIN_MASK   GPIO_PIN_MASK(ZONIK_INT_PIN)
 /*---------------------------------------------------------------------------*/
 static uint8_t zonik_buffer[ZONIK_FRAME_SIZE+1];
-static uint16_t zonik_status = ZONIK_DISABLED;
+static int zonik_status = ZONIK_DISABLED;
 /*---------------------------------------------------------------------------*/
 static struct etimer et;
 /*---------------------------------------------------------------------------*/
