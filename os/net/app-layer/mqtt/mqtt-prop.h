@@ -108,13 +108,23 @@ void mqtt_prop_parse_auth_props(struct mqtt_connection *conn, struct mqtt_prop_a
 
 void mqtt_prop_decode_input_props(struct mqtt_connection *conn);
 
-uint8_t mqtt_prop_register(struct mqtt_prop_list **prop_list,
-                           struct mqtt_prop_out_property **prop_out,
+/* Switch argument order to avoid undefined behavior from having a type
+   that undergoes argument promotion immediately before ", ...". */
+#if MQTT_PROP_USE_MEMB
+#define mqtt_prop_register(l, out, msg, id, ...) \
+  mqtt_prop_register_internal(l, msg, id, out, __VA_ARGS__)
+#else
+#define mqtt_prop_register(l, prop, out, msg, id, ...)           \
+  mqtt_prop_register_internal(l, prop, msg, id, out, __VA_ARGS__)
+#endif /* MQTT_PROP_USE_MEMB */
+
+uint8_t mqtt_prop_register_internal(struct mqtt_prop_list **prop_list,
 #if !MQTT_PROP_USE_MEMB
-                           struct mqtt_prop_out_property *prop,
+                                    struct mqtt_prop_out_property *prop,
 #endif
-                           mqtt_msg_type_t msg,
-                           mqtt_vhdr_prop_t prop_id, ...);
+                                    mqtt_msg_type_t msg,
+                                    mqtt_vhdr_prop_t prop_id,
+                                    struct mqtt_prop_out_property **prop_out, ...);
 
 void mqtt_prop_create_list(struct mqtt_prop_list **prop_list_out);
 
