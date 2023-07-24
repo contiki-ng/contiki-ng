@@ -70,7 +70,6 @@ static const char *config_ipaddr = "fd00::1/64";
 static char config_tundev[IFNAMSIZ + 1] = "tun0";
 
 
-#ifndef __CYGWIN__
 static int tunfd = -1;
 
 static int set_fd(fd_set *rset, fd_set *wset);
@@ -79,7 +78,6 @@ static const struct select_callback tun_select_callback = {
   set_fd,
   handle_fd
 };
-#endif /* __CYGWIN__ */
 
 static int ssystem(const char *fmt, ...)
      __attribute__((__format__ (__printf__, 1, 2)));
@@ -190,18 +188,6 @@ tun_alloc(char *dev, uint16_t devsize)
   return devopen(dev, O_RDWR);
 }
 #endif
-
-#ifdef __CYGWIN__
-/*wpcap process is used to connect to host interface */
-static void
-tun_init()
-{
-  setvbuf(stdout, NULL, _IOLBF, 0); /* Line buffered output. */
-}
-
-#else
-
-
 /*---------------------------------------------------------------------------*/
 static void
 tun_init()
@@ -304,7 +290,6 @@ handle_fd(fd_set *rset, fd_set *wset)
     tcpip_input();
   }
 }
-#endif /*  __CYGWIN_ */
 
 static void input(void)
 {
