@@ -94,8 +94,6 @@ typedef unsigned int uip_stats_t;
 
 #include <ctype.h>
 
-typedef unsigned long clock_time_t;
-
 #define CLOCK_CONF_SECOND 1000
 
 #define LOG_CONF_ENABLED 1

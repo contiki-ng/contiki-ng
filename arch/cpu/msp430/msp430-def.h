@@ -70,11 +70,12 @@
 
 #include <stdint.h>
 
-/* Types for clocks and uip_stats */
+/* Platform typedefs. */
 typedef unsigned short uip_stats_t;
-typedef unsigned long clock_time_t;
 typedef long off_t;
 
+/* Make clock_time_t smaller than default for size reasons. */
+#define CLOCK_CONF_SIZE 4
 /* Our clock resolution, this is the same as Unix HZ. */
 #define CLOCK_CONF_SECOND 128UL
 
