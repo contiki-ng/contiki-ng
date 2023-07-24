@@ -421,7 +421,7 @@ enter_rx(void)
 
   LOG_DBG_("--->%u\n", nrf_radio_state_get());
 
-  LOG_DBG("PACKETPTR=0x%08lx (rx_buf @ 0x%08lx)\n",
+  LOG_DBG("PACKETPTR=0x%08" PRIx32 " (rx_buf @ 0x%08" PRIx32 ")\n",
           (uint32_t)nrf_radio_packetptr_get(), (uint32_t)&rx_buf);
 }
 /*---------------------------------------------------------------------------*/
@@ -483,7 +483,7 @@ channel_clear(void)
   nrf_radio_event_clear(NRF_RADIO_EVENT_CCAIDLE);
   nrf_radio_event_clear(NRF_RADIO_EVENT_CCASTOPPED);
 
-  LOG_DBG("channel_clear: CCACTRL=0x%08lx\n", NRF_RADIO->CCACTRL);
+  LOG_DBG("channel_clear: CCACTRL=0x%08" PRIx32 "\n", NRF_RADIO->CCACTRL);
 
   /* We are now in RX. Send CCASTART */
   nrf_radio_task_trigger(NRF_RADIO_TASK_CCASTART);
