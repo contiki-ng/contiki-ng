@@ -51,7 +51,7 @@ ifdef BINARY_SIZE_LOGFILE
 endif
 PRINT_LOGFILE ?= true
 PRINT_DIR ?= --no-print-directory
-MAKEOPTIONS += $(PRINT_DIR) $(SIZE_LOGFILE) WERROR=1
+MAKEOPTIONS += $(PRINT_DIR) $(SIZE_LOGFILE) WERROR=1 $(MAKE_EXTRA_OPTIONS)
 
 # Rule for compiling examples.
 # EXAMPLES has the form directory/target:define1=value1:define2=value2:...
@@ -66,13 +66,16 @@ $(EXAMPLES_TMP):
 	$(eval _target := $(notdir $(_blob)))
 	$(eval _defines := $(wordlist 2,15,$(_exlist)))
 	@echo Building: $(_example) $(_defines) for target $(_target)
-	@($(MAKE) -C $(EXAMPLESDIR)/$(_example) $(_defines) TARGET=$(_target) $(MAKEOPTIONS) clean && \
+	$(Q)($(MAKE) -C $(EXAMPLESDIR)/$(_example) $(_defines) TARGET=$(_target) $(MAKEOPTIONS) clean && \
           make -C $(EXAMPLESDIR)/$(_example) -j$(CPUS) $(_defines) TARGET=$(_target) $(MAKEOPTIONS)) || \
          printf "%-75s %-40s %-20s TEST FAIL\n" "$(_example)" "$(_defines)" "$(_target)" >> summary
 
 examples: | $(EXAMPLESDIR)
 	@rm -f summary $(BINARY_SIZE_LOGFILE)
 	@$(MAKE) $(EXAMPLES_TMP)
+ifeq ($(CLANG_WARNINGS),1)
+	@$(MAKE) MAKE_EXTRA_OPTIONS=CLANG=1 $(EXAMPLES_TMP)
+endif
 
 $(EXAMPLESDIR):
 	@echo "Could not find examples directory $(EXAMPLESDIR).\n"
