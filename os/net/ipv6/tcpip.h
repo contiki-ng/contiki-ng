@@ -80,8 +80,6 @@ struct tcpip_uipstate {
 #define UIP_UDP_APPCALL tcpip_uipcall
 #define UIP_ICMP6_APPCALL tcpip_icmp6_call
 
-/*#define UIP_APPSTATE_SIZE sizeof(struct tcpip_uipstate)*/
-
 typedef struct tcpip_uipstate uip_udp_appstate_t;
 typedef struct tcpip_uipstate uip_tcp_appstate_t;
 typedef struct tcpip_uipstate uip_icmp6_appstate_t;
