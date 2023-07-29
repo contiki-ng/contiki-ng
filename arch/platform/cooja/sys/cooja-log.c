@@ -28,8 +28,10 @@
  *
  */
 
+#define _GNU_SOURCE /* For vasprintf. */
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
 #include "lib/simEnvChange.h"
 
@@ -49,17 +51,18 @@ int simLoggedLength;
 char simLoggedFlag;
 
 /*-----------------------------------------------------------------------------------*/
-void
+int
 simlog_char(char c)
 {
   if (simLoggedLength + 1 > MAX_LOG_LENGTH) {
     /* Dropping message due to buffer overflow */
-    return;
+    return EOF;
   }
 
   simLoggedData[simLoggedLength] = c;
   simLoggedLength += 1;
   simLoggedFlag = 1;
+  return c;
 }
 /*-----------------------------------------------------------------------------------*/
 void
@@ -129,14 +132,38 @@ dbg_putchar(int c)
   return c;
 }
 /*-----------------------------------------------------------------------------------*/
-unsigned int
-dbg_send_bytes(const unsigned char *s, unsigned int len)
+#ifndef __APPLE__
+extern int __wrap_putchar(int c) __attribute__((alias("putchar")));
+extern int __wrap_puts(const char *str) __attribute__((nonnull, alias("puts")));
+extern int __wrap_printf(const char *fmt, ...) __attribute__((nonnull, alias("printf")));
+#endif
+/*---------------------------------------------------------------------------*/
+int
+putchar(int c)
 {
-  unsigned int i;
-  for(i = 0; i < len && s && *s != 0; i++) {
-    putchar(*s++);
+  return simlog_char(c);
+}
+/*---------------------------------------------------------------------------*/
+int
+puts(const char* s)
+{
+  simlog(s);
+  return simlog_char('\n');
+}
+/*---------------------------------------------------------------------------*/
+int
+printf(const char *fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+  char *buf;
+  int res = vasprintf(&buf, fmt, ap);
+  va_end(ap);
+  if(res > 0) {
+    simlog(buf);
+    free(buf);
   }
-  return i;
+  return res;
 }
 /*-----------------------------------------------------------------------------------*/
 

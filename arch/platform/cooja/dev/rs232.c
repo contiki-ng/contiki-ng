@@ -46,7 +46,7 @@ char simSerialReceivingFlag;
 
 static int (* input_handler)(unsigned char) = NULL;
 
-void simlog_char(char c);
+int simlog_char(char c);
 /*-----------------------------------------------------------------------------------*/
 void rs232_init(void) { }
 /*-----------------------------------------------------------------------------------*/

@@ -61,8 +61,4 @@ printf(const char *fmt, ...)
   va_end(ap);
   return res;
 }
-
-#if defined(CONTIKI_TARGET_COOJA) && !defined(__APPLE__)
-extern int __wrap_printf(const char *fmt, ...) __attribute__((nonnull, alias("printf")));
-#endif
 /*---------------------------------------------------------------------------*/
