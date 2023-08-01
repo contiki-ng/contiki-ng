@@ -197,7 +197,7 @@ tun_init()
   tunfd = tun_alloc(slip_config_tundev);
 
   if(tunfd == -1) {
-    err(1, "tun_init: open");
+    err(1, "tun_init: tun_alloc failed");
   }
 
   select_set_callback(tunfd, &tun_select_callback);
