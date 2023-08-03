@@ -73,7 +73,7 @@ PROCESS_THREAD(dht11_process, ev, data)
      */
     SENSORS_ACTIVATE(dht11_sensor);
 
-    printf("%ld ", clock_time());
+    printf("%ld ", (unsigned long)clock_time());
     switch(dht11_sensor.status(0)) {
     case DHT11_STATUS_OKAY:
       printf("Humidity %d.%d %% ",
