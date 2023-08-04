@@ -21,7 +21,10 @@ MAKE_WITH_ORCHESTRA_ROOT_RULE ?= 0
 MAKE_MAC = MAKE_MAC_TSCH
 
 include $(CONTIKI)/Makefile.dir-variables
+include $(CONTIKI)/Makefile.identify-target
+ifneq ($(TARGET),z1)
 MODULES += $(CONTIKI_NG_SERVICES_DIR)/shell
+endif
 
 ORCHESTRA_EXTRA_RULES = &unicast_per_neighbor_rpl_ns
 
