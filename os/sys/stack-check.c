@@ -93,7 +93,7 @@ stack_check_init(void)
 #endif
 }
 /*---------------------------------------------------------------------------*/
-int32_t
+size_t
 stack_check_get_usage(void)
 {
   uint8_t *p = &_stack;
@@ -118,13 +118,13 @@ stack_check_get_usage(void)
 
   if(p >= (uint8_t*)GET_STACK_ORIGIN()) {
     /* This means the stack is screwed. */
-    return -1;
+    return SIZE_MAX;
   }
 
   return (uint8_t *)GET_STACK_ORIGIN() - p;
 }
 /*---------------------------------------------------------------------------*/
-int32_t
+size_t
 stack_check_get_reserved_size(void)
 {
   return (uint8_t *)GET_STACK_ORIGIN() - &_stack;
@@ -141,19 +141,15 @@ PROCESS_THREAD(stack_check_process, ev, data)
   etimer_set(&et, STACK_CHECK_PERIOD);
 
   while(1) {
-    int32_t actual, allowed;
-
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-    actual = stack_check_get_usage();
-    allowed = stack_check_get_reserved_size();
-    if(actual < 0 || allowed < 0) {
-      LOG_ERR("Check in inconsistent state: %" PRId32 " vs. %" PRId32 "\n",
-              actual, allowed);
-    } else if(actual > allowed) {
-      LOG_ERR("Check failed: %" PRId32 " vs. %" PRId32 "\n", actual, allowed);
+    size_t actual = stack_check_get_usage();
+    size_t allowed = stack_check_get_reserved_size();
+    if(actual > allowed) {
+      LOG_ERR("Check failed: %u vs. %u\n", (unsigned)actual,
+              (unsigned)allowed);
     } else {
-      LOG_DBG("Check ok: %" PRId32 " vs. %" PRId32 "\n", actual, allowed);
+      LOG_DBG("Check ok: %u vs. %u\n", (unsigned)actual, (unsigned)allowed);
     }
 
     etimer_reset(&et);
