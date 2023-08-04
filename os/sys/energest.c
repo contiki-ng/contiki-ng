@@ -80,23 +80,4 @@ energest_get_total_time(void)
     energest_type_time(ENERGEST_TYPE_LPM) +
     energest_type_time(ENERGEST_TYPE_DEEP_LPM);
 }
-/*---------------------------------------------------------------------------*/
-#else /* ENERGEST_CONF_ON */
-
-void
-energest_init(void)
-{
-}
-
-void
-energest_flush(void)
-{
-}
-
-uint64_t
-energest_get_total_time(void)
-{
-  return 0;
-}
-
 #endif /* ENERGEST_CONF_ON */
