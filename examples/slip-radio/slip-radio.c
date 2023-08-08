@@ -72,43 +72,6 @@ CMD_HANDLERS(slip_radio_cmd_handler);
 
 static const uint16_t mac_src_pan_id = IEEE802154_PANID;
 /*---------------------------------------------------------------------------*/
-static int
-is_broadcast_addr(uint8_t mode, uint8_t *addr)
-{
-  int i = mode == FRAME802154_SHORTADDRMODE ? 2 : 8;
-  while(i-- > 0) {
-    if(addr[i] != 0xff) {
-      return 0;
-    }
-  }
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-static int
-parse_frame(void)
-{
-  frame802154_t frame;
-  int len;
-  len = packetbuf_datalen();
-  if(frame802154_parse(packetbuf_dataptr(), len, &frame)) {
-    if(frame.fcf.dest_addr_mode) {
-      if(frame.dest_pid != mac_src_pan_id &&
-         frame.dest_pid != FRAME802154_BROADCASTPANDID) {
-        /* Packet to another PAN */
-        return 0;
-      }
-      if(!is_broadcast_addr(frame.fcf.dest_addr_mode, frame.dest_addr)) {
-        packetbuf_set_addr(PACKETBUF_ADDR_RECEIVER, (linkaddr_t *)&frame.dest_addr);
-      }
-    }
-    packetbuf_set_addr(PACKETBUF_ADDR_SENDER, (linkaddr_t *)&frame.src_addr);
-    packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO, frame.seq);
-
-    return 0;
-  }
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
 static void
 packet_sent(void *ptr, int status, int transmissions)
 {
@@ -142,6 +105,7 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
 
       packetbuf_clear();
       pos = packetutils_deserialize_atts(&data[3], len - 3);
+      pos += packetutils_deserialize_addrs(&data[3 + pos], len - 3 - pos);
       if(pos < 0) {
         LOG_ERR("illegal packet attributes\n");
         return 1;
@@ -151,14 +115,12 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
       if(len > PACKETBUF_SIZE) {
         len = PACKETBUF_SIZE;
       }
-      memcpy(packetbuf_dataptr(), &data[pos], len);
+      memcpy(packetbuf_hdrptr(), &data[pos], len);
       packetbuf_set_datalen(len);
 
       LOG_DBG("sending %u (%d bytes)\n",
               data[2], packetbuf_datalen());
 
-      /* parse frame before sending to get addresses, etc. */
-      parse_frame();
       NETSTACK_MAC.send(packet_sent, &packet_ids[packet_pos]);
 
       packet_pos++;

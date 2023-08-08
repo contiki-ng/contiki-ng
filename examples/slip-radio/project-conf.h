@@ -42,7 +42,5 @@
 
 /* Configuration for the slipradio/network driver. */
 #define NETSTACK_CONF_NETWORK slipnet_driver
-
-#define NETSTACK_CONF_FRAMER no_framer
 /*---------------------------------------------------------------------------*/
 #endif /* PROJECT_CONF_H_ */

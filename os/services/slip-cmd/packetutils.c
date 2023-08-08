@@ -88,3 +88,55 @@ packetutils_deserialize_atts(const uint8_t *data, int size)
   return pos;
 }
 /*---------------------------------------------------------------------------*/
+static int
+packetutils_serialize_addr(uint8_t *data, int size, const linkaddr_t* val) {
+  int i;
+  int pos = 0;
+  if(val != 0) {
+    if(pos + LINKADDR_SIZE > size) {
+      return -1;
+    }
+    
+    for(i = 0; i < LINKADDR_SIZE; i++) {
+      data[pos++] = val->u8[i];
+    }
+  }
+  return pos;
+}
+
+/*---------------------------------------------------------------------------*/
+int
+packetutils_serialize_addrs(uint8_t *data, int size)
+{
+  int pos = 0;
+  
+  pos = packetutils_serialize_addr(data, size, packetbuf_addr(PACKETBUF_ADDR_SENDER));
+  pos += packetutils_serialize_addr(&data[pos], size - pos, packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
+
+  return pos;
+}
+/*---------------------------------------------------------------------------*/
+static int
+packetutils_deserialize_addr(const uint8_t *data, int size, uint8_t type) {
+  int i;
+  linkaddr_t val;
+  for(i = 0; i < LINKADDR_SIZE; i++) {
+    val.u8[i] = data[i];
+  }
+  packetbuf_set_addr(type, &val);
+  return LINKADDR_SIZE;
+}
+/*---------------------------------------------------------------------------*/
+int
+packetutils_deserialize_addrs(const uint8_t *data, int size)
+{
+  int pos;
+
+  pos = 0;
+  
+  pos = packetutils_deserialize_addr(data, size, PACKETBUF_ADDR_SENDER);
+  pos += packetutils_deserialize_addr(&data[pos], size - pos, PACKETBUF_ADDR_RECEIVER);
+
+  return pos;
+}
+/*---------------------------------------------------------------------------*/
