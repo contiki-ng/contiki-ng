@@ -60,22 +60,22 @@ void nbr_print_stat(void);
 /*---------------------------------------------------------------------------*/
 PROCESS(border_router_cmd_process, "Border router cmd process");
 /*---------------------------------------------------------------------------*/
-static const uint8_t *
-hextoi(const uint8_t *buf, int len, int *v)
+static int
+hextoi(const uint8_t *buf, int len)
 {
-  *v = 0;
+  int v = 0;
   for(; len > 0; len--, buf++) {
     if(*buf >= '0' && *buf <= '9') {
-      *v = (*v << 4) + ((*buf - '0') & 0xf);
+      v = (v << 4) + ((*buf - '0') & 0xf);
     } else if(*buf >= 'a' && *buf <= 'f') {
-      *v = (*v << 4) + ((*buf - 'a' + 10) & 0xf);
+      v = (v << 4) + ((*buf - 'a' + 10) & 0xf);
     } else if(*buf >= 'A' && *buf <= 'F') {
-      *v = (*v << 4) + ((*buf - 'A' + 10) & 0xf);
+      v = (v << 4) + ((*buf - 'A' + 10) & 0xf);
     } else {
       break;
     }
   }
-  return buf;
+  return v;
 }
 /*---------------------------------------------------------------------------*/
 static const uint8_t *
@@ -87,10 +87,12 @@ dectoi(const uint8_t *buf, int len, int *v)
     return buf;
   }
   if(*buf == '$') {
-    return hextoi(buf + 1, len - 1, v);
+    *v = hextoi(buf + 1, len - 1);
+    return buf;
   }
   if(*buf == '0' && *(buf + 1) == 'x' && len > 2) {
-    return hextoi(buf + 2, len - 2, v);
+    *v = hextoi(buf + 2, len - 2);
+    return buf;
   }
   if(*buf == '-') {
     negative = 1;
