@@ -5,6 +5,7 @@ EXAMPLESDIR=../../examples
 TOOLSDIR=../../tools
 
 EXAMPLES = \
+6tisch/simple-node/z1 \
 hello-world/native \
 hello-world/native:MAKE_NET=MAKE_NET_NULLNET \
 hello-world/native:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
