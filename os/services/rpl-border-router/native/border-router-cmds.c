@@ -231,11 +231,11 @@ PROCESS_THREAD(border_router_cmd_process, ev, data)
       LOG_DBG("Got serial data!!! %s of len: %zd\n",
               (char *)data, strlen((char *)data));
       command_context = CMD_CONTEXT_STDIO;
-      if(cmd_input(data, strlen((char *)data))) {
-        /* Commnand executed - all is fine */
-      } else {
+      if(!cmd_input(data, strlen((char *)data))) {
         /* did not find command - run shell and see if ... */
-        PROCESS_PT_SPAWN(&shell_input_pt, shell_input(&shell_input_pt, serial_shell_output, data));
+        PROCESS_PT_SPAWN(&shell_input_pt,
+                         shell_input(&shell_input_pt, serial_shell_output,
+                                     data));
       }
     }
   }
