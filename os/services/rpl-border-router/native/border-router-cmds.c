@@ -228,8 +228,8 @@ PROCESS_THREAD(border_router_cmd_process, ev, data)
   while(1) {
     PROCESS_YIELD();
     if(ev == serial_line_event_message && data != NULL) {
-      LOG_DBG("Got serial data!!! %s of len: %u\n",
-             (char *)data, (unsigned)strlen((char *)data));
+      LOG_DBG("Got serial data!!! %s of len: %zd\n",
+              (char *)data, strlen((char *)data));
       command_context = CMD_CONTEXT_STDIO;
       if(cmd_input(data, strlen((char *)data))) {
         /* Commnand executed - all is fine */
