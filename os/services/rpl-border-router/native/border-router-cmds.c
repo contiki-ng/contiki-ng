@@ -129,12 +129,10 @@ border_router_cmd_handler(const uint8_t *data, int len)
       case 'C': {
         /* send on a set-param thing! */
         uint8_t set_param[] = {'!', 'V', 0, RADIO_PARAM_CHANNEL, 0, 0 };
-        int channel = -1;
+        int channel;
         dectoi(&data[2], len - 2, &channel);
-        if(channel >= 0) {
-          set_param[5] = channel & 0xff;
-          write_to_slip(set_param, sizeof(set_param));
-        }
+        set_param[5] = channel & 0xff;
+        write_to_slip(set_param, sizeof(set_param));
         return 1;
       }
       case 'P': {
