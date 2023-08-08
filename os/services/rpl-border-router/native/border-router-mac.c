@@ -89,7 +89,8 @@ packet_sent(uint8_t sessionid, uint8_t status, uint8_t tx)
     packetbuf_attr_copyfrom(callback->attrs, callback->addrs);
     mac_call_sent_callback(callback->cback, callback->ptr, status, tx);
   } else {
-    LOG_ERR("Session id to high (%d)\n", sessionid);
+    LOG_ERR("Session id (%d) >= MAX_CALLBACKS (%d)\n", sessionid,
+            MAX_CALLBACKS);
   }
 }
 /*---------------------------------------------------------------------------*/
