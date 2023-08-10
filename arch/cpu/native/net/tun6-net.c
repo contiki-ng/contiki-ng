@@ -101,14 +101,25 @@ static ssystem(const char *fmt, ...)
 static void
 cleanup(void)
 {
-  ssystem("ifconfig %s down", config_tundev);
+#define TMPBUFSIZE 128
+  /* Called from signal handler, avoid unsafe functions. */
+  char buf[TMPBUFSIZE];
+  strcpy(buf, "ifconfig ");
+  /* Will not overflow, but null-terminate to avoid spurious warnings. */
+  buf[TMPBUFSIZE - 1] = '\0';
+  strncat(buf, config_tundev, TMPBUFSIZE - strlen(buf) - 1);
+  strncat(buf, " down", TMPBUFSIZE - strlen(buf) - 1);
+  system(buf);
 #ifndef linux
-  ssystem("sysctl -w net.ipv6.conf.all.forwarding=1");
+  system("sysctl -w net.ipv6.conf.all.forwarding=1");
 #endif
-  ssystem("netstat -nr"
-	  " | awk '{ if ($2 == \"%s\") print \"route delete -net \"$1; }'"
-	  " | sh",
-	  config_tundev);
+  strcpy(buf, "netstat -nr"
+         " | awk '{ if ($2 == \"");
+  buf[TMPBUFSIZE - 1] = '\0';
+  strncat(buf, config_tundev, TMPBUFSIZE - strlen(buf) - 1);
+  strncat(buf, "\") print \"route delete -net \"$1; }'"
+          " | sh", TMPBUFSIZE - strlen(buf) - 1);
+  system(buf);
 }
 
 /*---------------------------------------------------------------------------*/
