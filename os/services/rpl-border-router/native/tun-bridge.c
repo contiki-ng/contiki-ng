@@ -107,8 +107,8 @@ tun_alloc(char *dev)
 {
   struct ifreq ifr;
   int fd, err;
-
   if((fd = open("/dev/net/tun", O_RDWR)) < 0) {
+    /* Error message handled by caller */
     return -1;
   }
 
@@ -121,8 +121,8 @@ tun_alloc(char *dev)
   if(*dev != 0) {
     strncpy(ifr.ifr_name, dev, IFNAMSIZ - 1);
   }
-
   if((err = ioctl(fd, TUNSETIFF, (void *)&ifr)) < 0) {
+    /* Error message handled by caller */
     close(fd);
     return err;
   }
@@ -130,6 +130,7 @@ tun_alloc(char *dev)
   return fd;
 }
 #else
+/*---------------------------------------------------------------------------*/
 int
 tun_alloc(char *dev)
 {
@@ -151,7 +152,6 @@ tun_init()
   LOG_INFO("Opening tun interface:%s\n", slip_config_tundev);
 
   tunfd = tun_alloc(slip_config_tundev);
-
   if(tunfd == -1) {
     err(1, "tun_init: tun_alloc failed");
   }
@@ -171,7 +171,6 @@ tun_init()
 static int
 tun_output(uint8_t *data, int len)
 {
-  /* fprintf(stderr, "*** Writing to tun...%d\n", len); */
   if(write(tunfd, data, len) != len) {
     err(1, "serial_to_tun: write");
     return -1;
@@ -242,7 +241,6 @@ handle_fd(fd_set *rset, fd_set *wset)
 
     if(FD_ISSET(tunfd, rset)) {
       size = tun_input(uip_buf, sizeof(uip_buf));
-      /* printf("TUN data incoming read:%d\n", size); */
       uip_len = size;
       tcpip_input();
 

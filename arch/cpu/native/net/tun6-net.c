@@ -51,6 +51,7 @@
 #include <sys/socket.h>
 #include <net/if.h>
 
+/*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "Tun6"
@@ -68,7 +69,6 @@
 static const char *config_ipaddr = "fd00::1/64";
 /* Allocate some bytes in RAM and copy the string */
 static char config_tundev[IFNAMSIZ + 1] = "tun0";
-
 
 static int tunfd = -1;
 
@@ -172,7 +172,7 @@ tun_alloc(char *dev, uint16_t devsize)
   struct ifreq ifr;
   int fd, err;
   LOG_INFO("Opening: %s\n", dev);
-  if( (fd = open("/dev/net/tun", O_RDWR)) < 0 ) {
+  if((fd = open("/dev/net/tun", O_RDWR)) < 0) {
     /* Error message handled by caller */
     return -1;
   }
@@ -186,12 +186,11 @@ tun_alloc(char *dev, uint16_t devsize)
   if(*dev != '\0') {
     memcpy(ifr.ifr_name, dev, MIN(sizeof(ifr.ifr_name), devsize));
   }
-  if((err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0 ) {
+  if((err = ioctl(fd, TUNSETIFF, (void *)&ifr)) < 0) {
     /* Error message handled by caller */
     close(fd);
     return err;
   }
-
   LOG_INFO("Using '%s' vs '%s'\n", dev, ifr.ifr_name);
   strncpy(dev, ifr.ifr_name, MIN(devsize - 1, sizeof(ifr.ifr_name)));
   dev[devsize - 1] = '\0';
@@ -218,7 +217,6 @@ tun_init()
   tunfd = tun_alloc(config_tundev, sizeof(config_tundev));
   if(tunfd == -1) {
     LOG_WARN("Failed to open tun device (you may be lacking permission). Running without network.\n");
-    /* err(1, "failed to allocate tun device ``%s''", config_tundev); */
     return;
   }
 
@@ -235,12 +233,10 @@ tun_init()
   signal(SIGINT, sigcleanup);
   ifconf(config_tundev, config_ipaddr);
 }
-
 /*---------------------------------------------------------------------------*/
 static int
 tun_output(uint8_t *data, int len)
 {
-  /* fprintf(stderr, "*** Writing to tun...%d\n", len); */
   if(tunfd != -1 && write(tunfd, data, len) != len) {
     err(1, "serial_to_tun: write");
   }
@@ -262,7 +258,6 @@ tun_input(unsigned char *data, int maxlen)
   }
   return size;
 }
-
 /*---------------------------------------------------------------------------*/
 static uint8_t
 output(const linkaddr_t *localdest)
@@ -287,7 +282,6 @@ set_fd(fd_set *rset, fd_set *wset)
   FD_SET(tunfd, rset);
   return 1;
 }
-
 /*---------------------------------------------------------------------------*/
 
 static void
@@ -323,6 +317,4 @@ const struct network_driver tun6_net_driver ={
   input,
   output
 };
-
-
 /*---------------------------------------------------------------------------*/
