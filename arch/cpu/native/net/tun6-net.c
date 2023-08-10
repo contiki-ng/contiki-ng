@@ -138,6 +138,15 @@ sigcleanup(int signo)
   _exit(0);
 }
 /*---------------------------------------------------------------------------*/
+int
+devopen(const char *dev, int flags)
+{
+  char t[32];
+  strcpy(t, "/dev/");
+  strncat(t, dev, sizeof(t) - 5);
+  return open(t, flags);
+}
+/*---------------------------------------------------------------------------*/
 void
 ifconf(const char *tundev, const char *ipaddr)
 {
@@ -190,14 +199,6 @@ tun_alloc(char *dev, uint16_t devsize)
   return fd;
 }
 #else
-static int
-devopen(const char *dev, int flags)
-{
-  char t[32];
-  strcpy(t, "/dev/");
-  strncat(t, dev, sizeof(t) - 5);
-  return open(t, flags);
-}
 /*---------------------------------------------------------------------------*/
 static int
 tun_alloc(char *dev, uint16_t devsize)
