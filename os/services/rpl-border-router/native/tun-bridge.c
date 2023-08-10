@@ -84,6 +84,8 @@ int ssystem(const char *fmt, ...)
      __attribute__((__format__ (__printf__, 1, 2)));
 void ifconf_cleanup(const char *dev);
 void ifconf(const char *tundev, const char *ipaddr);
+int devopen(const char *dev, int flags);
+
 
 /*---------------------------------------------------------------------------*/
 void
@@ -97,15 +99,6 @@ sigcleanup(int signo)
 {
   fprintf(stderr, "signal %d\n", signo);
   exit(0);			/* exit(0) will call cleanup() */
-}
-/*---------------------------------------------------------------------------*/
-int
-devopen(const char *dev, int flags)
-{
-  char t[32];
-  strcpy(t, "/dev/");
-  strncat(t, dev, sizeof(t) - 5);
-  return open(t, flags);
 }
 /*---------------------------------------------------------------------------*/
 #ifdef linux
