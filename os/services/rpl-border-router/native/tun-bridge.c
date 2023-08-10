@@ -47,6 +47,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <termios.h>
+#include <net/if.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
@@ -68,7 +69,7 @@
 #include "border-router.h"
 
 extern const char *slip_config_ipaddr;
-extern char slip_config_tundev[32];
+extern char slip_config_tundev[IFNAMSIZ + 1];
 extern uint16_t slip_config_basedelay;
 
 static int tunfd;
@@ -103,7 +104,7 @@ sigcleanup(int signo)
 /*---------------------------------------------------------------------------*/
 #ifdef linux
 int
-tun_alloc(char *dev)
+tun_alloc(char *dev, uint16_t devsize)
 {
   struct ifreq ifr;
   int fd, err;
@@ -118,21 +119,22 @@ tun_alloc(char *dev)
    *        IFF_NO_PI - Do not provide packet information
    */
   ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-  if(*dev != 0) {
-    strncpy(ifr.ifr_name, dev, IFNAMSIZ - 1);
+  if(*dev != '\0') {
+    memcpy(ifr.ifr_name, dev, MIN(sizeof(ifr.ifr_name), devsize));
   }
   if((err = ioctl(fd, TUNSETIFF, (void *)&ifr)) < 0) {
     /* Error message handled by caller */
     close(fd);
     return err;
   }
-  strcpy(dev, ifr.ifr_name);
+  strncpy(dev, ifr.ifr_name, MIN(devsize - 1, sizeof(ifr.ifr_name)));
+  dev[devsize - 1] = '\0';
   return fd;
 }
 #else
 /*---------------------------------------------------------------------------*/
 int
-tun_alloc(char *dev)
+tun_alloc(char *dev, uint16_t devsize)
 {
   return devopen(dev, O_RDWR);
 }
@@ -151,7 +153,7 @@ tun_init()
 
   LOG_INFO("Opening tun interface:%s\n", slip_config_tundev);
 
-  tunfd = tun_alloc(slip_config_tundev);
+  tunfd = tun_alloc(slip_config_tundev, sizeof(slip_config_tundev));
   if(tunfd == -1) {
     err(1, "tun_init: tun_alloc failed");
   }
