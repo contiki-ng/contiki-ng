@@ -82,33 +82,14 @@ static const struct select_callback tun_select_callback = {
 
 int ssystem(const char *fmt, ...)
      __attribute__((__format__ (__printf__, 1, 2)));
-int
-ssystem(const char *fmt, ...) __attribute__((__format__ (__printf__, 1, 2)));
+void ifconf_cleanup(const char *dev);
+void ifconf(const char *tundev, const char *ipaddr);
 
-int
-ssystem(const char *fmt, ...)
-{
-  char cmd[128];
-  va_list ap;
-  va_start(ap, fmt);
-  vsnprintf(cmd, sizeof(cmd), fmt, ap);
-  va_end(ap);
-  printf("%s\n", cmd);
-  fflush(stdout);
-  return system(cmd);
-}
 /*---------------------------------------------------------------------------*/
 void
 cleanup(void)
 {
-  ssystem("ifconfig %s down", slip_config_tundev);
-#ifndef linux
-  ssystem("sysctl -w net.ipv6.conf.all.forwarding=1");
-#endif
-  ssystem("netstat -nr"
-	  " | awk '{ if ($2 == \"%s\") print \"route delete -net \"$1; }'"
-	  " | sh",
-	  slip_config_tundev);
+  ifconf_cleanup(slip_config_tundev);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -116,24 +97,6 @@ sigcleanup(int signo)
 {
   fprintf(stderr, "signal %d\n", signo);
   exit(0);			/* exit(0) will call cleanup() */
-}
-/*---------------------------------------------------------------------------*/
-void
-ifconf(const char *tundev, const char *ipaddr)
-{
-#ifdef linux
-  ssystem("ifconfig %s inet `hostname` up", tundev);
-  ssystem("ifconfig %s add %s", tundev, ipaddr);
-#elif defined(__APPLE__)
-  ssystem("ifconfig %s inet6 %s up", tundev, ipaddr);
-  ssystem("sysctl -w net.inet.ip.forwarding=1");
-#else
-  ssystem("ifconfig %s inet `hostname` %s up", tundev, ipaddr);
-  ssystem("sysctl -w net.inet.ip.forwarding=1");
-#endif /* !linux */
-
-  /* Print the configuration to the console. */
-  ssystem("ifconfig %s\n", tundev);
 }
 /*---------------------------------------------------------------------------*/
 int

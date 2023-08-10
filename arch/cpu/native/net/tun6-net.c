@@ -79,11 +79,11 @@ static const struct select_callback tun_select_callback = {
   handle_fd
 };
 
-static int ssystem(const char *fmt, ...)
+int ssystem(const char *fmt, ...)
      __attribute__((__format__ (__printf__, 1, 2)));
 
 int
-static ssystem(const char *fmt, ...)
+ssystem(const char *fmt, ...)
 {
   char cmd[128];
   va_list ap;
@@ -96,8 +96,8 @@ static ssystem(const char *fmt, ...)
 }
 
 /*---------------------------------------------------------------------------*/
-static void
-cleanup(void)
+void
+ifconf_cleanup(const char *dev)
 {
 #define TMPBUFSIZE 128
   /* Called from signal handler, avoid unsafe functions. */
@@ -105,7 +105,7 @@ cleanup(void)
   strcpy(buf, "ifconfig ");
   /* Will not overflow, but null-terminate to avoid spurious warnings. */
   buf[TMPBUFSIZE - 1] = '\0';
-  strncat(buf, config_tundev, TMPBUFSIZE - strlen(buf) - 1);
+  strncat(buf, dev, TMPBUFSIZE - strlen(buf) - 1);
   strncat(buf, " down", TMPBUFSIZE - strlen(buf) - 1);
   system(buf);
 #ifndef linux
@@ -114,12 +114,17 @@ cleanup(void)
   strcpy(buf, "netstat -nr"
          " | awk '{ if ($2 == \"");
   buf[TMPBUFSIZE - 1] = '\0';
-  strncat(buf, config_tundev, TMPBUFSIZE - strlen(buf) - 1);
+  strncat(buf, dev, TMPBUFSIZE - strlen(buf) - 1);
   strncat(buf, "\") print \"route delete -net \"$1; }'"
           " | sh", TMPBUFSIZE - strlen(buf) - 1);
   system(buf);
 }
-
+/*---------------------------------------------------------------------------*/
+static void
+cleanup(void)
+{
+  ifconf_cleanup(config_tundev);
+}
 /*---------------------------------------------------------------------------*/
 static void CC_NORETURN
 sigcleanup(int signo)
@@ -132,9 +137,8 @@ sigcleanup(int signo)
   cleanup();
   _exit(0);
 }
-
 /*---------------------------------------------------------------------------*/
-static void
+void
 ifconf(const char *tundev, const char *ipaddr)
 {
 #ifdef linux
