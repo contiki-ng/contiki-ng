@@ -115,8 +115,13 @@ cleanup(void)
 static void CC_NORETURN
 sigcleanup(int signo)
 {
-  fprintf(stderr, "signal %d\n", signo);
-  exit(0);			/* exit(0) will call cleanup() */
+  const char *prefix = "signal ";
+  const char *sig =
+    signo == SIGHUP ? "HUP\n" : signo == SIGTERM ? "TERM\n" : "INT\n";
+  write(fileno(stderr), prefix, strlen(prefix));
+  write(fileno(stderr), sig, strlen(sig));
+  cleanup();
+  _exit(0);
 }
 
 /*---------------------------------------------------------------------------*/
