@@ -173,7 +173,6 @@ tun_output(uint8_t *data, int len)
 {
   if(write(tunfd, data, len) != len) {
     err(1, "serial_to_tun: write");
-    return -1;
   }
   return 0;
 }
