@@ -108,6 +108,7 @@ tun_alloc(char *dev, uint16_t devsize)
 {
   struct ifreq ifr;
   int fd, err;
+  LOG_INFO("Opening: %s\n", dev);
   if((fd = open("/dev/net/tun", O_RDWR)) < 0) {
     /* Error message handled by caller */
     return -1;
@@ -127,8 +128,10 @@ tun_alloc(char *dev, uint16_t devsize)
     close(fd);
     return err;
   }
+  LOG_INFO("Using '%s' vs '%s'\n", dev, ifr.ifr_name);
   strncpy(dev, ifr.ifr_name, MIN(devsize - 1, sizeof(ifr.ifr_name)));
   dev[devsize - 1] = '\0';
+  LOG_INFO("Using %s\n", dev);
   return fd;
 }
 #else
@@ -136,6 +139,7 @@ tun_alloc(char *dev, uint16_t devsize)
 int
 tun_alloc(char *dev, uint16_t devsize)
 {
+  LOG_INFO("Opening: %s\n", dev);
   return devopen(dev, O_RDWR);
 }
 #endif
@@ -157,6 +161,8 @@ tun_init()
   if(tunfd == -1) {
     err(1, "tun_init: tun_alloc failed");
   }
+
+  LOG_INFO("Tun open:%d\n", tunfd);
 
   select_set_callback(tunfd, &tun_select_callback);
 

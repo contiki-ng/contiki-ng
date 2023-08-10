@@ -212,7 +212,7 @@ tun_init()
 {
   setvbuf(stdout, NULL, _IOLBF, 0); /* Line buffered output. */
 
-  LOG_INFO("Initializing tun interface\n");
+  LOG_INFO("Opening tun interface:%s\n", config_tundev);
 
   tunfd = tun_alloc(config_tundev, sizeof(config_tundev));
   if(tunfd == -1) {
