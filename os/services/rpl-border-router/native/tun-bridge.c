@@ -95,7 +95,7 @@ cleanup(void)
   ifconf_cleanup(slip_config_tundev);
 }
 /*---------------------------------------------------------------------------*/
-void
+void CC_NORETURN
 sigcleanup(int signo)
 {
   fprintf(stderr, "signal %d\n", signo);
