@@ -386,18 +386,16 @@ uip_udpchksum(void)
 void
 uip_init(void)
 {
-  int c;
-
   uipbuf_init();
   uip_ds6_init();
   uip_icmp6_init();
   uip_nd6_init();
 
 #if UIP_TCP
-  for(c = 0; c < UIP_LISTENPORTS; ++c) {
+  for(int c = 0; c < UIP_LISTENPORTS; ++c) {
     uip_listenports[c] = 0;
   }
-  for(c = 0; c < UIP_TCP_CONNS; ++c) {
+  for(int c = 0; c < UIP_TCP_CONNS; ++c) {
     uip_conns[c].tcpstateflags = UIP_CLOSED;
   }
 #endif /* UIP_TCP */
@@ -407,7 +405,7 @@ uip_init(void)
 #endif /* UIP_ACTIVE_OPEN || UIP_UDP */
 
 #if UIP_UDP
-  for(c = 0; c < UIP_UDP_CONNS; ++c) {
+  for(int c = 0; c < UIP_UDP_CONNS; ++c) {
     uip_udp_conns[c].lport = 0;
   }
 #endif /* UIP_UDP */
