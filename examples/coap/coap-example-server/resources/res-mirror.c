@@ -86,7 +86,8 @@ res_any_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
   if(coap_get_header_content_format(request, &content_format)) {
     strpos += snprintf((char *)buffer, REST_MAX_CHUNK_SIZE + 1, "CF %u\n", content_format);
   }
-  if(strpos <= REST_MAX_CHUNK_SIZE && (len = coap_get_header_accept(request, &content_format))) {
+  if(strpos <= REST_MAX_CHUNK_SIZE &&
+     coap_get_header_accept(request, &content_format)) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "Ac %u\n", content_format);
     /* Some getters such as for ETag or Location are omitted, as these options should not appear in a request.
      * Max-Age might appear in HTTP requests or used for special purposes in CoAP. */
