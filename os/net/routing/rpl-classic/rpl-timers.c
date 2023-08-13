@@ -331,8 +331,6 @@ schedule_dao(rpl_instance_t *instance, clock_time_t latency)
     return;
   }
 
-  expiration_time = etimer_expiration_time(&instance->dao_timer.etimer);
-
   if(!etimer_expired(&instance->dao_timer.etimer)) {
     LOG_DBG("DAO timer already scheduled\n");
   } else {
