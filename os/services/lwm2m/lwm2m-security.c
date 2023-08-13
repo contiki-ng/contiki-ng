@@ -168,7 +168,6 @@ lwm2m_callback(lwm2m_object_instance_t *object,
 {
   /* NOTE: the create operation will only create an instance and should
      avoid reading out data */
-  int32_t value;
   int iv;
   lwm2m_security_server_t *security;
   security = (lwm2m_security_server_t *) object;
@@ -178,12 +177,12 @@ lwm2m_callback(lwm2m_object_instance_t *object,
     switch(ctx->resource_id) {
     case LWM2M_SECURITY_SERVER_URI_ID:
       LOG_DBG("Writing security URI value: len: %"PRId16"\n", ctx->inbuf->size);
-      value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->server_uri, LWM2M_SECURITY_URI_SIZE);
+      lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->server_uri, LWM2M_SECURITY_URI_SIZE);
       /* This is string... */
       security->server_uri_len = ctx->last_value_len;
       break;
-    case LWM2M_SECURITY_BOOTSTRAP_SERVER_ID:
-      value = lwm2m_object_read_boolean(ctx, ctx->inbuf->buffer, ctx->inbuf->size, &iv);
+    case LWM2M_SECURITY_BOOTSTRAP_SERVER_ID: {
+      int32_t value = lwm2m_object_read_boolean(ctx, ctx->inbuf->buffer, ctx->inbuf->size, &iv);
       if(value > 0) {
         LOG_DBG("Set Bootstrap: %d\n", iv);
         security->bootstrap = (uint8_t) iv;
@@ -191,17 +190,18 @@ lwm2m_callback(lwm2m_object_instance_t *object,
         LOG_WARN("Failed to set bootstrap\n");
       }
       break;
+    }
     case LWM2M_SECURITY_MODE_ID:
       {
         int32_t v2;
-        value = lwm2m_object_read_int(ctx, ctx->inbuf->buffer, ctx->inbuf->size, &v2);
+        lwm2m_object_read_int(ctx, ctx->inbuf->buffer, ctx->inbuf->size, &v2);
         LOG_DBG("Writing security MODE value: %"PRId32" len: %d\n", v2,
                 (int)ctx->inbuf->size);
         security->security_mode = v2;
       }
       break;
     case LWM2M_SECURITY_CLIENT_PKI_ID:
-      value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->public_key, LWM2M_SECURITY_KEY_SIZE);
+      lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->public_key, LWM2M_SECURITY_KEY_SIZE);
       security->public_key_len = ctx->last_value_len;
 
       LOG_DBG("Writing client PKI: len: %"PRIu16" '", ctx->last_value_len);
@@ -210,7 +210,7 @@ lwm2m_callback(lwm2m_object_instance_t *object,
       LOG_DBG_("'\n");
       break;
     case LWM2M_SECURITY_KEY_ID:
-      value = lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->secret_key, LWM2M_SECURITY_KEY_SIZE);
+      lwm2m_object_read_string(ctx, ctx->inbuf->buffer, ctx->inbuf->size, security->secret_key, LWM2M_SECURITY_KEY_SIZE);
       security->secret_key_len = ctx->last_value_len;
 
       LOG_DBG("Writing secret key: len: %"PRIu16" '", ctx->last_value_len);
