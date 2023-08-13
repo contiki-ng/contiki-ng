@@ -49,6 +49,16 @@
 
 #ifdef __GNUC__
 
+#ifndef CC_CONF_ASSUME
+  #ifdef __clang__
+    #define CC_CONF_ASSUME(c) do { __builtin_assume((c)); } while(0)
+  #elif __GNUC__ >= 13
+    #define CC_CONF_ASSUME(c) __attribute__((__assume__(c)))
+  #else
+    #define CC_CONF_ASSUME(c) do { if (!(c)) __builtin_unreachable(); } while(0)
+  #endif
+#endif
+
 #define CC_CONF_ALIGN(n) __attribute__((__aligned__(n)))
 
 #ifndef CC_CONF_CONSTRUCTOR
@@ -64,6 +74,16 @@
 #define CC_CONF_NORETURN __attribute__((__noreturn__))
 
 #endif /* __GNUC__ */
+
+/**
+ * Configure if the C compiler supports taking hints from the user about
+ * invariants, e.g. with __attribute__((__assume__(hint))).
+ */
+#ifdef CC_CONF_ASSUME
+#define ASSUME(c) CC_CONF_ASSUME(c)
+#else
+#define ASSUME(c)
+#endif /* CC_CONF_ASSUME */
 
 #ifdef CC_CONF_ALIGN
 #define CC_ALIGN(n) CC_CONF_ALIGN(n)
