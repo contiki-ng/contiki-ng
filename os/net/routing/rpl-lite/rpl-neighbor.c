@@ -168,8 +168,7 @@ int
 rpl_neighbor_count(void)
 {
   int count = 0;
-  rpl_nbr_t *nbr = nbr_table_head(rpl_neighbors);
-  for(nbr = nbr_table_head(rpl_neighbors);
+  for(rpl_nbr_t *nbr = nbr_table_head(rpl_neighbors);
       nbr != NULL;
       nbr = nbr_table_next(rpl_neighbors, nbr)) {
     count++;
