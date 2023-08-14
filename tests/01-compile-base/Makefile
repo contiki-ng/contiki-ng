@@ -4,7 +4,7 @@ BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
 EXAMPLESDIR=../../examples
 
 EXAMPLES = \
-6tisch/simple-node/z1 \
+6tisch/simple-node/z1:MAKE_WITH_PERIODIC_ROUTES_PRINT=1 \
 hello-world/native \
 hello-world/native:DEFINES=UIP_CONF_UDP=0 \
 hello-world/native:MAKE_NET=MAKE_NET_NULLNET \
