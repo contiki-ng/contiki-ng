@@ -81,8 +81,6 @@ static const struct select_callback tun_select_callback = {
 
 static int ssystem(const char *fmt, ...)
      __attribute__((__format__ (__printf__, 1, 2)));
-static int
-ssystem(const char *fmt, ...) __attribute__((__format__ (__printf__, 1, 2)));
 
 int
 static ssystem(const char *fmt, ...)
