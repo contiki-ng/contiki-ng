@@ -54,19 +54,12 @@ AUTOSTART_PROCESSES(&node_process);
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(node_process, ev, data)
 {
-  int is_coordinator;
-
   PROCESS_BEGIN();
-
-  is_coordinator = 0;
-
 #if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_Z1
-  is_coordinator = (node_id == 1);
-#endif
-
-  if(is_coordinator) {
+  if(node_id == 1) { /* Coordinator node. */
     NETSTACK_ROUTING.root_start();
   }
+#endif
   NETSTACK_MAC.on();
 
 #if WITH_PERIODIC_ROUTES_PRINT
