@@ -2,7 +2,6 @@ CURDIR := $(abspath $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
 BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
 
 EXAMPLESDIR=../../examples
-TOOLSDIR=../../tools
 
 EXAMPLES = \
 hello-world/native \
@@ -32,7 +31,5 @@ dev/dht11/z1 \
 snmp-server/native \
 snmp-server/sky \
 snmp-server/z1 \
-
-TOOLS=
 
 include ../Makefile.compile-test
