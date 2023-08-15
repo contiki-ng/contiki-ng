@@ -31,7 +31,7 @@ Hello, world
 ## Running the example on a real device
 First, make sure the necessary toolchains are installed: For Linux see [doc:toolchain-installation-linux]. For Mac OS, see [doc:toolchain-installation-macos].
 
-If you're in a virtual machine, make sure to make the USB device visible inside the VM, through the device sharing options of your virtual machine software. Identify the USB port of your device by using `make TARGET=zoul motelist`. It might be for instance `/dev/ttyUSB0` or `/dev/ttyUSB1`.
+If you're in a virtual machine, make sure to make the USB device visible inside the VM, through the device sharing options of your virtual machine software. Identify the USB port of your device by using `make motelist-all`. It might be for instance `/dev/ttyUSB0` or `/dev/ttyUSB1`.
 
 To run the same project on an IoT device such as the Zolertia RE-Mote, you can run the following shell command:
 
