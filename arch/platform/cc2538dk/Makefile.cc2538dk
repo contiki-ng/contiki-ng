@@ -27,12 +27,12 @@ endif
 
 BSL = $(CONTIKI_NG_TOOLS_DIR)/cc2538-bsl/cc2538-bsl.py
 
-%.upload: $(OUT_BIN) $(OUT_ELF)
+%.upload: $(OUT_BIN) $(BUILD_DIR_BOARD)/%.$(TARGET)
 ifeq ($(wildcard $(BSL)), )
 	$(error Could not find "$(BSL)". Did you run 'git submodule update --init'?)
 else
 	$(eval BSL_ADDRESS_ARG := -a $(shell $(OBJDUMP) -h \
-	                               $(BUILD_DIR_BOARD)/$*.elf | grep -B1 LOAD | \
+	                               $(BUILD_DIR_BOARD)/$*.$(TARGET) | grep -B1 LOAD | \
 	                               grep -Ev 'LOAD|\-\-' | awk '{print "0x" $$5}' | \
 	                               sort -g | head -1))
 	$(BSL) $(BSL_FLAGS) $(BSL_ADDRESS_ARG) $<
