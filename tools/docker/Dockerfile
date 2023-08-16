@@ -66,20 +66,11 @@ RUN apt-get -qq update && \
     snmp \
     snmp-mibs-downloader \
     > /dev/null && \
-  wget -nv https://github.com/dongjinleekr/graalvm-ce-deb/releases/download/22.2.0-0/graalvm-ce-java17_amd64_22.2.0-0.deb && \
-  dpkg --unpack graalvm-ce-java17_amd64_22.2.0-0.deb && \
-  apt-get -qq -y --no-install-recommends install \
-    ca-certificates-java \
-    java-common \
-    libnss3 \
-    libnspr4 \
-    libsqlite3-0 \
-    > /dev/null && \
-  apt-get -qq -y --no-install-recommends install \
-    ant \
-    > /dev/null && \
-  rm graalvm-ce-java17_amd64_22.2.0-0.deb && \
   apt-get -qq clean
+
+RUN wget -nv https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-17.0.7/graalvm-community-jdk-17.0.7_linux-x64_bin.tar.gz && \
+  tar xf graalvm-community-jdk-17.0.7_linux-x64_bin.tar.gz -C /usr/local --strip-components=1 --no-same-owner && \
+  rm -f graalvm*gz
 
 # Install ARM toolchain
 RUN wget -nv https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 && \
