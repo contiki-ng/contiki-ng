@@ -610,7 +610,7 @@ compress_addr_64(uint8_t bitpos, uip_ipaddr_t *ipaddr,
  * pref_post_count takes a byte where the first nibble specify prefix count
  * and the second postfix count (NOTE: 15/0xf => 16 bytes copy).
  */
-static void
+static bool
 uncompress_addr(uip_ipaddr_t *ipaddr, uint8_t const prefix[],
                 uint8_t pref_post_count, uip_lladdr_t *lladdr)
 {
@@ -629,6 +629,11 @@ uncompress_addr(uip_ipaddr_t *ipaddr, uint8_t const prefix[],
     memset(&ipaddr->u8[prefcount], 0, 16 - (prefcount + postcount));
   }
   if(postcount > 0) {
+    if((iphc_ptr - packetbuf_ptr) + postcount > packetbuf_datalen()) {
+      LOG_WARN("Insufficient packet data to decompress IP address\n");
+      return false;
+    }
+
     memcpy(&ipaddr->u8[16 - postcount], iphc_ptr, postcount);
     if(postcount == 2 && prefcount < 11) {
       /* 16 bits uncompression => 0000:00ff:fe00:XXXX */
@@ -643,6 +648,7 @@ uncompress_addr(uip_ipaddr_t *ipaddr, uint8_t const prefix[],
 
   LOG_DBG_6ADDR(ipaddr);
   LOG_DBG_("\n");
+  return true;
 }
 
 /*--------------------------------------------------------------------*/
@@ -1181,13 +1187,18 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
       }
     }
     /* if tmp == 0 we do not have a context and therefore no prefix */
-    uncompress_addr(&SICSLOWPAN_IP_BUF(buf)->srcipaddr,
-                    tmp != 0 ? context->prefix : NULL, unc_ctxconf[tmp],
-                    (uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER));
+    if(!uncompress_addr(&SICSLOWPAN_IP_BUF(buf)->srcipaddr,
+                        tmp != 0 ? context->prefix : NULL, unc_ctxconf[tmp],
+                        (uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER))) {
+      return false;
+    }
   } else {
     /* no compression and link local */
-    uncompress_addr(&SICSLOWPAN_IP_BUF(buf)->srcipaddr, llprefix, unc_llconf[tmp],
-                    (uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER));
+    if(!uncompress_addr(&SICSLOWPAN_IP_BUF(buf)->srcipaddr, llprefix,
+                        unc_llconf[tmp],
+                        (uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER))) {
+      return false;
+    }
   }
 
   /* Destination address */
@@ -1212,8 +1223,10 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
         iphc_ptr++;
       }
 
-      uncompress_addr(&SICSLOWPAN_IP_BUF(buf)->destipaddr, prefix,
-                      unc_mxconf[tmp], NULL);
+      if(!uncompress_addr(&SICSLOWPAN_IP_BUF(buf)->destipaddr, prefix,
+                          unc_mxconf[tmp], NULL)) {
+        return false;
+      }
     }
   } else {
     /* no multicast */
@@ -1227,14 +1240,18 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
         LOG_ERR("uncompression: error context not found\n");
         return false;
       }
-      uncompress_addr(&SICSLOWPAN_IP_BUF(buf)->destipaddr, context->prefix,
-                      unc_ctxconf[tmp],
-                      (uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
+      if(!uncompress_addr(&SICSLOWPAN_IP_BUF(buf)->destipaddr, context->prefix,
+                          unc_ctxconf[tmp],
+                          (uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_RECEIVER))) {
+        return false;
+      }
     } else {
       /* not context based => link local M = 0, DAC = 0 - same as SAC */
-      uncompress_addr(&SICSLOWPAN_IP_BUF(buf)->destipaddr, llprefix,
-                      unc_llconf[tmp],
-                      (uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
+      if(!uncompress_addr(&SICSLOWPAN_IP_BUF(buf)->destipaddr, llprefix,
+                          unc_llconf[tmp],
+                          (uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_RECEIVER))) {
+        return false;
+      }
     }
   }
   uncomp_hdr_len += UIP_IPH_LEN;
