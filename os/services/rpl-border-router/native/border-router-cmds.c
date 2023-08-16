@@ -60,52 +60,49 @@ void nbr_print_stat(void);
 /*---------------------------------------------------------------------------*/
 PROCESS(border_router_cmd_process, "Border router cmd process");
 /*---------------------------------------------------------------------------*/
-static const uint8_t *
-hextoi(const uint8_t *buf, int len, int *v)
+static int
+hextoi(const uint8_t *buf, int len)
 {
-  *v = 0;
+  int v = 0;
   for(; len > 0; len--, buf++) {
     if(*buf >= '0' && *buf <= '9') {
-      *v = (*v << 4) + ((*buf - '0') & 0xf);
+      v = (v << 4) + ((*buf - '0') & 0xf);
     } else if(*buf >= 'a' && *buf <= 'f') {
-      *v = (*v << 4) + ((*buf - 'a' + 10) & 0xf);
+      v = (v << 4) + ((*buf - 'a' + 10) & 0xf);
     } else if(*buf >= 'A' && *buf <= 'F') {
-      *v = (*v << 4) + ((*buf - 'A' + 10) & 0xf);
+      v = (v << 4) + ((*buf - 'A' + 10) & 0xf);
     } else {
       break;
     }
   }
-  return buf;
+  return v;
 }
 /*---------------------------------------------------------------------------*/
-static const uint8_t *
-dectoi(const uint8_t *buf, int len, int *v)
+static int
+dectoi(const uint8_t *buf, int len)
 {
   int negative = 0;
-  *v = 0;
   if(len <= 0) {
-    return buf;
+    return 0;
   }
   if(*buf == '$') {
-    return hextoi(buf + 1, len - 1, v);
+    return hextoi(buf + 1, len - 1);
   }
   if(*buf == '0' && *(buf + 1) == 'x' && len > 2) {
-    return hextoi(buf + 2, len - 2, v);
+    return hextoi(buf + 2, len - 2);
   }
   if(*buf == '-') {
     negative = 1;
     buf++;
   }
+  int v = 0;
   for(; len > 0; len--, buf++) {
     if(*buf < '0' || *buf > '9') {
       break;
     }
-    *v = (*v * 10) + ((*buf - '0') & 0xf);
+    v = (v * 10) + ((*buf - '0') & 0xf);
   }
-  if(negative) {
-    *v = - *v;
-  }
-  return buf;
+  return negative ? -v : v;
 }
 /*---------------------------------------------------------------------------*/
 
@@ -129,19 +126,15 @@ border_router_cmd_handler(const uint8_t *data, int len)
       case 'C': {
         /* send on a set-param thing! */
         uint8_t set_param[] = {'!', 'V', 0, RADIO_PARAM_CHANNEL, 0, 0 };
-        int channel = -1;
-        dectoi(&data[2], len - 2, &channel);
-        if(channel >= 0) {
-          set_param[5] = channel & 0xff;
-          write_to_slip(set_param, sizeof(set_param));
-        }
+        int channel = dectoi(&data[2], len - 2);
+        set_param[5] = channel & 0xff;
+        write_to_slip(set_param, sizeof(set_param));
         return 1;
       }
       case 'P': {
         /* send on a set-param thing! */
         uint8_t set_param[] = {'!', 'V', 0, RADIO_PARAM_PAN_ID, 0, 0 };
-        int pan_id;
-        dectoi(&data[2], len - 2, &pan_id);
+        int pan_id = dectoi(&data[2], len - 2);
         set_param[4] = (pan_id >> 8) & 0xff;
         set_param[5] = pan_id & 0xff;
         write_to_slip(set_param, sizeof(set_param));
@@ -235,14 +228,14 @@ PROCESS_THREAD(border_router_cmd_process, ev, data)
   while(1) {
     PROCESS_YIELD();
     if(ev == serial_line_event_message && data != NULL) {
-      LOG_DBG("Got serial data!!! %s of len: %u\n",
-             (char *)data, (unsigned)strlen((char *)data));
+      LOG_DBG("Got serial data!!! %s of len: %zd\n",
+              (char *)data, strlen((char *)data));
       command_context = CMD_CONTEXT_STDIO;
-      if(cmd_input(data, strlen((char *)data))) {
-        /* Commnand executed - all is fine */
-      } else {
+      if(!cmd_input(data, strlen((char *)data))) {
         /* did not find command - run shell and see if ... */
-        PROCESS_PT_SPAWN(&shell_input_pt, shell_input(&shell_input_pt, serial_shell_output, data));
+        PROCESS_PT_SPAWN(&shell_input_pt,
+                         shell_input(&shell_input_pt, serial_shell_output,
+                                     data));
       }
     }
   }
