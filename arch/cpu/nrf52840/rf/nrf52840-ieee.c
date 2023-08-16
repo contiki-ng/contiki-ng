@@ -988,13 +988,16 @@ PROCESS_THREAD(nrf52840_ieee_rf_process, ev, data)
         packetbuf_set_datalen(len);
         NETSTACK_MAC.input();
         LOG_DBG("last frame (%u bytes) timestamps:\n", timestamps.phr);
-        LOG_DBG("      SFD=%lu (Derived)\n", timestamps.sfd);
-        LOG_DBG("      PHY=%lu (PPI)\n", timestamps.framestart);
-        LOG_DBG("     MPDU=%lu (Duration)\n", timestamps.mpdu_duration);
-        LOG_DBG("      END=%lu (PPI)\n", timestamps.end);
-        LOG_DBG(" Expected=%lu + %u + %lu = %lu\n", timestamps.sfd,
-                BYTE_DURATION_RTIMER, timestamps.mpdu_duration,
-                timestamps.sfd + BYTE_DURATION_RTIMER + timestamps.mpdu_duration);
+        LOG_DBG("      SFD=%lu (Derived)\n", (unsigned long)timestamps.sfd);
+        LOG_DBG("      PHY=%lu (PPI)\n", (unsigned long)timestamps.framestart);
+        LOG_DBG("     MPDU=%lu (Duration)\n",
+                (unsigned long)timestamps.mpdu_duration);
+        LOG_DBG("      END=%lu (PPI)\n", (unsigned long)timestamps.end);
+        LOG_DBG(" Expected=%lu + %u + %lu = %lu\n",
+                (unsigned long)timestamps.sfd,
+                BYTE_DURATION_RTIMER, (unsigned long)timestamps.mpdu_duration,
+                (unsigned long)timestamps.sfd + BYTE_DURATION_RTIMER
+                + timestamps.mpdu_duration);
       }
     }
   }
