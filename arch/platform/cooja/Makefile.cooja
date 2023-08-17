@@ -37,13 +37,15 @@ WRAPPED_FUNS = printf putchar puts snprintf sprintf vsnprintf
 
 CC = gcc
 
+CFLAGS += -pthread
+
 ifeq ($(HOST_OS),Darwin)
   CFLAGS += -fno-common -DHAVE_SNPRINTF
   LDFLAGS_WERROR = -Wl,-fatal_warnings
   LDFLAGS += -dynamiclib -fno-common
 else
   CFLAGS += -fPIC
-  LDFLAGS += -shared -Wl,-zdefs
+  LDFLAGS += -shared -pthread -Wl,-zdefs
   LDFLAGS += -Wl,--warn-common
   LDFLAGS += -Wl,-T$(CONTIKI_NG_RELOC_PLATFORM_DIR)/cooja/cooja.ld
   # Use the printf-family replacement functions in dbg-io.
@@ -68,7 +70,7 @@ CONTIKI_TARGET_DIRS = . dev lib sys cfs
 # (COOJA_SOURCEDIRS contains additional sources dirs set from simulator)
 vpath %.c $(COOJA_SOURCEDIRS)
 
-COOJA_BASE	= simEnvChange.c cooja_mt.c cooja_mtarch.c rtimer-arch.c watchdog.c int-master.c
+COOJA_BASE	= simEnvChange.c cooja_mt.c rtimer-arch.c watchdog.c int-master.c
 
 COOJA_INTFS	= beep.c ip.c leds-arch.c moteid.c \
 		    pir-sensor.c rs232.c vib-sensor.c \
