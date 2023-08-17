@@ -45,7 +45,6 @@
 
 #include "sys/cooja_mt.h"
 
-#include <limits.h>
 #include <signal.h>
 #include <stdio.h>
 
@@ -101,11 +100,6 @@ void
 cooja_mt_start(struct cooja_mt_thread *caller,
                struct cooja_mt_thread *t, void (*function)(void))
 {
-  /* FIXME: leftover from old code, this should not be required. */
-  for(int i = 0; i < COOJA_MTARCH_STACKSIZE; ++i) {
-    t->stack[i] = i % CHAR_MAX;
-  }
-
   if(getcontext(&t->ctxt) == -1) {
     perror("getcontext failed");
     return;
