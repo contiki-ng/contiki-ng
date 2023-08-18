@@ -1151,6 +1151,7 @@ PT_THREAD(handle_input(struct httpd_state *s))
     } else {
       s->inputbuf[PSOCK_DATALEN(&s->sin) - 1] = 0;
       strncpy(s->filename, s->inputbuf, sizeof(s->filename));
+      s->filename[HTTPD_PATHLEN - 1] = '\0';
     }
   } else if(strncasecmp(s->inputbuf, http_post, 5) == 0) {
     s->request_type = REQUEST_TYPE_POST;
@@ -1162,6 +1163,7 @@ PT_THREAD(handle_input(struct httpd_state *s))
 
     s->inputbuf[PSOCK_DATALEN(&s->sin) - 1] = 0;
     strncpy(s->filename, s->inputbuf, sizeof(s->filename));
+    s->filename[HTTPD_PATHLEN - 1] = '\0';
 
     /* POST: Read out the rest of the line and ignore it */
     PSOCK_READTO(&s->sin, ISO_nl);
