@@ -60,9 +60,9 @@ static process_event_t lastevent;
  * Structure used for keeping the queue of active events.
  */
 struct event_data {
-  process_event_t ev;
   process_data_t data;
   struct process *p;
+  process_event_t ev;
 };
 
 static process_num_events_t nevents, fevent;
