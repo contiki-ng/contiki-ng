@@ -134,21 +134,22 @@ int
 code_style_example_function(char c)
 {
   /*
-   * Local variables should always be declared at the start of the
-   * function.
-   */
-  int i;                   /* Use short variable names for loop
-                              counters. */
-
-  /*
    * There should be no space between keywords and the first
    * parenthesis. There should be spaces around binary operators, no
    * spaces between a unary operator and its operand.
    *
    * Curly brackets following for(), if(), do, and switch() statements
    * should follow the statement on the same line.
+   *
+   * Use short variable names for loop counters.
    */
-  for(i = 0; i < 10; ++i) {
+  for(int i = 0; i < 10; ++i) {
+
+    /*
+     * Declare variables as locally as possible.
+     */
+    int sum = i + c;
+
     /*
      * Always use full blocks (curly brackets) after if(), for(), and
      * while() statements, even though the statement is a single line
@@ -156,11 +157,13 @@ code_style_example_function(char c)
      * are less error prone.
      */
     if(i == c) {
-      return 1;           /* No parenthesis around return values. */
+      return sum;         /* No parenthesis around return values. */
     } else {              /* The else keyword is placed inbetween
                              curly braces, always on its own line. */
       c++;
     }
+
+    c += sum;
   }
 
   /* Do not indent case and default within a switch block */
