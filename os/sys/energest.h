@@ -74,11 +74,15 @@
 #endif /* ENERGEST_SECOND */
 
 #ifndef ENERGEST_GET_TOTAL_TIME
+#if ENERGEST_CONF_ON
 #ifdef ENERGEST_CONF_GET_TOTAL_TIME
 #define ENERGEST_GET_TOTAL_TIME ENERGEST_CONF_GET_TOTAL_TIME
 #else /* ENERGEST_CONF_GET_TOTAL_TIME */
 #define ENERGEST_GET_TOTAL_TIME energest_get_total_time
 #endif /* ENERGEST_CONF_GET_TOTAL_TIME */
+#else /* ENERGEST_CONF_ON */
+#define ENERGEST_GET_TOTAL_TIME()
+#endif /* ENERGEST_CONF_ON */
 #endif /* ENERGEST_GET_TOTAL_TIME */
 
 /*
@@ -106,12 +110,12 @@ typedef enum energest_type {
   ENERGEST_TYPE_MAX
 } energest_type_t;
 
+#if ENERGEST_CONF_ON
+
 void energest_init(void);
 void energest_flush(void);
 
 uint64_t ENERGEST_GET_TOTAL_TIME(void);
-
-#if ENERGEST_CONF_ON
 
 extern uint64_t energest_total_time[ENERGEST_TYPE_MAX];
 extern ENERGEST_TIME_T energest_current_time[ENERGEST_TYPE_MAX];
@@ -167,6 +171,10 @@ energest_switch(energest_type_t type_off, energest_type_t type_on)
 #define ENERGEST_SWITCH(type_off, type_on) energest_switch(type_off, type_on)
 
 #else /* ENERGEST_CONF_ON */
+
+static inline void energest_init(void) { }
+
+static inline void energest_flush(void) { }
 
 static inline uint64_t energest_type_time(energest_type_t type) { return 0; }
 
