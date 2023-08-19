@@ -70,6 +70,8 @@
 
 #include "sys/clock.h"
 
+#include <stdbool.h>
+
 /**
  * A timer.
  *
@@ -86,7 +88,7 @@ struct stimer {
 void stimer_set(struct stimer *t, unsigned long interval);
 void stimer_reset(struct stimer *t);
 void stimer_restart(struct stimer *t);
-int stimer_expired(struct stimer *t);
+bool stimer_expired(struct stimer *t);
 unsigned long stimer_remaining(struct stimer *t);
 unsigned long stimer_elapsed(struct stimer *t);
 

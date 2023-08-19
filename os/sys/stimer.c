@@ -120,10 +120,10 @@ stimer_restart(struct stimer *t)
  *
  * \param t A pointer to the timer
  *
- * \return Non-zero if the timer has expired, zero otherwise.
+ * \return True if the timer has expired.
  *
  */
-int
+bool
 stimer_expired(struct stimer *t)
 {
   return SCLOCK_GEQ(clock_seconds(), t->start + t->interval);

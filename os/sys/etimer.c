@@ -209,7 +209,7 @@ etimer_adjust(struct etimer *et, int timediff)
   update_time();
 }
 /*---------------------------------------------------------------------------*/
-int
+bool
 etimer_expired(struct etimer *et)
 {
   return et->p == PROCESS_NONE;
