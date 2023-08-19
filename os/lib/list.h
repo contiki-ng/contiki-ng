@@ -68,6 +68,7 @@
 #define LIST_H_
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #define LIST_CONCAT2(s1, s2) s1##s2
 #define LIST_CONCAT(s1, s2) LIST_CONCAT2(s1, s2)
@@ -147,7 +148,11 @@ typedef void *const *const_list_t;
  *
  * \param list The list to be initialized.
  */
-void   list_init(list_t list);
+static inline void
+list_init(list_t list)
+{
+  *list = NULL;
+}
 
 /**
  * Get a pointer to the first element of a list.
