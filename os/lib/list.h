@@ -257,7 +257,11 @@ int    list_length(const_list_t list);
  * \param dest The destination list.
  * \param src The source list.
  */
-void   list_copy(list_t dest, const_list_t src);
+static inline void
+list_copy(list_t dest, const_list_t src)
+{
+  *dest = *src;
+}
 
 /**
  * \brief      Insert an item after a specified item on the list
