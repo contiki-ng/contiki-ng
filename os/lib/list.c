@@ -53,12 +53,6 @@ struct list {
   struct list *next;
 };
 /*---------------------------------------------------------------------------*/
-void *
-list_head(const_list_t list)
-{
-  return *list;
-}
-/*---------------------------------------------------------------------------*/
 void
 list_copy(list_t dest, const_list_t src)
 {

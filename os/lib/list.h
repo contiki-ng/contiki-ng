@@ -165,7 +165,11 @@ list_init(list_t list)
  *
  * \sa list_tail()
  */
-void * list_head(const_list_t list);
+static inline void *
+list_head(const_list_t list)
+{
+  return *list;
+}
 
 /**
  * Get the tail of a list.
