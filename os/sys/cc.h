@@ -124,10 +124,6 @@
 #define CC_DEPRECATED(msg)
 #endif /* CC_CONF_DEPRECATED */
 
-#if CC_CONF_NO_VA_ARGS
-#define CC_NO_VA_ARGS CC_CONF_VA_ARGS
-#endif
-
 /** \def CC_ACCESS_NOW(x)
  * This macro ensures that the access to a non-volatile variable can
  * not be reordered or optimized by the compiler.
