@@ -106,7 +106,24 @@ stimer_set(struct stimer *t, unsigned long interval)
 void stimer_reset(struct stimer *t);
 void stimer_restart(struct stimer *t);
 bool stimer_expired(struct stimer *t);
-unsigned long stimer_remaining(struct stimer *t);
+
+/**
+ * The time until the timer expires
+ *
+ * This function returns the time until the timer expires.
+ *
+ * \param t A pointer to the timer
+ *
+ * \return The time until the timer expires
+ *
+ */
+static inline unsigned long
+stimer_remaining(struct stimer *t)
+{
+  return t->start + t->interval - clock_seconds();
+}
+
+
 unsigned long stimer_elapsed(struct stimer *t);
 
 

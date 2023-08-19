@@ -112,22 +112,6 @@ stimer_expired(struct stimer *t)
 }
 /*---------------------------------------------------------------------------*/
 /**
- * The time until the timer expires
- *
- * This function returns the time until the timer expires.
- *
- * \param t A pointer to the timer
- *
- * \return The time until the timer expires
- *
- */
-unsigned long
-stimer_remaining(struct stimer *t)
-{
-  return t->start + t->interval - clock_seconds();
-}
-/*---------------------------------------------------------------------------*/
-/**
  * The time elapsed since the timer started
  *
  * This function returns the time elapsed.
