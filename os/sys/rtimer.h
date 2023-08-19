@@ -117,8 +117,10 @@ typedef uint64_t rtimer_clock_t;
  *             This function initializes the real-time scheduler and
  *             must be called at boot-up, before any other functions
  *             from the real-time scheduler is called.
+ *
+ * \hideinitializer
  */
-void rtimer_init(void);
+#define rtimer_init() rtimer_arch_init()
 
 struct rtimer;
 typedef void (* rtimer_callback_t)(struct rtimer *t, void *ptr);

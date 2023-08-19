@@ -57,12 +57,6 @@
 static struct rtimer *next_rtimer;
 
 /*---------------------------------------------------------------------------*/
-void
-rtimer_init(void)
-{
-  rtimer_arch_init();
-}
-/*---------------------------------------------------------------------------*/
 int
 rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
 	   rtimer_clock_t duration,
