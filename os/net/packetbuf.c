@@ -213,11 +213,10 @@ packetbuf_attr(uint8_t type)
   return packetbuf_attrs[type].val;
 }
 /*---------------------------------------------------------------------------*/
-int
+void
 packetbuf_set_addr(uint8_t type, const linkaddr_t *addr)
 {
   linkaddr_copy(&packetbuf_addrs[type - PACKETBUF_ADDR_FIRST].addr, addr);
-  return 1;
 }
 /*---------------------------------------------------------------------------*/
 const linkaddr_t *
