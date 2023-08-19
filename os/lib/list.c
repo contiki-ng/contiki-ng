@@ -181,12 +181,6 @@ list_insert(list_t list, void *previtem, void *newitem)
   }
 }
 /*---------------------------------------------------------------------------*/
-void *
-list_item_next(const void *item)
-{
-  return item == NULL ? NULL : ((struct list *)item)->next;
-}
-/*---------------------------------------------------------------------------*/
 bool
 list_contains(const_list_t list, const void *item)
 {

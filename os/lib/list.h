@@ -290,7 +290,14 @@ void   list_insert(list_t list, void *previtem, void *newitem);
  *             the list. This function is used when iterating through
  *             lists.
  */
-void * list_item_next(const void *item);
+static inline void *
+list_item_next(const void *item)
+{
+  struct list {
+    struct list *next;
+  };
+  return item == NULL ? NULL : ((struct list *)item)->next;
+}
 
 /**
  * \brief      Check if the list contains an item
