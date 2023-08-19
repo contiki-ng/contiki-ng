@@ -53,24 +53,6 @@
 
 /*---------------------------------------------------------------------------*/
 /**
- * Set a timer.
- *
- * This function is used to set a timer for a time sometime in the
- * future. The function stimer_expired() will evaluate to true after
- * the timer has expired.
- *
- * \param t A pointer to the timer
- * \param interval The interval before the timer expires.
- *
- */
-void
-stimer_set(struct stimer *t, unsigned long interval)
-{
-  t->interval = interval;
-  t->start = clock_seconds();
-}
-/*---------------------------------------------------------------------------*/
-/**
  * Reset the timer with the same interval.
  *
  * This function resets the timer with the same interval that was
