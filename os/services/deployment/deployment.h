@@ -44,7 +44,6 @@
 #define DEPLOYMENT_H_
 
 #include "contiki-conf.h"
-#include "sys/node-id.h"
 #include "net/ipv6/uip.h"
 #include "net/linkaddr.h"
 
