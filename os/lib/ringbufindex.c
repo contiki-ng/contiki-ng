@@ -123,27 +123,3 @@ ringbufindex_peek_get(const struct ringbufindex *r)
     return -1;
   }
 }
-/* Return the ring buffer size */
-int
-ringbufindex_size(const struct ringbufindex *r)
-{
-  return r->mask + 1;
-}
-/* Return the number of elements currently in the ring buffer */
-int
-ringbufindex_elements(const struct ringbufindex *r)
-{
-  return (r->put_ptr - r->get_ptr) & r->mask;
-}
-/* Is the ring buffer full? */
-int
-ringbufindex_full(const struct ringbufindex *r)
-{
-  return ((r->put_ptr - r->get_ptr) & r->mask) == r->mask;
-}
-/* Is the ring buffer empty? */
-int
-ringbufindex_empty(const struct ringbufindex *r)
-{
-  return ringbufindex_elements(r) == 0;
-}
