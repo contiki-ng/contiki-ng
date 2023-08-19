@@ -201,11 +201,10 @@ packetbuf_attr_copyfrom(struct packetbuf_attr *attrs,
   memcpy(packetbuf_addrs, addrs, sizeof(packetbuf_addrs));
 }
 /*---------------------------------------------------------------------------*/
-int
+void
 packetbuf_set_attr(uint8_t type, const packetbuf_attr_t val)
 {
   packetbuf_attrs[type].val = val;
-  return 1;
 }
 /*---------------------------------------------------------------------------*/
 packetbuf_attr_t
