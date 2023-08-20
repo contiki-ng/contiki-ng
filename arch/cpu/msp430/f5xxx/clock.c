@@ -41,7 +41,7 @@
 
 #define MAX_TICKS (~((clock_time_t)0) / 2)
 
-#define CLOCK_LT(a, b) ((int16_t)((a)-(b)) < 0)
+#define HW_CLOCK_LT(a, b) ((int16_t)((a)-(b)) < 0)
 
 static volatile unsigned long seconds;
 
@@ -73,7 +73,7 @@ ISR(TIMER1_A1, timera1)
 
     last_tar = read_tar();
     /* Make sure interrupt time is future */
-    while(!CLOCK_LT(last_tar, TA1CCR1)) {
+    while(!HW_CLOCK_LT(last_tar, TA1CCR1)) {
       TA1CCR1 += INTERVAL;
       ++count;
 
