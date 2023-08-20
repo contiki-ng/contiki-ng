@@ -57,6 +57,7 @@ jobs:
         tools/docker/print-dockerhash.sh >> $GITHUB_ENV
         echo COOJA_COMMIT=$(git -C tools/cooja log -1 --oneline | cut -d" " -f1) >> $GITHUB_ENV
         echo SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct) >> $GITHUB_ENV
+        [ ${{ matrix.test }} != compile-base -a ${{ matrix.test }} != compile-arm-ports ] || echo SIZE_TRACKING=1 >> $GITHUB_ENV
 
     # Try to download the image from dockerhub. If it works, use it.
     #
@@ -147,3 +148,31 @@ jobs:
         docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 -e GITHUB_JOB -e GITHUB_REF -e GITHUB_SHA -e GITHUB_REPOSITORY -e GITHUB_REPOSITORY_OWNER -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e GITHUB_RETENTION_DAYS -e GITHUB_ACTOR -e GITHUB_WORKFLOW -e GITHUB_HEAD_REF -e GITHUB_BASE_REF -e GITHUB_EVENT_NAME -e GITHUB_SERVER_URL -e GITHUB_API_URL -e GITHUB_GRAPHQL_URL -e GITHUB_WORKSPACE -e GITHUB_ACTION -e GITHUB_EVENT_PATH -e GITHUB_ACTION_REPOSITORY -e GITHUB_ACTION_REF -e GITHUB_PATH -e GITHUB_ENV -e RUNNER_OS -e RUNNER_TOOL_CACHE -e RUNNER_TEMP -e RUNNER_WORKSPACE -e ACTIONS_RUNTIME_URL -e ACTIONS_RUNTIME_TOKEN -e ACTIONS_CACHE_URL -e GITHUB_ACTIONS=true -e CI=true -e GRADLE_USER_HOME=/home/user/contiki-ng/tools/cooja/.gradle_home -e LOCAL_UID=$(id -u $USER) -e LOCAL_GID=$(id -g $USER) -e SOURCE_DATE_EPOCH $DOCKER_ARGS -v `pwd`:/home/user/contiki-ng -v $GITHUB_WORKSPACE/.ccache:/home/user/.ccache $DOCKER_IMG bash --login -c "source ../.bash_aliases && ccache --set-config=max_size='160M' && cimake -C tests/??-${{ matrix.test }}; ccache -c"
         # Check outcome of the test
         ./tests/check-test.sh `pwd`/tests/??-${{ matrix.test }}
+
+    - name: Checkout data repo
+      uses: actions/checkout@v3
+      if: env.SIZE_TRACKING == '1'
+      with:
+        repository: contiki-ng/contiki-ng.github.io
+        path: ci-data
+        token: ${{ secrets.DATA_PUSH_TOKEN }}
+    - name: Get binary size changes compared to develop
+      if: env.SIZE_TRACKING == '1'
+      run: |
+        cd ci-data
+        bin/add-data ${{ matrix.test }} ubuntu-latest
+        git add -N .
+        echo "# Test size differences" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`diff" >> $GITHUB_STEP_SUMMARY
+        git diff --word-diff=porcelain --unified=0 >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        MERGE_BRANCH_REF=$(echo ${{ github.ref }} | sed -e 's|refs/heads/||g')
+        if [ $MERGE_BRANCH_REF == develop ]; then
+          git config user.name "Contiki-NG CI"
+          git config user.email nobody@contiki-ng.org
+          # Pull so the window for other jobs pushing is minimal.
+          git pull
+          git commit -a -m "CI: update ${{ matrix.test }} data for ubuntu-latest"
+          # Push, but mask failure and just avoid pushing on failure.
+          git push || (echo "Push failed, ignoring" && true)
+        fi
