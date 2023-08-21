@@ -100,7 +100,7 @@ stimer_reset(struct stimer *t)
  * current time.
  *
  * \note A periodic timer will drift if this function is used to reset
- * it. For preioric timers, use the stimer_reset() function instead.
+ * it. For periodic timers, use the stimer_reset() function instead.
  *
  * \param t A pointer to the timer.
  *
