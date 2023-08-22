@@ -182,12 +182,9 @@ framer_802154_setup_params(packetbuf_attr_t (*get_attr)(uint8_t type),
   }
 
   /* Suppress Source PAN ID and put Destination PAN ID by default */
-  if(params->fcf.src_addr_mode == FRAME802154_SHORTADDRMODE ||
-     params->fcf.dest_addr_mode == FRAME802154_SHORTADDRMODE) {
-    params->fcf.panid_compression = 1;
-  } else {
-    params->fcf.panid_compression = 0;
-  }
+  params->fcf.panid_compression =
+    params->fcf.src_addr_mode == FRAME802154_SHORTADDRMODE ||
+    params->fcf.dest_addr_mode == FRAME802154_SHORTADDRMODE;
 }
 /*---------------------------------------------------------------------------*/
 static int
