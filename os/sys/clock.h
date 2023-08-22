@@ -69,6 +69,27 @@
 #ifndef CLOCK_H_
 #define CLOCK_H_
 
+#include <stdint.h>
+
+/** \brief The clock size (in bytes). */
+#ifdef CLOCK_CONF_SIZE
+#define CLOCK_SIZE CLOCK_CONF_SIZE
+#else /* CLOCK_CONF_SIZE */
+#define CLOCK_SIZE 8
+#endif /* CLOCK_CONF_SIZE */
+
+/* Define clock_time_t before including contiki.h, so etimer.h
+ * and other header files have clock_time_t defined. */
+#if CLOCK_SIZE == 4
+typedef uint32_t clock_time_t;
+#define CLOCK_LT(a, b)  ((int32_t)((a) - (b)) < 0)
+#elif CLOCK_SIZE == 8
+typedef uint64_t clock_time_t;
+#define CLOCK_LT(a, b)  ((int64_t)((a) - (b)) < 0)
+#else
+#error Unsupported clock_time_t size (check CLOCK_CONF_SIZE)
+#endif
+
 #include "contiki.h"
 
 /**

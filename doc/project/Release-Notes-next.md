@@ -20,6 +20,13 @@ The Contiki-NG team
 
 ## API changes for ports outside the main tree
 
+### Centralized clock_time_t definition
+
+Ports should now define `CLOCK_CONF_SIZE` instead of a typedef for `clock_time_t`
+([#2550](https://github.com/contiki-ng/contiki-ng/pull/2550)).
+
+This is similar to how `RTIMER_CONF_CLOCK_SIZE` is already handled.
+
 ## Cooja API changes for plugins outside the main tree
 
 ## Changelog

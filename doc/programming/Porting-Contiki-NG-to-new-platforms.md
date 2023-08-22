@@ -30,7 +30,7 @@ If not, let's assume that your MCU is called `my-new-mcu`.
 * Under `arch/cpu/my-new-mcu`, create the following files:
   * `Makefile.my-new-mcu`: This is where you will explain to the build system how to build firmware images suitable for your MCU.
   * `my-new-mcu-conf.h`: This is where you will put MCU-specific macros that users are expected to be able to modify (for example whether you want your internal watchdog timer to be enabled/disabled).
-  * `my-new-mcu-def.h`: This is where you will put MCU-specific macros that users should _not_ modify. One such example is the `typedef` for `clock_time_t` and the number of software clock ticks per second `CLOCK_CONF_SECOND`
+  * `my-new-mcu-def.h`: This is where you will put MCU-specific macros that users should _not_ modify. One such example is the `define` for `CLOCK_CONF_SIZE` and the number of software clock ticks per second `CLOCK_CONF_SECOND`
   * `doxygen-group.txt`: This is where you will define where your CPU code's documentation will be located in the API doc structure. See for example [`arch/cpu/cc2538/doxygen-group.txt`](https://github.com/contiki-ng/contiki-ng/tree/develop/arch/cpu/cc2538/doxygen-group.txt).
 
 #### Configure the build system
