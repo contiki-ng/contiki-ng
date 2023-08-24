@@ -57,12 +57,16 @@ static int (*input_handler)(unsigned char c) = NULL;
 /*---------------------------------------------------------------------------*/
 static nrfx_uarte_t instance = NRFX_UARTE_INSTANCE(0);
 static uint8_t uarte_buffer;
+static bool is_initialized;
 /*---------------------------------------------------------------------------*/
 void
 uarte_write(unsigned char data)
 {
+  if(!is_initialized) {
+    return;
+  }
   do {
-  }  while(nrfx_uarte_tx_in_progress(&instance));
+  } while(nrfx_uarte_tx_in_progress(&instance));
   nrfx_uarte_tx(&instance, &data, sizeof(data));
 }
 /*---------------------------------------------------------------------------*/
@@ -117,6 +121,8 @@ uarte_init(void)
   (void) uarte_handler;
 #endif /* defined(NRF_UARTE0_TX_PORT) && defined(NRF_UARTE0_TX_PIN) \
   && defined(NRF_UARTE0_RX_PORT) && defined(NRF_UARTE0_RX_PIN) */
+
+  is_initialized = true;
 }
 /*---------------------------------------------------------------------------*/
 #endif /* NRF_HAS_UARTE */
