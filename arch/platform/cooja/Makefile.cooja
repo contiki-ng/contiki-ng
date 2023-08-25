@@ -31,9 +31,7 @@ ifneq ($(MAKECMDGOALS),clean)
   endif
 endif
 
-# Use dbg-io for IO functions like printf()
-MODULES += os/lib/dbg-io
-WRAPPED_FUNS = printf putchar puts snprintf sprintf vsnprintf
+WRAPPED_FUNS = printf putchar puts
 
 CC = gcc
 
@@ -48,7 +46,7 @@ else
   LDFLAGS += -shared -pthread -Wl,-zdefs
   LDFLAGS += -Wl,--warn-common
   LDFLAGS += -Wl,-T$(CONTIKI_NG_RELOC_PLATFORM_DIR)/cooja/cooja.ld
-  # Use the printf-family replacement functions in dbg-io.
+  # Use the printf-family replacement functions in cooja-log.c.
   LDFLAGS += $(addprefix -Wl$(COMMA)--wrap$(COMMA), $(WRAPPED_FUNS))
 endif
 
