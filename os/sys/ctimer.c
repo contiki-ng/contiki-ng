@@ -157,7 +157,7 @@ ctimer_stop(struct ctimer *c)
   list_remove(ctimer_list, c);
 }
 /*---------------------------------------------------------------------------*/
-int
+bool
 ctimer_expired(struct ctimer *c)
 {
   struct ctimer *t;
@@ -166,10 +166,10 @@ ctimer_expired(struct ctimer *c)
   }
   for(t = list_head(ctimer_list); t != NULL; t = t->next) {
     if(t == c) {
-      return 0;
+      return false;
     }
   }
-  return 1;
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

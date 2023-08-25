@@ -58,6 +58,8 @@
 #include "contiki.h"
 #include "sys/etimer.h"
 
+#include <stdbool.h>
+
 struct ctimer {
   struct ctimer *next;
   struct etimer etimer;
@@ -149,12 +151,12 @@ void ctimer_stop(struct ctimer *c);
 /**
  * \brief      Check if a callback timer has expired.
  * \param c    A pointer to the callback timer
- * \return     Non-zero if the timer has expired, zero otherwise.
+ * \return     True if the timer has expired.
  *
  *             This function tests if a callback timer has expired and
  *             returns true or false depending on its status.
  */
-int ctimer_expired(struct ctimer *c);
+bool ctimer_expired(struct ctimer *c);
 
 /**
  * \brief      Initialize the callback timer library.

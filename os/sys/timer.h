@@ -71,6 +71,8 @@
 
 #include "sys/clock.h"
 
+#include <stdbool.h>
+
 /**
  * A timer.
  *
@@ -87,7 +89,7 @@ struct timer {
 void timer_set(struct timer *t, clock_time_t interval);
 void timer_reset(struct timer *t);
 void timer_restart(struct timer *t);
-int timer_expired(struct timer *t);
+bool timer_expired(struct timer *t);
 clock_time_t timer_remaining(struct timer *t);
 
 
