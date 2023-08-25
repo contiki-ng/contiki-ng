@@ -68,6 +68,7 @@
 #define LIST_H_
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #define LIST_CONCAT2(s1, s2) s1##s2
 #define LIST_CONCAT(s1, s2) LIST_CONCAT2(s1, s2)
@@ -147,7 +148,11 @@ typedef void *const *const_list_t;
  *
  * \param list The list to be initialized.
  */
-void   list_init(list_t list);
+static inline void
+list_init(list_t list)
+{
+  *list = NULL;
+}
 
 /**
  * Get a pointer to the first element of a list.
@@ -160,7 +165,11 @@ void   list_init(list_t list);
  *
  * \sa list_tail()
  */
-void * list_head(const_list_t list);
+static inline void *
+list_head(const_list_t list)
+{
+  return *list;
+}
 
 /**
  * Get the tail of a list.
@@ -248,7 +257,11 @@ int    list_length(const_list_t list);
  * \param dest The destination list.
  * \param src The source list.
  */
-void   list_copy(list_t dest, const_list_t src);
+static inline void
+list_copy(list_t dest, const_list_t src)
+{
+  *dest = *src;
+}
 
 /**
  * \brief      Insert an item after a specified item on the list
@@ -277,7 +290,14 @@ void   list_insert(list_t list, void *previtem, void *newitem);
  *             the list. This function is used when iterating through
  *             lists.
  */
-void * list_item_next(const void *item);
+static inline void *
+list_item_next(const void *item)
+{
+  struct list {
+    struct list *next;
+  };
+  return item == NULL ? NULL : ((struct list *)item)->next;
+}
 
 /**
  * \brief      Check if the list contains an item
