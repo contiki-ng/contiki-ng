@@ -82,13 +82,15 @@
  * and other header files have clock_time_t defined. */
 #if CLOCK_SIZE == 4
 typedef uint32_t clock_time_t;
-#define CLOCK_LT(a, b)  ((int32_t)((a) - (b)) < 0)
+#define CLOCK_DIFF(a, b) ((int32_t)((a) - (b)))
 #elif CLOCK_SIZE == 8
 typedef uint64_t clock_time_t;
-#define CLOCK_LT(a, b)  ((int64_t)((a) - (b)) < 0)
+#define CLOCK_DIFF(a, b) ((int64_t)((a) - (b)))
 #else
 #error Unsupported clock_time_t size (check CLOCK_CONF_SIZE)
 #endif
+
+#define CLOCK_LT(a, b) (CLOCK_DIFF(a, b) < 0)
 
 #include "contiki.h"
 
