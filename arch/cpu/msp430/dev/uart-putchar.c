@@ -1,5 +1,5 @@
-/*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include "dev/uart0.h"
 #include "dev/uart1.h"
 
 #include <string.h>
@@ -14,15 +14,15 @@ putchar(int c)
   static char debug_frame = 0;
 
   if(!debug_frame) {            /* Start of debug output */
-    uart1_writeb(SLIP_END);
-    uart1_writeb('\r');     /* Type debug line == '\r' */
+    UART_WRITEB(SLIP_END);
+    UART_WRITEB('\r');     /* Type debug line == '\r' */
     debug_frame = 1;
   }
 #endif /* SLIP_ARCH_CONF_ENABLED */
 
   /* Need to also print '\n' because for example COOJA will not show
      any output before line end */
-  uart1_writeb((char)c);
+  UART_WRITEB((char)c);
 
 #if SLIP_ARCH_CONF_ENABLED
   /*
@@ -30,10 +30,25 @@ putchar(int c)
    * implicitly flushes debug output.
    */
   if(c == '\n') {
-    uart1_writeb(SLIP_END);
+    UART_WRITEB(SLIP_END);
     debug_frame = 0;
   }
 #endif /* SLIP_ARCH_CONF_ENABLED */
   return c;
 }
+/*---------------------------------------------------------------------------*/
+#if defined(__GNUC__) && (__GNUC__ >= 9)
+/* The printf() in newlib in GCC 9 from Texas Instruments uses the
+ * "TI C I/O" protocol which is not implemented in GDB. The user manual
+ * suggests overriding write() to redirect printf() output. */
+int
+write(int fd, const char *buf, int len)
+{
+  int i = 0;
+  for(; i < len && buf[i]; i++) {
+    putchar(buf[i]);
+  }
+  return i;
+}
+#endif
 /*---------------------------------------------------------------------------*/

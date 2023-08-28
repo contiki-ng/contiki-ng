@@ -8,10 +8,12 @@ SMALL=0
 ARCH = leds.c xmem.c i2cmaster.c \
        spi-legacy.c cc2420.c cc2420-arch.c cc2420-arch-sfd.c\
        node-id-z1.c sensors.c button-sensor.c \
-       uart0.c uart0-putchar.c uip-ipchksum.c \
+       uart0.c uart-putchar.c uip-ipchksum.c \
        slip_uart0.c z1-sensors.c adxl345.c temperature-sensor.c \
        z1-phidgets.c light-sensor.c battery-sensor.c sky-sensors.c tmp102.c \
        platform.c
+
+$(OBJECTDIR)/uart-putchar.o: CFLAGS += -DUART_WRITEB=uart0_writeb
 
 CONTIKI_TARGET_DIRS = . dev apps
 ifndef CONTIKI_TARGET_MAIN
