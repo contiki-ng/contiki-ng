@@ -30,7 +30,7 @@ jobs:
         # Always run all jobs in the matrix, even if one fails
         fail-fast: false
         matrix:
-            test: [ documentation, compile-base, compile-arm-ports, compile-tools, out-of-tree-build, rpl-lite, rpl-classic, simulation-base, ipv6, ieee802154, tun-rpl-br, script-base, native-runs, ipv6-nbr, coap-lwm2m, packet-parsing ]
+            test: [ documentation, compile-base, compile-arm-ports, compile-tools, out-of-tree-build, rpl-lite, rpl-classic, renode-simulation, simulation-base, ipv6, ieee802154, tun-rpl-br, script-base, native-runs, ipv6-nbr, coap-lwm2m, packet-parsing ]
 
     # Checks-out the contiki-ng $GITHUB_WORKSPACE, so your job can access it
     steps:
