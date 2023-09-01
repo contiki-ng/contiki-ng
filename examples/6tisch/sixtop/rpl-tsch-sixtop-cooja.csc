@@ -19,7 +19,7 @@
       <identifier>mtype204</identifier>
       <description>node</description>
       <source>[CONTIKI_DIR]/examples/6tisch/sixtop/node-sixtop.c</source>
-      <commands>make -j$(CPUS) node-sixtop.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) -j$(CPUS) node-sixtop.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

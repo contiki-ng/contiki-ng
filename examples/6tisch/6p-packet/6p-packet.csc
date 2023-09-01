@@ -19,7 +19,7 @@
       <identifier>mtype639</identifier>
       <description>6P node</description>
       <source>[CONTIKI_DIR]/examples/6tisch/6p-packet/sixp-node.c</source>
-      <commands>make -j$(CPUS) sixp-node.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) -j$(CPUS) sixp-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

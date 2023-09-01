@@ -19,7 +19,7 @@
       <identifier>mtype829</identifier>
       <description>Cooja Mote Type #1</description>
       <source>[CONTIKI_DIR]/examples/rpl-udp/udp-server.c</source>
-      <commands>make -j$(CPUS) udp-server.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) -j$(CPUS) udp-server.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -43,7 +43,7 @@
       <identifier>mtype405</identifier>
       <description>Cooja Mote Type #2</description>
       <source>[CONTIKI_DIR]/examples/rpl-udp/udp-client.c</source>
-      <commands>make -j$(CPUS) udp-client.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) -j$(CPUS) udp-client.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

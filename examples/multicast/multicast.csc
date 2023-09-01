@@ -19,7 +19,7 @@
       <identifier>mtype653</identifier>
       <description>root/sender</description>
       <source>[CONTIKI_DIR]/examples/multicast/root.c</source>
-      <commands>make -j root.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) -j root.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -43,7 +43,7 @@
       <identifier>mtype444</identifier>
       <description>intermediate/forwarder</description>
       <source>[CONTIKI_DIR]/examples/multicast/intermediate.c</source>
-      <commands>make -j intermediate.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) -j intermediate.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -67,7 +67,7 @@
       <identifier>mtype278</identifier>
       <description>sink/receiver</description>
       <source>[CONTIKI_DIR]/examples/multicast/sink.c</source>
-      <commands>make -j sink.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) -j sink.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

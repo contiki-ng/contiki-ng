@@ -19,7 +19,7 @@
       <identifier>mtype90</identifier>
       <description>Cooja Mote Type #1</description>
       <source>[CONTIKI_DIR]/examples/libs/deployment/node.c</source>
-      <commands>make -j$(CPUS) node.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) -j$(CPUS) node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
