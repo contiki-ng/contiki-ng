@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Swedish Institute of Computer Science.
+ * Copyright (c) 2006, Swedish Institute of Computer Science
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,27 +26,58 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * This file is part of the Contiki operating system.
- *
  */
-
-/**
- * \file
- *         A brief description of what this file is.
- * \author
- *         Adam Dunkels <adam@sics.se>
- */
-
-#ifndef UART1_H_
-#define UART1_H_
-
 #include "contiki.h"
+#include "dev/uart0.h"
+#include "dev/uart1.h"
 
-#define UART_BAUD2UBR(baud) ((MSP430_CPU_SPEED)/(baud))
+#include <string.h>
+/*---------------------------------------------------------------------------*/
+#define SLIP_END     0300
+#undef putchar
+/*---------------------------------------------------------------------------*/
+int
+putchar(int c)
+{
+#if SLIP_ARCH_CONF_ENABLED
+  static char debug_frame = 0;
 
-void uart1_set_input(int (*input)(unsigned char c));
-void uart1_writeb(unsigned char c);
-void uart1_init(unsigned long ubr);
-uint8_t uart1_active(void);
+  if(!debug_frame) {            /* Start of debug output */
+    UART_WRITEB(SLIP_END);
+    UART_WRITEB('\r');     /* Type debug line == '\r' */
+    debug_frame = 1;
+  }
+#endif /* SLIP_ARCH_CONF_ENABLED */
 
-#endif /* UART1_H_ */
+  /* Need to also print '\n' because for example COOJA will not show
+     any output before line end */
+  UART_WRITEB((char)c);
+
+#if SLIP_ARCH_CONF_ENABLED
+  /*
+   * Line buffered output, a newline marks the end of debug output and
+   * implicitly flushes debug output.
+   */
+  if(c == '\n') {
+    UART_WRITEB(SLIP_END);
+    debug_frame = 0;
+  }
+#endif /* SLIP_ARCH_CONF_ENABLED */
+  return c;
+}
+/*---------------------------------------------------------------------------*/
+#if defined(__GNUC__) && (__GNUC__ >= 9)
+/* The printf() in newlib in GCC 9 from Texas Instruments uses the
+ * "TI C I/O" protocol which is not implemented in GDB. The user manual
+ * suggests overriding write() to redirect printf() output. */
+int
+write(int fd, const char *buf, int len)
+{
+  int i = 0;
+  for(; i < len && buf[i]; i++) {
+    putchar(buf[i]);
+  }
+  return i;
+}
+#endif
+/*---------------------------------------------------------------------------*/

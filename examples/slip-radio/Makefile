@@ -5,7 +5,7 @@ all: $(CONTIKI_PROJECT)
 PLATFORMS_EXCLUDE = native
 
 # The sky directory overrides the architecture putchar().
-CONTIKI_SOURCES_EXCLUDES_SKY += uart1-putchar.c
+CONTIKI_SOURCES_EXCLUDES_SKY += uart-putchar.c
 
 CONTIKI=../..
 include $(CONTIKI)/Makefile.identify-target
