@@ -38,7 +38,7 @@
 #include "sys/cc.h"
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
-static CC_INLINE int
+static inline int
 fromhex(char c)
 {
   if(c >= '0' && c <= '9') {

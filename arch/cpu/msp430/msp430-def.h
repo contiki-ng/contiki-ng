@@ -37,7 +37,6 @@
 #define dint() __disable_interrupt()
 #define eint() __enable_interrupt()
 #define __MSP430__ 1
-#define CC_CONF_INLINE
 
 #else /* __IAR_SYSTEMS_ICC__ */
 
@@ -56,8 +55,6 @@
 #define MSP430_MEMCPY_WORKAROUND 1
 #endif
 #endif /* __MSPGCC__ */
-
-#define CC_CONF_INLINE inline
 
 #endif /* __IAR_SYSTEMS_ICC__ */
 

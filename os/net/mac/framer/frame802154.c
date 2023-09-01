@@ -89,7 +89,7 @@ typedef struct {
 } field_length_t;
 
 /*----------------------------------------------------------------------------*/
-CC_INLINE static uint8_t
+static inline uint8_t
 addr_len(uint8_t mode)
 {
   switch(mode) {

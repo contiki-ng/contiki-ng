@@ -35,22 +35,22 @@
 #include "sys/cc.h"
 
 #define HWCONF_PIN(name, port, bit)                                           \
-static CC_INLINE void name##_SELECT() {P##port##SEL &= ~(1 << bit);}          \
-static CC_INLINE void name##_SELECT_IO() {P##port##SEL &= ~(1 << bit);}       \
-static CC_INLINE void name##_SELECT_PM() {P##port##SEL |= 1 << bit;}          \
-static CC_INLINE void name##_SET() {P##port##OUT |= 1 << bit;}                \
-static CC_INLINE void name##_CLEAR() {P##port##OUT &= ~(1 << bit);}           \
-static CC_INLINE int  name##_READ() {return (P##port##IN & (1 << bit));}      \
-static CC_INLINE void name##_MAKE_OUTPUT() {P##port##DIR |= 1 << bit;}        \
-static CC_INLINE void name##_MAKE_INPUT() {P##port##DIR &= ~(1 << bit);}
+static inline void name##_SELECT() {P##port##SEL &= ~(1 << bit);}          \
+static inline void name##_SELECT_IO() {P##port##SEL &= ~(1 << bit);}       \
+static inline void name##_SELECT_PM() {P##port##SEL |= 1 << bit;}          \
+static inline void name##_SET() {P##port##OUT |= 1 << bit;}                \
+static inline void name##_CLEAR() {P##port##OUT &= ~(1 << bit);}           \
+static inline int  name##_READ() {return (P##port##IN & (1 << bit));}      \
+static inline void name##_MAKE_OUTPUT() {P##port##DIR |= 1 << bit;}        \
+static inline void name##_MAKE_INPUT() {P##port##DIR &= ~(1 << bit);}
 
 #define HWCONF_IRQ(name, port, bit)                                           \
-static CC_INLINE void name##_ENABLE_IRQ() {P##port##IE |= 1 << bit;}          \
-static CC_INLINE void name##_DISABLE_IRQ() {P##port##IE &= ~(1 << bit);}      \
-static CC_INLINE int  name##_IRQ_ENABLED() {return P##port##IE & (1 << bit);} \
-static CC_INLINE void name##_IRQ_EDGE_SELECTD() {P##port##IES |= 1 << bit;}   \
-static CC_INLINE void name##_IRQ_EDGE_SELECTU() {P##port##IES &= ~(1 << bit);}\
-static CC_INLINE int  name##_CHECK_IRQ() {return P##port##IFG & (1 << bit);} \
-static CC_INLINE int  name##_IRQ_PORT() {return port;}
+static inline void name##_ENABLE_IRQ() {P##port##IE |= 1 << bit;}          \
+static inline void name##_DISABLE_IRQ() {P##port##IE &= ~(1 << bit);}      \
+static inline int  name##_IRQ_ENABLED() {return P##port##IE & (1 << bit);} \
+static inline void name##_IRQ_EDGE_SELECTD() {P##port##IES |= 1 << bit;}   \
+static inline void name##_IRQ_EDGE_SELECTU() {P##port##IES &= ~(1 << bit);}\
+static inline int  name##_CHECK_IRQ() {return P##port##IFG & (1 << bit);} \
+static inline int  name##_IRQ_PORT() {return port;}
 
 #endif /* HWCONF_H_ */
