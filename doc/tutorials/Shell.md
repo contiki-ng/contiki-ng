@@ -2,7 +2,7 @@
 
 Contiki-NG provides a shell that enables interactive IPv6 host inspection and maintenance. 
 
-To enable the shell in your project, simply add it to the module list in your Makefile:
+To enable the shell in your project, simply add it to the module list (before the line `include $(CONTIKI)/Makefile.include`) in your Makefile:
 ```
 MODULES += os/services/shell
 ```
