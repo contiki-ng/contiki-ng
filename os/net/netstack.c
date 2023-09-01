@@ -81,13 +81,4 @@ uip_ds6_ip_packet_processor_rm(struct netstack_ip_packet_processor *p)
                                {
   list_remove(ip_processor_list, p);
 }
-
-/*---------------------------------------------------------------------------*/
-void
-netstack_init(void)
-{
-  NETSTACK_RADIO.init();
-  NETSTACK_MAC.init();
-  NETSTACK_NETWORK.init();
-}
 /*---------------------------------------------------------------------------*/
