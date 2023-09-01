@@ -67,7 +67,7 @@
 
 #ifdef CC_CONF_ALIGN
 #define CC_ALIGN(n) CC_CONF_ALIGN(n)
-#endif /* CC_CONF_INLINE */
+#endif /* CC_CONF_ALIGN */
 
 /**
  * Configure if the C compiler supports functions that are not meant to return
