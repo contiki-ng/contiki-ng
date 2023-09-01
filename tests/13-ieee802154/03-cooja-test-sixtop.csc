@@ -18,8 +18,8 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>Cooja Mote Type #1</description>
       <source>[CONFIG_DIR]/code-6tisch/test-sixtop.c</source>
-      <commands>make clean TARGET=cooja
-      make -j$(CPUS) test-sixtop.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) clean TARGET=cooja
+      $(MAKE) -j$(CPUS) test-sixtop.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

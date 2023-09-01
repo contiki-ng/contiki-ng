@@ -18,8 +18,8 @@
       org.contikios.cooja.mspmote.Z1MoteType
       <description>Z1 Mote Type #z11</description>
       <source>[CONTIKI_DIR]/examples/6tisch/simple-node/node.c</source>
-      <commands>make TARGET=z1 clean
-      make -j$(CPUS) node.z1 TARGET=z1 MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=0 MAKE_WITH_PERIODIC_ROUTES_PRINT=1</commands>
+      <commands>$(MAKE) TARGET=z1 clean
+      $(MAKE) -j$(CPUS) node.z1 TARGET=z1 MAKE_WITH_ORCHESTRA=0 MAKE_WITH_SECURITY=0 MAKE_WITH_PERIODIC_ROUTES_PRINT=1</commands>
       <firmware>[CONTIKI_DIR]/examples/6tisch/simple-node/node.z1</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>

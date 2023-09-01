@@ -18,8 +18,8 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <description>Sky Mote Type #1</description>
       <source>[CONTIKI_DIR]/examples/hello-world/hello-world.c</source>
-      <commands>make TARGET=sky clean
-make -j$(CPUS) hello-world.sky TARGET=sky</commands>
+      <commands>$(MAKE) TARGET=sky clean
+$(MAKE) -j$(CPUS) hello-world.sky TARGET=sky</commands>
       <firmware>[CONTIKI_DIR]/examples/hello-world/hello-world.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>

@@ -18,8 +18,8 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>Server</description>
       <source>[CONFIG_DIR]/code-ipv6/tcp-server/tcp-server.c</source>
-      <commands>make TARGET=cooja clean
-make -j$(CPUS) tcp-server.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) TARGET=cooja clean
+$(MAKE) -j$(CPUS) tcp-server.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -52,8 +52,8 @@ make -j$(CPUS) tcp-server.cooja TARGET=cooja</commands>
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>Client</description>
       <source>[CONFIG_DIR]/code-ipv6/tcp-client/tcp-client.c</source>
-      <commands>make TARGET=cooja clean
-make -j$(CPUS) tcp-client.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) TARGET=cooja clean
+$(MAKE) -j$(CPUS) tcp-client.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
