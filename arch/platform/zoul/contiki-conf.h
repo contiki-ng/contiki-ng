@@ -72,6 +72,7 @@ uint16_t *radio_tsch_timeslot_timing(void);
 #define RADIO_DELAY_BEFORE_RX     radio_delay_before_rx()
 #define RADIO_DELAY_BEFORE_DETECT radio_delay_before_detect()
 
+#define TSCH_CONF_DYNAMIC_TIMESLOT_TEMPLATE 1
 #define TSCH_CONF_DEFAULT_TIMESLOT_TIMING   radio_tsch_timeslot_timing()
 
 /*---------------------------------------------------------------------------*/

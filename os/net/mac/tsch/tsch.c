@@ -1000,11 +1000,13 @@ tsch_init(void)
 
   rtimer_clock_t t;
 
+#if TSCH_DYNAMIC_TIMESLOT_TEMPLATE
   /* Check that the platform provides a TSCH timeslot timing template */
   if(TSCH_DEFAULT_TIMESLOT_TIMING == NULL) {
     LOG_ERR("! platform does not provide a timeslot timing template.\n");
     return;
   }
+#endif
 
   /* Check that the radio can correctly report its max supported payload */
   if(NETSTACK_RADIO.get_value(RADIO_CONST_MAX_PAYLOAD_LEN, &radio_max_payload_len) != RADIO_RESULT_OK) {

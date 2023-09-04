@@ -450,6 +450,13 @@ by default, useful in case of duplicate seqno */
 #define TSCH_DEFAULT_TIMESLOT_TIMING tsch_timeslot_timing_us_10000
 #endif
 
+/* Is the timing template dynamic. */
+#ifdef TSCH_CONF_DYNAMIC_TIMESLOT_TEMPLATE
+#define TSCH_DYNAMIC_TIMESLOT_TEMPLATE TSCH_CONF_DYNAMIC_TIMESLOT_TEMPLATE
+#else
+#define TSCH_DYNAMIC_TIMESLOT_TEMPLATE 0
+#endif
+
 /* Configurable Rx guard time is micro-seconds */
 #ifndef TSCH_CONF_RX_WAIT
 #define TSCH_CONF_RX_WAIT 2200
