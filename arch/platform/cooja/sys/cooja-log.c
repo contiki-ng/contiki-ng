@@ -33,7 +33,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include "lib/simEnvChange.h"
 
 #ifndef MAX_LOG_LENGTH
 #define MAX_LOG_LENGTH 8192
@@ -42,8 +41,6 @@
 #ifndef COOJA_LOG_WITH_SLIP
 #define COOJA_LOG_WITH_SLIP 0
 #endif /* COOJA_LOG_WITH_SLIP */
-
-const struct simInterface simlog_interface;
 
 /* Variables shared between COOJA and Contiki */
 char simLoggedData[MAX_LOG_LENGTH];
@@ -84,16 +81,6 @@ log_message(const char *part1, const char *part2)
 {
   simlog(part1);
   simlog(part2);
-}
-/*-----------------------------------------------------------------------------------*/
-static void
-doInterfaceActionsBeforeTick(void)
-{
-}
-/*-----------------------------------------------------------------------------------*/
-static void
-doInterfaceActionsAfterTick(void)
-{
 }
 /*-----------------------------------------------------------------------------------*/
 static int log_putchar_with_slip = COOJA_LOG_WITH_SLIP != 0;
@@ -165,8 +152,3 @@ printf(const char *fmt, ...)
   }
   return res;
 }
-/*-----------------------------------------------------------------------------------*/
-
-SIM_INTERFACE(simlog_interface,
-          doInterfaceActionsBeforeTick,
-          doInterfaceActionsAfterTick);

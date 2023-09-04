@@ -34,8 +34,6 @@
 #include "lib/csprng.h"
 #include <string.h>
 
-const struct simInterface moteid_interface;
-
 // COOJA variables
 int simMoteID;
 char simMoteIDChanged;
@@ -57,12 +55,4 @@ doInterfaceActionsBeforeTick(void)
   }
 }
 /*-----------------------------------------------------------------------------------*/
-static void
-doInterfaceActionsAfterTick(void)
-{
-}
-/*-----------------------------------------------------------------------------------*/
-
-SIM_INTERFACE(moteid_interface,
-	      doInterfaceActionsBeforeTick,
-	      doInterfaceActionsAfterTick);
+COOJA_PRE_TICK_ACTION(COOJA_MOTEID_INIT_PRIO, doInterfaceActionsBeforeTick);

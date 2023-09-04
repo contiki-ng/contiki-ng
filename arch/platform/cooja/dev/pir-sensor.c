@@ -31,7 +31,6 @@
 #include "dev/pir-sensor.h"
 #include "lib/simEnvChange.h"
 
-const struct simInterface pir_interface;
 const struct sensors_sensor pir_sensor;
 
 // COOJA variables
@@ -83,15 +82,7 @@ doInterfaceActionsBeforeTick(void)
   }
 }
 /*---------------------------------------------------------------------------*/
-static void
-doInterfaceActionsAfterTick(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-
-SIM_INTERFACE(pir_interface,
-	doInterfaceActionsBeforeTick,
-	doInterfaceActionsAfterTick);
+COOJA_PRE_TICK_ACTION(COOJA_PIR_INIT_PRIO, doInterfaceActionsBeforeTick);
 
 SENSORS_SENSOR(pir_sensor, PIR_SENSOR,
                value, configure, status);

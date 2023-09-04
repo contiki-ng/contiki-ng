@@ -40,6 +40,8 @@
 #include <string.h>
 
 #include "contiki.h"
+#include "lib/list.h"
+#include "sys/cc.h"
 #include "sys/cooja_mt.h"
 
 /* The main function, implemented in contiki-main.c */
@@ -51,6 +53,36 @@ int main(void);
  */
 intptr_t referenceVar;
 
+/*
+ * Interface handlers.
+ */
+LIST(pre_tick_actions);
+LIST(post_tick_actions);
+/*---------------------------------------------------------------------------*/
+void
+cooja_add_pre_tick_action(struct cooja_tick_action *handler)
+{
+  /* Constructor order is per module on macOS, so init list here instead. */
+  static bool initialized = false;
+  if(!initialized) {
+    list_init(pre_tick_actions);
+    initialized = true;
+  }
+  list_add(pre_tick_actions, handler);
+}
+/*---------------------------------------------------------------------------*/
+void
+cooja_add_post_tick_action(struct cooja_tick_action *handler)
+{
+  /* Constructor order is per module on macOS, so init list here instead. */
+  static bool initialized = false;
+  if(!initialized) {
+    list_init(post_tick_actions);
+    initialized = true;
+  }
+  list_add(post_tick_actions, handler);
+}
+/*---------------------------------------------------------------------------*/
 /*
  * Contiki and rtimer threads.
  */
@@ -143,7 +175,10 @@ cooja_tick(void)
   simProcessRunValue = 0;
 
   /* Let all simulation interfaces act first */
-  doActionsBeforeTick();
+  for(struct cooja_tick_action *r = list_head(pre_tick_actions);
+      r != NULL; r = r->next) {
+    r->action();
+  }
 
   /* Poll etimer process */
   if(etimer_pending()) {
@@ -161,7 +196,10 @@ cooja_tick(void)
   }
 
   /* Let all simulation interfaces act before returning to java */
-  doActionsAfterTick();
+  for(struct cooja_tick_action *r = list_head(post_tick_actions);
+      r != NULL; r = r->next) {
+    r->action();
+  }
 
   /* Do we have any pending timers */
   simEtimerPending = etimer_pending();
