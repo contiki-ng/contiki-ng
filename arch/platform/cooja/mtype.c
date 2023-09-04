@@ -58,6 +58,51 @@ static struct cooja_mt_thread cooja_thread;
 static struct cooja_mt_thread rtimer_thread;
 static struct cooja_mt_thread process_run_thread;
 /*---------------------------------------------------------------------------*/
+#ifdef __APPLE__
+extern int macos_data_start __asm("section$start$__DATA$__data");
+extern int macos_data_end __asm("section$end$__DATA$__data");
+extern int macos_bss_start __asm("section$start$__DATA$__bss");
+extern int macos_bss_end __asm("section$end$__DATA$__bss");
+extern int macos_common_start __asm("section$start$__DATA$__common");
+extern int macos_common_end __asm("section$end$__DATA$__common");
+
+uintptr_t
+cooja_data_start(void)
+{
+  return (uintptr_t)&macos_data_start;
+}
+
+int
+cooja_data_size(void)
+{
+  return (int)((uintptr_t)&macos_data_end - (uintptr_t)&macos_data_start);
+}
+
+uintptr_t
+cooja_bss_start(void)
+{
+  return (uintptr_t)&macos_bss_start;
+}
+
+int
+cooja_bss_size(void)
+{
+  return (int)((uintptr_t)&macos_bss_end - (uintptr_t)&macos_bss_start);
+}
+
+uintptr_t
+cooja_common_start(void)
+{
+  return (uintptr_t)&macos_common_start;
+}
+
+int
+cooja_common_size(void)
+{
+  return (int)((uintptr_t)&macos_common_end - (uintptr_t)&macos_common_start);
+}
+#endif /* __APPLE__ */
+/*---------------------------------------------------------------------------*/
 static void
 rtimer_thread_loop(void)
 {
