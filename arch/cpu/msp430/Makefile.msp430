@@ -42,6 +42,8 @@ CONTIKI_SOURCEFILES        += $(CONTIKI_TARGET_SOURCEFILES)
 
 ### Compiler definitions
 
+# Clang supports MSP430, but more Contiki-NG-work is required to use it.
+NO_CLANG = 1
 # LTO is available in GCC 4.7.2, but crashes for MSP430.
 NO_LTO_TARGET = 1
 

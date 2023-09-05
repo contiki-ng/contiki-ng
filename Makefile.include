@@ -136,6 +136,9 @@ ifneq ($(MAKECMDGOALS),clean)
     LD := $(CC)
     CFLAGS += $(CFLAGS_CLANG)
     LDFLAGS += $(LDFLAGS_CLANG)
+    ifdef NO_CLANG
+      PLATFORM_ACTION = skip
+    endif
   endif
 
   # Validate the toolchain.
