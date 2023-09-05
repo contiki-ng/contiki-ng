@@ -183,28 +183,28 @@
 /** \brief A prefix list entry */
 #if UIP_CONF_ROUTER
 typedef struct uip_ds6_prefix {
-  uint8_t isused;
   uip_ipaddr_t ipaddr;
+  uint8_t isused;
   uint8_t length;
   uint8_t advertise;
+  uint8_t l_a_reserved; /**< on-link and autonomous flags + 6 reserved bits */
   uint32_t vlifetime;
   uint32_t plifetime;
-  uint8_t l_a_reserved; /**< on-link and autonomous flags + 6 reserved bits */
 } uip_ds6_prefix_t;
 #else /* UIP_CONF_ROUTER */
 typedef struct uip_ds6_prefix {
-  uint8_t isused;
   uip_ipaddr_t ipaddr;
+  uint8_t isused;
   uint8_t length;
-  struct stimer vlifetime;
   uint8_t isinfinite;
+  struct stimer vlifetime;
 } uip_ds6_prefix_t;
 #endif /*UIP_CONF_ROUTER */
 
 /** * \brief Unicast address structure */
 typedef struct uip_ds6_addr {
-  uint8_t isused;
   uip_ipaddr_t ipaddr;
+  uint8_t isused;
   uint8_t state;
   uint8_t type;
   uint8_t isinfinite;
@@ -217,24 +217,22 @@ typedef struct uip_ds6_addr {
 
 /** \brief Anycast address  */
 typedef struct uip_ds6_aaddr {
-  uint8_t isused;
   uip_ipaddr_t ipaddr;
+  uint8_t isused;
 } uip_ds6_aaddr_t;
 
 /** \brief A multicast address */
 typedef struct uip_ds6_maddr {
-  uint8_t isused;
   uip_ipaddr_t ipaddr;
+  uint8_t isused;
 } uip_ds6_maddr_t;
 
 /** \brief  Interface structure (contains all the interface variables) */
 typedef struct uip_ds6_netif {
   uint32_t link_mtu;
-  uint8_t cur_hop_limit;
   uint32_t base_reachable_time; /* in msec */
   uint32_t reachable_time;      /* in msec */
   uint32_t retrans_timer;       /* in msec */
-  uint8_t maxdadns;
 #if UIP_DS6_ADDR_NB
   uip_ds6_addr_t addr_list[UIP_DS6_ADDR_NB];
 #endif /* UIP_DS6_ADDR_NB */
@@ -244,12 +242,14 @@ typedef struct uip_ds6_netif {
 #if UIP_DS6_MADDR_NB
   uip_ds6_maddr_t maddr_list[UIP_DS6_MADDR_NB];
 #endif /* UIP_DS6_MADDR_NB */
+  uint8_t cur_hop_limit;
+  uint8_t maxdadns;
 } uip_ds6_netif_t;
 
 /** \brief Generic type for a DS6, to use a common loop though all DS */
 typedef struct uip_ds6_element {
-  uint8_t isused;
   uip_ipaddr_t ipaddr;
+  uint8_t isused;
 } uip_ds6_element_t;
 
 
