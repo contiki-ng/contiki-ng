@@ -84,8 +84,10 @@ RUN wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 &
   cp -f -r /tmp/msp430/* /usr/local/ && \
   rm -rf /tmp/msp430 mspgcc*.tar.bz2
 
-# Install nRF Command Line tools
-RUN wget -nv https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-22-0/nrf-command-line-tools_10.22.0_amd64.deb && \
+# Install nRF Util+nRF Command Line tools.
+RUN wget -nv -O /usr/local/bin/nrfutil https://developer.nordicsemi.com/.pc-tools/nrfutil/x64-linux/nrfutil && \
+  chmod 755 /usr/local/bin/nrfutil && \
+  wget -nv https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-22-0/nrf-command-line-tools_10.22.0_amd64.deb && \
   apt-get -qq -y --no-install-recommends install ./nrf-command-line-tools_10.22.0_amd64.deb > /dev/null && \
   apt-get -qq -y --no-install-recommends install /opt/nrf-command-line-tools/share/JLink_Linux_V780c_x86_64.deb > /dev/null && \
   rm -f *.deb *.tar.gz /opt/nrf-command-line-tools/share/JLink_*deb && \
@@ -115,8 +117,7 @@ ENV PATH="/opt/SimplicityCommander:${PATH}"
 # Keep the image size down by removing the pip cache when done.
 COPY files/rtd_requirements.txt /tmp
 RUN python3 -m pip -q install \
-      matplotlib \
-      nrfutil && \
+      matplotlib && \
     python3 -m pip -q install -r /tmp/rtd_requirements.txt && \
     rm -rf /root/.cache /tmp/rtd_requirements.txt
 
