@@ -68,8 +68,16 @@
 #include "net/ipv6/uip-ds6.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
-/* Sensors */
-SENSORS(&pir_sensor, &vib_sensor);
+/* Sensors. Four combinations: pir+vib, pir, vib, no sensors. */
+#ifndef NO_PIR_SENSOR
+SENSORS(&pir_sensor
+#ifndef NO_VIB_SENSOR
+        , &vib_sensor
+#endif
+        );
+#elif !defined NO_VIB_SENSOR
+SENSORS(&vib_sensor);
+#endif
 
 /*---------------------------------------------------------------------------*/
 /* Needed since the new LEDs API does not provide this prototype */
@@ -103,21 +111,27 @@ void
 platform_init_stage_one()
 {
   gpio_hal_init();
+#ifndef NO_LEDS
   leds_arch_init();
+#endif
 }
 /*---------------------------------------------------------------------------*/
 void
 platform_init_stage_two()
 {
   set_lladdr();
+#ifndef NO_BUTTONS
   button_hal_init();
+#endif
 }
 /*---------------------------------------------------------------------------*/
 void
 platform_init_stage_three()
 {
+#ifndef NO_EEPROM
   /* Initialize eeprom */
   eeprom_init();
+#endif
   /* Start serial process */
   serial_line_init();
 }
