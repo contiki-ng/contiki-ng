@@ -111,7 +111,7 @@ coap_call_handlers(coap_message_t *request, coap_message_t *response,
   return COAP_HANDLER_STATUS_CONTINUE;
 }
 /*---------------------------------------------------------------------------*/
-static CC_INLINE coap_handler_status_t
+static inline coap_handler_status_t
 call_service(coap_message_t *request, coap_message_t *response,
              uint8_t *buffer, uint16_t buffer_size, int32_t *offset)
 {

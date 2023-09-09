@@ -97,7 +97,6 @@
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #define CC_CONF_VA_ARGS                1
-#define CC_CONF_INLINE inline
 
 #include <inttypes.h>
 
