@@ -72,10 +72,11 @@ $(EXAMPLES_TMP):
 
 examples:
 	@rm -f summary $(BINARY_SIZE_LOGFILE)
-	@$(MAKE) $(EXAMPLES_TMP)
 ifeq ($(CLANG_WARNINGS),1)
 	@$(MAKE) MAKE_EXTRA_OPTIONS=CLANG=1 $(EXAMPLES_TMP)
+	@rm -f $(BINARY_SIZE_LOGFILE)
 endif
+	@$(MAKE) $(EXAMPLES_TMP)
 
 summary: examples
 	@echo "========== Summary =========="

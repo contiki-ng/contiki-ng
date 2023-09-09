@@ -7,6 +7,7 @@ USER root
 
 # Tools
 # build-essential: development tools.
+# clang-15: additional warnings in tests.
 # gdb: development tools.
 # git: development tools.
 # git-lfs: development tools (used by Gecko SDK).
@@ -33,6 +34,7 @@ RUN apt-get -qq update && \
       ca-certificates > /dev/null && \
   apt-get -qq -y --no-install-recommends install \
     build-essential \
+    clang-15 \
     gdb \
     git \
     git-lfs \
