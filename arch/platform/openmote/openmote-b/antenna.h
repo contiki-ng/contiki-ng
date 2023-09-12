@@ -62,6 +62,15 @@ void antenna_select_cc2538(void);
  */
 void antenna_select_at86rf215(void);
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief Connect the TI CC2538 radio to the external antenna
+ */
+void antenna_select_ti(void);
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Connect the Atmel AT86RF215 radio to the external antenna
+ */
+void antenna_select_atmel(void);
 #endif /* ANTENNA_H_ */
 /**
  * @}

@@ -46,6 +46,11 @@
 #include <stdint.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "OpenMote-B"
+#define LOG_LEVEL LOG_LEVEL_MAIN
+/*---------------------------------------------------------------------------*/
 static void
 configure_unused_pins(void)
 {
@@ -56,7 +61,15 @@ void
 board_init()
 {
   antenna_init();
-  antenna_select_cc2538();
+
+#if OPENMOTEB_USE_ATMEL_RADIO
+  LOG_INFO("Atmel radio connected to the 2.4 GHz antenna connector\n");
+  antenna_select_atmel();
+#else
+  LOG_INFO("TI radio connected to the 2.4 GHz antenna connector\n");
+  antenna_select_ti();
+#endif
+
   configure_unused_pins();
 
   /* configure bootloader pin as input */

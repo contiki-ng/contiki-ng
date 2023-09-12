@@ -112,6 +112,9 @@
 #define UART0_RX_PIN             0
 #define UART0_TX_PORT            GPIO_A_NUM
 #define UART0_TX_PIN             1
+
+#define UART_CONF_ENABLE         1
+//#define UART0_CONF_BAUD_RATE     921600
 /** @} */
 /*---------------------------------------------------------------------------*/
 /** \name OpenMote-B Button configuration
@@ -133,14 +136,15 @@
  * \name SPI (SSI0) configuration
  *
  * These values configure which CC2538 pins to use for the SPI (SSI0) lines.
+ * The SPI0 is currently used for interface with the AT86RF215 radio.
  * @{
  */
-#define SPI_CLK_PORT             GPIO_A_NUM
-#define SPI_CLK_PIN              2
-#define SPI_MOSI_PORT            GPIO_A_NUM
-#define SPI_MOSI_PIN             5
-#define SPI_MISO_PORT            GPIO_A_NUM
-#define SPI_MISO_PIN             4
+#define SPI0_CLK_PORT            GPIO_A_NUM
+#define SPI0_CLK_PIN             2
+#define SPI0_TX_PORT             GPIO_A_NUM
+#define SPI0_TX_PIN              5
+#define SPI0_RX_PORT             GPIO_A_NUM
+#define SPI0_RX_PIN              4
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
@@ -181,15 +185,60 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
- * \name CC2538 TSCH configuration
+ * \name Atmel's AT86RF215 radio configuration
  *
  * @{
  */
-#define RADIO_PHY_OVERHEAD        CC2538_PHY_OVERHEAD
-#define RADIO_BYTE_AIR_TIME       CC2538_BYTE_AIR_TIME
-#define RADIO_DELAY_BEFORE_TX     CC2538_DELAY_BEFORE_TX
-#define RADIO_DELAY_BEFORE_RX     CC2538_DELAY_BEFORE_RX
-#define RADIO_DELAY_BEFORE_DETECT CC2538_DELAY_BEFORE_DETECT
+#define AT86RF215_SPI_INSTANCE    0
+#define AT86RF215_SPI_CSN_PORT    GPIO_A_NUM
+#define AT86RF215_SPI_CSN_PIN     3
+#define AT86RF215_RSTN_PORT       GPIO_D_NUM
+#define AT86RF215_RSTN_PIN        1
+#define AT86RF215_PWR_PORT        GPIO_C_NUM
+#define AT86RF215_PWR_PIN         0
+#define AT86RF215_IRQ_PORT        GPIO_D_NUM
+#define AT86RF215_IRQ_PIN         0
+#define AT86RF215_GPIOx_VECTOR    GPIO_D_IRQn
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \name Radio configuration - use either AT86RF215 or CC2538
+ *
+ * OpenMoteB can use either the AT86RF215 or the CC2538 radio.
+ * @{
+ */
+#ifndef OPENMOTEB_CONF_USE_ATMEL_RADIO
+#define OPENMOTEB_USE_ATMEL_RADIO               1
+#else
+#define OPENMOTEB_USE_ATMEL_RADIO               OPENMOTEB_CONF_USE_ATMEL_RADIO
+#endif
+
+/** Configuration of Atmel AT86RF215 radio */
+#if OPENMOTEB_USE_ATMEL_RADIO == 1
+
+    #define NETSTACK_CONF_RADIO                 at86rf215_driver
+
+    #define RADIO_PHY_OVERHEAD                  AT86RF215_PHY_OVERHEAD
+    #define RADIO_BYTE_AIR_TIME                 AT86RF215_BYTE_AIR_TIME
+    #define RADIO_DELAY_BEFORE_TX               AT86RF215_DELAY_BEFORE_TX
+    #define RADIO_DELAY_BEFORE_RX               AT86RF215_DELAY_BEFORE_RX
+    #define RADIO_DELAY_BEFORE_DETECT           AT86RF215_DELAY_BEFORE_DETECT
+
+    /* Use 32 MHz clock, so the SPI speed can be at at least at 16MHz */
+    #define SYS_CTRL_CONF_SYS_DIV               SYS_CTRL_CLOCK_CTRL_SYS_DIV_32MHZ
+
+/** Configuration of Texas Instrument CC2538 radio */
+#else
+
+    #define NETSTACK_CONF_RADIO                 cc2538_rf_driver
+
+    #define RADIO_PHY_OVERHEAD                  CC2538_PHY_OVERHEAD
+    #define RADIO_BYTE_AIR_TIME                 CC2538_BYTE_AIR_TIME
+    #define RADIO_DELAY_BEFORE_TX               CC2538_DELAY_BEFORE_TX
+    #define RADIO_DELAY_BEFORE_RX               CC2538_DELAY_BEFORE_RX
+    #define RADIO_DELAY_BEFORE_DETECT           CC2538_DELAY_BEFORE_DETECT
+#endif /* OPENMOTEB_USE_ATMEL_RADIO */
+
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
