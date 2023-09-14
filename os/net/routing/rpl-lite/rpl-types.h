@@ -186,10 +186,10 @@ struct rpl_dag {
   uip_ipaddr_t dag_id;
   rpl_prefix_t prefix_info;
   rpl_nbr_t *preferred_parent;
+  uint32_t lifetime;
   rpl_rank_t lowest_rank; /* The lowest rank seen in the current version */
   rpl_rank_t rank; /* The current rank */
   rpl_rank_t last_advertised_rank; /* The last rank advertised in a multicast-DIO */
-  uint32_t lifetime;
   uint8_t version;
   uint8_t grounded;
   uint8_t preference;
@@ -216,8 +216,8 @@ struct rpl_dag {
 #endif /* RPL_WITH_PROBING */
 #if RPL_WITH_DAO_ACK
   uip_ipaddr_t dao_ack_target;
-  uint16_t dao_ack_sequence;
   struct ctimer dao_ack_timer;
+  uint16_t dao_ack_sequence;
 #endif /* RPL_WITH_DAO_ACK */
 };
 typedef struct rpl_dag rpl_dag_t;
