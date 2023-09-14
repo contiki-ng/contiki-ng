@@ -107,8 +107,6 @@ platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc
 platform-specific/cc26x0-cc13x0/base-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
 platform-specific/cc26x0-cc13x0/base-demo/simplelink:BOARD=sensortag/cc1350 \
 platform-specific/cc26x0-cc13x0/base-demo/simplelink:BOARD=sensortag/cc1352r1 \
-platform-specific/nrf/start-network-core/nrf:BOARD=nrf52840/dk \
-platform-specific/nrf/start-network-core/nrf:BOARD=nrf52840/dongle \
 platform-specific/nrf/start-network-core/nrf:BOARD=nrf5340/dk/application \
 platform-specific/nrf/start-network-core/nrf:BOARD=nrf5340/dk/network \
 platform-specific/zoul/at-test/zoul \
