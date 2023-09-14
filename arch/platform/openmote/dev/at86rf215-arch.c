@@ -111,8 +111,7 @@ at86rf215_arch_spi_txrx(uint8_t b)
     SPIX_BUF(AT86RF215_SPI_INSTANCE) = b;
     SPIX_WAITFOREOTx(AT86RF215_SPI_INSTANCE);
     SPIX_WAITFOREORx(AT86RF215_SPI_INSTANCE);
-    b = SPIX_BUF(AT86RF215_SPI_INSTANCE);
-    return b;
+    return SPIX_BUF(AT86RF215_SPI_INSTANCE);;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -129,11 +128,9 @@ at86rf215_arch_init(void)
     /* Turn the radio off */
     GPIO_CLR_PIN(AT86RF215_PWR_PORT_BASE , AT86RF215_PWR_PIN_MASK );
     GPIO_CLR_PIN(AT86RF215_RSTN_PORT_BASE ,AT86RF215_RSTN_PIN_MASK );
-    for(uint16_t delay=0; delay<0xA2C2; delay++);
 
     /* Power up the radio */
     GPIO_SET_PIN(AT86RF215_PWR_PORT_BASE , AT86RF215_PWR_PIN_MASK );
-    for(uint16_t delay=0; delay<0xA2C2; delay++);
 
     /* "Un-reset" the radio */
     at86rf215_arch_clear_RSTN();

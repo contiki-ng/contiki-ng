@@ -92,9 +92,9 @@ typedef struct {
     //uint8_t content[AT86RF215_MAX_PAYLOAD_SIZE];
     //uint8_t len;
     //uint16_t crc;
+	rtimer_clock_t timestamp;
     uint8_t lqi;
     int8_t rssi;
-	rtimer_clock_t timestamp;
 } at86rf215_rx_frame_t;
 
 /* Basic radio configuration */
