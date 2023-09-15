@@ -18,8 +18,8 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <description>Sky Mote Type #sky1</description>
       <source>[CONFIG_DIR]/code-data-structures/test-data-structures.c</source>
-      <commands>make clean TARGET=sky
-make -j$(CPUS) test-data-structures.sky TARGET=sky</commands>
+      <commands>$(MAKE) clean TARGET=sky
+$(MAKE) -j$(CPUS) test-data-structures.sky TARGET=sky</commands>
       <firmware>[CONFIG_DIR]/code-data-structures/test-data-structures.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>

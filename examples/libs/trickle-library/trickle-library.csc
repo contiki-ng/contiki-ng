@@ -20,7 +20,7 @@
       <identifier>sky1</identifier>
       <description>trickle-tester</description>
       <source EXPORT="discard">[CONTIKI_DIR]/examples/libs/trickle-library/trickle-library.c</source>
-      <commands EXPORT="discard">make -j$(CPUS) trickle-library.sky TARGET=sky</commands>
+      <commands EXPORT="discard">$(MAKE) -j$(CPUS) trickle-library.sky TARGET=sky</commands>
       <firmware EXPORT="copy">[CONTIKI_DIR]/examples/libs/trickle-library/trickle-library.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>

@@ -18,8 +18,8 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>Sender</description>
       <source>[CONFIG_DIR]/code-ipv6/udp-sender/unicast-sender.c</source>
-      <commands>make TARGET=cooja clean
-make -j$(CPUS) unicast-sender.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) TARGET=cooja clean
+$(MAKE) -j$(CPUS) unicast-sender.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -52,8 +52,8 @@ make -j$(CPUS) unicast-sender.cooja TARGET=cooja</commands>
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>Receiver</description>
       <source>[CONFIG_DIR]/code-ipv6/udp-receiver/udp-receiver.c</source>
-      <commands>make TARGET=cooja clean
-make -j$(CPUS) udp-receiver.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) TARGET=cooja clean
+$(MAKE) -j$(CPUS) udp-receiver.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

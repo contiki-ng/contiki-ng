@@ -19,8 +19,8 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>Cooja Mote Type #1</description>
       <source>[CONTIKI_DIR]/examples/rpl-border-router/border-router.c</source>
-      <commands>make TARGET=cooja clean
-make -j$(CPUS) border-router.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) TARGET=cooja clean
+$(MAKE) -j$(CPUS) border-router.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -53,8 +53,8 @@ make -j$(CPUS) border-router.cooja TARGET=cooja</commands>
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>Cooja Mote Type #2</description>
       <source>[CONTIKI_DIR]/examples/hello-world/hello-world.c</source>
-      <commands>make TARGET=cooja clean
-make -j$(CPUS) hello-world.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) TARGET=cooja clean
+$(MAKE) -j$(CPUS) hello-world.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

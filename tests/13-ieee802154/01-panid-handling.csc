@@ -18,8 +18,8 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>Cooja Mote Type #1</description>
       <source>[CONFIG_DIR]/code-panid-handling/test-panid-handling.c</source>
-      <commands>make clean TARGET=cooja
-make -j$(CPUS) test-panid-handling.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) clean TARGET=cooja
+$(MAKE) -j$(CPUS) test-panid-handling.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

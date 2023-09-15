@@ -19,8 +19,8 @@
       <identifier>mtype660</identifier>
       <description>RPL/TSCH Node</description>
       <source>[CONFIG_DIR]/node.c</source>
-      <commands>make TARGET=cooja clean
-make -j$(CPUS) TARGET=cooja node.cooja</commands>
+      <commands>$(MAKE) TARGET=cooja clean
+$(MAKE) -j$(CPUS) TARGET=cooja node.cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

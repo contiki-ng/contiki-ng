@@ -18,8 +18,8 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>Sender</description>
       <source>[CONFIG_DIR]/code/sender-node.c</source>
-      <commands>make TARGET=cooja clean
-make -j$(CPUS) sender-node.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) TARGET=cooja clean
+$(MAKE) -j$(CPUS) sender-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -51,8 +51,8 @@ make -j$(CPUS) sender-node.cooja TARGET=cooja</commands>
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>RPL root</description>
       <source>[CONFIG_DIR]/code/root-node.c</source>
-      <commands>make TARGET=cooja clean
-make -j$(CPUS) root-node.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) TARGET=cooja clean
+$(MAKE) -j$(CPUS) root-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -84,8 +84,8 @@ make -j$(CPUS) root-node.cooja TARGET=cooja</commands>
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>Receiver</description>
       <source>[CONFIG_DIR]/code/receiver-node.c</source>
-      <commands>make TARGET=cooja clean
-make -j$(CPUS) receiver-node.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) TARGET=cooja clean
+$(MAKE) -j$(CPUS) receiver-node.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

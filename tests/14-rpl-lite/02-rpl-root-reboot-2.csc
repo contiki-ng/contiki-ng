@@ -19,8 +19,8 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>mote</description>
       <source>[CONTIKI_DIR]/examples/libs/shell/example.c</source>
-      <commands>make TARGET=cooja clean
-make example.cooja TARGET=cooja MAKE_ROUTING=MAKE_ROUTING_RPL_LITE -j</commands>
+      <commands>$(MAKE) TARGET=cooja clean
+$(MAKE) example.cooja TARGET=cooja MAKE_ROUTING=MAKE_ROUTING_RPL_LITE -j</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

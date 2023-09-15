@@ -19,8 +19,8 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>Cooja Mote Type #1</description>
       <source>[CONFIG_DIR]/code/node.c</source>
-      <commands>make TARGET=cooja clean
-      make -j$(CPUS) WITH_CSMA=1 node.cooja</commands>
+      <commands>$(MAKE) TARGET=cooja clean
+      $(MAKE) -j$(CPUS) WITH_CSMA=1 node.cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
