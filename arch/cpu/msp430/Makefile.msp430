@@ -42,6 +42,8 @@ CONTIKI_SOURCEFILES        += $(CONTIKI_TARGET_SOURCEFILES)
 
 ### Compiler definitions
 
+# Target does not use DWARF debug format, so disable CHECK_STRUCTS.
+NO_CHECK_STRUCTS = 1
 # Clang supports MSP430, but more Contiki-NG-work is required to use it.
 NO_CLANG = 1
 # LTO is available in GCC 4.7.2, but crashes for MSP430.

@@ -181,6 +181,20 @@ endif
 
 CP ?= cp
 
+ifdef NO_CHECK_STRUCTS
+  PAHOLE = echo ""
+else
+  ifeq ($(CHECK_STRUCTS),1)
+    DEBUG = 1
+  endif
+endif
+
+# Default to use pahole for finding holes in structs.
+PAHOLE ?= pahole
+# There are structs with holes in external libraries, exclude these structs.
+PAHOLE_EXCLUDES ?= _IO_FILE
+PAHOLE_FLAGS ?= -H 1 --exclude=$(PAHOLE_EXCLUDES)
+
 # Default to release builds.
 DEBUG ?= 0
 # Default to generate debug information for gdb. Targets can override this.
@@ -514,12 +528,18 @@ ifndef CUSTOM_RULE_C_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.c | $(DEPDIR)
 	$(TRACE_CC)
 	$(Q)$(CCACHE) $(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+ifeq ($(CHECK_STRUCTS),1)
+	$(Q)$(PAHOLE) $(PAHOLE_FLAGS) $@ | perl -ne 'exit 1 if /XXX/'
+endif
 endif
 
 ifndef CUSTOM_RULE_CPP_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.cpp | $(DEPDIR)
 	$(TRACE_CXX)
 	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
+ifeq ($(CHECK_STRUCTS),1)
+	$(Q)$(PAHOLE) $(PAHOLE_FLAGS) $@ | perl -ne 'exit 1 if /XXX/'
+endif
 endif
 
 ifndef CUSTOM_RULE_S_TO_OBJECTDIR_O
