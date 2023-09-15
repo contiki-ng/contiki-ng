@@ -239,12 +239,5 @@ docker pull contiker/contiki-ng:<hash>
 ```
 
 ## Running out-of-tree-tests
-If you want to run the entire test suite inside docker, you will need to take additional steps in order for `out-of-tree-tests` to work.
+If you want to run the entire test suite inside docker, you need to either `export CI=true' before running the tests, or start 02-compile-arm-ports with `make OUT_OF_TREE_TEST=1`.
 
-Firstly, you will need to clone the `contiki-ng/out-of-tree-tests` repository somewhere in your computer. Store the path of the clone in the `OUT_OF_TREE_TEST_PATH` environment variable.
-
-You then need to pass an additional `--mount` command to your docker invocation. Add the following line to your `contiker` alias or function.
-
-```
---mount type=bind,source=$OUT_OF_TREE_TEST_PATH,destination=/home/user/out-of-tree-tests
-```

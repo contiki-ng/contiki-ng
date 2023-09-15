@@ -1,5 +1,44 @@
 CURDIR := $(abspath $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
+CONTIKI_DIR := $(abspath $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))/../..)
 BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
+
+ifeq ($(CI), true)
+  OUT_OF_TREE_TEST ?= 1
+else
+  Q ?= @
+endif
+
+OUT_OF_TREE_EXAMPLESDIR = $(HOME)/out-of-tree-tests
+
+OUT_OF_TREE_EXAMPLES = \
+hello-world/native \
+hello-world/zoul \
+hello-world/openmote \
+hello-world/cc26x0-cc13x0 \
+hello-world/simplelink:BOARD=launchpad/cc26x2r1 \
+hello-world/simplelink:BOARD=sensortag/cc2650 \
+
+# Construct DIR_TARGET based on whether EXAMPLESDIR exists.
+# Put a common dummy string first since targets cannot start with "-".
+DIR_TARGET = examplesdir-$(wildcard $(OUT_OF_TREE_EXAMPLESDIR))
+DIR_PRESENT = examplesdir-$(OUT_OF_TREE_EXAMPLESDIR)
+DIR_ABSENT = examplesdir-
+
+ifeq ($(OUT_OF_TREE_TEST), 1)
+# Copy examples/hello-world to $(OUT_OF_TREE_EXAMPLESDIR), and adjust Makefile.
+preparation: | $(DIR_TARGET)
+	@cp -a $(CONTIKI_DIR)/examples/hello-world $(OUT_OF_TREE_EXAMPLESDIR)
+	@perl -pi -e "s|^CONTIKI =.*$$|CONTIKI = $(CONTIKI_DIR)|g" $(OUT_OF_TREE_EXAMPLESDIR)/hello-world/Makefile
+	$(Q)$(MAKE) EXAMPLES="$(OUT_OF_TREE_EXAMPLES)" EXAMPLESDIR=$(OUT_OF_TREE_EXAMPLESDIR) all
+	$(Q)$(MAKE) OUT_OF_TREE_TEST=0 all
+
+$(DIR_ABSENT):
+	@mkdir -p $(OUT_OF_TREE_EXAMPLESDIR)
+
+$(DIR_PRESENT):
+	@echo "Remove $(OUT_OF_TREE_EXAMPLESDIR) before running this test.\n"
+	@false
+endif
 
 EXAMPLESDIR=../../examples
 
