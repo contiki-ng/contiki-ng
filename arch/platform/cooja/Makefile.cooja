@@ -1,10 +1,3 @@
-## The COOJA Simulator Contiki platform Makefile
-##
-## This makefile should normally never be called directly, but
-## rather from inside the COOJA simulator.
-## The purpose of this file is to compile a shared library that
-## can be loaded into the Java part of COOJA.
-
 EXPECTED_COOJA_VERSION = 2022071901
 
 ifndef CONTIKI
@@ -13,17 +6,11 @@ endif
 
 # Detect incompatible Cooja versions when not performing "make clean".
 ifneq ($(MAKECMDGOALS),clean)
-  ifndef LIBNAME
-    $(warning Cooja target should be built by Cooja)
-    $(error Use TARGET=native for quickstarting a .csc simulation file)
-  endif
-
-  ifndef COOJA_VERSION
-    $(error COOJA_VERSION not defined, please upgrade Cooja)
-  endif
-
-  ifneq ($(COOJA_VERSION),$(EXPECTED_COOJA_VERSION))
-    $(error Got COOJA_VERSION $(COOJA_VERSION) but expected $(EXPECTED_COOJA_VERSION))
+  # If LIBNAME is set, build is done under Cooja.
+  ifdef LIBNAME
+    ifneq ($(COOJA_VERSION),$(EXPECTED_COOJA_VERSION))
+      $(error Got COOJA_VERSION $(COOJA_VERSION) but expected $(EXPECTED_COOJA_VERSION))
+    endif
   endif
 
   ifneq ($(BOARD),)
