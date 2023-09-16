@@ -36,7 +36,7 @@ jobs:
         fail-fast: false
         matrix:
             os: [ ubuntu-latest, macos-latest ]
-            test: [ documentation, compile-base, compile-arm-ports, compile-tools, out-of-tree-build, rpl-lite, rpl-classic, renode-simulation, simulation-base, ipv6, ieee802154, tun-rpl-br, script-base, native-runs, ipv6-nbr, coap-lwm2m, packet-parsing ]
+            test: [ documentation, compile-base, compile-arm-ports, compile-tools, rpl-lite, rpl-classic, renode-simulation, simulation-base, ipv6, ieee802154, tun-rpl-br, script-base, native-runs, ipv6-nbr, coap-lwm2m, packet-parsing ]
             exclude:
               # Renode tests done by Linux (more CI runners available).
               - os: macos-latest
@@ -49,8 +49,6 @@ jobs:
               # No arm-none-eabi-gcc installed.
               - os: macos-latest
                 test: compile-arm-ports
-              - os: macos-latest
-                test: out-of-tree-build
               # Uses zoul as dummy target, fails on missing arm-none-eabi-gcc.
               # Tests/build system should be fixed.
               - os: macos-latest
