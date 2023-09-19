@@ -162,8 +162,14 @@ enum {
  *             time in the future.
  *
  */
-int rtimer_set(struct rtimer *task, rtimer_clock_t time,
-	       rtimer_clock_t duration, rtimer_callback_t func, void *ptr);
+static inline int
+rtimer_set(struct rtimer *task, rtimer_clock_t time,
+	   rtimer_clock_t duration, rtimer_callback_t func, void *ptr) {
+  void rtimer_set_internal(struct rtimer *, rtimer_clock_t, rtimer_clock_t,
+                           rtimer_callback_t, void *);
+  rtimer_set_internal(task, time, duration, func, ptr);
+  return RTIMER_OK;
+}
 
 /**
  * \brief      Execute the next real-time task and schedule the next task, if any

@@ -57,10 +57,10 @@
 static struct rtimer *next_rtimer;
 
 /*---------------------------------------------------------------------------*/
-int
-rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
-	   rtimer_clock_t duration,
-	   rtimer_callback_t func, void *ptr)
+void
+rtimer_set_internal(struct rtimer *rtimer, rtimer_clock_t time,
+                    rtimer_clock_t duration, rtimer_callback_t func,
+                    void *ptr)
 {
   bool first = next_rtimer == NULL;
 
@@ -75,7 +75,6 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
   if(first) {
     rtimer_arch_schedule(time);
   }
-  return RTIMER_OK;
 }
 /*---------------------------------------------------------------------------*/
 void
