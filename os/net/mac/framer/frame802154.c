@@ -304,12 +304,8 @@ field_len(frame802154_t *p, field_length_t *flen)
    * up to the caller. */
   if(p->fcf.frame_version < FRAME802154_IEEE802154_2015) {
     /* Set PAN ID compression bit if src pan id matches dest pan id. */
-    if((p->fcf.dest_addr_mode & 3) && (p->fcf.src_addr_mode & 3) &&
-       p->src_pid == p->dest_pid) {
-      p->fcf.panid_compression = 1;
-    } else {
-      p->fcf.panid_compression = 0;
-    }
+    p->fcf.panid_compression = (p->fcf.dest_addr_mode & 3) &&
+      (p->fcf.src_addr_mode & 3) && p->src_pid == p->dest_pid;
   }
 
   frame802154_has_panid(&p->fcf, &has_src_panid, &has_dest_panid);
