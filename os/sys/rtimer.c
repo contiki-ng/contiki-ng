@@ -90,7 +90,6 @@ rtimer_run_next(void)
   if(next_rtimer != NULL) {
     rtimer_arch_schedule(next_rtimer->time);
   }
-  return;
 }
 /*---------------------------------------------------------------------------*/
 
