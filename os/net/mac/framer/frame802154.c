@@ -336,7 +336,6 @@ field_len(frame802154_t *p, field_length_t *flen)
 #if LLSEC802154_USES_EXPLICIT_KEYS
     flen->aux_sec_len += get_key_id_len(p->aux_hdr.security_control.key_id_mode);
 #endif /* LLSEC802154_USES_EXPLICIT_KEYS */
-    ;
   }
 #endif /* LLSEC802154_USES_AUX_HEADER */
 }
