@@ -374,11 +374,8 @@ rpl_icmp6_dio_output(uip_ipaddr_t *uc_addr)
   buffer[pos++] = curr_instance.instance_id;
   buffer[pos++] = curr_instance.dag.version;
 
-  if(rpl_get_leaf_only()) {
-    set16(buffer, pos, RPL_INFINITE_RANK);
-  } else {
-    set16(buffer, pos, curr_instance.dag.rank);
-  }
+  set16(buffer, pos,
+        rpl_get_leaf_only() ? RPL_INFINITE_RANK : curr_instance.dag.rank);
   pos += 2;
 
   buffer[pos] = 0;
