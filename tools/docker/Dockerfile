@@ -81,10 +81,9 @@ RUN wget -nv https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.
   rm -f gcc-arm-none-eabi-*-linux.tar.bz2
 
 # Install msp430 toolchain
-RUN wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 && \
-  tar xjf mspgcc*.tar.bz2 -C /tmp/ && \
-  cp -f -r /tmp/msp430/* /usr/local/ && \
-  rm -rf /tmp/msp430 mspgcc*.tar.bz2
+RUN wget -nv https://github.com/pjonsson/msp430gcc-binary/releases/download/v1.0/mspgcc-4.7.4-linux-x86_64.tar.bz2 && \
+  tar xf mspgcc*.tar.bz2 -C /usr/local --no-same-owner && \
+  rm -f mspgcc*.tar.bz2
 
 # Install nRF Command Line tools
 RUN wget -nv https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-22-0/nrf-command-line-tools_10.22.0_amd64.deb && \
