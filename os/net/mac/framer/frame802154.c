@@ -388,7 +388,6 @@ frame802154_create(frame802154_t *p, uint8_t *buf)
 {
   int c;
   field_length_t flen;
-  uint8_t pos;
 #if LLSEC802154_USES_EXPLICIT_KEYS
   uint8_t key_id_mode;
 #endif /* LLSEC802154_USES_EXPLICIT_KEYS */
@@ -398,7 +397,7 @@ frame802154_create(frame802154_t *p, uint8_t *buf)
   /* OK, now we have field lengths.  Time to actually construct */
   /* the outgoing frame, and store it in buf */
   frame802154_create_fcf(&p->fcf, buf);
-  pos = 2;
+  unsigned int pos = 2;
 
   /* Sequence number */
   if(flen.seqno_len == 1) {
