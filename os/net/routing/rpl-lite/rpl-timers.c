@@ -552,14 +552,6 @@ rpl_timers_stop_dag_timers(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-rpl_timers_unschedule_state_update(void)
-{
-  if(curr_instance.used) {
-    ctimer_stop(&curr_instance.dag.state_update);
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
 rpl_timers_schedule_state_update(void)
 {
   if(curr_instance.used) {
