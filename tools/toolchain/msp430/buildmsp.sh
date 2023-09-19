@@ -1,6 +1,6 @@
 #!/bin/sh -e
 ##############################################################################
-# This script builds mspgcc using gcc 4.7.2 as the basis.                    #
+# This script builds mspgcc using gcc 4.7.4 as the basis.                    #
 #                                                                            #
 # This script is a modified version (by Daniele Alessandrelli) of the script #
 # created by Hossein Shafagh and hosted here:                                #
@@ -12,7 +12,7 @@
 #                                                                            #
 # There are several issues outstanding. Search for FIXME in this script.     #
 #                                                                            #
-# By default the compiler is installed in `/usr/local/stow/mspgcc-4.7.2`     #
+# By default the compiler is installed in `/usr/local/stow/mspgcc-4.7.4`     #
 # so that this install can be used with the `stow` package. You can          #
 # change this by modifying INSTALL_PREFIX.                                   #
 #                                                                            #
@@ -26,7 +26,7 @@
 #    access to the INSTALL_PREFIX directory.                                 #
 ##############################################################################
 
-INSTALL_PREFIX="/usr/local/stow/mspgcc-4.7.2"
+INSTALL_PREFIX="/usr/local/stow/mspgcc-4.7.4"
 echo The installation prefix is: $INSTALL_PREFIX
 
 error() {
@@ -56,13 +56,13 @@ wget --no-verbose http://sourceforge.net/projects/mspgcc/files/mspgcc/DEVEL-4.7.
 wget --no-verbose http://sourceforge.net/projects/mspgcc/files/msp430mcu/msp430mcu-20120716.tar.bz2
 wget --no-verbose http://sourceforge.net/projects/mspgcc/files/msp430-libc/msp430-libc-20120716.tar.bz2
 wget --no-verbose http://ftpmirror.gnu.org/binutils/binutils-2.22.tar.bz2
-wget --no-verbose http://ftpmirror.gnu.org/gcc/gcc-4.7.2/gcc-4.7.2.tar.bz2
+wget --no-verbose http://ftpmirror.gnu.org/gcc/gcc-4.7.4/gcc-4.7.4.tar.bz2
 wget --no-verbose http://sourceforge.net/p/mspgcc/bugs/352/attachment/0001-SF-352-Bad-code-generated-pushing-a20-from-stack.patch
 wget --no-verbose  http://sourceforge.net/p/mspgcc/bugs/_discuss/thread/fd929b9e/db43/attachment/0001-SF-357-Shift-operations-may-produce-incorrect-result.patch
 
 # Unpacking the tars
 tar xfj binutils-2.22.tar.bz2
-tar xfj gcc-4.7.2.tar.bz2
+tar xfj gcc-4.7.4.tar.bz2
 tar xfj mspgcc-20120911.tar.bz2
 tar xfj msp430mcu-20120716.tar.bz2
 tar xfj msp430-libc-20120716.tar.bz2
@@ -336,26 +336,14 @@ index 4cfb440..9d631a6 100644
 EOF
 cd ..
 # 2) Incorporating the changes contained in the patch delievered in mspgcc-20120911
-cd gcc-4.7.2
+cd gcc-4.7.4
 patch --force -p1<../mspgcc-20120911/msp430-gcc-4.7.0-20120911.patch || echo "FIXME: ignoring failure on this patch"
 patch --force -p1<../0001-SF-352-Bad-code-generated-pushing-a20-from-stack.patch
 patch --force -p1<../0001-SF-357-Shift-operations-may-produce-incorrect-result.patch
 patch -p1 <<EOF
-diff -u -r gcc-4.7.2-orig/gcc/doc/cppopts.texi gcc-4.7.2/gcc/doc/cppopts.texi
---- gcc-4.7.2-orig/gcc/doc/cppopts.texi	2022-09-26 21:38:56.828426672 +0100
-+++ gcc-4.7.2/gcc/doc/cppopts.texi	2022-09-26 21:41:16.101754116 +0100
-@@ -803,7 +803,7 @@
- Enable special code to work around file systems which only permit very
- short file names, such as MS-DOS@.
-
--@itemx --help
-+@item --help
- @itemx --target-help
- @opindex help
- @opindex target-help
-diff -u -r gcc-4.7.2-orig/gcc/doc/gcc.texi gcc-4.7.2/gcc/doc/gcc.texi
+diff -u -r gcc-4.7.2-orig/gcc/doc/gcc.texi gcc-4.7.4/gcc/doc/gcc.texi
 --- gcc-4.7.2-orig/gcc/doc/gcc.texi	2022-09-26 21:38:56.980428153 +0100
-+++ gcc-4.7.2/gcc/doc/gcc.texi	2022-09-26 21:47:14.125105710 +0100
++++ gcc-4.7.4/gcc/doc/gcc.texi	2022-09-26 21:47:14.125105710 +0100
 @@ -86,9 +86,15 @@
  @item GNU Press
  @tab Website: www.gnupress.org
@@ -374,113 +362,9 @@ diff -u -r gcc-4.7.2-orig/gcc/doc/gcc.texi gcc-4.7.2/gcc/doc/gcc.texi
  @item 51 Franklin Street, Fifth Floor
  @tab Tel 617-542-5942
  @item Boston, MA 02110-1301 USA
-diff -u -r gcc-4.7.2-orig/gcc/doc/generic.texi gcc-4.7.2/gcc/doc/generic.texi
---- gcc-4.7.2-orig/gcc/doc/generic.texi	2022-09-26 21:38:56.848426867 +0100
-+++ gcc-4.7.2/gcc/doc/generic.texi	2022-09-26 21:47:10.281069354 +0100
-@@ -1415,13 +1415,13 @@
- not matter.  The type of the operands and that of the result are
- always of @code{BOOLEAN_TYPE} or @code{INTEGER_TYPE}.
-
--@itemx POINTER_PLUS_EXPR
-+@item POINTER_PLUS_EXPR
- This node represents pointer arithmetic.  The first operand is always
- a pointer/reference type.  The second operand is always an unsigned
- integer type compatible with sizetype.  This is the only binary
- arithmetic operand that can operate on pointer types.
-
--@itemx PLUS_EXPR
-+@item PLUS_EXPR
- @itemx MINUS_EXPR
- @itemx MULT_EXPR
- These nodes represent various binary arithmetic operations.
-diff -u -r gcc-4.7.2-orig/gcc/doc/invoke.texi gcc-4.7.2/gcc/doc/invoke.texi
---- gcc-4.7.2-orig/gcc/doc/invoke.texi	2022-09-26 21:38:56.900427374 +0100
-+++ gcc-4.7.2/gcc/doc/invoke.texi	2022-09-26 21:48:48.714002084 +0100
-@@ -5179,7 +5179,7 @@
- e.g. With -fdbg-cnt=dce:10,tail_call:0
- dbg_cnt(dce) will return true only for first 10 invocations
-
--@itemx -fenable-@var{kind}-@var{pass}
-+@item -fenable-@var{kind}-@var{pass}
- @itemx -fdisable-@var{kind}-@var{pass}=@var{range-list}
- @opindex fdisable-
- @opindex fenable-
-@@ -5327,11 +5327,11 @@
- @option{-fdump-rtl-ce3} enable dumping after the three
- if conversion passes.
-
--@itemx -fdump-rtl-cprop_hardreg
-+@item -fdump-rtl-cprop_hardreg
- @opindex fdump-rtl-cprop_hardreg
- Dump after hard register copy propagation.
-
--@itemx -fdump-rtl-csa
-+@item -fdump-rtl-csa
- @opindex fdump-rtl-csa
- Dump after combining stack adjustments.
-
-@@ -5342,11 +5342,11 @@
- @option{-fdump-rtl-cse1} and @option{-fdump-rtl-cse2} enable dumping after
- the two common sub-expression elimination passes.
-
--@itemx -fdump-rtl-dce
-+@item -fdump-rtl-dce
- @opindex fdump-rtl-dce
- Dump after the standalone dead code elimination passes.
-
--@itemx -fdump-rtl-dbr
-+@item -fdump-rtl-dbr
- @opindex fdump-rtl-dbr
- Dump after delayed branch scheduling.
-
-@@ -5391,7 +5391,7 @@
- @opindex fdump-rtl-initvals
- Dump after the computation of the initial value sets.
-
--@itemx -fdump-rtl-into_cfglayout
-+@item -fdump-rtl-into_cfglayout
- @opindex fdump-rtl-into_cfglayout
- Dump after converting to cfglayout mode.
-
-@@ -5421,7 +5421,7 @@
- @opindex fdump-rtl-rnreg
- Dump after register renumbering.
-
--@itemx -fdump-rtl-outof_cfglayout
-+@item -fdump-rtl-outof_cfglayout
- @opindex fdump-rtl-outof_cfglayout
- Dump after converting from cfglayout mode.
-
-@@ -5433,7 +5433,7 @@
- @opindex fdump-rtl-postreload
- Dump after post-reload optimizations.
-
--@itemx -fdump-rtl-pro_and_epilogue
-+@item -fdump-rtl-pro_and_epilogue
- @opindex fdump-rtl-pro_and_epilogue
- Dump after generating the function prologues and epilogues.
-
-@@ -11344,7 +11344,7 @@
- as needed before the operation.
-
- @item
--If the device supports RAM larger than 64@tie{KiB} and the compiler
-+If the device supports RAM larger than 64@tie{}KiB and the compiler
- needs to change @code{RAMPZ} to accomplish an operation, @code{RAMPZ}
- is reset to zero after the operation.
-
-@@ -11354,7 +11354,7 @@
- zero in case the ISR code might (implicitly) use it.
-
- @item
--RAM larger than 64@tie{KiB} is not supported by GCC for AVR targets.
-+RAM larger than 64@tie{}KiB is not supported by GCC for AVR targets.
- If you use inline assembler to read from locations outside the
- 16-bit address range and change one of the @code{RAMP} registers,
- you must reset it to zero after the access.
-diff -u -r gcc-4.7.2-orig/gcc/doc/sourcebuild.texi gcc-4.7.2/gcc/doc/sourcebuild.texi
+diff -u -r gcc-4.7.2-orig/gcc/doc/sourcebuild.texi gcc-4.7.4/gcc/doc/sourcebuild.texi
 --- gcc-4.7.2-orig/gcc/doc/sourcebuild.texi	2022-09-26 21:38:56.904427412 +0100
-+++ gcc-4.7.2/gcc/doc/sourcebuild.texi	2022-09-26 21:47:12.925094362 +0100
++++ gcc-4.7.4/gcc/doc/sourcebuild.texi	2022-09-26 21:47:12.925094362 +0100
 @@ -676,7 +676,7 @@
  @code{lang_checks}.
 
@@ -496,7 +380,7 @@ cd ..
 
 # 3) Creating new directories
 mkdir binutils-2.22-msp430
-mkdir gcc-4.7.2-msp430
+mkdir gcc-4.7.4-msp430
 
 # 4) installing binutils in INSTALL_PREFIX
 cd binutils-2.22-msp430/
@@ -506,12 +390,12 @@ make CFLAGS="-Wno-error"
 make install
 
 # 5) Download the prerequisites
-cd ../gcc-4.7.2
+cd ../gcc-4.7.4
 ./contrib/download_prerequisites
 
-# 6) compiling gcc-4.7.2 in INSTALL_PREFIX
-cd ../gcc-4.7.2-msp430
-../gcc-4.7.2/configure --target=msp430 --enable-languages=c --program-prefix="msp430-" --prefix=$INSTALL_PREFIX
+# 6) compiling gcc-4.7.4 in INSTALL_PREFIX
+cd ../gcc-4.7.4-msp430
+../gcc-4.7.4/configure --target=msp430 --enable-languages=c --program-prefix="msp430-" --prefix=$INSTALL_PREFIX
 # FIXME: override of CFLAGS needed to remove -O2, which causes a segfault during compilation of _negdi2
 make -j20 CFLAGS="-g"
 make install
@@ -526,5 +410,3 @@ cd src
 PATH=${INSTALL_PREFIX}/bin:$PATH
 make
 make PREFIX=$INSTALL_PREFIX install
-
-exit 0
