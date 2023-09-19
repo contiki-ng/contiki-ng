@@ -62,13 +62,9 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
 	   rtimer_clock_t duration,
 	   rtimer_callback_t func, void *ptr)
 {
-  int first = 0;
+  bool first = next_rtimer == NULL;
 
   PRINTF("rtimer_set time %d\n", time);
-
-  if(next_rtimer == NULL) {
-    first = 1;
-  }
 
   rtimer->func = func;
   rtimer->ptr = ptr;
@@ -76,7 +72,7 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
   rtimer->time = time;
   next_rtimer = rtimer;
 
-  if(first == 1) {
+  if(first) {
     rtimer_arch_schedule(time);
   }
   return RTIMER_OK;
