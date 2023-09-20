@@ -1,3 +1,3 @@
-#!/bin/bash -e
+#!/bin/sh -e
 
 ./run-one.sh 11-aes-ccm
