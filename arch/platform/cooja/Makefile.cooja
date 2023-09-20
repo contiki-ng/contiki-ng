@@ -6,10 +6,12 @@ endif
 
 # Detect incompatible Cooja versions when not performing "make clean".
 ifneq ($(MAKECMDGOALS),clean)
-  # If LIBNAME is set, build is done under Cooja.
-  ifdef LIBNAME
-    ifneq ($(COOJA_VERSION),$(EXPECTED_COOJA_VERSION))
-      $(error Got COOJA_VERSION $(COOJA_VERSION) but expected $(EXPECTED_COOJA_VERSION))
+  ifndef COOJA_CI
+    # If LIBNAME is set, build is done under Cooja.
+    ifdef LIBNAME
+      ifneq ($(COOJA_VERSION),$(EXPECTED_COOJA_VERSION))
+        $(error Got COOJA_VERSION $(COOJA_VERSION) but expected $(EXPECTED_COOJA_VERSION))
+      endif
     endif
   endif
 
