@@ -1,7 +1,26 @@
 CURDIR := $(abspath $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
-BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
 
-CLANG_WARNINGS = 1
+ifeq ($(CI), true)
+  TOOLS_TEST ?= 1
+else
+  Q ?= @
+endif
+
+ifneq ($(TOOLS_TEST),1)
+  CLANG_WARNINGS=1
+  BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
+endif
+
+TOOLS_EXAMPLESDIR = ../../tools
+
+TOOLS_EXAMPLES = \
+serial-io/native
+
+ifeq ($(TOOLS_TEST), 1)
+preparation:
+	$(Q)$(MAKE) EXAMPLES="$(TOOLS_EXAMPLES)" EXAMPLESDIR=$(TOOLS_EXAMPLESDIR) all
+	$(Q)$(MAKE) TOOLS_TEST=0 all
+endif
 
 EXAMPLESDIR=../../examples
 
