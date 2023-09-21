@@ -1,9 +1,6 @@
 #!/bin/bash
 source ../utils.sh
 
-# Contiki directory
-CONTIKI=$1
-
 # Basic statistics for packet parsing results.
 SUCCEEDED=0
 FAILED=0
@@ -17,8 +14,6 @@ echo packet dir = $PACKET_DIR
 
 # Starting Contiki-NG native node
 echo "Starting native node"
-make -j4 -C $CODE_DIR TARGET=native || exit 1
-
 for i in $PACKET_DIR/*
 do
   if [ -d "$i" ]; then
