@@ -392,6 +392,9 @@ make install
 # 5) Download the prerequisites
 cd ../gcc-4.7.4
 ./contrib/download_prerequisites
+# Build fails if flex is installed on a modern Linux/macOS.
+# https://gmplib.org/list-archives/gmp-bugs/2008-August/001114.html
+perl -pi -e 's#M4=m4-not-needed#M4=m4#g' gmp-4.3.2/configure
 
 # 6) compiling gcc-4.7.4 in INSTALL_PREFIX
 cd ../gcc-4.7.4-msp430
