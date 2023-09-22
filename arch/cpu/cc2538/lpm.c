@@ -248,7 +248,7 @@ lpm_enter()
    * Choose the most suitable PM based on anticipated deep sleep duration
    */
   lpm_exit_time = rtimer_arch_next_trigger();
-  duration = lpm_exit_time - RTIMER_NOW();
+  duration = RTIMER_CLOCK_DIFF(lpm_exit_time, RTIMER_NOW());
 
   if(duration < DEEP_SLEEP_PM1_THRESHOLD || lpm_exit_time == 0) {
     /* Anticipated duration too short or no scheduled rtimer task. Use PM0 */
@@ -267,7 +267,7 @@ lpm_enter()
    * Switching the System Clock from the 32MHz XOSC to the 16MHz RC OSC may
    * have taken a while. Re-estimate sleep duration.
    */
-  duration = lpm_exit_time - RTIMER_NOW();
+  duration = RTIMER_CLOCK_DIFF(lpm_exit_time, RTIMER_NOW());
 
   if(duration < DEEP_SLEEP_PM1_THRESHOLD) {
     /*
