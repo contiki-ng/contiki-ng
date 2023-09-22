@@ -1,15 +1,6 @@
 #!/bin/sh -e
 
-TESTNAME=04-test-result-visualization
-
-CONTIKI=../..
-
-TEST_CODE_DIR=code-result-visualization
-
-make -C ${TEST_CODE_DIR} clean
-make -j4 -C ${TEST_CODE_DIR}
-
-${CONTIKI}/examples/benchmarks/result-visualization/run-analysis.py ${TEST_CODE_DIR}/COOJA.testlog > analysis.log
+../../examples/benchmarks/result-visualization/run-analysis.py code-result-visualization/COOJA.testlog > analysis.log
 
 # check that some packets were sent and all were received
 grep "PDR=100" analysis.log > /dev/null || exit 1
