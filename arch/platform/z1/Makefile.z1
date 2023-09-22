@@ -1,7 +1,5 @@
 # Common Makefile between Z1 and Z1SP
 
-CONTIKI_TARGET_SOURCEFILES += contiki-z1-platform.c 
-
 include $(CONTIKI_NG_RELOC_PLATFORM_DIR)/z1/Makefile.common
 
 ifeq ($(ZOLERTIA_Z1SP),1)

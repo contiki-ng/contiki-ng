@@ -32,6 +32,7 @@
 #include <string.h>
 #include "contiki.h"
 #include "sys/energest.h"
+#include "dev/button-sensor.h"
 #include "dev/radio/cc2420/cc2420.h"
 #include "dev/etc/ds2411/ds2411.h"
 #include "dev/leds.h"
@@ -64,7 +65,8 @@ extern int msp430_dco_required;
 #include "experiment-setup.h"
 #endif
 
-void init_platform(void);
+SENSORS(&button_sensor);
+
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
@@ -166,7 +168,7 @@ platform_init_stage_three(void)
   uint8_t longaddr[8];
   uint16_t shortaddr;
 
-  init_platform();
+  process_start(&sensors_process, NULL);
 
   shortaddr = (linkaddr_node_addr.u8[0] << 8) + linkaddr_node_addr.u8[1];
   memset(longaddr, 0, sizeof(longaddr));
