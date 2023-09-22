@@ -304,12 +304,8 @@ field_len(frame802154_t *p, field_length_t *flen)
    * up to the caller. */
   if(p->fcf.frame_version < FRAME802154_IEEE802154_2015) {
     /* Set PAN ID compression bit if src pan id matches dest pan id. */
-    if((p->fcf.dest_addr_mode & 3) && (p->fcf.src_addr_mode & 3) &&
-       p->src_pid == p->dest_pid) {
-      p->fcf.panid_compression = 1;
-    } else {
-      p->fcf.panid_compression = 0;
-    }
+    p->fcf.panid_compression = (p->fcf.dest_addr_mode & 3) &&
+      (p->fcf.src_addr_mode & 3) && p->src_pid == p->dest_pid;
   }
 
   frame802154_has_panid(&p->fcf, &has_src_panid, &has_dest_panid);
@@ -340,7 +336,6 @@ field_len(frame802154_t *p, field_length_t *flen)
 #if LLSEC802154_USES_EXPLICIT_KEYS
     flen->aux_sec_len += get_key_id_len(p->aux_hdr.security_control.key_id_mode);
 #endif /* LLSEC802154_USES_EXPLICIT_KEYS */
-    ;
   }
 #endif /* LLSEC802154_USES_AUX_HEADER */
 }
@@ -393,7 +388,6 @@ frame802154_create(frame802154_t *p, uint8_t *buf)
 {
   int c;
   field_length_t flen;
-  uint8_t pos;
 #if LLSEC802154_USES_EXPLICIT_KEYS
   uint8_t key_id_mode;
 #endif /* LLSEC802154_USES_EXPLICIT_KEYS */
@@ -403,7 +397,7 @@ frame802154_create(frame802154_t *p, uint8_t *buf)
   /* OK, now we have field lengths.  Time to actually construct */
   /* the outgoing frame, and store it in buf */
   frame802154_create_fcf(&p->fcf, buf);
-  pos = 2;
+  unsigned int pos = 2;
 
   /* Sequence number */
   if(flen.seqno_len == 1) {
