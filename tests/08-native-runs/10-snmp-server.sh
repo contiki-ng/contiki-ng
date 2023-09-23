@@ -2,30 +2,30 @@
 source ../utils.sh
 
 # Contiki directory
-CONTIKI=$1
+CONTIKI=../..
 # Test basename
 BASENAME=$(basename $0 .sh)
 
 IPADDR=fd00::302:304:506:708
 
 # Starting Contiki-NG native node
-make -j4 -C $CONTIKI/examples/snmp-server
 sudo $CONTIKI/examples/snmp-server/snmp-server.native &
 CPID=$!
+printf "\r\n"
 
 test_handler () {
   sleep 2
-  $1 2>&1 | tee $BASENAME.log
-  grep -z -E "$2" $BASENAME.log
+  $1 > $BASENAME.log 2>&1
+  grep -q -z -E "$2" $BASENAME.log
   STATUS=$?
 
   if [ $STATUS -eq 0 ] ; then
-    printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
+    printf "%-32s TEST OK\r\n" "$BASENAME" | tee $BASENAME.testlog;
   else
     kill_bg $CPID
     echo $1
     echo $2
-    printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
+    printf "%-32s TEST FAIL\r\n" "$BASENAME" | tee $BASENAME.testlog;
     exit 1
   fi
 }

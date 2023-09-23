@@ -2,7 +2,7 @@
 source ../utils.sh
 
 # Contiki directory
-CONTIKI=$1
+CONTIKI=../..
 
 # 3_1, 3_1_1, or 5
 # default: 3_1
@@ -41,9 +41,6 @@ sleep 2
 
 # Starting Contiki-NG native node
 echo "Starting native node"
-make -C $CODE_DIR -B TARGET=native clean || exit 1
-make -j4 -C $CODE_DIR -B TARGET=native \
-  DEFINES=MQTT_CLIENT_CONF_ORG_ID=\\\"travis-test\\\",MQTT_CLIENT_CONF_LOG_LEVEL=LOG_LEVEL_DBG,MQTT_CONF_VERSION=MQTT_PROTOCOL_VERSION_$MQTT_VERSION || exit 1
 sudo $VALGRIND_CMD $CODE_DIR/$CODE.native > $CLIENT_LOG 2> $CLIENT_ERR &
 CPID=$!
 

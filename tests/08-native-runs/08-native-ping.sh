@@ -2,7 +2,7 @@
 source ../utils.sh
 
 # Contiki directory
-CONTIKI=$1
+CONTIKI=../..
 # Test basename
 BASENAME=$(basename $0 .sh)
 
@@ -10,7 +10,6 @@ IPADDR=fd00::302:304:506:708
 
 # Starting Contiki-NG native node
 echo "Starting native node"
-make -j4 -C $CONTIKI/examples/hello-world || exit 1
 sudo $CONTIKI/examples/hello-world/hello-world.native &
 CPID=$!
 sleep 2

@@ -2,7 +2,7 @@
 source ../utils.sh
 
 # Contiki directory
-CONTIKI=$1
+CONTIKI=../..
 # Test basename
 BASENAME=$(basename $0 .sh)
 
@@ -13,7 +13,6 @@ declare -i TESTCOUNT=0
 
 # Starting Contiki-NG native node
 echo "Starting native CoAP server"
-make -j4 -C $CONTIKI/examples/coap/coap-example-server || exit 1
 sudo $CONTIKI/examples/coap/coap-example-server/coap-example-server.native &
 CPID=$!
 sleep 2
