@@ -1,15 +1,8 @@
 #!/bin/bash
 source ../utils.sh
 
-# Contiki directory
-CONTIKI=$1
 # Test basename
 BASENAME=07-lwm2m-standalone-test
-
-# Building standalone posix example
-echo "Compiling standalone posix example"
-make CONTIKI_NG=$CONTIKI -C example-lwm2m-standalone/lwm2m clean || exit 1
-make -j4 CONTIKI_NG=$CONTIKI -C example-lwm2m-standalone/lwm2m || exit 1
 
 echo "Downloading leshan"
 LESHAN_JAR=leshan-server-demo-1.0.0-SNAPSHOT-jar-with-dependencies.jar
@@ -44,8 +37,6 @@ kill_bg $LESHID
 if ! grep -q 'OK' leshan.err ; then
   echo "==== leshan.log ====" ; cat leshan.log;
   echo "==== leshan.err ====" ; cat leshan.err;
-  echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
-
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
   rm -f leshan.log leshan.err
   exit 1
