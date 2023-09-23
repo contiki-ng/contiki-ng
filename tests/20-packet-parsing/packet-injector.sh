@@ -52,9 +52,5 @@ if [ $((TIMEDOUT + FAILED)) -gt 0 ]; then
   echo "Succeeded: " $SUCCEEDED
   echo "Timed out: " $TIMEDOUT
   echo "Failed   : " $FAILED
-
-  sleep 3
   exit 1
 fi
-
-sleep 3
