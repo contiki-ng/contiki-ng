@@ -76,7 +76,7 @@ _sbrk(int incr)
   static uint8_t *heap_end = &_heap;
   uint8_t *prev_heap_end = heap_end;
 
-  if(heap_end + incr > &_eheap) {
+  if((uintptr_t)heap_end + incr > (uintptr_t)&_eheap) {
     PRINTF("Out of heap space!\n");
     errno = ENOMEM;
     return (caddr_t)-1;
