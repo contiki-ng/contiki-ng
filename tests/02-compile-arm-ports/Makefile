@@ -4,11 +4,21 @@ BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
 
 ifeq ($(CI), true)
   OUT_OF_TREE_TEST ?= 1
+  # Use a fixed directory for CI to improve ccache hit rate.
+  OUT_OF_TREE_BASE = $(HOME)
+  CLEANUP_CMD = true
 else
   Q ?= @
+  ifeq ($(OUT_OF_TREE_TEST), 1)
+    # Create a temporary directory for out-of-tree tests.
+    ifeq ($(MAKELEVEL), 0)
+      OUT_OF_TREE_BASE := $(shell mktemp -d)
+      CLEANUP_CMD = rm -rf $(OUT_OF_TREE_BASE)/out-of-tree-tests && rmdir $(OUT_OF_TREE_BASE)
+    endif
+  endif
 endif
 
-OUT_OF_TREE_EXAMPLESDIR = $(HOME)/out-of-tree-tests
+OUT_OF_TREE_EXAMPLESDIR = $(OUT_OF_TREE_BASE)/out-of-tree-tests
 
 OUT_OF_TREE_EXAMPLES = \
 hello-world/native \
@@ -30,6 +40,7 @@ preparation: | $(DIR_TARGET)
 	@cp -a $(CONTIKI_DIR)/examples/hello-world $(OUT_OF_TREE_EXAMPLESDIR)
 	@perl -pi -e "s|^CONTIKI =.*$$|CONTIKI = $(CONTIKI_DIR)|g" $(OUT_OF_TREE_EXAMPLESDIR)/hello-world/Makefile
 	$(Q)$(MAKE) EXAMPLES="$(OUT_OF_TREE_EXAMPLES)" EXAMPLESDIR=$(OUT_OF_TREE_EXAMPLESDIR) all
+	$(Q)$(CLEANUP_CMD)
 	$(Q)$(MAKE) OUT_OF_TREE_TEST=0 all
 
 $(DIR_ABSENT):
