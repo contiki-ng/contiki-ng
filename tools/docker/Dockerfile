@@ -70,7 +70,7 @@ RUN apt-get -qq update && \
     > /dev/null && \
   apt-get -qq clean
 
-ARG JAVA_VERSION=20
+ARG JAVA_VERSION=21
 RUN wget -nv https://download.oracle.com/graalvm/${JAVA_VERSION}/latest/graalvm-jdk-${JAVA_VERSION}_linux-x64_bin.tar.gz && \
   tar xf graalvm-jdk-${JAVA_VERSION}_linux-x64_bin.tar.gz -C /usr/local --strip-components=1 --no-same-owner && \
   rm -f graalvm*gz

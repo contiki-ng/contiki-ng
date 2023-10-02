@@ -208,12 +208,12 @@ jobs:
         # Check outcome of the test
         ./tests/check-test.sh `pwd`/tests/??-${{ matrix.test }}
 
-    # Pre-install a Java 20 on macOS to avoid 503 responses in Gradle.
-    - name: Setup Java 20
+    # Pre-install a Java 21 on macOS to avoid 503 responses in Gradle.
+    - name: Setup Java 21
       if: matrix.os == 'macos-latest'
       uses: actions/setup-java@v3
       with:
-        java-version: 20
+        java-version: 21
         distribution: 'zulu'
 
     - name: Execute tests
