@@ -442,7 +442,9 @@ heapmem_free(void *ptr)
 #endif
 {
   if(!IN_HEAP(ptr)) {
-    LOG_WARN("%s: ptr %p is not in the heap\n", __func__, ptr);
+    if(ptr) {
+      LOG_WARN("%s: ptr %p is not in the heap\n", __func__, ptr);
+    }
     return false;
   }
 
