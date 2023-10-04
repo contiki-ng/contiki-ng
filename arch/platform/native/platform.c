@@ -64,6 +64,15 @@
 #include "net/ipv6/uip-ds6.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
+#include "lib/assert.h"
+#include "lib/csprng.h"
+#ifdef __APPLE__
+#include <Security/Security.h>
+#include <Security/SecRandom.h>
+#else /* __APPLE__ */
+#include <sys/random.h>
+#endif /* __APPLE__ */
+
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "Native"
@@ -238,7 +247,15 @@ platform_init_stage_one()
   gpio_hal_init();
   button_hal_init();
   leds_init();
-  return;
+  struct csprng_seed seed;
+#ifdef __APPLE__
+  if(SecRandomCopyBytes(kSecRandomDefault, CSPRNG_SEED_LEN, seed.u8)
+      == errSecSuccess) {
+#else /* __APPLE__ */
+  if(getrandom(seed.u8, CSPRNG_SEED_LEN, GRND_RANDOM) == CSPRNG_SEED_LEN) {
+#endif /* __APPLE__ */
+    csprng_feed(&seed);
+  }
 }
 /*---------------------------------------------------------------------------*/
 void
