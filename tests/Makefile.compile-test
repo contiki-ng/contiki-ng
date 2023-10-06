@@ -60,12 +60,16 @@ DEFINE_START ?= 2
 
 # Rule for compiling examples.
 # EXAMPLES has the form directory/target:define1=value1:define2=value2:...
-# Mangle ":" to "_@_" and "=" to "@_@" to get a valid make rule name.
-DELIMIT1 := _@_
-DELIMIT2 := @_@
-EXAMPLES_TMP := $(subst =,$(DELIMIT2), $(subst :,$(DELIMIT1),$(EXAMPLES)))
+# Mangle :, =, \, and '"' to get valid rule name.
+DELIMIT1 := __@__
+DELIMIT2 := _@-@_
+DELIMIT3 := _@_@_
+DELIMIT4 := _@@@_
+QUOTE := "
+EXAMPLES_TMP := $(subst \,$(DELIMIT4), $(subst $(QUOTE),$(DELIMIT3), $(subst =,$(DELIMIT2), $(subst :,$(DELIMIT1),$(EXAMPLES)))))
+
 $(EXAMPLES_TMP):
-	$(eval _exlist := $(subst $(DELIMIT1), ,$(subst $(DELIMIT2),=,$@)))
+	$(eval _exlist := $(subst $(DELIMIT1), ,$(subst $(DELIMIT2),=,$(subst $(DELIMIT3),$(QUOTE),$(subst $(DELIMIT4),\,$@)))))
 	$(eval _blob := $(firstword $(_exlist)))
 	$(eval _example := $(dir $(_blob)))
 	$(eval _target := $(notdir $(_blob)))

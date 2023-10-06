@@ -2,7 +2,7 @@
 source ../utils.sh
 
 # Contiki directory
-CONTIKI=$1
+CONTIKI=../..
 
 # Example code directory
 CODE_DIR=$CONTIKI/tests/07-simulation-base/code-data-structures/
@@ -10,7 +10,6 @@ CODE=test-data-structures
 
 # Starting Contiki-NG native node
 echo "Starting native node"
-make -j4 -C $CODE_DIR TARGET=native || exit 1
 $CODE_DIR/$CODE.native > $CODE.log 2> $CODE.err &
 CPID=$!
 
