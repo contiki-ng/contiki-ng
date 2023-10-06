@@ -2,7 +2,7 @@
 source ../utils.sh
 
 # Contiki directory
-CONTIKI=$1
+CONTIKI=../..
 # Test basename
 BASENAME=06-lwm2m-ipso-test
 
@@ -10,8 +10,6 @@ IPADDR=fd00::302:304:506:708
 
 # Starting Contiki-NG native node
 echo "Starting native node - lwm2m/ipso objects"
-make -C $CONTIKI/examples/lwm2m-ipso-objects clean || exit 1
-make -j4 -C $CONTIKI/examples/lwm2m-ipso-objects || exit 1
 sudo $CONTIKI/examples/lwm2m-ipso-objects/example-ipso-objects.native &
 CPID=$!
 
@@ -43,8 +41,6 @@ kill_bg $LESHID
 if ! grep -q 'OK' leshan.err ; then
   echo "==== leshan.log ====" ; cat leshan.log;
   echo "==== leshan.err ====" ; cat leshan.err;
-  echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
-
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
   rm -f leshan.log leshan.err
   exit 1

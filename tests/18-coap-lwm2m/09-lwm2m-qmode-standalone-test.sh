@@ -1,14 +1,7 @@
 #!/bin/bash
 
-# Contiki directory
-CONTIKI=$1
 # Test basename
 BASENAME=09-lwm2m-qmode-standalone-test
-
-# Building standalone posix example
-echo "Compiling standalone posix example"
-make CONTIKI_NG=$CONTIKI -C example-lwm2m-standalone/lwm2m clean || exit 1
-make -j4 CONTIKI_NG=$CONTIKI -C example-lwm2m-standalone/lwm2m DEFINES=LWM2M_QUEUE_MODE_CONF_ENABLED=1,LWM2M_QUEUE_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1,LWM2M_QUEUE_MODE_OBJECT_CONF_ENABLED=1 || exit 1
 
 echo "Downloading leshan with Q-Mode support"
 LESHAN_JAR=leshan-server-demo-qmode-support1.0.0-SNAPSHOT-jar-with-dependencies.jar
@@ -47,8 +40,6 @@ then
 else
   echo "==== leshan.log ====" ; cat leshan.log;
   echo "==== leshan.err ====" ; cat leshan.err;
-  echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
-
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
   rm -f leshan.log leshan.err
   exit 1
