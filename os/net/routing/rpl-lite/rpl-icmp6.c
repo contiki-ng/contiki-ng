@@ -319,6 +319,12 @@ dio_input(void)
           goto discard;
         }
         dio.prefix_info.length = buffer[i + 2];
+        if(dio.prefix_info.length > sizeof(uip_ipaddr_t) * 8) {
+          LOG_WARN("dio_input: invalid DAG prefix info, len %u > %zu\n",
+                   dio.prefix_info.length, sizeof(uip_ipaddr_t) * 8);
+          goto discard;
+        }
+
         dio.prefix_info.flags = buffer[i + 3];
         /* valid lifetime is ingnored for now - at i + 4 */
         /* preferred lifetime stored in lifetime */
