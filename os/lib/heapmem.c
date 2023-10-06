@@ -172,7 +172,8 @@ static size_t heap_usage;
 static chunk_t *first_chunk = (chunk_t *)heap_base;
 static chunk_t *free_list;
 
-#define IN_HEAP(ptr) ((char *)(ptr) >= (char *)heap_base) && \
+#define IN_HEAP(ptr) ((ptr) != NULL && \
+                     (char *)(ptr) >= (char *)heap_base) && \
                      ((char *)(ptr) < (char *)heap_base + heap_usage)
 
 /* extend_space: Increases the current footprint used in the heap, and
