@@ -51,8 +51,8 @@
 /*
  * Pointer to the currently running process structure.
  */
-struct process *process_list = NULL;
-struct process *process_current = NULL;
+struct process *process_list;
+struct process *process_current;
 
 static process_event_t lastevent;
 
@@ -210,13 +210,6 @@ void
 process_init(void)
 {
   lastevent = PROCESS_EVENT_MAX;
-
-  nevents = fevent = 0;
-#if PROCESS_CONF_STATS
-  process_maxevents = 0;
-#endif /* PROCESS_CONF_STATS */
-
-  process_current = process_list = NULL;
 }
 /*---------------------------------------------------------------------------*/
 /*
