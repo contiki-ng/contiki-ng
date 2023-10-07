@@ -110,22 +110,21 @@ struct psock_buf {
  * elements.
  */
 struct psock {
-  struct pt pt, psockpt; /* Protothreads - one that's using the psock
-			    functions, and one that runs inside the
-			    psock functions. */
   const uint8_t *sendptr;   /* Pointer to the next data to be sent. */
   uint8_t *readptr;         /* Pointer to the next data to be read. */
-  
+
   uint8_t *bufptr;          /* Pointer to the buffer used for buffering
 			    incoming data. */
-  
-  uint16_t sendlen;         /* The number of bytes left to be sent. */
-  uint16_t readlen;         /* The number of bytes left to be read. */
-
   struct psock_buf buf;  /* The structure holding the state of the
 			    input buffer. */
   unsigned int bufsize;  /* The size of the input buffer. */
-  
+
+  uint16_t sendlen;         /* The number of bytes left to be sent. */
+  uint16_t readlen;         /* The number of bytes left to be read. */
+
+  struct pt pt, psockpt; /* Protothreads - one that's using the psock
+			    functions, and one that runs inside the
+			    psock functions. */
   unsigned char state;   /* The state of the protosocket. */
 };
 
