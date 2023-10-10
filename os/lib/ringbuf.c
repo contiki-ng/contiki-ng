@@ -40,15 +40,6 @@
 #include "lib/ringbuf.h"
 #include <sys/cc.h>
 /*---------------------------------------------------------------------------*/
-void
-ringbuf_init(struct ringbuf *r, uint8_t *dataptr, uint8_t size)
-{
-  r->data = dataptr;
-  r->mask = size - 1;
-  r->put_ptr = 0;
-  r->get_ptr = 0;
-}
-/*---------------------------------------------------------------------------*/
 int
 ringbuf_put(struct ringbuf *r, uint8_t c)
 {
