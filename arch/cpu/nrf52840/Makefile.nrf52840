@@ -137,7 +137,7 @@ endif
 ifeq (, $(shell which $(NRFJPROG)))
 	$(error Could not find nrfjprog "$(NRFJPROG)", please install it)
 else
-	$(NRFJPROG) -f nrf52 $(NRFJPROG_FLAGS) --sectorerase --program $<
+	$(NRFJPROG) -f nrf52 $(NRFJPROG_FLAGS) --sectorerase --verify --program $<
 	$(NRFJPROG) -f nrf52 $(NRFJPROG_FLAGS) --reset
 endif
 
@@ -155,7 +155,7 @@ ifneq ($(filter nrf-upload-sequence,$(MAKECMDGOALS)),)
 endif
 
 nrf-upload-snr.%:
-	$(NRFJPROG) -f nrf52 --snr $* --sectorerase --program $(HEX_FILE)
+	$(NRFJPROG) -f nrf52 --snr $* --sectorerase --verify --program $(HEX_FILE)
 	$(NRFJPROG) -f nrf52 --snr $* --reset
 
 nrf-upload-sequence: $(foreach SNR, $(NRF_SNRS), nrf-upload-snr.$(SNR))
