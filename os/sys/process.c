@@ -49,6 +49,16 @@
 #include "sys/process.h"
 
 /*
+ * A configurable function called after a process poll been requested.
+ */
+#ifdef PROCESS_CONF_POLL_REQUESTED
+#define PROCESS_POLL_REQUESTED PROCESS_CONF_POLL_REQUESTED
+void PROCESS_POLL_REQUESTED(void);
+#else
+#define PROCESS_POLL_REQUESTED()
+#endif
+
+/*
  * Pointer to the currently running process structure.
  */
 struct process *process_list;
@@ -370,6 +380,7 @@ process_poll(struct process *p)
        p->state == PROCESS_STATE_CALLED) {
       p->needspoll = 1;
       poll_requested = 1;
+      PROCESS_POLL_REQUESTED();
     }
   }
 }
