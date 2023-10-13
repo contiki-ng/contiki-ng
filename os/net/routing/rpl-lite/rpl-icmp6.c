@@ -380,18 +380,11 @@ rpl_icmp6_dio_output(uip_ipaddr_t *uc_addr)
   buffer[pos++] = curr_instance.instance_id;
   buffer[pos++] = curr_instance.dag.version;
 
-  if(rpl_get_leaf_only()) {
-    set16(buffer, pos, RPL_INFINITE_RANK);
-  } else {
-    set16(buffer, pos, curr_instance.dag.rank);
-  }
+  set16(buffer, pos,
+        rpl_get_leaf_only() ? RPL_INFINITE_RANK : curr_instance.dag.rank);
   pos += 2;
 
-  buffer[pos] = 0;
-  if(curr_instance.dag.grounded) {
-    buffer[pos] |= RPL_DIO_GROUNDED;
-  }
-
+  buffer[pos] = curr_instance.dag.grounded ? RPL_DIO_GROUNDED : 0;
   buffer[pos] |= curr_instance.mop << RPL_DIO_MOP_SHIFT;
   buffer[pos] |= curr_instance.dag.preference & RPL_DIO_PREFERENCE_MASK;
   pos++;
