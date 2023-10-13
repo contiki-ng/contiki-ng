@@ -59,12 +59,71 @@ vpath %.c $(COOJA_SOURCEDIRS)
 
 COOJA_BASE	= cooja_mt.c rtimer-arch.c watchdog.c int-master.c
 
-COOJA_INTFS	= beep.c ip.c leds-arch.c moteid.c \
-		    pir-sensor.c rs232.c vib-sensor.c \
-		    clock.c cooja-log.c cfs-cooja.c cooja-radio.c \
-			eeprom.c slip-arch.c
+COOJA_INTFS	= clock.c moteid.c cooja-log.c
 
-COOJA_CORE = platform.c mtype.c random.c sensors.c leds.c gpio-hal-arch.c buttons.c
+ifneq ($(COOJA_BEEP),0)
+  COOJA_INTFS += beep.c
+endif
+
+ifneq ($(COOJA_CFS),0)
+  COOJA_INTFS += cfs-cooja.c
+endif
+
+ifeq ($(COOJA_EEPROM),0)
+  $(OBJECTDIR)/platform.o: CFLAGS += -DNO_EEPROM
+else
+  COOJA_INTFS += eeprom.c
+endif
+
+ifneq ($(COOJA_IP),0)
+  COOJA_INTFS += ip.c
+endif
+
+ifeq ($(COOJA_LEDS),0)
+  CONTIKI_SOURCES_EXCLUDES += leds.c
+  $(OBJECTDIR)/platform.o: CFLAGS += -DNO_LEDS
+else
+  COOJA_INTFS += leds-arch.c
+endif
+
+# FIXME: iq-seeder requires radio for entropy.
+ifeq ($(COOJA_RADIO),0)
+  CONTIKI_SOURCES_EXCLUDES += iq-seeder.c
+else
+  COOJA_INTFS += cooja-radio.c
+endif
+
+ifeq ($(COOJA_SERIAL),0)
+  CONTIKI_SOURCES_EXCLUDES += slip.c
+else
+  COOJA_INTFS += rs232.c slip-arch.c
+endif
+
+ifeq ($(COOJA_PIR_SENSOR),0)
+  $(OBJECTDIR)/platform.o: CFLAGS += -DNO_PIR_SENSOR
+else
+  COOJA_INTFS += pir-sensor.c
+endif
+
+ifeq ($(COOJA_VIB_SENSOR),0)
+  $(OBJECTDIR)/platform.o: CFLAGS += -DNO_VIB_SENSOR
+else
+  COOJA_INTFS += vib-sensor.c
+endif
+
+COOJA_CORE = platform.c mtype.c gpio-hal-arch.c
+
+# Do not include sensors.c when compiling without sensors.
+ifeq ($(filter %-sensor.c,$(COOJA_INTFS)),)
+  CONTIKI_SOURCES_EXCLUDES += sensors.c
+endif
+
+ifeq ($(COOJA_BUTTONS),0)
+  CONTIKI_SOURCES_EXCLUDES += button-hal.c
+  $(OBJECTDIR)/platform.o: CFLAGS += -DNO_BUTTONS
+else
+  COOJA_CORE += buttons.c
+endif
 
 # (COOJA_SOURCEFILES contains additional sources set from simulator)
 CONTIKI_TARGET_SOURCEFILES = \
