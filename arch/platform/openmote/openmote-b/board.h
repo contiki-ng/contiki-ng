@@ -189,9 +189,9 @@
  *
  * @{
  */
-#define ANTENNA_BSP_RADIO_BASE   GPIO_PORT_TO_BASE(GPIO_D_NUM)
-#define ANTENNA_BSP_RADIO_INT    GPIO_PIN_MASK(3)
-#define ANTENNA_BSP_RADIO_EXT    GPIO_PIN_MASK(4)
+#define ANTENNA_BSP_RADIO_BASE              GPIO_PORT_TO_BASE(GPIO_D_NUM)
+#define ANTENNA_BSP_RADIO_24GHZ_CC2538      GPIO_PIN_MASK(3)
+#define ANTENNA_BSP_RADIO_24GHZ_AT86RF215   GPIO_PIN_MASK(4)
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

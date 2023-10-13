@@ -30,49 +30,39 @@
  * This file is part of the Contiki operating system.
  *
  */
-/*---------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------*/
 /**
- * \addtogroup openmote-antenna
+ * \addtogroup openmote-b
  * @{
  *
- * Driver for the OpenMote-CC2538 RF switch.
- * INT is the internal antenna (chip) configured through ANT1_SEL (V1)
- * EXT is the external antenna (connector) configured through ANT2_SEL (V2)
+ * \defgroup openmote-b-antenna OpenMote-B antenna switch
+ *
+ * Driver for the OpenMote-B antenna switch
  * @{
  *
  * \file
- * Driver implementation for the OpenMote-CC2538 antenna switch
+ * Header for the OpenMote-B antenna switch
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "dev/gpio.h"
-#include "dev/antenna.h"
+#ifndef ANTENNA_H_
+#define ANTENNA_H_
 /*---------------------------------------------------------------------------*/
-void
-antenna_init(void)
-{
-  /* Configure the ANT1 and ANT2 GPIO as output */
-  GPIO_SET_OUTPUT(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_INT);
-  GPIO_SET_OUTPUT(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_EXT);
-
-  /* Select external antenna by default. */
-  antenna_external();
-}
+/**
+ * \brief Initialize the antenna switch
+ */
+void antenna_init(void);
 /*---------------------------------------------------------------------------*/
-void
-antenna_external(void)
-{
-  GPIO_WRITE_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_INT, 0);
-  GPIO_WRITE_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_EXT, 1);
-}
+/**
+ * \brief Connect the CC2538 radio to the 2.4 GHz SMA connector
+ */
+void antenna_select_cc2538(void);
 /*---------------------------------------------------------------------------*/
-void
-antenna_internal(void)
-{
-  GPIO_WRITE_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_EXT, 0);
-  GPIO_WRITE_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_INT, 1);
-}
+/**
+ * \brief Connect the AT86RF215 radio to the 2.4 GHz SMA connector
+ */
+void antenna_select_at86rf215(void);
 /*---------------------------------------------------------------------------*/
+#endif /* ANTENNA_H_ */
 /**
  * @}
  * @}
