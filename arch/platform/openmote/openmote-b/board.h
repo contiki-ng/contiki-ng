@@ -216,6 +216,8 @@
 /** Configuration of Atmel AT86RF215 radio */
 #if OPENMOTEB_USE_ATMEL_RADIO == 1
 
+    #include "at86rf215-def.h"
+
     #define NETSTACK_CONF_RADIO                 at86rf215_driver
 
     #define RADIO_PHY_OVERHEAD                  AT86RF215_PHY_OVERHEAD

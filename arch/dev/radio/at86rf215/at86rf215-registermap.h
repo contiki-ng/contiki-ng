@@ -29,7 +29,7 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \file   
+ * \file
  *       Registermap for the AT86RF215
  * 
  *       Note that currently only registers for RF24 and BBC1 are defined.

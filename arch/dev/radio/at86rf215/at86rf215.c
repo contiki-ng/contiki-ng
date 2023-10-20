@@ -29,10 +29,10 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \file  
+ * \file
  *      AT86RF215 driver for Contiki-NG, version 0.1
  * 
- * \author 
+ * \author
  *      Grega Morano <grega.morano@ijs.si>
  *
  * \short
@@ -799,7 +799,7 @@ const struct radio_driver at86rf215_driver = {
 
 /*---------------------------------------------------------------------------*/
 /** 
- * @brief   Interrupt service routine for the AT86RF215
+ * Interrupt service routine for the AT86RF215
  * 
  * This function is called by the GPIO interrupt handler. The interrupt can be
  * triggered by the radio (RF) or the baseband part (BBC). Depending on the 
@@ -860,7 +860,7 @@ at86rf215_isr(void)
 
 /*---------------------------------------------------------------------------*/
 /**
- * @brief   Contiki-NG process for the AT86RF215 driver.
+ * Contiki-NG process for the AT86RF215 driver.
  * 
  * The process is started by the at86rf215_init() function and waits idle for
  * an event. The event is triggered at the at86rf215_isr() function when the 

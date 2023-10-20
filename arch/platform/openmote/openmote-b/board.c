@@ -64,10 +64,10 @@ board_init()
 
 #if OPENMOTEB_USE_ATMEL_RADIO
   LOG_INFO("Atmel radio connected to the 2.4 GHz antenna connector\n");
-  antenna_select_atmel();
+  antenna_select_at86rf215();
 #else
   LOG_INFO("TI radio connected to the 2.4 GHz antenna connector\n");
-  antenna_select_ti();
+  antenna_select_cc2538();
 #endif
 
   configure_unused_pins();
