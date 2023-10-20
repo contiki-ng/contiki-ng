@@ -125,6 +125,8 @@ include $(target_makefile)
 
 ifneq ($(MAKECMDGOALS),clean)
   ifeq ($(CLANG),1)
+    # Clang Static Analyzer ignores -Werror, run through clang-tidy instead.
+    override ANALYZER = 0
     # Use GCC sysroot unless user specified something else.
     ifndef SYSROOT
       SYSROOT := $(shell $(CC) $(CFLAGS) --print-sysroot)
@@ -202,6 +204,15 @@ CFLAGS_DEBUG ?= -ggdb
 
 ifeq ($(DEBUG),1)
   CFLAGS += $(CFLAGS_DEBUG)
+endif
+
+# Default to not use static analysis.
+ANALYZE ?= 0
+ifeq ($(ANALYZE),1)
+  # Define something corresponding to __clang_analyzer__ for GCC as well.
+  CFLAGS += -fanalyzer -D__gcc_analyzer__ $(CFLAGS_FANALYZER)
+  # FIXME: poor -fanalyzer results with GCC 13 according to documentation.
+  #        Add ANALYZE support to CXXFLAGS when GCC supports it better.
 endif
 
 # Configure link-time-optimization (LTO).
