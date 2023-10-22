@@ -67,9 +67,9 @@ EXAMPLES = \
 benchmarks/rpl-req-resp/zoul \
 coap/coap-example-client/zoul \
 coap/coap-example-server/zoul \
+dev/button-hal/gecko:BOARD=brd4162a \
+dev/button-hal/gecko:BOARD=brd4166a \
 dev/gpio-hal/zoul:BOARD=orion \
-dev/gpio-hal/gecko:BOARD=brd4162a \
-dev/gpio-hal/gecko:BOARD=brd4166a \
 dev/leds/simplelink:BOARD=srf06/cc26x0 \
 dev/leds/gecko:BOARD=brd4162a \
 dev/leds/gecko:BOARD=brd4166a \
