@@ -50,7 +50,6 @@ CFLAGS += -DNRFX_UARTE0_ENABLED
 ifeq ($(CLANG),0)
   LDFLAGS += --specs=nano.specs
 endif
-LDFLAGS += -L $(NRFX_ROOT)/mdk
 LDFLAGS += -Wl,--defsym=_stack=end
 LDFLAGS += -Wl,--defsym=_stack_origin=__stack
 LDFLAGS += -Wl,--defsym=_heap=end

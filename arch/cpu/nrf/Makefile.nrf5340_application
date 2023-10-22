@@ -32,10 +32,7 @@ else
   SOURCE_LDSCRIPT ?= $(NRFX_ROOT)/mdk/nrf5340_xxaa_application.ld
 endif
 
-# GCC automatically invokes the linker with this flag, Clang does not.
-ifeq ($(CLANG),1)
-  LDFLAGS += -L$(NRFX_ROOT)/mdk
-endif
+LDFLAGS += -L$(NRFX_ROOT)/mdk
 LDFLAGS += -mfloat-abi=hard 
 LDFLAGS += -mfpu=fpv5-sp-d16
 

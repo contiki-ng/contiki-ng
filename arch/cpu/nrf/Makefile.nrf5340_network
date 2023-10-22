@@ -14,6 +14,8 @@ NRFJPROG_OPTIONS=-f NRF53 --coprocessor CP_NETWORK
 CFLAGS += -DCPU_CONF_PATH=\"nrf5340-network-conf.h\"
 CFLAGS += -DCPU_DEF_PATH=\"nrf5340-network-def.h\"
 
+LDFLAGS += -L$(NRFX_ROOT)/mdk
+
 TARGET_LIBFILES += -lm
 
 ifeq ($(NRF_NATIVE_USB),1)
