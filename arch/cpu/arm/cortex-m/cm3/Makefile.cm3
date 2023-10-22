@@ -2,7 +2,12 @@ CONTIKI_ARM_DIRS += cortex-m/cm3
 
 CFLAGS += -mcpu=cortex-m3
 
-LDFLAGS += -mcpu=cortex-m3 -nostartfiles
+LDFLAGS += -mcpu=cortex-m3
+# Clang does not add crti.o and other start files when linking
+# with the Contiki-NG build system, so do not pass -nostartfiles.
+ifeq ($(CLANG), 0)
+  LDFLAGS += -nostartfiles
+endif
 
 TARGET_LIBFILES += -lm
 
