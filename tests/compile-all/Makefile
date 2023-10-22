@@ -1,5 +1,4 @@
-all:
-	./build.sh all
+all clean:
+	MAKE="$(MAKE)" MAKEFLAGS="$(MAKEFLAGS)" ./build.sh $@
 
-clean:
-	./build.sh clean
+.PHONY: all clean
