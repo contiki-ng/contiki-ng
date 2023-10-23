@@ -143,6 +143,13 @@ ifneq ($(MAKECMDGOALS),clean)
     endif
   endif
 
+  ifdef BOARD
+    ifeq ("$(filter $(BOARD), $(BOARDS))", "")
+      $(info Available boards: $(BOARDS))
+      $(error Board '$(BOARD)' not available for target '$(TARGET)'.)
+    endif
+  endif
+
   # Validate the toolchain.
   ifeq (, $(shell which $(CC)))
     $(error Target "$(TARGET)" compiler "$(CC)" cannot be found)
