@@ -51,6 +51,11 @@
 #include "nrfx_rtc.h"
 #include "nrfx_clock.h"
 
+#if CLOCK_SIZE != 4
+/* 64 bit variables may not be read atomically without extra handling */
+#error CLOCK_CONF_SIZE must be 4 (32 bit)
+#endif
+
 #ifdef NRF_CLOCK_CONF_RTC_INSTANCE
 #define NRF_CLOCK_RTC_INSTANCE NRF_CLOCK_CONF_RTC_INSTANCE
 #else
@@ -61,10 +66,10 @@
 /**< RTC instance used for platform clock */
 static const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(NRF_CLOCK_RTC_INSTANCE);
 /*---------------------------------------------------------------------------*/
-static volatile uint32_t ticks;
+static volatile clock_time_t ticks;
 void clock_update(void);
 /*---------------------------------------------------------------------------*/
-static void 
+static void
 clock_handler(nrfx_clock_evt_type_t event)
 {
   (void) event;
@@ -82,7 +87,7 @@ rtc_handler(nrfx_rtc_int_type_t int_type)
   }
 }
 /*---------------------------------------------------------------------------*/
-/** 
+/**
  * @brief Function starting the internal LFCLK XTAL oscillator.
  */
 static void
@@ -137,7 +142,7 @@ clock_init(void)
 clock_time_t
 clock_time(void)
 {
-  return (clock_time_t)(ticks & 0xFFFFFFFF);
+  return ticks;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -152,7 +157,7 @@ clock_update(void)
 unsigned long
 clock_seconds(void)
 {
-  return (unsigned long)ticks / CLOCK_CONF_SECOND;
+  return (unsigned long)(ticks / CLOCK_SECOND);
 }
 /*---------------------------------------------------------------------------*/
 void
