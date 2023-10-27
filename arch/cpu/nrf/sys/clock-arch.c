@@ -62,12 +62,13 @@
 #define NRF_CLOCK_RTC_INSTANCE 0
 #endif
 
+static void clock_update(void);
+
 /*---------------------------------------------------------------------------*/
 /**< RTC instance used for platform clock */
 static const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(NRF_CLOCK_RTC_INSTANCE);
 /*---------------------------------------------------------------------------*/
 static volatile clock_time_t ticks;
-void clock_update(void);
 /*---------------------------------------------------------------------------*/
 static void
 clock_handler(nrfx_clock_evt_type_t event)
@@ -145,11 +146,11 @@ clock_time(void)
   return ticks;
 }
 /*---------------------------------------------------------------------------*/
-void
+static void
 clock_update(void)
 {
   ticks++;
-  if(etimer_pending()) {
+  if(etimer_pending() && !CLOCK_LT(ticks, etimer_next_expiration_time())) {
     etimer_request_poll();
   }
 }
