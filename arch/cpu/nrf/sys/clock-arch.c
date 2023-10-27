@@ -163,9 +163,8 @@ clock_seconds(void)
 void
 clock_wait(clock_time_t i)
 {
-  clock_time_t start;
-  start = clock_time();
-  while(clock_time() - start < (clock_time_t)i) {
+  clock_time_t start = clock_time();
+  while(clock_time() - start < i) {
     __WFE();
   }
 }
