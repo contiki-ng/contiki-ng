@@ -1,0 +1,5 @@
+{
+  "image": "contiker/contiki-ng:latest",
+  "features": {
+  }
+}
