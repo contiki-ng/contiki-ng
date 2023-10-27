@@ -622,7 +622,7 @@ uncompress_addr(uip_ipaddr_t *ipaddr, uint8_t const prefix[],
 
   LOG_DBG("uncompression: address %d %d ", prefcount, postcount);
 
-  if(prefcount > 0) {
+  if(prefix != NULL) {
     memcpy(ipaddr, prefix, prefcount);
   }
   if(prefcount + postcount < 16) {
