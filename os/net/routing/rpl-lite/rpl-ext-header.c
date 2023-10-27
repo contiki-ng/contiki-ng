@@ -349,7 +349,7 @@ rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
   sender = nbr_table_get_from_lladdr(rpl_neighbors, packetbuf_addr(PACKETBUF_ADDR_SENDER));
   rank_error_signaled = (rpl_opt->flags & RPL_HDR_OPT_RANK_ERR) ? 1 : 0;
   sender_closer = sender_rank < curr_instance.dag.rank;
-  loop_detected = (down && !sender_closer) || (!down && sender_closer);
+  loop_detected = down != sender_closer;
 
   LOG_INFO("ext hdr: packet from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
