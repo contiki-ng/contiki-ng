@@ -166,7 +166,7 @@ frame802154e_create_ie_csl(uint8_t *buf, int len,
 /* Header IE. ACK/NACK time correction. Used in enhanced ACKs */
 int
 frame80215e_create_ie_header_ack_nack_time_correction(uint8_t *buf, int len,
-    struct ieee802154_ies *ies)
+    const struct ieee802154_ies *ies)
 {
   int ie_len = 2;
   if(len >= 2 + ie_len && ies != NULL) {
@@ -232,7 +232,8 @@ frame80215e_create_ie_payload_list_termination(uint8_t *buf, int len,
 #if TSCH_WITH_SIXTOP
 /* Payload IE. 6top. Used to nest sub-IEs */
 int
-frame80215e_create_ie_ietf(uint8_t *buf, int len, struct ieee802154_ies *ies)
+frame80215e_create_ie_ietf(uint8_t *buf, int len,
+    const struct ieee802154_ies *ies)
 {
   if(len >= 2 && ies != NULL) {
     create_payload_ie_descriptor(buf,
@@ -247,7 +248,7 @@ frame80215e_create_ie_ietf(uint8_t *buf, int len, struct ieee802154_ies *ies)
 /* Payload IE. MLME. Used to nest sub-IEs */
 int
 frame80215e_create_ie_mlme(uint8_t *buf, int len,
-    struct ieee802154_ies *ies)
+    const struct ieee802154_ies *ies)
 {
   int ie_len = 0;
   if(len >= 2 + ie_len && ies != NULL) {
@@ -262,7 +263,7 @@ frame80215e_create_ie_mlme(uint8_t *buf, int len,
 /* MLME sub-IE. TSCH synchronization. Used in EBs: ASN and join priority */
 int
 frame80215e_create_ie_tsch_synchronization(uint8_t *buf, int len,
-    struct ieee802154_ies *ies)
+    const struct ieee802154_ies *ies)
 {
   int ie_len = 6;
   if(len >= 2 + ie_len && ies != NULL) {
@@ -282,7 +283,7 @@ frame80215e_create_ie_tsch_synchronization(uint8_t *buf, int len,
 /* MLME sub-IE. TSCH slotframe and link. Used in EBs: initial schedule */
 int
 frame80215e_create_ie_tsch_slotframe_and_link(uint8_t *buf, int len,
-    struct ieee802154_ies *ies)
+    const struct ieee802154_ies *ies)
 {
   if(ies != NULL) {
     int i;
@@ -319,7 +320,7 @@ frame80215e_create_ie_tsch_slotframe_and_link(uint8_t *buf, int len,
 /* MLME sub-IE. TSCH timeslot. Used in EBs: timeslot template (timing) */
 int
 frame80215e_create_ie_tsch_timeslot(uint8_t *buf, int len,
-    struct ieee802154_ies *ies)
+    const struct ieee802154_ies *ies)
 {
   int ie_len;
   if(ies == NULL) {
@@ -345,7 +346,7 @@ frame80215e_create_ie_tsch_timeslot(uint8_t *buf, int len,
 /* MLME sub-IE. TSCH channel hopping sequence. Used in EBs: hopping sequence */
 int
 frame80215e_create_ie_tsch_channel_hopping_sequence(uint8_t *buf, int len,
-    struct ieee802154_ies *ies)
+    const struct ieee802154_ies *ies)
 {
   int ie_len;
   if(ies == NULL || ies->ie_hopping_sequence_len > sizeof(ies->ie_hopping_sequence_list)) {
