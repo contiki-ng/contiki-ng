@@ -24,7 +24,7 @@ Please adhere to the following guidelines:
 * For new features, GitHub Action tests are mandatory. For bug fixes, they are strongly encouraged.
 * For new protocols, platforms, or major modules, we will ask for documentation, as a wiki page.
 * Doxygen comments are strongly encouraged.
-* Ensure that all contributed files have a valid copyright statement, open-source license, and follow the required code style and naming conventions (see [doc:code-style]). Adhere to ISO C99 in all C language source files.
+* Ensure that all contributed files have a valid copyright statement, open-source license, and follow the required code style and naming conventions (see [doc:code-style]). Adhere to the subset of ISO C11 that is supported in GCC 4.7 in all C language source files.
 * Write a descriptive pull request message. Explain the advantages and disadvantages of your proposed changes.
 * If your PR introduces changes that need reflected in some pages in the wiki, make sure to point out which wiki pages are affected as part of your PR message. Providing updated text for those pages is always welcome.
  
