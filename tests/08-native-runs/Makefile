@@ -16,7 +16,9 @@ examples/coap/coap-example-server/native:./09-native-coap.sh \
 examples/snmp-server/native:./10-snmp-server.sh \
 tests/08-native-runs/11-aes-ccm/native:./11-aes-ccm.sh \
 tests/08-native-runs/12-heapmem/native:./12-heapmem.sh \
-tests/08-native-runs/13-coffee/native:./13-coffee.sh
+tests/08-native-runs/13-coffee/native:./13-coffee.sh \
+examples/platform-specific/native/cbor/json2cbor/native:./14-json2cbor.sh \
+examples/platform-specific/native/cbor/cbordump/native:./15-cbordump.sh
 
 
 include ../Makefile.compile-test
