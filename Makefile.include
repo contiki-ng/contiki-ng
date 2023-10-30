@@ -27,6 +27,7 @@ WERROR ?= 1
 
 # Disable Clang by default.
 CLANG ?= 0
+TIDY ?= 0
 
 include $(CONTIKI)/Makefile.identify-target
 
@@ -133,6 +134,7 @@ ifneq ($(MAKECMDGOALS),clean)
     endif
     # Default to the most recent Clang in Ubuntu.
     CLANG_CC ?= clang-15
+    CLANG_TIDY ?= clang-tidy-15
     CC := $(CLANG_CC)
     AS := $(CC)
     LD := $(CC)
@@ -430,15 +432,24 @@ CONTIKI_CPU_DIRS_CONCAT    = ${addprefix $(CONTIKI_CPU)/, \
                                $(CONTIKI_CPU_DIRS)}
 
 SOURCEDIRS += . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) \
-              $(CONTIKI_CPU_DIRS_CONCAT) $(MODULEDIRS) $(EXTERNALDIRS)
+              $(CONTIKI_CPU_DIRS_CONCAT) $(MODULEDIRS)
 
-vpath %.c $(SOURCEDIRS)
-vpath %.cpp $(SOURCEDIRS)
-vpath %.in $(SOURCEDIRS)
-vpath %.S $(SOURCEDIRS)
-vpath %.s $(SOURCEDIRS)
+vpath %.c $(SOURCEDIRS) $(EXTERNALDIRS)
+vpath %.cpp $(SOURCEDIRS) $(EXTERNALDIRS)
+vpath %.in $(SOURCEDIRS) $(EXTERNALDIRS)
+vpath %.S $(SOURCEDIRS) $(EXTERNALDIRS)
+vpath %.s $(SOURCEDIRS) $(EXTERNALDIRS)
 
-CFLAGS += ${addprefix -I,$(SOURCEDIRS) $(CONTIKI)}
+CFLAGS += $(addprefix -I,$(SOURCEDIRS))
+# EXTERNALDIRS are used for third-party code, consider them system
+# includes with Clang so clang-tidy does not try to enforce the Contiki-NG
+# style on them.
+ifeq ($(CLANG),1)
+CFLAGS += $(addprefix -isystem,$(EXTERNALDIRS))
+else
+CFLAGS += $(addprefix -I,$(EXTERNALDIRS))
+endif
+CFLAGS += $(addprefix -I,$(CONTIKI))
 
 ### Check for a git repo and pass version if found
 ifndef RELSTR
@@ -544,6 +555,13 @@ endif
 
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.c | $(DEPDIR)
+ifeq ($(CLANG),1)
+ifeq ($(TIDY),1)
+	$(Q)if git ls-files --error-unmatch $< >/dev/null 2>&1; then \
+          $(CLANG_TIDY) $< -- $(CFLAGS); \
+        fi
+endif
+endif
 	$(TRACE_CC)
 	$(Q)$(CCACHE) $(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 ifeq ($(CHECK_STRUCTS),1)
@@ -553,6 +571,13 @@ endif
 
 ifndef CUSTOM_RULE_CPP_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.cpp | $(DEPDIR)
+ifeq ($(CLANG),1)
+ifeq ($(TIDY),1)
+	$(Q)if git ls-files --error-unmatch $< >/dev/null 2>&1; then \
+          $(CLANG_TIDY) $< -- $(CXXFLAGS); \
+        fi
+endif
+endif
 	$(TRACE_CXX)
 	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
 ifeq ($(CHECK_STRUCTS),1)
