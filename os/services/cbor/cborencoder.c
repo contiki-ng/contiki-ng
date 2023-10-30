@@ -101,7 +101,7 @@
  * complete the encoding. At the end, you can obtain that count by calling
  * cbor_encoder_get_extra_bytes_needed().
  *
- * \section1 Finalizing the encoding
+ * \section Finalizing the encoding
  *
  * Once all items have been appended and the containers have all been properly
  * closed, the user-supplied buffer will contain the CBOR stream and may be
@@ -544,7 +544,7 @@ CborError cbor_encoder_create_array(CborEncoder *parentEncoder, CborEncoder *arr
  * when creating the map, the constant \ref CborIndefiniteLength may be passed as
  * length instead, and an indefinite length map is created.
  *
- * \b{Implementation limitation:} TinyCBOR cannot encode more than SIZE_MAX/2
+ * <b>Implementation limitation:</b> TinyCBOR cannot encode more than SIZE_MAX/2
  * key-value pairs in the stream. If the length \a length is larger than this
  * value (and is not \ref CborIndefiniteLength), this function returns error
  * CborErrorDataTooLarge.

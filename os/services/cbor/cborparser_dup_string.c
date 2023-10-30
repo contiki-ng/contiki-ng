@@ -50,8 +50,8 @@
  * If \c malloc returns a NULL pointer, this function will return error
  * condition \ref CborErrorOutOfMemory.
  *
- * On success, \c{*buffer} will contain a valid pointer that must be freed by
- * calling \c{free()}. This is the case even for zero-length strings.
+ * On success, \c *buffer will contain a valid pointer that must be freed by
+ * calling \c free(). This is the case even for zero-length strings.
  *
  * The \a next pointer, if not null, will be updated to point to the next item
  * after this string. If \a value points to the last item, then \a next will be
@@ -81,8 +81,8 @@
  * If \c malloc returns a NULL pointer, this function will return error
  * condition \ref CborErrorOutOfMemory.
  *
- * On success, \c{*buffer} will contain a valid pointer that must be freed by
- * calling \c{free()}. This is the case even for zero-length strings.
+ * On success, \c *buffer will contain a valid pointer that must be freed by
+ * calling \c free(). This is the case even for zero-length strings.
  *
  * The \a next pointer, if not null, will be updated to point to the next item
  * after this string. If \a value points to the last item, then \a next will be
