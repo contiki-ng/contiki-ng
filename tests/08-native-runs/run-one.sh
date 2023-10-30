@@ -2,6 +2,7 @@
 
 source ../utils.sh
 
+BIN_PREFIX=${TEST_PREFIX:-test}
 BASENAME=$(basename $1)
 
 cd ${1}
@@ -9,7 +10,7 @@ test_init
 
 echo "-- Starting test $1"
 
-for TEST in ./test*.native; do
+for TEST in ./${BIN_PREFIX}*.native; do
   RUNLOG=$(basename $TEST .native).run.log
   register_logfile $RUNLOG
 
