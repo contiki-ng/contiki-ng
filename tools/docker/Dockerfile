@@ -18,6 +18,7 @@ USER root
 # libcanberra-gtk-module: remove warning message from renode.
 # libcoap2-bin: used by regression tests.
 # libgl1-mesa-glx: required by Simplicity Commander
+# libcjson-dev: used by CBOR regression tests.
 # libxtst6: required for GraalVM/Java17 to run Cooja in GUI mode.
 # mosquitto: used by the regression tests.
 # mtr-tiny: used by the regression tests.
@@ -45,6 +46,7 @@ RUN apt-get -qq update && \
     libcanberra-gtk-module \
     libcoap2-bin \
     libgl1-mesa-glx \
+    libcjson-dev \
     libpng-dev \
     libxtst6 \
     mosquitto \
