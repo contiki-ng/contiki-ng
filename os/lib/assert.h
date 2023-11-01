@@ -57,4 +57,12 @@ void _xassert(const char *, int) CC_NORETURN;
 #define __CTASSERT(x, y)        typedef char __assert ## y[(x) ? 1 : -1]
 #endif
 
+/* Provide static_assert macro in C11-C17. */
+#if __STDC_VERSION__ >= 201112L && __STDC_VERSION__ < 202311L && \
+  !defined __cplusplus
+#ifndef static_assert
+#define static_assert _Static_assert
+#endif
+#endif
+
 #endif /* ASSERT_H_ */
