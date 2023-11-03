@@ -510,9 +510,6 @@ static struct sicslowpan_addr_context
 addr_contexts[SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS];
 #endif
 
-/** pointer to an address context. */
-static struct sicslowpan_addr_context *context;
-
 /** pointer to the byte where to write next inline field. */
 static uint8_t *iphc_ptr;
 
@@ -738,10 +735,11 @@ compress_hdr_iphc(void)
 
 
   /* check if dest context exists (for allocating third byte) */
-  /* TODO: fix this so that it remembers the looked up values for
-     avoiding two lookups - or set the lookup values immediately */
-  if(addr_context_lookup_by_prefix(&UIP_IP_BUF->destipaddr) != NULL ||
-     addr_context_lookup_by_prefix(&UIP_IP_BUF->srcipaddr) != NULL) {
+  struct sicslowpan_addr_context *source_context =
+      addr_context_lookup_by_prefix(&UIP_IP_BUF->srcipaddr);
+  struct sicslowpan_addr_context *destination_context =
+      addr_context_lookup_by_prefix(&UIP_IP_BUF->destipaddr);
+  if(source_context || destination_context) {
     /* set context flag and increase iphc_ptr */
     LOG_DBG("compression: dest or src ipaddr - setting CID\n");
     iphc1 |= SICSLOWPAN_IPHC_CID;
@@ -833,13 +831,12 @@ compress_hdr_iphc(void)
     LOG_DBG("compression: addr unspecified - setting SAC\n");
     iphc1 |= SICSLOWPAN_IPHC_SAC;
     iphc1 |= SICSLOWPAN_IPHC_SAM_00;
-  } else if((context = addr_context_lookup_by_prefix(&UIP_IP_BUF->srcipaddr))
-     != NULL) {
+  } else if(source_context) {
     /* elide the prefix - indicate by CID and set context + SAC */
     LOG_DBG("compression: src with context - setting CID & SAC ctx: %d\n",
-           context->number);
+           source_context->number);
     iphc1 |= SICSLOWPAN_IPHC_CID | SICSLOWPAN_IPHC_SAC;
-    PACKETBUF_IPHC_BUF[2] |= context->number << 4;
+    PACKETBUF_IPHC_BUF[2] |= source_context->number << 4;
     /* compession compare with this nodes address (source) */
 
     iphc1 |= compress_addr_64(SICSLOWPAN_IPHC_SAM_BIT,
@@ -887,10 +884,10 @@ compress_hdr_iphc(void)
     }
   } else {
     /* Address is unicast, try to compress */
-    if((context = addr_context_lookup_by_prefix(&UIP_IP_BUF->destipaddr)) != NULL) {
+    if(destination_context) {
       /* elide the prefix */
       iphc1 |= SICSLOWPAN_IPHC_DAC;
-      PACKETBUF_IPHC_BUF[2] |= context->number;
+      PACKETBUF_IPHC_BUF[2] |= destination_context->number;
       /* compession compare with link adress (destination) */
 
       iphc1 |= compress_addr_64(SICSLOWPAN_IPHC_DAM_BIT,
@@ -1179,16 +1176,20 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
       PACKETBUF_IPHC_BUF[2] >> 4 : 0;
 
     /* Source address - check context != NULL only if SAM bits are != 0*/
+    struct sicslowpan_addr_context *source_context;
     if (tmp != 0) {
-      context = addr_context_lookup_by_number(sci);
-      if(context == NULL) {
-        LOG_ERR("uncompression: error context not found\n");
+      source_context = addr_context_lookup_by_number(sci);
+      if(!source_context) {
+        LOG_ERR("uncompression: error source context not found\n");
         return false;
       }
+    } else {
+      source_context = NULL;
     }
     /* if tmp == 0 we do not have a context and therefore no prefix */
     if(!uncompress_addr(&SICSLOWPAN_IP_BUF(buf)->srcipaddr,
-                        tmp != 0 ? context->prefix : NULL, unc_ctxconf[tmp],
+                        source_context ? source_context->prefix : NULL,
+                        unc_ctxconf[tmp],
                         (uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER))) {
       return false;
     }
@@ -1233,14 +1234,16 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
     /* Context based */
     if(iphc1 & SICSLOWPAN_IPHC_DAC) {
       uint8_t dci = (iphc1 & SICSLOWPAN_IPHC_CID) ? PACKETBUF_IPHC_BUF[2] & 0x0f : 0;
-      context = addr_context_lookup_by_number(dci);
+      struct sicslowpan_addr_context *destination_context =
+          addr_context_lookup_by_number(dci);
 
       /* all valid cases below need the context! */
-      if(context == NULL) {
-        LOG_ERR("uncompression: error context not found\n");
+      if(!destination_context) {
+        LOG_ERR("uncompression: error destination context not found\n");
         return false;
       }
-      if(!uncompress_addr(&SICSLOWPAN_IP_BUF(buf)->destipaddr, context->prefix,
+      if(!uncompress_addr(&SICSLOWPAN_IP_BUF(buf)->destipaddr,
+                          destination_context->prefix,
                           unc_ctxconf[tmp],
                           (uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_RECEIVER))) {
         return false;
