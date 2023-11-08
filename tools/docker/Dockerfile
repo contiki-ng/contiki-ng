@@ -14,7 +14,6 @@ USER root
 # gosu: used for UID-remapping.
 # iputils-ping: used by regression tests.
 # less: convenience tool.
-# lib32z1: 32-bit libz, probably used by some old 32-bit binary.
 # libcanberra-gtk-module: remove warning message from renode.
 # libcoap2-bin: used by regression tests.
 # libgl1-mesa-glx: required by Simplicity Commander
@@ -41,7 +40,6 @@ RUN apt-get -qq update && \
     gosu \
     iputils-ping \
     less \
-    lib32z1 \
     libcanberra-gtk-module \
     libcoap2-bin \
     libgl1-mesa-glx \
@@ -81,8 +79,8 @@ RUN wget -nv https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.
   rm -f gcc-arm-none-eabi-*-linux.tar.bz2
 
 # Install msp430 toolchain
-RUN wget -nv https://github.com/pjonsson/msp430gcc-binary/releases/download/v1.0/mspgcc-4.7.4-linux-x86_64.tar.bz2 && \
-  tar xf mspgcc*.tar.bz2 -C /usr/local --no-same-owner && \
+RUN wget -nv https://github.com/pjonsson/msp430gcc-binary/releases/download/v1.1/mspgcc-4.7.4-linux-x86_64.tar.bz2 && \
+  tar xf mspgcc*.tar.bz2 -C /usr/local --strip-components=1 --no-same-owner && \
   rm -f mspgcc*.tar.bz2
 
 # Install nRF Util+nRF Command Line tools.
