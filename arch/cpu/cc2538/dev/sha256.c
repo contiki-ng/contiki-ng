@@ -64,8 +64,7 @@ new_hash(sha256_state_t *state, const void *data, void *hash)
 {
   /* Workaround for AES registers not retained after PM2 */
   REG(AES_CTRL_INT_CFG) = AES_CTRL_INT_CFG_LEVEL;
-  REG(AES_CTRL_INT_EN) = AES_CTRL_INT_EN_DMA_IN_DONE |
-                         AES_CTRL_INT_EN_RESULT_AV;
+  REG(AES_CTRL_INT_EN) = AES_CTRL_INT_EN_RESULT_AV;
 
   /* Configure master control module and enable DMA path to the SHA-256 engine
    * + Digest readout */
@@ -120,8 +119,7 @@ new_hash(sha256_state_t *state, const void *data, void *hash)
   }
 
   /* Clear the interrupt */
-  REG(AES_CTRL_INT_CLR) = AES_CTRL_INT_CLR_DMA_IN_DONE |
-                          AES_CTRL_INT_CLR_RESULT_AV;
+  REG(AES_CTRL_INT_CLR) = AES_CTRL_INT_CLR_RESULT_AV;
   /* Disable master control / DMA clock */
   REG(AES_CTRL_ALG_SEL) = 0x00000000;
   /* Clear mode */
@@ -141,8 +139,7 @@ resume_hash(sha256_state_t *state, const void *data, void *hash)
 {
   /* Workaround for AES registers not retained after PM2 */
   REG(AES_CTRL_INT_CFG) = AES_CTRL_INT_CFG_LEVEL;
-  REG(AES_CTRL_INT_EN) = AES_CTRL_INT_EN_DMA_IN_DONE |
-                         AES_CTRL_INT_EN_RESULT_AV;
+  REG(AES_CTRL_INT_EN) = AES_CTRL_INT_EN_RESULT_AV;
 
   /* Configure master control module and enable the DMA path to the SHA-256
    * engine */
@@ -215,8 +212,7 @@ resume_hash(sha256_state_t *state, const void *data, void *hash)
   REG(AES_HASH_IO_BUF_CTRL) = AES_HASH_IO_BUF_CTRL_OUTPUT_FULL;
 
   /* Clear the interrupt */
-  REG(AES_CTRL_INT_CLR) = AES_CTRL_INT_CLR_DMA_IN_DONE |
-                          AES_CTRL_INT_CLR_RESULT_AV;
+  REG(AES_CTRL_INT_CLR) = AES_CTRL_INT_CLR_RESULT_AV;
   /* Disable master control / DMA clock */
   REG(AES_CTRL_ALG_SEL) = 0x00000000;
   /* Clear mode */
