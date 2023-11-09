@@ -1,5 +1,7 @@
 CURDIR := $(abspath $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
 
+HOST_OS := $(shell uname)
+
 ifeq ($(CI), true)
   TOOLS_TEST ?= 1
 else
@@ -7,8 +9,10 @@ else
 endif
 
 ifneq ($(TOOLS_TEST),1)
+ifneq ($(HOST_OS),Darwin)
   CLANG_WARNINGS=1
   BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
+endif
 endif
 
 TOOLS_EXAMPLESDIR = ../../tools

@@ -41,9 +41,7 @@ jobs:
               # Renode tests done by Linux (more CI runners available).
               - os: macos-latest
                 test: renode-simulation
-              # No msp430-gcc installed.
-              - os: macos-latest
-                test: compile-base
+              # Runs on x86, already have intermittent failures there.
               - os: macos-latest
                 test: simulation-base
               # No arm-none-eabi-gcc installed.
@@ -83,13 +81,15 @@ jobs:
     - name: install macOS software
       if: matrix.os == 'macos-latest'
       run: |
-        brew install coreutils gnu-tar make mosquitto mtr rlwrap
+        brew install coreutils make mosquitto mtr rlwrap
         # Doxygen 1.9.7 is broken with ifdefs again, install 1.9.4 which works.
         wget https://raw.githubusercontent.com/Homebrew/homebrew-core/41828ee36b96e35b63b2a4c8cfc2df2c3728944a/Formula/doxygen.rb
         brew install doxygen.rb
         rm doxygen.rb
         python3 -m pip -q install matplotlib
         python3 -m pip -q install -r tools/docker/files/rtd_requirements.txt
+        wget -nv https://github.com/pjonsson/msp430gcc-binary/releases/download/v1.1/mspgcc-4.7.4-macos-x86_64.tar.bz2
+        sudo tar xf mspgcc*.tar.bz2 -C /usr/local --strip-components=1 --no-same-owner
         # Homebrew prefix is different for x86-64 and aarch64.
         export HOMEBREW_PREFIX=/usr/local
         # Put Homebrew installed make, and tar first in PATH so "make"
