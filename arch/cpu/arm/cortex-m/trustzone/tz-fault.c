@@ -1,15 +1,18 @@
 /*
- * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (c) 2023, RISE Research Institutes of Sweden
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -28,92 +31,83 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * \addtogroup nrf
- * @{
- *
- * \addtogroup nrf-os OS drivers
- * @{
- *
- * \addtogroup nrf-dbg Debug driver
- * @{
- *
+/*
  * \file
- *         Debug driver for the nRF.
+ *      ARMv8-M fault handling.
  * \author
- *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
- *
+ *      Nicolas Tsiftes <nicolas.tsiftes@ri.se>
+ *      Niclas Finne <niclas.finne@ri.se>
  */
-/*---------------------------------------------------------------------------*/
+
 #include "contiki.h"
+#include "dev/watchdog.h"
 
-#include "uarte-arch.h"
-#include "usb.h"
-/*---------------------------------------------------------------------------*/
-#if PLATFORM_DBG_CONF_USB
-#define write_byte(b) usb_write((uint8_t *)&b, sizeof(uint8_t))
-#define flush()       usb_flush()
-#else /* PLATFORM_DBG_CONF_USB */
-#define write_byte(b) uarte_write(b)
-#define flush()
-#endif /* PLATFORM_DBG_CONF_USB */
-/*---------------------------------------------------------------------------*/
-#if TRUSTZONE_NONSECURE
-#include "trustzone/tz-api.h"
+#include <arm_cmse.h>
 
-#define DBG_BUF_SIZE 256
-static char dbg_buf[DBG_BUF_SIZE];
-static uint16_t dbg_pos;
 /*---------------------------------------------------------------------------*/
-int
-dbg_putchar(int c)
+#include "sys/log.h"
+#define LOG_MODULE "SecureFault"
+#define LOG_LEVEL LOG_LEVEL_INFO
+/*---------------------------------------------------------------------------*/
+/* Magic value to check for initialization */
+#define FAULT_MAGIC 0x12345678
+struct fault_info {
+  uint32_t magic;
+  uint32_t sfsr;
+  uint32_t sfar;
+};
+__attribute__((section(".noinit"))) volatile struct fault_info fault_info;
+/*---------------------------------------------------------------------------*/
+static void
+print_sfsr(uint32_t sfsr)
 {
-  if(dbg_pos < DBG_BUF_SIZE) {
-    dbg_buf[dbg_pos++] = c;
+  if(sfsr & SAU_SFSR_LSERR_Msk) {
+    LOG_WARN_(" LSERR");
   }
-
-  if(c == '\n' || dbg_pos >= DBG_BUF_SIZE - 1) {
-    dbg_buf[MIN(dbg_pos - 1, DBG_BUF_SIZE - 1)] = '\0';
-    tz_api_println(dbg_buf);
-    dbg_pos = 0;
+  if(sfsr & SAU_SFSR_SFARVALID_Msk) {
+    LOG_WARN_(" SFARVALID");
   }
-
-  return c;
-}
-#else
-int
-dbg_putchar(int c)
-{
-  write_byte(c);
-
-  if(c == '\n') {
-    flush();
+  if(sfsr & SAU_SFSR_LSPERR_Msk) {
+    LOG_WARN_(" LSPERR");
   }
-
-  return c;
-}
-#endif /* TRUSTZONE_NONSECURE */
-/*---------------------------------------------------------------------------*/
-unsigned int
-dbg_send_bytes(const unsigned char *s, unsigned int len)
-{
-  unsigned int i = 0;
-
-  while(s && *s != 0) {
-    if(i >= len) {
-      break;
-    }
-    dbg_putchar(*s++);
-    i++;
+  if(sfsr & SAU_SFSR_INVTRAN_Msk) {
+    LOG_WARN_(" INVTRAN");
   }
-
-  flush();
-
-  return i;
+  if(sfsr & SAU_SFSR_AUVIOL_Msk) {
+    LOG_WARN_(" AUVIOL");
+  }
+  if(sfsr & SAU_SFSR_INVER_Msk) {
+    LOG_WARN_(" INVER");
+  }
+  if(sfsr & SAU_SFSR_INVIS_Msk) {
+    LOG_WARN_(" INVIS");
+  }
+  if(sfsr & SAU_SFSR_INVEP_Msk) {
+    LOG_WARN_(" INVEP");
+  }
 }
 /*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- * @}
- */
+void
+SecureFault_Handler(void)
+{
+  fault_info.magic = FAULT_MAGIC;
+  fault_info.sfar = SAU->SFAR;
+  fault_info.sfsr = SAU->SFSR;
+  NVIC_SystemReset();
+}
+/*---------------------------------------------------------------------------*/
+void
+tz_fault_init(void)
+{
+  if(fault_info.magic == FAULT_MAGIC) {
+    fault_info.magic = 0;
+
+    LOG_WARN("Reboot caused by Secure Fault! Address 0x%"PRIx32
+             ", SFSR 0x%"PRIx32"\n",
+             fault_info.sfar, fault_info.sfsr);
+    LOG_WARN("Secure Fault status:");
+    print_sfsr(fault_info.sfsr);
+    LOG_WARN_("\n");
+  }
+}
+/*---------------------------------------------------------------------------*/

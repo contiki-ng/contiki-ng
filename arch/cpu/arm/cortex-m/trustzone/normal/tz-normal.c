@@ -1,15 +1,18 @@
 /*
- * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (c) 2023, RISE Research Institutes of Sweden
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -28,92 +31,80 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * \addtogroup nrf
- * @{
- *
- * \addtogroup nrf-os OS drivers
- * @{
- *
- * \addtogroup nrf-dbg Debug driver
- * @{
- *
+/*
  * \file
- *         Debug driver for the nRF.
+ *   TrustZone API setup for normal world.
  * \author
- *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
- *
+ *   Niclas Finne <niclas.finne@ri.se>
+ *   Nicolas Tsiftes <nicolas.tsiftes@ri.se>
  */
-/*---------------------------------------------------------------------------*/
-#include "contiki.h"
 
-#include "uarte-arch.h"
-#include "usb.h"
-/*---------------------------------------------------------------------------*/
-#if PLATFORM_DBG_CONF_USB
-#define write_byte(b) usb_write((uint8_t *)&b, sizeof(uint8_t))
-#define flush()       usb_flush()
-#else /* PLATFORM_DBG_CONF_USB */
-#define write_byte(b) uarte_write(b)
-#define flush()
-#endif /* PLATFORM_DBG_CONF_USB */
-/*---------------------------------------------------------------------------*/
-#if TRUSTZONE_NONSECURE
+#include "contiki.h"
+#include "sys/platform.h"
 #include "trustzone/tz-api.h"
 
-#define DBG_BUF_SIZE 256
-static char dbg_buf[DBG_BUF_SIZE];
-static uint16_t dbg_pos;
 /*---------------------------------------------------------------------------*/
-int
-dbg_putchar(int c)
-{
-  if(dbg_pos < DBG_BUF_SIZE) {
-    dbg_buf[dbg_pos++] = c;
-  }
-
-  if(c == '\n' || dbg_pos >= DBG_BUF_SIZE - 1) {
-    dbg_buf[MIN(dbg_pos - 1, DBG_BUF_SIZE - 1)] = '\0';
-    tz_api_println(dbg_buf);
-    dbg_pos = 0;
-  }
-
-  return c;
-}
-#else
-int
-dbg_putchar(int c)
-{
-  write_byte(c);
-
-  if(c == '\n') {
-    flush();
-  }
-
-  return c;
-}
-#endif /* TRUSTZONE_NONSECURE */
+#include "sys/log.h"
+#define LOG_MODULE "TZNormalWorld"
+#define LOG_LEVEL LOG_LEVEL_INFO
 /*---------------------------------------------------------------------------*/
-unsigned int
-dbg_send_bytes(const unsigned char *s, unsigned int len)
-{
-  unsigned int i = 0;
+static volatile bool is_poll_requested;
 
-  while(s && *s != 0) {
-    if(i >= len) {
-      break;
+PROCESS(tz_normal_process, "TZ normal process");
+/*---------------------------------------------------------------------------*/
+static bool
+request_poll(void)
+{
+  is_poll_requested = true;
+  process_poll(&tz_normal_process);
+  return true;
+}
+/*---------------------------------------------------------------------------*/
+static void
+init_tz_api(void)
+{
+  struct tz_api tz_api = {0};
+
+  tz_api.request_poll = request_poll;
+  bool result = tz_api_init(&tz_api);
+  LOG_INFO("Initialize TrustZone API: %s\n",
+           result ? "SUCCESS" : "FAILURE");
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(tz_normal_process, ev, data)
+{
+  PROCESS_BEGIN();
+
+  while(true) {
+    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_POLL);
+    if(is_poll_requested) {
+      is_poll_requested = false;
+      LOG_DBG("> Poll secure world\n");
+      if(tz_api_poll()) {
+        request_poll();
+      }
+      LOG_DBG("< Poll secure world %s!\n",
+              is_poll_requested ? "waiting" : "done");
     }
-    dbg_putchar(*s++);
-    i++;
   }
 
-  flush();
-
-  return i;
+  PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-/**
- * @}
- * @}
- * @}
- */
+void
+platform_main_loop(void)
+{
+  init_tz_api();
+  process_start(&tz_normal_process, NULL);
+
+  while(1) {
+    uint8_t r;
+    do {
+      r = process_run();
+      watchdog_periodic();
+    } while(r > 0);
+
+    platform_idle();
+  }
+}
+/*---------------------------------------------------------------------------*/

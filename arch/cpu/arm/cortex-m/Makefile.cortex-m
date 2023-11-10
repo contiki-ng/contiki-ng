@@ -15,6 +15,33 @@ CONTIKI_ARM_DIRS += cortex-m
 ### Build syscalls for newlib
 MODULES += os/lib/newlib
 
+# Default value for the module containing functionality for communication
+# between the secure and normal worlds.
+CMSE_IMPORT_LIB ?= CMSE-import-lib.o
+
+ifeq ($(TRUSTZONE_SECURE_BUILD), 1)
+    # Include the core TrustZone module for secure world.
+    MODULES_REL += $(CONTIKI_NG_RELOC_CPU_DIR)/arm/cortex-m/trustzone
+
+    # Provide a library of secure functions to the normal world.
+    LDFLAGS += -Xlinker --cmse-implib
+    LDFLAGS += -Xlinker --out-implib=$(BUILD_DIR_BOARD)/$(CMSE_IMPORT_LIB)
+
+    CFLAGS += -DTRUSTZONE_SECURE=1
+else ifeq ($(TRUSTZONE_SECURE_BUILD), 0)
+    ifndef TRUSTZONE_SECURE_WORLD_PATH
+        $(error TRUSTZONE_SECURE_WORLD_PATH must be set.)
+    endif
+
+    # Include the core TrustZone module for normal world.
+    MODULES_REL += $(CONTIKI_NG_RELOC_CPU_DIR)/arm/cortex-m/trustzone/normal
+
+    LDFLAGS += $(TRUSTZONE_SECURE_WORLD_PATH)/$(BUILD_DIR_BOARD)/$(CMSE_IMPORT_LIB)
+
+    CFLAGS += -DTRUSTZONE_NONSECURE=1
+endif
+
+
 LDFLAGS += -T $(LDSCRIPT)
 LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
 # The next line might be trying to avoid

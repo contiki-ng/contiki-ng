@@ -50,7 +50,12 @@
 #include "nrfx_config.h"
 #include "nrfx_wdt.h"
 
-#include "leds.h"
+#ifdef WATCHDOG_CONF_ENABLE
+#define WATCHDOG_ENABLE WATCHDOG_CONF_ENABLE
+#else
+/* Enabled by default */
+#define WATCHDOG_ENABLE 1
+#endif
 
 /*---------------------------------------------------------------------------*/
 static const nrfx_wdt_t wdt = NRFX_WDT_INSTANCE(0);
@@ -63,12 +68,15 @@ static uint8_t wdt_initialized = 0;
 static void
 wdt_event_handler(void)
 {
-  leds_off(LEDS_ALL);
 }
 /*---------------------------------------------------------------------------*/
 void
 watchdog_init(void)
 {
+#if !WATCHDOG_ENABLE
+  return;
+#endif /* WATCHDOG_ENABLE */
+
   nrfx_wdt_config_t config = NRFX_WDT_DEFAULT_CONFIG;
   nrfx_err_t err_code = nrfx_wdt_init(&wdt, &config, &wdt_event_handler);
 

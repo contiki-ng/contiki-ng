@@ -76,7 +76,10 @@ platform_init_stage_two(void)
   /* Seed value is ignored since hardware RNG is used. */
   random_init(0x5678);
 
-#if NRF_HAS_UARTE
+  /* There are two images of everything when building with
+   * TrustZone, and uarte can only be initialized once,
+   * so initialize in the secure mode. */
+#if NRF_HAS_UARTE && !defined(NRF_TRUSTZONE_NONSECURE)
   uarte_init();
 #endif /* NRF_HAS_UARTE */
 

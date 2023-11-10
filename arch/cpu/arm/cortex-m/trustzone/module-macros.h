@@ -1,0 +1,2 @@
+#define PLATFORM_CONF_PROVIDES_MAIN_LOOP 1
+#define PROCESS_CONF_POLL_REQUESTED tz_api_request_poll_from_ns
