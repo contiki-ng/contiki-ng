@@ -4,8 +4,7 @@ all: $(CONTIKI_PROJECT)
 # slip-radio is only intended for platforms with SLIP support
 PLATFORMS_EXCLUDE = native
 
-# The sky directory overrides the architecture putchar().
-CONTIKI_SOURCES_EXCLUDES_SKY += uart-putchar.c
+PUTCHAR_FUN = slip_arch_writeb
 
 CONTIKI=../..
 include $(CONTIKI)/Makefile.identify-target

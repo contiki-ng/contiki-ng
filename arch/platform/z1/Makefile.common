@@ -13,7 +13,9 @@ ARCH = leds.c xmem.c i2cmaster.c \
        z1-phidgets.c light-sensor.c battery-sensor.c sky-sensors.c tmp102.c \
        platform.c
 
-$(OBJECTDIR)/uart-putchar.o: CFLAGS += -DUART_WRITEB=uart0_writeb
+PUTCHAR_FUN ?= uart0_writeb
+
+$(OBJECTDIR)/uart-putchar.o: CFLAGS += -DUART_WRITEB=$(PUTCHAR_FUN)
 
 CONTIKI_TARGET_DIRS = . dev apps
 ifndef CONTIKI_TARGET_MAIN

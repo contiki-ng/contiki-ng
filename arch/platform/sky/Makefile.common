@@ -3,7 +3,9 @@ ARCH=spi-legacy.c ds2411.c xmem.c sensors.c \
      sky-sensors.c uip-ipchksum.c \
      uart1.c slip_uart1.c uart-putchar.c platform.c
 
-$(OBJECTDIR)/uart-putchar.o: CFLAGS += -DUART_WRITEB=uart1_writeb
+PUTCHAR_FUN ?= uart1_writeb
+
+$(OBJECTDIR)/uart-putchar.o: CFLAGS += -DUART_WRITEB=$(PUTCHAR_FUN)
 
 CONTIKI_TARGET_DIRS = . dev apps net
 ifndef CONTIKI_TARGET_MAIN

@@ -30,6 +30,7 @@
 #include "contiki.h"
 #include "dev/uart0.h"
 #include "dev/uart1.h"
+#include "dev/slip.h"
 
 #include <string.h>
 /*---------------------------------------------------------------------------*/
