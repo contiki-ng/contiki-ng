@@ -32,23 +32,41 @@
 
 /**
  * \file
- *         Header file for module for automatically starting and exiting a list of processes.
+ *         Implementation of module for automatically starting and exiting a list of processes.
  * \author
  *         Adam Dunkels <adam@sics.se>
  */
 
-#ifndef AUTOSTART_H_
-#define AUTOSTART_H_
+#include "sys/autostart.h"
 
-#include "contiki.h"
-#include "sys/process.h"
+#define DEBUG 0
+#if DEBUG
+#include <stdio.h>
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
 
-#define AUTOSTART_PROCESSES(...)					\
-struct process * const autostart_processes[] = {__VA_ARGS__, NULL}
+/*---------------------------------------------------------------------------*/
+void
+autostart_start(struct process * const processes[])
+{
+  int i;
 
-extern struct process * const autostart_processes[];
+  for(i = 0; processes[i] != NULL; ++i) {
+    process_start(processes[i], NULL);
+    PRINTF("autostart_start: starting process '%s'\n", processes[i]->name);
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+autostart_exit(struct process * const processes[])
+{
+  int i;
 
-void autostart_start(struct process * const processes[]);
-void autostart_exit(struct process * const processes[]);
-
-#endif /* AUTOSTART_H_ */
+  for(i = 0; processes[i] != NULL; ++i) {
+    process_exit(processes[i]);
+    PRINTF("autostart_exit: stopping process '%s'\n", processes[i]->name);
+  }
+}
+/*---------------------------------------------------------------------------*/
