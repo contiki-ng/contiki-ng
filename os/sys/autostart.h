@@ -43,12 +43,27 @@
 #include "contiki.h"
 #include "sys/process.h"
 
+#include <stddef.h>
+
 #define AUTOSTART_PROCESSES(...)					\
 struct process * const autostart_processes[] = {__VA_ARGS__, NULL}
 
 extern struct process * const autostart_processes[];
 
-void autostart_start(struct process * const processes[]);
-void autostart_exit(struct process * const processes[]);
+static inline void
+autostart_start(struct process * const processes[])
+{
+  for(int i = 0; processes[i] != NULL; ++i) {
+    process_start(processes[i], NULL);
+  }
+}
+
+static inline void
+autostart_exit(struct process * const processes[])
+{
+  for(int i = 0; processes[i] != NULL; ++i) {
+    process_exit(processes[i]);
+  }
+}
 
 #endif /* AUTOSTART_H_ */
