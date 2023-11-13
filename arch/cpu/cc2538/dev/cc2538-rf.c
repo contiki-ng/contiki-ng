@@ -279,9 +279,6 @@ get_iq_lsbs(radio_value_t *value)
   /* Wait on RSSI_VALID */
   while((REG(RFCORE_XREG_RSSISTAT) & RFCORE_XREG_RSSISTAT_RSSI_VALID) == 0);
 
-  /* Wait until the channel seems clear for better randomness */
-  while(!(REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_CCA));
-
   /* Read I/Q LSBs */
   *value = REG(RFCORE_XREG_RFRND)
       & (RFCORE_XREG_RFRND_IRND | RFCORE_XREG_RFRND_QRND);
