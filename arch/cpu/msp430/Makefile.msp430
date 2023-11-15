@@ -82,7 +82,7 @@ endif
 ifndef CFLAGSNO
 CFLAGSNO = -Wall -mmcu=$(MCU) $(CFLAGSWERROR)
 endif
-CFLAGS  += -Os -fno-strict-aliasing -std=gnu99
+CFLAGS  += -Os -fno-strict-aliasing -std=gnu11
 LDFLAGS += -mmcu=$(MCU) -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP)
 LDFLAGS += -Wl,--sort-section=alignment
 

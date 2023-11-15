@@ -1,6 +1,7 @@
 # Press release
 
-We are releasing version 5.0 of Contiki-NG. This release adds XXX.
+We are releasing version 5.0 of Contiki-NG. This release adds C11 support,
+XXX.
 
 ## Find out more at:
 
@@ -13,7 +14,6 @@ We are releasing version 5.0 of Contiki-NG. This release adds XXX.
 
 * Contiki-NG tag on Stack Overflow: https://stackoverflow.com/questions/tagged/contiki-ng
 * Github Discussions: https://github.com/contiki-ng/contiki-ng/discussions
-* Gitter: https://gitter.im/contiki-ng
 * Twitter: https://twitter.com/contiki_ng
 
 The Contiki-NG team
