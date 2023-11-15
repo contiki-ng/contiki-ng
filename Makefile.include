@@ -510,20 +510,19 @@ endif
 ### Automatic dependency generation, see
 ### http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/#advanced
 
-DEPFLAGS ?= -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
+DEPFLAGS ?= -MT $@ -MMD -MP -MF $(DEPDIR)/$(notdir $<).d
 
-# PROJECT_SOURCEFILES can contain anything, perform one substitution for each
-# file type and filter out the results we want. Without the filter, DEPFILES
-# will contain cpp files from the first PROJECT_SOURCEFILES and c files from
-# the second PROJECT_SOURCEFILES.
+# Source files for CONTIKI_PROJECT can be C or C++, so add both.
 # LDSCRIPT is generated with the preprocessor on some targets, so enable
 # those targets to avoid rebuilds as well.
 DEPFILES := $(TARGET_DEPFILES) \
-            $(addprefix $(DEPDIR)/, $(addsuffix .d, $(CONTIKI_PROJECT))) \
-            ${filter %.d, $(CONTIKI_SOURCEFILES:%.c=$(DEPDIR)/%.d) \
-                          $(PROJECT_SOURCEFILES:%.c=$(DEPDIR)/%.d) \
-                          $(PROJECT_SOURCEFILES:%.cpp=$(DEPDIR)/%.d)} \
-            $(addprefix $(DEPDIR)/, $(addsuffix .d, $(notdir $(LDSCRIPT))))
+            $(addprefix $(DEPDIR)/, \
+               $(addsuffix .c.d, $(CONTIKI_PROJECT)) \
+               $(addsuffix .cpp.d, $(CONTIKI_PROJECT)) \
+               $(addsuffix .d, \
+                  $(notdir $(CONTIKI_SOURCEFILES)) \
+                  $(notdir $(PROJECT_SOURCEFILES)) \
+                  $(notdir $(LDSCRIPT))))
 
 $(DEPFILES):
 include $(wildcard $(DEPFILES))
