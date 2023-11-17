@@ -56,8 +56,10 @@
 struct ccm_star_driver {
 
   /**
-   * \brief         Sets the key in use. Default implementation calls AES_128.set_key().
+   * \brief         Sets the key in use.
    * \param key     The key to use.
+   *
+   *                The default implementation calls AES_128.set_key().
    */
   void (* set_key)(const uint8_t* key);
 
