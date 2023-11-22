@@ -78,8 +78,15 @@ stack_check_init(void)
 
   /* Make this static to avoid destroying it in the while loop */
   static void *stack_top;
+#if defined __GNUC__ && __GNUC__ >= 13
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdangling-pointer"
+#endif
   /* Use address of this local variable as a boundary */
   stack_top = &p;
+#if defined __GNUC__ && __GNUC__ >= 13
+#pragma GCC diagnostic pop
+#endif
 
   /* Note: this is expected to be called before the WDT is started! */
   p = &_stack;
