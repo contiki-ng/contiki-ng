@@ -191,44 +191,6 @@
 /** @} */
 
 /**
- * \brief The header for fragments
- * \note We do not define different structures for FRAG1
- * and FRAGN headers, which are different. For FRAG1, the
- * offset field is just not used
- */
-/* struct sicslowpan_frag_hdr { */
-/*   uint16_t dispatch_size; */
-/*   uint16_t tag; */
-/*   uint8_t offset; */
-/* }; */
-
-/**
- * \brief The HC1 header when HC_UDP is not used
- *
- * When all fields are compressed and HC_UDP is not used,
- * we use this structure. If HC_UDP is used, the ttl is
- * in another spot, and we use the sicslowpan_hc1_hc_udp
- * structure
- */
-/* struct sicslowpan_hc1_hdr { */
-/*   uint8_t dispatch; */
-/*   uint8_t encoding; */
-/*   uint8_t ttl; */
-/* }; */
-
-/**
- * \brief HC1 followed by HC_UDP
- */
-/* struct sicslowpan_hc1_hc_udp_hdr { */
-/*   uint8_t dispatch; */
-/*   uint8_t hc1_encoding; */
-/*   uint8_t hc_udp_encoding; */
-/*   uint8_t ttl; */
-/*   uint8_t ports; */
-/*   uint16_t udpchksum; */
-/* }; */
-
-/**
  * \brief An address context for IPHC address compression
  * each context can have upto 8 bytes
  */
