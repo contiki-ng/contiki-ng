@@ -44,11 +44,14 @@ jobs:
         # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     # Specify the container in which actions will run
-    container: 
+    container:
       image: mcr.microsoft.com/cstsectools/codeql-container
       options: --user root
 
     steps:
+    - name: Install git-lfs
+      run: apt-get install -y --no-install-recommends git-lfs
+
     - name: Checkout github repo (+ download lfs dependencies)
       uses: actions/checkout@v4
       with:
@@ -57,7 +60,9 @@ jobs:
           persist-credentials: false
           lfs: true
     - name: Checkout LFS objects
-      run: git lfs checkout
+      run: |
+        git config --global --add safe.directory /__w/contiki-ng/contiki-ng
+        git lfs checkout
 
     - name: arm-none-eabi-gcc GNU Arm Embedded Toolchain
       uses: carlosperate/arm-none-eabi-gcc-action@v1.6.0
