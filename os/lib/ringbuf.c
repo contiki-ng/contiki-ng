@@ -71,7 +71,7 @@ int
 ringbuf_get(struct ringbuf *r)
 {
   uint8_t c;
-  
+
   /* Check if there are bytes in the buffer. If so, we return the
      first one and increase the pointer. If there are no bytes left, we
      return -1.
@@ -82,7 +82,7 @@ ringbuf_get(struct ringbuf *r)
      be atomic. We use an uint8_t type, which makes access atomic on
      most platforms, but C does not guarantee this.
   */
-  if(((r->put_ptr - r->get_ptr) & r->mask) > 0) {
+  if(((r->put_ptr - r->get_ptr) & r->mask) != 0) {
     /*
      * CC_ACCESS_NOW is used because the compiler is allowed to reorder
      * the access to non-volatile variables.
