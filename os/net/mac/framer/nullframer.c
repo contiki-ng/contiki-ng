@@ -46,6 +46,7 @@
 #endif
 
 /*---------------------------------------------------------------------------*/
+#if NULLFRAMER_PARSE_802154
 static int
 is_broadcast_addr(uint8_t mode, const uint8_t *addr)
 {
@@ -57,6 +58,7 @@ is_broadcast_addr(uint8_t mode, const uint8_t *addr)
   }
   return 1;
 }
+#endif /* NULLFRAMER_PARSE_802154 */
 /*---------------------------------------------------------------------------*/
 static int
 hdr_length(void)
