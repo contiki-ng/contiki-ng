@@ -116,8 +116,6 @@ platform_init_stage_two()
 void
 platform_init_stage_three()
 {
-  /* Initialize eeprom */
-  eeprom_init();
   /* Start serial process */
   serial_line_init();
 }

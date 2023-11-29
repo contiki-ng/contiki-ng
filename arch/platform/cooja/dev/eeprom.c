@@ -40,12 +40,6 @@ int simEEPROMRead = 0;
 int simEEPROMWritten = 0;
 
 bool
-eeprom_init(void)
-{
-  return true;
-}
-
-bool
 eeprom_read(eeprom_addr_t addr, unsigned char *buf, size_t len)
 {
   if(addr >= EEPROM_BUF_SIZE) {
