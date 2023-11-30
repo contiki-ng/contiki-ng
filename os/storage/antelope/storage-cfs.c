@@ -68,11 +68,21 @@ struct index_record {
 
 #define ROW_XOR 0xf6U
 
-static void
-merge_strings(char *dest, char *prefix, char *suffix)
+static bool
+merge_strings(char *dest, size_t dest_size, char *prefix, char *suffix)
 {
-  strcpy(dest, prefix);
-  strcat(dest, suffix);
+  size_t prefix_len = strlen(prefix);
+  size_t suffix_len = strlen(suffix);
+
+  if(dest_size < prefix_len + suffix_len + 1) {
+    return false;
+  }
+
+  memcpy(dest, prefix, prefix_len);
+  memcpy(dest + prefix_len, suffix, suffix_len);
+  dest[prefix_len + suffix_len] = '\0';
+
+  return true;
 }
 
 char *
@@ -340,7 +350,9 @@ storage_get_index(index_t *index, relation_t *rel, attribute_t *attr)
   struct index_record record;
   db_result_t result;
 
-  merge_strings(filename, rel->name, INDEX_NAME_SUFFIX);
+  if(!merge_strings(filename, sizeof(filename), rel->name, INDEX_NAME_SUFFIX)) {
+    return DB_NAME_ERROR;
+  }
 
   fd = cfs_open(filename, CFS_READ);
   if(fd < 0) {
@@ -376,7 +388,10 @@ storage_put_index(index_t *index)
   struct index_record record;
   db_result_t result;
 
-  merge_strings(filename, index->rel->name, INDEX_NAME_SUFFIX);
+  if(!merge_strings(filename, sizeof(filename), index->rel->name,
+                    INDEX_NAME_SUFFIX)) {
+    return DB_NAME_ERROR;
+  }
 
   fd = cfs_open(filename, CFS_WRITE | CFS_APPEND);
   if(fd < 0) {
