@@ -121,10 +121,12 @@ res_any_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
   if(strpos <= REST_MAX_CHUNK_SIZE && coap_pkt->token_len > 0) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "To 0x");
     int index = 0;
-    for(index = 0; index < coap_pkt->token_len; ++index) {
+    for(index = 0; index < coap_pkt->token_len && strpos <= REST_MAX_CHUNK_SIZE; ++index) {
       strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "%02X", coap_pkt->token[index]);
     }
-    strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "\n");
+    if(strpos <= REST_MAX_CHUNK_SIZE) {
+      strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "\n");
+    }
   }
 
   if(strpos <= REST_MAX_CHUNK_SIZE && coap_is_option(coap_pkt, COAP_OPTION_OBSERVE)) {
@@ -133,10 +135,12 @@ res_any_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
   if(strpos <= REST_MAX_CHUNK_SIZE && coap_is_option(coap_pkt, COAP_OPTION_ETAG)) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "ET 0x");
     int index = 0;
-    for(index = 0; index < coap_pkt->etag_len; ++index) {
+    for(index = 0; index < coap_pkt->etag_len && strpos <= REST_MAX_CHUNK_SIZE; ++index) {
       strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "%02X", coap_pkt->etag[index]);
     }
-    strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "\n");
+    if(strpos <= REST_MAX_CHUNK_SIZE) {
+      strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "\n");
+    }
   }
   if(strpos <= REST_MAX_CHUNK_SIZE && coap_get_header_block2(request, &block_num, &block_more, &block_size, NULL)) { /* This getter allows NULL pointers to get only a subset of the block parameters. */
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "B2 %lu%s (%u)\n", (unsigned long) block_num, block_more ? "+" : "", block_size);
