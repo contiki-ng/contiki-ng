@@ -211,7 +211,7 @@ jobs:
     # Pre-install a Java 21 on macOS to avoid 503 responses in Gradle.
     - name: Setup Java 21
       if: matrix.os == 'macos-latest'
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: 21
         distribution: 'zulu'
