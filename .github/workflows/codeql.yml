@@ -18,6 +18,7 @@ on:
     - cron: '0 3 * * *'
   # pull_request:
   #   branches: '*'
+  workflow_dispatch:
 
 jobs:
   analyze:
