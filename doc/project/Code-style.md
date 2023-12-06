@@ -1,5 +1,24 @@
 # Code style
 
+The code style guidelines in this document apply to Contiki-NG source
+files written in the C programming language. Source files written in
+other programming languages should follow a common style convention if one
+exists; e.g., PEP 8 for Python. Moreover, if a specific code style is already
+commonly used for a given language in the repository, it is encouraged to
+follow this code style.
+
+## Standard compliance
+
+Contiki-NG programmers should adhere to the ISO/IEC 9899:2011 standard
+(also referred to as "C11") as much as possible. Observe that this guideline
+is currently limited to the subset of C11 supported by GCC 4.7 in order to
+ensure that MSP430-based platforms continue to work.
+
+When writing architecture-specific source code for the native platform, one
+should also adhere to IEEE Std 1003.1-2017 (also referred to as "POSIX") when
+possible. For other architecture-specific source code, it is acceptable to
+rely on compiler extensions where this is necessary.
+
 ## Naming
 
 * File names are composed of lower-case characters and dashes. Like
@@ -90,7 +109,7 @@ Below is an example .c files that complies with the Contiki-NG code style:
 /* Single line comments look like this. */
 
 /*
- * Multi-line comments look like this. Comments should prefferably be
+ * Multi-line comments look like this. Comments should preferably be
  * full sentences, filled to look like real paragraphs.
  */
 
