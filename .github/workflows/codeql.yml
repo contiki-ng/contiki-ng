@@ -111,8 +111,8 @@ jobs:
       uses: advanced-security/filter-sarif@v1
       with:
         patterns: |
-          -**:cpp/complex-block/*
-          -**:cpp/fixme-comment/*
+          -**:cpp/complex-block
+          -**:cpp/fixme-comment
           -**:cpp/path-injection
           -**:cpp/world-writable-file-creation
           -**:cpp/poorly-documented-function
@@ -121,7 +121,7 @@ jobs:
           -**:cpp/integer-multiplication-cast-to-long
           -**:cpp/comparison-with-wider-type
           -**:cpp/leap-year/*
-          -**:cpp/long-switch/*
+          -**:cpp/long-switch
           -**:cpp/ambiguously-signed-bit-field
           -**:cpp/suspicious-pointer-scaling
           -**:cpp/suspicious-pointer-scaling-void
