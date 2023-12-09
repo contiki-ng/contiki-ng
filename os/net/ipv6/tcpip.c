@@ -389,11 +389,6 @@ eventhandler(process_event_t ev, process_data_t data)
      * check the different timers for neighbor discovery and
      * stateless autoconfiguration
      */
-    /*if(data == &uip_ds6_timer_periodic &&
-           etimer_expired(&uip_ds6_timer_periodic)) {
-          uip_ds6_periodic();
-          tcpip_ipv6_output();
-        }*/
 #if !UIP_CONF_ROUTER
     if(data == &uip_ds6_timer_rs &&
         etimer_expired(&uip_ds6_timer_rs)) {
