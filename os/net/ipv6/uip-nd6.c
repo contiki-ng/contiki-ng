@@ -585,12 +585,6 @@ na_input(void)
   }
 #if UIP_CONF_IPV6_QUEUE_PKT
   /* The nbr is now reachable, check if we had buffered a pkt for it */
-  /*if(nbr->queue_buf_len != 0) {
-    uip_len = nbr->queue_buf_len;
-    memcpy(UIP_IP_BUF, nbr->queue_buf, uip_len);
-    nbr->queue_buf_len = 0;
-    return;
-    }*/
   if(uip_packetqueue_buflen(&nbr->packethandle) != 0) {
     uip_len = uip_packetqueue_buflen(&nbr->packethandle);
     memcpy(UIP_IP_BUF, uip_packetqueue_buf(&nbr->packethandle), uip_len);
@@ -732,8 +726,6 @@ uip_nd6_ra_output(const uip_ipaddr_t * dest)
     (UIP_ND6_M_FLAG << 7) | (UIP_ND6_O_FLAG << 6);
 
   UIP_ND6_RA_BUF->router_lifetime = uip_htons(UIP_ND6_ROUTER_LIFETIME);
-  //UIP_ND6_RA_BUF->reachable_time = uip_htonl(uip_ds6_if.reachable_time);
-  //UIP_ND6_RA_BUF->retrans_timer = uip_htonl(uip_ds6_if.retrans_timer);
   UIP_ND6_RA_BUF->reachable_time = 0;
   UIP_ND6_RA_BUF->retrans_timer = 0;
 
@@ -768,7 +760,6 @@ uip_nd6_ra_output(const uip_ipaddr_t * dest)
   ND6_OPT_MTU_BUF(nd6_opt_offset)->type = UIP_ND6_OPT_MTU;
   ND6_OPT_MTU_BUF(nd6_opt_offset)->len = UIP_ND6_OPT_MTU_LEN >> 3;
   ND6_OPT_MTU_BUF(nd6_opt_offset)->reserved = 0;
-  //ND6_OPT_MTU_BUF(nd6_opt_offset)->mtu = uip_htonl(uip_ds6_if.link_mtu);
   ND6_OPT_MTU_BUF(nd6_opt_offset)->mtu = uip_htonl(1500);
 
   uip_len += UIP_ND6_OPT_MTU_LEN;
