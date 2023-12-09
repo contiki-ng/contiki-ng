@@ -243,7 +243,6 @@ dis_input(void)
           LOG_DBG("Unicast DIS, reply to sender\n");
           dio_output(instance, &UIP_IP_BUF->srcipaddr);
         }
-        /* } */
       }
     }
   }
@@ -789,8 +788,6 @@ dao_input_storing(void)
       break;
     case RPL_OPTION_TRANSIT:
       /* The path sequence and control are ignored. */
-      /*      pathcontrol = buffer[i + 3];
-              pathsequence = buffer[i + 4];*/
       if(last_valid_pos < i + 5) {
 	LOG_WARN("Dropping incomplete DAO (%"PRIu16" < %d)\n",
 		 last_valid_pos, i + 5);
@@ -1068,8 +1065,6 @@ dao_input_nonstoring(void)
       break;
     case RPL_OPTION_TRANSIT:
       /* The path sequence and control are ignored. */
-      /*      pathcontrol = buffer[i + 3];
-              pathsequence = buffer[i + 4];*/
       if(i + 6 + 16 > buffer_length) {
 	LOG_WARN("Incomplete DAO transit option (%d > %"PRIu16")\n",
 		 i + 6 + 16, buffer_length);
