@@ -68,6 +68,11 @@ struct tsch_slotframe_and_links {
 /* The information elements that we currently support */
 struct ieee802154_ies {
   /* Header IEs */
+#if MAC_CONF_WITH_CSL
+  uint16_t rendezvous_time;
+  uint16_t csl_period;
+  uint16_t csl_phase;
+#endif /* MAC_CONF_WITH_CSL */
   int16_t ie_time_correction;
   uint8_t ie_is_nack;
   /* Payload MLME */
@@ -93,9 +98,19 @@ struct ieee802154_ies {
 };
 
 /** Insert various Information Elements **/
+#if MAC_CONF_WITH_CSL
+/* Header IE. Time until the transmission of a payload frame. Used in wake-up frames */
+int frame802154e_create_ie_rendezvous_time(uint8_t *buf, int len,
+    const struct ieee802154_ies *ies);
+/* Header IE. Carries the time from the first symbol of the frame containing the CSL IE
+ * until the next duty cycle. Used in Enh-Acks. */
+int frame802154e_create_ie_csl(uint8_t *buf, int len,
+    const struct ieee802154_ies *ies);
+#endif /* MAC_CONF_WITH_CSL */
+
 /* Header IE. ACK/NACK time correction. Used in enhanced ACKs */
 int frame80215e_create_ie_header_ack_nack_time_correction(uint8_t *buf, int len,
-    struct ieee802154_ies *ies);
+    const struct ieee802154_ies *ies);
 /* Header IE. List termination 1 (Signals the end of the Header IEs when
  * followed by payload IEs) */
 int frame80215e_create_ie_header_list_termination_1(uint8_t *buf, int len,
@@ -110,23 +125,23 @@ int frame80215e_create_ie_payload_list_termination(uint8_t *buf, int len,
 #if TSCH_WITH_SIXTOP
 /* Payload IE. 6top. Used to nest sub-IEs */
 int frame80215e_create_ie_ietf(uint8_t *buf, int len,
-    struct ieee802154_ies *ies);
+    const struct ieee802154_ies *ies);
 #endif /* TSCH_WITH_SIXTOP */
 /* Payload IE. MLME. Used to nest sub-IEs */
 int frame80215e_create_ie_mlme(uint8_t *buf, int len,
-    struct ieee802154_ies *ies);
+    const struct ieee802154_ies *ies);
 /* MLME sub-IE. TSCH synchronization. Used in EBs: ASN and join priority */
 int frame80215e_create_ie_tsch_synchronization(uint8_t *buf, int len,
-    struct ieee802154_ies *ies);
+    const struct ieee802154_ies *ies);
 /* MLME sub-IE. TSCH slotframe and link. Used in EBs: initial schedule */
 int frame80215e_create_ie_tsch_slotframe_and_link(uint8_t *buf, int len,
-    struct ieee802154_ies *ies);
+    const struct ieee802154_ies *ies);
 /* MLME sub-IE. TSCH timeslot. Used in EBs: timeslot template (timing) */
 int frame80215e_create_ie_tsch_timeslot(uint8_t *buf, int len,
-    struct ieee802154_ies *ies);
+    const struct ieee802154_ies *ies);
 /* MLME sub-IE. TSCH channel hopping sequence. Used in EBs: hopping sequence */
 int frame80215e_create_ie_tsch_channel_hopping_sequence(uint8_t *buf, int len,
-    struct ieee802154_ies *ies);
+    const struct ieee802154_ies *ies);
 
 /* Parse all Information Elements of a frame */
 int frame802154e_parse_information_elements(const uint8_t *buf, uint8_t buf_size,
