@@ -143,4 +143,4 @@ jobs:
       with:
         name: codeql-results
         path: ${{ steps.step1.outputs.sarif-output }}
-        retention-days: 14
+        retention-days: 2
