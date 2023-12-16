@@ -1171,7 +1171,7 @@ handle_publish(struct mqtt_connection *conn)
 
   DBG("MQTT - This chunk is %i bytes\n", conn->in_publish_msg.payload_chunk_length);
 
-  if(((conn->in_packet.fhdr & 0x09) >> 1) > 0) {
+  if(((conn->in_packet.fhdr & 0x09) >> 1) != 0) {
     PRINTF("MQTT - Error, got incoming PUBLISH with QoS > 0, not supported atm!\n");
   }
 
