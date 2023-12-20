@@ -531,11 +531,6 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
     }
 
     /* Destination address */
-/*     l = addr_len(fcf.dest_addr_mode); */
-/*     for(c = 0; c < l; c++) { */
-/*       pf->dest_addr.u8[c] = p[l - c - 1]; */
-/*     } */
-/*     p += l; */
     if(fcf.dest_addr_mode == FRAME802154_SHORTADDRMODE) {
       linkaddr_copy((linkaddr_t *)&(pf->dest_addr), &linkaddr_null);
       pf->dest_addr[0] = p[1];
@@ -566,11 +561,6 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
     }
 
     /* Source address */
-/*     l = addr_len(fcf.src_addr_mode); */
-/*     for(c = 0; c < l; c++) { */
-/*       pf->src_addr.u8[c] = p[l - c - 1]; */
-/*     } */
-/*     p += l; */
     if(fcf.src_addr_mode == FRAME802154_SHORTADDRMODE) {
       linkaddr_copy((linkaddr_t *)&(pf->src_addr), &linkaddr_null);
       pf->src_addr[0] = p[1];

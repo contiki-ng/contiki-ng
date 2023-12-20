@@ -562,8 +562,6 @@ dao_input(void)
         break;
       case RPL_OPTION_TRANSIT:
         /* The path sequence and control are ignored. */
-        /*      pathcontrol = buffer[i + 3];
-                pathsequence = buffer[i + 4];*/
         if(len < 6) {
           LOG_WARN("dao_input: invalid transit option, len %"PRIu16", discard\n",
                    buffer_length);
