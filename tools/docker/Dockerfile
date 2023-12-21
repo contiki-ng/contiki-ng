@@ -24,6 +24,7 @@ USER root
 # python3: used by scripts.
 # snmp: used by the regression tests.
 # sudo: used by the regression tests.
+# tini: needed for cleaning up orphaned processes.
 # udev: needed for jlink deb postinst script.
 # unzip: required during docker image build for software installation.
 # valgrind: used by the regression tests.
@@ -57,6 +58,7 @@ RUN apt-get -qq update && \
     sudo \
     screen \
     srecord \
+    tini \
     udev \
     unzip \
     libusb-1.0-0 \
