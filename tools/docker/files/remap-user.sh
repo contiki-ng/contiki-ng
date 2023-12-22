@@ -9,4 +9,4 @@ GROUP_ID=${LOCAL_GID:-1000}
 
 [[ "$USER_ID" == "1000" ]] || usermod -u $USER_ID -o -m -d /home/user user
 [[ "$GROUP_ID" == "1000" ]] || groupmod -g $GROUP_ID user
-exec /usr/sbin/gosu user "$@"
+exec /usr/bin/tini -- /usr/sbin/gosu user "$@"
