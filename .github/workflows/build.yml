@@ -82,8 +82,8 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: |
         brew install coreutils make mosquitto mtr rlwrap
-        # Doxygen 1.9.7 is broken with ifdefs again, install 1.9.4 which works.
-        wget https://raw.githubusercontent.com/Homebrew/homebrew-core/41828ee36b96e35b63b2a4c8cfc2df2c3728944a/Formula/doxygen.rb
+        # Doxygen version needs to be in sync with Doxyfile.
+        wget https://github.com/Homebrew/homebrew-core/raw/f434ee2dce9ae11b27d7450a7cfb7af775a47719/Formula/d/doxygen.rb
         brew install doxygen.rb
         rm doxygen.rb
         python3 -m pip -q install matplotlib
