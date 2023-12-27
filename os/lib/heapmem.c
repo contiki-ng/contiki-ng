@@ -168,6 +168,7 @@ typedef struct chunk {
    statically allocated with a configurable size. */
 static char heap_base[HEAPMEM_ARENA_SIZE] CC_ALIGN(HEAPMEM_ALIGNMENT);
 static size_t heap_usage;
+static size_t max_heap_usage;
 
 static chunk_t *first_chunk = (chunk_t *)heap_base;
 static chunk_t *free_list;
@@ -187,6 +188,9 @@ extend_space(size_t size)
 
   char *old_usage = &heap_base[heap_usage];
   heap_usage += size;
+  if(heap_usage > max_heap_usage) {
+    max_heap_usage = heap_usage;
+  }
 
   return old_usage;
 }
@@ -603,6 +607,7 @@ heapmem_stats(heapmem_stats_t *stats)
   }
   stats->available += HEAPMEM_ARENA_SIZE - heap_usage;
   stats->footprint = heap_usage;
+  stats->max_footprint = max_heap_usage;
   stats->chunks = stats->overhead / sizeof(chunk_t);
 }
 

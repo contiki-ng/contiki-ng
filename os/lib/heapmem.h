@@ -89,6 +89,7 @@ typedef struct heapmem_stats {
   size_t overhead;
   size_t available;
   size_t footprint;
+  size_t max_footprint;
   size_t chunks;
 } heapmem_stats_t;
 /*****************************************************************************/
