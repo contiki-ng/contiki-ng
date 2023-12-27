@@ -112,7 +112,7 @@ heapmem_zone_t heapmem_zone_register(const char *name, size_t zone_size);
 #if HEAPMEM_DEBUG
 
 #define heapmem_alloc(size) heapmem_zone_alloc_debug(HEAPMEM_ZONE_GENERAL, (size), __FILE__, __LINE__)
-#define heapmem_zone_alloc(size) heapmem_zone_alloc_debug((zone), (size), __FILE__, __LINE__)
+#define heapmem_zone_alloc(zone, size) heapmem_zone_alloc_debug((zone), (size), __FILE__, __LINE__)
 #define heapmem_realloc(ptr, size) heapmem_realloc_debug((ptr), (size), __FILE__, __LINE__)
 #define heapmem_free(ptr) heapmem_free_debug((ptr), __FILE__, __LINE__)
 
