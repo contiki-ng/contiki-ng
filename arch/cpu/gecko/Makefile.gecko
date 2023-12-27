@@ -87,6 +87,8 @@ GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/emdrv/uartdrv/src
 GSDK_INC_PATHS += $(GSDK_ROOT)/platform/emdrv/uartdrv/inc
 
 ## peripheral
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/peripheral/src/peripheral_sysrtc.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/peripheral/src
 GSDK_INC_PATHS += $(GSDK_ROOT)/platform/peripheral/inc
 
 ## common
