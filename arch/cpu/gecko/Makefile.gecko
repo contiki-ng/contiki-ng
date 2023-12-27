@@ -15,11 +15,15 @@ ifndef RAIL_FAMILY
     $(error RAIL_FAMILY not defined!)
 endif
 
+ifndef SL_SERIES
+    $(error SL_SERIES not defined!)
+endif
+
 DEVICE_FAMILY_LOWER = $(shell echo $(DEVICE_FAMILY) | tr A-Z a-z)
 DEVICE_OPN_UPPER = $(shell echo $(DEVICE_OPN) | tr a-z A-Z)
 
 # OPN Specific
-LDSCRIPT ?= $(CONTIKI_CPU)/$(DEVICE_OPN)/$(DEVICE_FAMILY_LOWER).ld
+LDSCRIPT ?= $(CONTIKI_CPU)/$(DEVICE_OPN)/linkerfile.ld
 GSDK_C_SRCS += $(CONTIKI_CPU)/$(DEVICE_OPN)/sl_device_init_clocks.c
 GSDK_SRC_PATHS += $(CONTIKI_CPU)/$(DEVICE_OPN)
 GSDK_INC_PATHS += $(CONTIKI_CPU)/$(DEVICE_OPN)
@@ -47,6 +51,7 @@ GSDK_INC_PATHS += $(GSDK_ROOT)/hardware/board/inc
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_cmu.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_core.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_emu.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_eusart.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_gpio.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_ldma.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/emlib/src/em_leuart.c
@@ -114,16 +119,40 @@ GSDK_INC_PATHS += $(GSDK_ROOT)/platform/service/iostream/inc
 
 ### device_init
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_nvic.c
+ifeq ($(SL_SERIES),1)
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_dcdc_s1.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_hfxo_s1.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_lfxo_s1.c
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_emu_s1.c
+else ifeq ($(SL_SERIES),2)
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_dcdc_s2.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_hfxo_s2.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_lfxo_s2.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/device_init/src/sl_device_init_emu_s2.c
+else
+$(error "Unhandled series on device_init")
+endif
 GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/service/device_init/src
 GSDK_INC_PATHS += $(GSDK_ROOT)/platform/service/device_init/inc
 
+# hfxo_manager 
+# Only needed on series 2 devices
+ifeq ($(SL_SERIES),2)
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/hfxo_manager/src/sl_hfxo_manager.c
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/hfxo_manager/src/sl_hfxo_manager_hal_s2.c
+GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/service/hfxo_manager/src
+GSDK_INC_PATHS += $(GSDK_ROOT)/platform/service/hfxo_manager/inc
+endif
+
 ### power_manager
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/power_manager/src/sl_power_manager.c
+ifeq ($(SL_SERIES),1)
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/power_manager/src/sl_power_manager_hal_s0_s1.c
+else ifeq ($(SL_SERIES),2)
+GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/power_manager/src/sl_power_manager_hal_s2.c
+else
+$(error "Unhandled series on power_manager")
+endif
 GSDK_C_SRCS += $(GSDK_ROOT)/platform/service/power_manager/src/sl_power_manager_debug.c
 GSDK_SRC_PATHS += $(GSDK_ROOT)/platform/service/power_manager/src
 GSDK_INC_PATHS += $(GSDK_ROOT)/platform/service/power_manager/inc

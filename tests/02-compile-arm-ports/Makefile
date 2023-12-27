@@ -63,6 +63,7 @@ EXAMPLES = \
 6tisch/simple-node/nrf:BOARD=nrf5340/dk/network \
 6tisch/simple-node/gecko:BOARD=brd4162a \
 6tisch/simple-node/gecko:BOARD=brd4166a \
+6tisch/simple-node/gecko:BOARD=brd4184a \
 6tisch/sixtop/zoul \
 benchmarks/rpl-req-resp/zoul \
 coap/coap-example-client/zoul \
@@ -73,6 +74,7 @@ dev/gpio-hal/zoul:BOARD=orion \
 dev/leds/simplelink:BOARD=srf06/cc26x0 \
 dev/leds/gecko:BOARD=brd4162a \
 dev/leds/gecko:BOARD=brd4166a \
+dev/leds/gecko:BOARD=brd4184a \
 dev/rgb-led/zoul:BOARD=remote-reva \
 dev/dht11/nrf52840:BOARD=dk \
 hello-world/nrf52840:BOARD=dk \
@@ -106,6 +108,7 @@ hello-world/nrf:BOARD=nrf52840/dongle:NRF_NATIVE_USB=1 \
 hello-world/nrf:BOARD=nrf5340/dk/application:NRF_NATIVE_USB=1 \
 hello-world/gecko:BOARD=brd4162a \
 hello-world/gecko:BOARD=brd4166a \
+hello-world/gecko:BOARD=brd4184a \
 libs/data-structures/zoul \
 libs/deployment/openmote \
 libs/energest/zoul \
@@ -184,6 +187,7 @@ storage/antelope-shell/zoul \
 storage/cfs-coffee/zoul \
 storage/cfs-coffee/gecko:BOARD=brd4162a \
 storage/cfs-coffee/gecko:BOARD=brd4166a \
+storage/cfs-coffee/gecko:BOARD=brd4184a \
 websocket/zoul \
 
 include ../Makefile.compile-test
