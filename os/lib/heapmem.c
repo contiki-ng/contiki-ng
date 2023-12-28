@@ -168,6 +168,7 @@ typedef struct chunk {
    statically allocated with a configurable size. */
 static char heap_base[HEAPMEM_ARENA_SIZE] CC_ALIGN(HEAPMEM_ALIGNMENT);
 static size_t heap_usage;
+static size_t max_heap_usage;
 
 static chunk_t *first_chunk = (chunk_t *)heap_base;
 static chunk_t *free_list;
@@ -187,6 +188,9 @@ extend_space(size_t size)
 
   char *old_usage = &heap_base[heap_usage];
   heap_usage += size;
+  if(heap_usage > max_heap_usage) {
+    max_heap_usage = heap_usage;
+  }
 
   return old_usage;
 }
@@ -363,10 +367,10 @@ heapmem_zone_register(const char *name, size_t zone_size)
  * a pointer to it in case of success, and NULL in case of failure.
  *
  * When allocating memory, heapmem_alloc() will first try to find a
- * free chunk of the same size and the requested one. If none can be
+ * free chunk of the same size as the requested one. If none can be
  * find, we pick a larger chunk that is as close in size as possible,
  * and possibly split it so that the remaining part becomes a chunk
- * available for allocation.  At most CHUNK_SEARCH_MAX chunks on the
+ * available for allocation. At most CHUNK_SEARCH_MAX chunks on the
  * free list will be examined.
  *
  * As a last resort, heapmem_alloc() will try to extend the heap
@@ -420,7 +424,6 @@ heapmem_zone_alloc(heapmem_zone_t zone, size_t size)
   zones[zone].allocated += sizeof(chunk_t) + size;
 
   return GET_PTR(chunk);
-
 }
 
 /*
@@ -470,14 +473,14 @@ heapmem_free(void *ptr)
 /*
  * heapmem_realloc: Reallocate an object with a different size,
  * possibly moving it in memory. In case of success, the function
- * returns a pointer to the objects new location. In case of failure,
+ * returns a pointer to the object's new location. In case of failure,
  * it returns NULL.
  *
  * If the size of the new chunk is larger than that of the allocated
  * chunk, heapmem_realloc() will first attempt to extend the currently
- * allocated chunk. If that memory is not free, heapmem_ralloc() will
- * attempt to allocate a completely new chunk, copy the old data to
- * the new chunk, and deallocate the old chunk.
+ * allocated chunk. If the adjacent memory is not free,
+ * heapmem_realloc() will attempt to allocate a completely new chunk,
+ * copy the old data to the new chunk, and deallocate the old chunk.
  *
  * If the size of the new chunk is smaller than the allocated one, we
  * split the allocated chunk if the remaining chunk would be large
@@ -541,7 +544,7 @@ heapmem_realloc(void *ptr, size_t size)
   /* Request to make the object larger. (size_adj > 0) */
   if(IS_LAST_CHUNK(chunk)) {
     /*
-     * If the object is within the last allocated chunk (i.e., the
+     * If the object belongs to the last allocated chunk (i.e., the
      * one before the end of the heap footprint, we just attempt to
      * extend the heap.
      */
@@ -584,7 +587,7 @@ heapmem_realloc(void *ptr, size_t size)
 }
 #endif /* HEAPMEM_REALLOC */
 
-/* heapmem_stats: Calculate statistics regarding memory usage. */
+/* heapmem_stats: Provides statistics regarding heap memory usage. */
 void
 heapmem_stats(heapmem_stats_t *stats)
 {
@@ -603,10 +606,11 @@ heapmem_stats(heapmem_stats_t *stats)
   }
   stats->available += HEAPMEM_ARENA_SIZE - heap_usage;
   stats->footprint = heap_usage;
+  stats->max_footprint = max_heap_usage;
   stats->chunks = stats->overhead / sizeof(chunk_t);
 }
 
-/* heapmem_alignment: return the minimum alignment of allocated addresses. */
+/* heapmem_alignment: Returns the minimum alignment of allocated addresses. */
 size_t
 heapmem_alignment(void)
 {

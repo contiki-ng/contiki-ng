@@ -89,6 +89,7 @@ typedef struct heapmem_stats {
   size_t overhead;
   size_t available;
   size_t footprint;
+  size_t max_footprint;
   size_t chunks;
 } heapmem_stats_t;
 /*****************************************************************************/
@@ -118,7 +119,7 @@ heapmem_zone_t heapmem_zone_register(const char *name, size_t zone_size);
 
 void *heapmem_alloc_debug(size_t size,
 			  const char *file, const unsigned line);
-void *heapmem_zone_alloc_debug(heapmem_zone_t, size_t size,
+void *heapmem_zone_alloc_debug(heapmem_zone_t zone, size_t size,
 			  const char *file, const unsigned line);
 void *heapmem_realloc_debug(void *ptr, size_t size,
 			    const char *file, const unsigned line);
@@ -197,7 +198,6 @@ bool heapmem_free(void *ptr);
  * the amount of memory allocated, overhead used for memory management,
  * and the number of chunks allocated. By using this information, developers
  * can tune their software to use the heapmem allocator more efficiently.
- *
  */
 
 void heapmem_stats(heapmem_stats_t *stats);
