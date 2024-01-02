@@ -384,13 +384,12 @@ heapmem_zone_alloc_debug(heapmem_zone_t zone, size_t size,
 heapmem_zone_alloc(heapmem_zone_t zone, size_t size)
 #endif
 {
-  /* Fail early on too large allocation requests to prevent wrapping values. */
-  if(size > HEAPMEM_ARENA_SIZE) {
+  if(zone >= HEAPMEM_MAX_ZONES || zones[zone].name == NULL) {
+    LOG_WARN("Attempt to allocate from invalid zone: %u\n", zone);
     return NULL;
   }
 
-  if(zone >= HEAPMEM_MAX_ZONES || zones[zone].name == NULL) {
-    LOG_WARN("Attempt to allocate from invalid zone: %u\n", zone);
+  if(size > HEAPMEM_ARENA_SIZE || size == 0) {
     return NULL;
   }
 
