@@ -587,6 +587,29 @@ heapmem_realloc(void *ptr, size_t size)
 }
 #endif /* HEAPMEM_REALLOC */
 
+/* heapmem_calloc: Allocates memory for a zero-initialized array. */
+void *
+#if HEAPMEM_DEBUG
+heapmem_calloc_debug(size_t nmemb, size_t size,
+		     const char *file, const unsigned line)
+#else
+heapmem_calloc(size_t nmemb, size_t size)
+#endif
+{
+  size_t total_size = nmemb * size;
+
+  /* Overflow check. */
+  if(size == 0 || total_size / size != nmemb) {
+    return NULL;
+  }
+
+  void *ptr = heapmem_alloc(total_size);
+  if(ptr != NULL) {
+    memset(ptr, 0, total_size);
+  }
+  return ptr;
+}
+
 /* heapmem_stats: Provides statistics regarding heap memory usage. */
 void
 heapmem_stats(heapmem_stats_t *stats)
