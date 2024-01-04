@@ -1,0 +1,5 @@
+ifeq ($(WITH_OPEN_MEMSTREAM),1)
+  MODULES += os/lib/cbor/open_memstream
+else
+  $(OBJECTDIR)/cbortojson.o: CFLAGS += -DWITHOUT_OPEN_MEMSTREAM
+endif

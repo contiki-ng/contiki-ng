@@ -1,0 +1,1 @@
+#define UNIT_TEST_PRINT_FUNCTION print_test_report
