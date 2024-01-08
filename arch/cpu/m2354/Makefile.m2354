@@ -1,0 +1,32 @@
+LDSCRIPT ?= $(CONTIKI_CPU)/m2354.ld
+
+CFLAGS +=
+
+### CPU-dependent directories
+CONTIKI_CPU_DIRS = .  dev
+CONTIKI_CPU_DIRS += Device/Nuvoton/M2354/Source
+CONTIKI_CPU_DIRS += Device/Nuvoton/M2354/Source/GCC
+CONTIKI_CPU_DIRS += StdDriver/src 
+
+### CPU-dependent source files
+CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c handler.c watchdog.c dbg.c
+CONTIKI_CPU_SOURCEFILES += int-master.c slip-arch.c
+CONTIKI_CPU_SOURCEFILES += system_M2354.c
+CONTIKI_CPU_SOURCEFILES += _timer.c uart.c wdt.c gpio.c
+CONTIKI_CPU_SOURCEFILES += spi-arch.c
+CONTIKI_CPU_SOURCEFILES += startup_M2354.S
+
+ifneq ($(NS), 1)
+	CONTIKI_CPU_SOURCEFILES += clk.c
+endif
+
+CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
+
+CFLAGS += -I$(CONTIKI_CPU)/Device/Nuvoton/M2354/Include
+CFLAGS += -I$(CONTIKI_CPU)/StdDriver/inc
+CFLAGS += -g
+
+### This rule is used to generate the correct linker script
+
+include $(CONTIKI)/$(CONTIKI_NG_CORTEX_DIR)/cm23/Makefile.cm23
+
