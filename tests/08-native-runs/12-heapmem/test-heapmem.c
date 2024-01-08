@@ -237,6 +237,37 @@ UNIT_TEST(reallocations)
 
   UNIT_TEST_END();
 }
+/*****************************************************************************/UNIT_TEST_REGISTER(zero_init_alloc, "Heapmem calloc");
+UNIT_TEST(zero_init_alloc)
+{
+#define MAX_SIZE 500
+#define NUM_ALLOCS 10
+
+  UNIT_TEST_BEGIN();
+
+  void *ptr1 = heapmem_calloc(0, MAX_SIZE);
+  UNIT_TEST_ASSERT(ptr1 == NULL);
+
+  void *ptr2 = heapmem_calloc(1, 0);
+  UNIT_TEST_ASSERT(ptr2 == NULL);
+
+  uint8_t *ptr_array[NUM_ALLOCS];
+  for(size_t i = 1; i <= NUM_ALLOCS; i++) {
+    size_t nmemb = i * 10;
+    size_t size = MAX_SIZE / i;
+    ptr_array[i - 1] = heapmem_calloc(nmemb, size);
+    UNIT_TEST_ASSERT(ptr_array[i - 1] != NULL);
+    for(size_t j = 0; j < nmemb * size; j++) {
+      UNIT_TEST_ASSERT(ptr_array[i - 1][j] == 0);
+    }
+  }
+
+  for(size_t i = 1; i <= NUM_ALLOCS; i++) {
+    UNIT_TEST_ASSERT(heapmem_free(ptr_array[NUM_ALLOCS - i]));
+  }
+
+  UNIT_TEST_END();
+}
 /*****************************************************************************/
 UNIT_TEST_REGISTER(stats_check, "Heapmem statistics validation");
 UNIT_TEST(stats_check)
@@ -301,12 +332,15 @@ PROCESS_THREAD(test_heapmem_process, ev, data)
   UNIT_TEST_RUN(max_alloc);
   UNIT_TEST_RUN(invalid_freeing);
   UNIT_TEST_RUN(reallocations);
+  UNIT_TEST_RUN(zero_init_alloc);
   UNIT_TEST_RUN(stats_check);
   UNIT_TEST_RUN(zones);
 
   if(!UNIT_TEST_PASSED(do_many_allocations) ||
      !UNIT_TEST_PASSED(max_alloc) ||
      !UNIT_TEST_PASSED(invalid_freeing) ||
+     !UNIT_TEST_PASSED(reallocations) ||
+     !UNIT_TEST_PASSED(zero_init_alloc) ||
      !UNIT_TEST_PASSED(stats_check) ||
      !UNIT_TEST_PASSED(zones)) {
     printf("=check-me= FAILED\n");

@@ -384,13 +384,12 @@ heapmem_zone_alloc_debug(heapmem_zone_t zone, size_t size,
 heapmem_zone_alloc(heapmem_zone_t zone, size_t size)
 #endif
 {
-  /* Fail early on too large allocation requests to prevent wrapping values. */
-  if(size > HEAPMEM_ARENA_SIZE) {
+  if(zone >= HEAPMEM_MAX_ZONES || zones[zone].name == NULL) {
+    LOG_WARN("Attempt to allocate from invalid zone: %u\n", zone);
     return NULL;
   }
 
-  if(zone >= HEAPMEM_MAX_ZONES || zones[zone].name == NULL) {
-    LOG_WARN("Attempt to allocate from invalid zone: %u\n", zone);
+  if(size > HEAPMEM_ARENA_SIZE || size == 0) {
     return NULL;
   }
 
@@ -586,6 +585,29 @@ heapmem_realloc(void *ptr, size_t size)
   return newptr;
 }
 #endif /* HEAPMEM_REALLOC */
+
+/* heapmem_calloc: Allocates memory for a zero-initialized array. */
+void *
+#if HEAPMEM_DEBUG
+heapmem_calloc_debug(size_t nmemb, size_t size,
+		     const char *file, const unsigned line)
+#else
+heapmem_calloc(size_t nmemb, size_t size)
+#endif
+{
+  size_t total_size = nmemb * size;
+
+  /* Overflow check. */
+  if(size == 0 || total_size / size != nmemb) {
+    return NULL;
+  }
+
+  void *ptr = heapmem_alloc(total_size);
+  if(ptr != NULL) {
+    memset(ptr, 0, total_size);
+  }
+  return ptr;
+}
 
 /* heapmem_stats: Provides statistics regarding heap memory usage. */
 void

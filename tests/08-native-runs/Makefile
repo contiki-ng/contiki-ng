@@ -15,7 +15,8 @@ examples/hello-world/native:./08-native-ping.sh \
 examples/coap/coap-example-server/native:./09-native-coap.sh \
 examples/snmp-server/native:./10-snmp-server.sh \
 tests/08-native-runs/11-aes-ccm/native:./11-aes-ccm.sh \
-tests/08-native-runs/12-heapmem/native:./12-heapmem.sh \
+tests/08-native-runs/12-heapmem/native:./12-heapmem.sh:DEFINES=HEAPMEM_DEBUG=0 \
+tests/08-native-runs/12-heapmem/native:./12-heapmem.sh:DEFINES=HEAPMEM_DEBUG=1 \
 tests/08-native-runs/13-coffee/native:./13-coffee.sh
 
 
