@@ -84,10 +84,8 @@
 #define HEAPMEM_DEFAULT_ALIGNMENT sizeof(size_t)
 #endif
 
-/*
- * The HEAPMEM_CONF_ALIGNMENT parameter decides what the minimum
- * alignment for allocated data should be.
- */
+/* The HEAPMEM_CONF_ALIGNMENT parameter determines the minimum
+   alignment for allocated data. */
 #ifdef HEAPMEM_CONF_ALIGNMENT
 #define HEAPMEM_ALIGNMENT HEAPMEM_CONF_ALIGNMENT
 #else
@@ -120,12 +118,13 @@
 
 /*
  * A heapmem zone denotes a logical subdivision of the heap that is
- * dedicated for a specific purpose. This mimics the behavior of
- * various memory management strategies for embedded systems (e.g., by
- * having a fixed memory space for packet buffers), yet maintains a
- * level of dynamism offered by a malloc-like API. The rest of the
- * heap area that is not dedicated to a specific zone belongs to the
- * "GENERAL" zone, which can be used by any module.
+ * dedicated to a specific purpose. The concept of zones can help
+ * developers to maintain various memory management strategies for
+ * embedded systems (e.g., by having a fixed memory space for packet
+ * buffers), yet maintains a level of dynamism offered by a
+ * malloc-like API. The rest of the heap area that is not dedicated to
+ * a specific zone belongs to the "GENERAL" zone, which can be used by
+ * any module.
  */
 struct heapmem_zone {
   const char *name;
@@ -170,7 +169,6 @@ static char heap_base[HEAPMEM_ARENA_SIZE] CC_ALIGN(HEAPMEM_ALIGNMENT);
 static size_t heap_usage;
 static size_t max_heap_usage;
 
-static chunk_t *first_chunk = (chunk_t *)heap_base;
 static chunk_t *free_list;
 
 #define IN_HEAP(ptr) ((ptr) != NULL && \
@@ -300,10 +298,8 @@ get_free_chunk(const size_t size)
       break;
     }
 
-    /*
-     * To avoid fragmenting large chunks, we select the chunk with the
-     * smallest size that is larger than or equal to the requested size.
-     */
+    /* To avoid fragmenting large chunks, we select the chunk with the
+       smallest size that is larger than or equal to the requested size. */
     if(size <= chunk->size) {
       if(best == NULL || chunk->size < best->size) {
         best = chunk;
@@ -316,7 +312,8 @@ get_free_chunk(const size_t size)
   }
 
   if(best != NULL) {
-    /* We found a chunk for the allocation. Split it if necessary. */
+    /* We found a chunk that can hold an object of the requested
+       allocation size. Split it if possible. */
     remove_chunk_from_free_list(best);
     split_chunk(best, size);
   }
@@ -368,7 +365,7 @@ heapmem_zone_register(const char *name, size_t zone_size)
  *
  * When allocating memory, heapmem_alloc() will first try to find a
  * free chunk of the same size as the requested one. If none can be
- * find, we pick a larger chunk that is as close in size as possible,
+ * found, we pick a larger chunk that is as close in size as possible,
  * and possibly split it so that the remaining part becomes a chunk
  * available for allocation. At most CHUNK_SEARCH_MAX chunks on the
  * free list will be examined.
@@ -432,10 +429,9 @@ heapmem_zone_alloc(heapmem_zone_t zone, size_t size)
  * from heapmem_alloc or heapmem_realloc, without any call to
  * heapmem_free in between.
  *
- * When performing a deallocation of a chunk, the chunk will be put on
- * a list of free chunks internally. All free chunks that are adjacent
- * in memory will be merged into a single chunk in order to mitigate
- * fragmentation.
+ * When deallocating a chunk, the chunk will be inserted into the free
+ * list. Moreover, all free chunks that are adjacent in memory will be
+ * merged into a single chunk in order to mitigate fragmentation.
  */
 bool
 #if HEAPMEM_DEBUG
@@ -521,7 +517,7 @@ heapmem_realloc(void *ptr, size_t size)
   chunk_t *chunk = GET_CHUNK(ptr);
   if(!CHUNK_ALLOCATED(chunk)) {
     LOG_WARN("%s: ptr %p is not allocated\n", __func__, ptr);
-    return false;
+    return NULL;
   }
 
 #if HEAPMEM_DEBUG
@@ -615,7 +611,7 @@ heapmem_stats(heapmem_stats_t *stats)
 {
   memset(stats, 0, sizeof(*stats));
 
-  for(chunk_t *chunk = first_chunk;
+  for(chunk_t *chunk = (chunk_t *)heap_base;
       (char *)chunk < &heap_base[heap_usage];
       chunk = NEXT_CHUNK(chunk)) {
     if(CHUNK_ALLOCATED(chunk)) {
