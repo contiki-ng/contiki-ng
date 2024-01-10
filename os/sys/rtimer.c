@@ -46,13 +46,9 @@
 #include "sys/rtimer.h"
 #include "contiki.h"
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+#include "sys/log.h"
+#define LOG_MODULE "RTimer"
+#define LOG_LEVEL LOG_LEVEL_NONE
 
 static struct rtimer *next_rtimer;
 
@@ -62,7 +58,7 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
 	   rtimer_clock_t duration,
 	   rtimer_callback_t func, void *ptr)
 {
-  PRINTF("rtimer_set time %d\n", time);
+  LOG_DBG("rtimer_set time %lu\n", (unsigned long)time);
 
   if(next_rtimer) {
     return RTIMER_ERR_ALREADY_SCHEDULED;
