@@ -44,7 +44,7 @@
 
 uint64_t energest_total_time[ENERGEST_TYPE_MAX];
 ENERGEST_TIME_T energest_current_time[ENERGEST_TYPE_MAX];
-unsigned char energest_current_mode[ENERGEST_TYPE_MAX];
+bool energest_current_mode[ENERGEST_TYPE_MAX];
 
 /*---------------------------------------------------------------------------*/
 void
@@ -53,7 +53,7 @@ energest_init(void)
   int i;
   for(i = 0; i < ENERGEST_TYPE_MAX; ++i) {
     energest_total_time[i] = energest_current_time[i] = 0;
-    energest_current_mode[i] = 0;
+    energest_current_mode[i] = false;
   }
   ENERGEST_ON(ENERGEST_TYPE_CPU);
 }
