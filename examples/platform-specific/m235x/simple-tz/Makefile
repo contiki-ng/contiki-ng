@@ -1,5 +1,9 @@
-CONTIKI_PROJECT = simple-nse
-all: $(CONTIKI_PROJECT)
-
 CONTIKI = ../../../..
-include $(CONTIKI)/Makefile.include
+
+all:
+	$(MAKE) -C secure TOP=$(CONTIKI)
+	$(MAKE) -C nonsecure TOP=$(CONTIKI)
+
+%:
+	$(MAKE) $@ -C secure TOP=$(CONTIKI)
+	$(MAKE) $@ -C nonsecure TOP=$(CONTIKI)

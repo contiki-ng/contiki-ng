@@ -1,0 +1,14 @@
+CONTIKI_PROJECT = simple-ns
+all: $(CONTIKI_PROJECT)
+
+TZDIR=..
+CONTIKI = $(TZDIR)/$(TOP)
+
+SECUREDIR=$(TZDIR)/secure
+PROJECTDIRS += $(SECUREDIR) $(SECUREDIR)/include
+
+SECURE_BUILD_DIR=$(TZDIR)/secure/build/$(TARGET)/$(BOARD)
+LDFLAGS += -L$(SECURE_BUILD_DIR)
+
+TARGET_LIBFILES += -lsecure
+include $(CONTIKI)/Makefile.include

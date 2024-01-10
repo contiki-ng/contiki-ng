@@ -38,6 +38,7 @@
  */
 
 #include "contiki.h"
+#include "nsc.h"
 
 #include <stdio.h> /* For printf() */
 
@@ -57,6 +58,8 @@ PROCESS_THREAD(hello_world_process, ev, data)
   etimer_set(&timer, CLOCK_SECOND * 10);
 
   while(1) {
+    unsigned int tzv = tz_version();
+    printf("TZ version = %u.%u\n", (tzv>>8)&0xff, tzv & 0xff);
     printf("CPU Frequency = %lu\n", CLK_GetCPUFreq());
 
     /* Wait for the periodic timer to expire and then restart the timer. */
