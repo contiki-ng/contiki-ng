@@ -4,7 +4,7 @@ CONTIKI = $(TZDIR)/$(TOP)
 PROJECT_SOURCEFILES += version.c
 OBJECTS:= $(OBJECTDIR)/$(SOURCES:.c=.o)
 
-CFLAGS:= -Wall -std=c99 -g -O2 -I. -Iinclude
+CFLAGS:= -Wall -std=c99 -g -O2 -I. -I$(TZDIR)/include
 ARFLAGS:=crU
 
 CLEAN += $(LIB)
