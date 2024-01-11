@@ -3,6 +3,7 @@ all: $(CONTIKI_PROJECT)
 
 TZDIR=..
 CONTIKI = $(TZDIR)/$(TOP)
+NS=1
 
 SECUREDIR=$(TZDIR)/secure
 PROJECTDIRS += $(TZDIR)/include
@@ -10,5 +11,5 @@ PROJECTDIRS += $(TZDIR)/include
 SECURE_BUILD_DIR=$(TZDIR)/secure/build/$(TARGET)/$(BOARD)
 LDFLAGS += -L$(SECURE_BUILD_DIR)
 
-TARGET_LIBFILES += -lsecure
+TARGET_LIBFILES += $(SECURE_BUILD_DIR)/cmse_lib.o
 include $(CONTIKI)/Makefile.include

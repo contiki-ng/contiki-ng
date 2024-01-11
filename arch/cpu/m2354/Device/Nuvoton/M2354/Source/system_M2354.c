@@ -235,7 +235,7 @@ void SCU_IRQHandler(void)
             if(u32Reg & (1 << i))
             {
                 u32Addr = M32(SCU_BASE + info[i] + 4);
-                printf("  %s(0x%08x) Alarm! illegal access by %s\n", ipname[i], u32Addr, master[M32(SCU_BASE + info[i])]);
+                printf("  %s(0x%08lx) Alarm! illegal access by %s\n", ipname[i], u32Addr, master[M32(SCU_BASE + info[i])]);
                 SCU->SVINTSTS = (1 << i);
                 break;
             }

@@ -8,5 +8,13 @@ ifeq ($(NS), 1)
 	LDFLAGS += -Wl,--defsym,ld_flash_start=$(FLASH_START),--defsym,ld_flash_length=$(FLASH_LENGTH),--defsym,ld_ram_start=$(RAM_START),--defsym,ld_ram_length=$(RAM_LENGTH)
 
 	TARGET_LIBFILES += $(PLATFORM_ROOT_DIR)/$(BOARD)/cmse_lib.o
+else
+	FLASH_START = 0xd000
+	FLASH_LENGTH = 0x22000
+	RAM_LENGTH =  0x8000
+	CFLAGS += -DTRUSTZONE_SECURE
+        CFLAGS += -mcmse
+
+	LDFLAGS += -Wl,--defsym,ld_flash_start=$(FLASH_START),--defsym,ld_flash_length=$(FLASH_LENGTH),--defsym,ld_ram_length=$(RAM_LENGTH)
 endif
 
