@@ -17,6 +17,8 @@ include $(CONTIKI)/Makefile.include
 BINFILE=$(CONTIKI_PROJECT).$(TARGET).bin
 MAPFILE=$(CONTIKI_PROJECT).$(TARGET).map
 
+CLEAN += $(MAPFILE)
+
 postbuild: $(CONTIKI_PROJECT).$(TARGET)
 	$(Q)$(OBJCOPY) -O binary --gap-fill=0xff $^ $(BINFILE)
 

@@ -15,7 +15,7 @@ BINFILE=secure.$(TARGET).bin
 MAPFILE=secure.$(TARGET).map
 CMSE_LIB=$(BUILD_DIR_BOARD)/cmse_lib.o
 
-CLEAN += $(CMSE_LIB) $(ELFFILE)
+CLEAN += $(CMSE_LIB) $(ELFFILE) $(MAPFILE)
 
 CONTIKI_CPU_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_CPU_SOURCEFILES)}}
 LDFLAGS += -Wl,--cmse-implib -Wl,--out-implib=$(CMSE_LIB)
