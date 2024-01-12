@@ -1,5 +1,5 @@
-CONTIKI_PROJECT = simple-ns
-all: $(CONTIKI_PROJECT)
+CONTIKI_PROJECT = nonsecure
+all: postbuild
 
 TZDIR=..
 CONTIKI = $(TZDIR)/$(TOP)
@@ -13,3 +13,11 @@ LDFLAGS += -L$(SECURE_BUILD_DIR)
 
 TARGET_LIBFILES += $(SECURE_BUILD_DIR)/cmse_lib.o
 include $(CONTIKI)/Makefile.include
+
+BINFILE=$(CONTIKI_PROJECT).$(TARGET).bin
+MAPFILE=$(CONTIKI_PROJECT).$(TARGET).map
+
+postbuild: $(CONTIKI_PROJECT).$(TARGET)
+	$(Q)$(OBJCOPY) -O binary --gap-fill=0xff $^ $(BINFILE)
+
+.PHONY: postbuild

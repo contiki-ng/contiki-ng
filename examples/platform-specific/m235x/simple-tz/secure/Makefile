@@ -10,15 +10,20 @@ all:
 
 include $(CONTIKI)/Makefile.include
 
-CLEAN += $(CMSE_LIB) secure.$(TARGET)
+ELFFILE=secure.$(TARGET)
+BINFILE=secure.$(TARGET).bin
+MAPFILE=secure.$(TARGET).map
+CMSE_LIB=$(BUILD_DIR_BOARD)/cmse_lib.o
+
+CLEAN += $(CMSE_LIB) $(ELFFILE)
 
 CONTIKI_CPU_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_CPU_SOURCEFILES)}}
-CMSE_LIB=$(BUILD_DIR_BOARD)/cmse_lib.o
 LDFLAGS += -Wl,--cmse-implib -Wl,--out-implib=$(CMSE_LIB)
-LDFLAGS += -Wl,-Map=secure.map
+LDFLAGS += -Wl,-Map=$(MAPFILE)
 
-all: secure.$(TARGET)
+all: $(ELFFILE)
 PROJECT_OBJECTFILES = $(addprefix $(OBJECTDIR)/, $(PROJECT_SOURCEFILES:.c=.o))
-secure.$(TARGET): $(CONTIKI_CPU_OBJECTFILES) $(PROJECT_OBJECTFILES)
+$(ELFFILE): $(CONTIKI_CPU_OBJECTFILES) $(PROJECT_OBJECTFILES)
 	$(TRACE_LD)
 	$(Q)$(LD) $(LDFLAGS) -o $@ $^
+	$(Q)$(OBJCOPY) -O binary --gap-fill=0xff $@ $(BINFILE)
