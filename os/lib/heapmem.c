@@ -51,6 +51,15 @@
 #define LOG_MODULE "HeapMem"
 #define LOG_LEVEL LOG_LEVEL_WARN
 
+/* The HEAPMEM_CONF_PRINTF function determines which function to use for
+   printing debug information. */
+#ifndef HEAPMEM_CONF_PRINTF
+#include <stdio.h>
+#define HEAPMEM_PRINTF printf
+#else
+#define HEAPMEM_PRINTF HEAPMEM_CONF_PRINTF
+#endif /* !HEAPMEM_CONF_PRINTF */
+
 /* The HEAPMEM_CONF_ARENA_SIZE parameter determines the size of the
    space that will be statically allocated in this module. */
 #define HEAPMEM_ARENA_SIZE HEAPMEM_CONF_ARENA_SIZE
@@ -626,6 +635,43 @@ heapmem_stats(heapmem_stats_t *stats)
   stats->footprint = heap_usage;
   stats->max_footprint = max_heap_usage;
   stats->chunks = stats->overhead / sizeof(chunk_t);
+}
+
+/* heapmem_print_stats: Print all the statistics collected through the
+   heapmem_stats function. */
+void
+heapmem_print_debug_info(bool print_chunks)
+{
+  heapmem_stats_t stats;
+  heapmem_stats(&stats);
+
+  HEAPMEM_PRINTF("* HeapMem statistics\n");
+  HEAPMEM_PRINTF("* Allocated memory: %zu\n", stats.allocated);
+  HEAPMEM_PRINTF("* Available memory: %zu\n", stats.available);
+  HEAPMEM_PRINTF("* Heap usage: %zu\n", stats.footprint);
+  HEAPMEM_PRINTF("* Max heap usage: %zu\n", stats.max_footprint);
+  HEAPMEM_PRINTF("* Allocated chunks: %zu\n", stats.chunks);
+  HEAPMEM_PRINTF("* Chunk size: %zu\n", sizeof(chunk_t));
+  HEAPMEM_PRINTF("* Total chunk overhead: %zu\n", stats.overhead);
+
+  if(print_chunks) {
+    HEAPMEM_PRINTF("* Allocated chunks:\n");
+    for(chunk_t *chunk = (chunk_t *)heap_base;
+        (char *)chunk < &heap_base[heap_usage];
+        chunk = NEXT_CHUNK(chunk)) {
+      if(CHUNK_ALLOCATED(chunk)) {
+#if HEAPMEM_DEBUG
+        HEAPMEM_PRINTF("* Chunk: heap offset %"PRIuPTR", obj %p, flags 0x%x (%s:%u)\n",
+                       (uintptr_t)((char *)chunk - (char *)heap_base),
+                       GET_PTR(chunk), chunk->flags, chunk->file, chunk->line);
+#else
+        HEAPMEM_PRINTF("* Chunk: heap offset %"PRIuPTR", obj %p, flags 0x%x\n",
+                       (uintptr_t)((char *)chunk - (char *)heap_base),
+                       GET_PTR(chunk), chunk->flags);
+#endif /* HEAPMEM_DEBUG */
+      }
+    }
+  }
 }
 
 /* heapmem_alignment: Returns the minimum alignment of allocated addresses. */
