@@ -38,7 +38,7 @@
  */
 
 #include "contiki.h"
-#include "nsc.h"
+#include "nsc/tz_version.h"
 
 #include <stdio.h> /* For printf() */
 

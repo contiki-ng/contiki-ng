@@ -1,4 +1,4 @@
-#include "nsc.h"
+#include "nsc/tz_version.h"
 
 __NONSECURE_ENTRY
 unsigned int tz_version(void)
