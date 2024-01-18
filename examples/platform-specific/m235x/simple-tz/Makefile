@@ -27,11 +27,14 @@ $(NS_TARGETBIN):
 	$(MAKE) $@ -C secure TOP=$(CONTIKI)
 	$(MAKE) $@ -C nonsecure TOP=$(CONTIKI)
 
-.PHONY: all clean
+.PHONY: all clean $(S_TARGETBIN) $(NS_TARGETBIN) cscope
 clean:
-	rm -f $(CONTIKI_PROJECT).$(TARGET).bin
+	rm -f $(CONTIKI_PROJECT).$(TARGET).bin cscope*
 	$(MAKE) $@ -C secure TOP=$(CONTIKI)
 	$(MAKE) $@ -C nonsecure TOP=$(CONTIKI)
 
 $(SECURE_SIZE_BIN): $(SECURE_SIZE_TOOL_DIR)/secure_size.c
 	$(MAKE) -C $(SECURE_SIZE_TOOL_DIR) TARGET=$(TARGET) BOARD=$(BOARD)
+
+cscope:
+	cscope -Rbq -s $(CONTIKI)/arch/cpu/$(TARGET) -s $(CONTIKI)/arch/platform/$(TARGET)/$(BOARD) -s $(CONTIKI)/os
