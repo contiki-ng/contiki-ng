@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2024 Kyung-mo Kim <kkim@securityplatform.co.kr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,13 +29,13 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup nrf-platforms
+ * \addtogroup m2354-platforms
  * @{
  *
  * \file
- *      Platform implementation for nRF
+ *      Platform implementation for m2354
  * \author
- *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *      Kyung-mo Kim <kkim@securityplatform.co.kr>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
