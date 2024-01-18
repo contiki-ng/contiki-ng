@@ -185,7 +185,7 @@ jobs:
     # Keep a cache of the Cooja build files and gradle files. Keyed on Cooja
     # repo commit to ensure clean rebuild when updating Cooja submodule.
     - name: Cache Cooja Artifacts
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           tools/cooja/build
