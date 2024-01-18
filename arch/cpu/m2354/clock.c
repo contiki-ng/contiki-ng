@@ -132,9 +132,11 @@ void clock_delay(unsigned int i)
 
 void SysTick_Handler(void)
 {
+#ifdef TRUSTZONE_NONSECURE
 	g_ticks++;
 	if (etimer_pending())
 		etimer_request_poll();
+#endif
 }
 
 void TMR2_IRQHandler(void)

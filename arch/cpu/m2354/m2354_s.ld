@@ -57,42 +57,6 @@ ENTRY(Reset_Handler)
 
 SECTIONS
 {
-
-	/* ===== axiocrypto region start ===== */
-	.ac_code :
-	{
-		. = ALIGN(32);
-		*(__ac_signature__);
-
-		__ac_start__ = .;
-		*axiocrypto_m235x.o(.text* .rodata*)
-		FILL (0xFF)
-
-		. = ORIGIN(AC_FLASH) + LENGTH(AC_FLASH) - 0x1000;
-
-		__etext2 = .;
-		__ac_end__ = .;
-
-	} > AC_FLASH
-
-	.ac_data : AT (__etext2)
-	{
-		. = ALIGN(32);
-		__data2_start__ = .;
-		*axiocrypto_m235x.o(.data*)
-		__data2_end__ = .;
-	} > AC_RAM
-
-	.ac_bss :
-	{
-		. = ALIGN(32);
-		__bss2_start__ = .;
-		*axiocrypto_m235x.o(.bss*)
-		__bss2_end__ = .;
-	} > AC_RAM
-
-	/* ===== axiocrypto region end ===== */
-
 	.text :
 	{
 		FILL(0xff)
@@ -180,9 +144,6 @@ SECTIONS
 		LONG (__etext)
 		LONG (__data_start__)
 		LONG (__data_end__ - __data_start__)
-		LONG (__etext2)
-		LONG (__data2_start__)
-		LONG (__data2_end__ - __data2_start__)
 		__copy_table_end__ = .;
 	} > FLASH
 
@@ -195,8 +156,6 @@ SECTIONS
 		__zero_table_start__ = .;
 		LONG (__bss_start__)
 		LONG (__bss_end__ - __bss_start__)
-		LONG (__bss2_start__)
-		LONG (__bss2_end__ - __bss2_start__)
 		__zero_table_end__ = .;
 	} > FLASH
 

@@ -16,12 +16,14 @@ CONTIKI_CPU_DIRS += StdDriver/src
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += startup_M2354.S
 CONTIKI_CPU_SOURCEFILES += system_M2354.c
-CONTIKI_CPU_SOURCEFILES += handler.c
+CONTIKI_CPU_SOURCEFILES += handler.c clock.c
+CONTIKI_CPU_SOURCEFILES += _timer.c
+CONTIKI_CPU_SOURCEFILES += uart.c dbg.c
 
 ifeq ($(NS), 1)
-        CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c watchdog.c dbg.c
+        CONTIKI_CPU_SOURCEFILES += rtimer-arch.c watchdog.c
         CONTIKI_CPU_SOURCEFILES += int-master.c slip-arch.c
-        CONTIKI_CPU_SOURCEFILES += _timer.c uart.c wdt.c gpio.c
+        CONTIKI_CPU_SOURCEFILES += wdt.c gpio.c
         CONTIKI_CPU_SOURCEFILES += spi-arch.c
 else
         CONTIKI_CPU_SOURCEFILES += clk.c

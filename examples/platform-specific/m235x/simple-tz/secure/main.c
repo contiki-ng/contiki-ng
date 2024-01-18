@@ -3,16 +3,14 @@
 #include <string.h>
 
 #include "cpu.h"
+#include "board.h"
 
 #include "partition_M2354.h"
 #define NONSECURE_START_ADDRESS (FMC_NON_SECURE_BASE + 0x1000)
 
-#if defined(MODULE_UART_STDOUT)
-#include "uart_stdout.h"
 static const char banner[] = \
 "\r\n" \
 "Secure is running\r\n";
-#endif
 
 typedef __attribute__( ( cmse_nonsecure_call ) ) void ( *NonSecureResetHandler_t )( uint32_t );
 
@@ -25,11 +23,9 @@ static void prvBootNonSecure( uint32_t ulNonSecureStartAddress );
 
 int main(void)
 {
-//	board_init();
+	platform_init_stage_secure();
 
-#if defined(MODULE_UART_STDOUT)
 	puts(banner);
-#endif
 
 	prvBootNonSecure( NONSECURE_START_ADDRESS );
 
@@ -55,9 +51,7 @@ static void prvBootNonSecure( uint32_t ulNonSecureStartAddress )
 	 * Reset Handler. */
 	pxNonSecureResetHandler = ( NonSecureResetHandler_t )( * ( ( uint32_t * ) ( ( ulNonSecureStartAddress ) + 4U ) ) );
 
-#if defined(MODULE_UART_STDOUT)
 	printf("Jump to non-secure world...\n");
-#endif
 
 	/* Start non-secure state software application by jumping to the non-secure
 	 * Reset Handler. */
