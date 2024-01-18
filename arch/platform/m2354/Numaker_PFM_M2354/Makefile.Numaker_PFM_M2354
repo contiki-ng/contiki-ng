@@ -6,8 +6,6 @@ ifeq ($(NS), 1)
 
 	CFLAGS += -DTRUSTZONE_NONSECURE
 	LDFLAGS += -Wl,--defsym,ld_flash_start=$(FLASH_START),--defsym,ld_flash_length=$(FLASH_LENGTH),--defsym,ld_ram_start=$(RAM_START),--defsym,ld_ram_length=$(RAM_LENGTH)
-
-	TARGET_LIBFILES += $(PLATFORM_ROOT_DIR)/$(BOARD)/cmse_lib.o
 else
 	FLASH_START = 0x0
 	FLASH_LENGTH = 0x30000

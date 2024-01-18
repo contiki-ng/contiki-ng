@@ -6,7 +6,7 @@
 #include "board.h"
 
 #include "partition_M2354.h"
-#define NONSECURE_START_ADDRESS (FMC_NON_SECURE_BASE + 0x1000)
+#define NONSECURE_START_ADDRESS (FMC_NON_SECURE_BASE)
 
 static const char banner[] = \
 "\r\n" \

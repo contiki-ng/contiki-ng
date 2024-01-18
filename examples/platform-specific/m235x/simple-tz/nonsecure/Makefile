@@ -2,6 +2,7 @@ CONTIKI_PROJECT = nonsecure
 all: postbuild
 
 TZDIR=..
+TOP ?= ../../../..
 CONTIKI = $(TZDIR)/$(TOP)
 NS=1
 
@@ -16,10 +17,16 @@ include $(CONTIKI)/Makefile.include
 
 BINFILE=$(CONTIKI_PROJECT).$(TARGET).bin
 MAPFILE=$(CONTIKI_PROJECT).$(TARGET).map
+HEXFILE=$(CONTIKI_PROJECT).$(TARGET).hex
 
-CLEAN += $(MAPFILE)
+LDFLAGS += -Wl,-Map=$(MAPFILE)
 
-postbuild: $(CONTIKI_PROJECT).$(TARGET)
+CLEAN += $(MAPFILE) $(HEXFILE) $(BINFILE)
+
+postbuild: $(BINFILE) $(HEXFILE)
+$(BINFILE): $(CONTIKI_PROJECT).$(TARGET)
 	$(Q)$(OBJCOPY) -O binary --gap-fill=0xff $^ $(BINFILE)
+$(HEXFILE): $(CONTIKI_PROJECT).$(TARGET)
+	$(Q)$(OBJCOPY) -O ihex --change-addresses=-0x10000000 $^ $(HEXFILE)
 
 .PHONY: postbuild
