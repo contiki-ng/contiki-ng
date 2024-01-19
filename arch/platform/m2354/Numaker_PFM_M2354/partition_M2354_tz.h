@@ -54,7 +54,7 @@
 //     <o>Secure Flash ROM Size <0x800-0x80000:0x800>
 */
 
-#define FMC_SECURE_ROM_SIZE      0x30000
+#define FMC_SECURE_ROM_SIZE      0x10000
 
 #define FMC_NON_SECURE_BASE     (0x10000000 + FMC_SECURE_ROM_SIZE)
 

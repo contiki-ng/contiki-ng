@@ -1,15 +1,29 @@
+PART_H=$(CONTIKI)/$(CONTIKI_NG_ARCH_PLATFORM_DIR)/$(TARGET)/$(BOARD)/partition_M2354_tz.h
+FLASH_SZ=0x100000
+FLASH_S_SZ=$(strip $(shell grep -E "\#define[[:blank:]]+FMC_SECURE_ROM_SIZE" $(PART_H) | sed "s/\#define[[:blank:]]\+FMC_SECURE_ROM_SIZE//"))
+FLASH_NS_START=0x10000000
+RAM_SZ = 0x40000
+RAM_S_SZ=$(strip $(shell grep -E "\#define[[:blank:]]+SCU_SECURE_SRAM_SIZE" $(PART_H) | sed "s/\#define[[:blank:]]\+SCU_SECURE_SRAM_SIZE//"))
+RAM_NS_START=0x30000000
+ifeq ($(strip $(FLASH_S_SZ)),)
+    $(info $(FLASH_S_SZ))
+    $(error wrong FLASH_S_SZ)
+endif
+ifeq ($(strip $(RAM_S_SZ)),)
+    $(error wrong RAM_S_SZ)
+endif
 ifeq ($(NS), 1)
-	FLASH_START = 0x10030000
-	FLASH_LENGTH = 0xD0000
-	RAM_START = 0x30008000
-	RAM_LENGTH =  0x38000
+	FLASH_START = $(shell printf "0x%x" $$(($(FLASH_NS_START) + $(FLASH_S_SZ))) )
+	FLASH_LENGTH = $(shell printf "0x%x" $$(($(FLASH_SZ) - $(FLASH_S_SZ))) )
+	RAM_START = $(shell printf "0x%x" $$(($(RAM_NS_START) + $(RAM_S_SZ))) )
+	RAM_LENGTH =  $(shell printf "0x%x" $$(($(RAM_SZ) - $(RAM_S_SZ))) )
 
 	CFLAGS += -DTRUSTZONE_NONSECURE
 	LDFLAGS += -Wl,--defsym,ld_flash_start=$(FLASH_START),--defsym,ld_flash_length=$(FLASH_LENGTH),--defsym,ld_ram_start=$(RAM_START),--defsym,ld_ram_length=$(RAM_LENGTH)
 else
 	FLASH_START = 0x0
-	FLASH_LENGTH = 0x30000
-	RAM_LENGTH =  0x8000
+	FLASH_LENGTH = $(FLASH_S_SZ)
+	RAM_LENGTH =  $(RAM_S_SZ)
 	CFLAGS += -DTRUSTZONE_SECURE
         CFLAGS += -mcmse
 

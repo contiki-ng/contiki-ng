@@ -181,12 +181,6 @@ SECTIONS
 		*(vtor_ram);
 	} > RAM
 
-	._cdi (NOLOAD) :
-	{
-		__DICE_CDI = .;
-		. += 0x20;
-	} > RAM
-
 	/* startup_M2351.S defines stack section. to avoid name conflict, declare _stack section */
 	._stack (NOLOAD) :
 	{
