@@ -4,8 +4,6 @@ CONTIKI = $(TZDIR)/$(TOP)
 
 PROJECT_SOURCEFILES += main.c puts.c
 PROJECT_SOURCEFILES += version.c
-PROJECT_SOURCEFILES += secure_init.c secure_heap.c
-PROJECT_SOURCEFILES += secure_context.c secure_context_port.c
 
 CFLAGS:= -Wall -std=c99 -g -O2 -I. -I$(TZDIR)/include
 
