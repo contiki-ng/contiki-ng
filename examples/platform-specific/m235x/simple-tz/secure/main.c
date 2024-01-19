@@ -8,10 +8,6 @@
 #include "partition_M2354.h"
 #define NONSECURE_START_ADDRESS (FMC_NON_SECURE_BASE)
 
-static const char banner[] = \
-"\r\n" \
-"Secure is running\r\n";
-
 typedef __attribute__( ( cmse_nonsecure_call ) ) void ( *NonSecureResetHandler_t )( uint32_t );
 
 /**
@@ -25,7 +21,8 @@ int main(void)
 {
 	platform_init_stage_secure();
 
-	puts(banner);
+        puts("\r\n");
+        puts(CONTIKI_VERSION_STRING);
 
 	prvBootNonSecure( NONSECURE_START_ADDRESS );
 

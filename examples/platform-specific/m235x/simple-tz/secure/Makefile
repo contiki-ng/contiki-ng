@@ -13,6 +13,8 @@ all:
 
 include $(CONTIKI)/Makefile.include
 
+CFLAGS += $(CONTIKI_VERSION)
+
 ELFFILE=secure.$(TARGET)
 BINFILE=secure.$(TARGET).bin
 MAPFILE=secure.$(TARGET).map

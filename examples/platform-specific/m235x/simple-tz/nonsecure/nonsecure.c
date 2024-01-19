@@ -41,6 +41,7 @@
 #include "nsc/tz_version.h"
 
 #include <stdio.h> /* For printf() */
+#include <stdlib.h>
 
 uint32_t CLK_GetCPUFreq(void);
 
@@ -51,17 +52,27 @@ AUTOSTART_PROCESSES(&hello_world_process);
 PROCESS_THREAD(hello_world_process, ev, data)
 {
   static struct etimer timer;
+  unsigned int tzv ;
+  char *s;
 
   PROCESS_BEGIN();
+
+  s = malloc(64);
+  if (s) {
+      tzv = tz_version(s, 64);
+      printf("TZ version = %u.%u, %s\n", (tzv>>8)&0xff, tzv & 0xff, s);
+      free(s);
+      s = NULL;
+  } else {
+      tzv = tz_version(NULL, 0);
+      printf("TZ version = %u.%u\n", (tzv>>8)&0xff, tzv & 0xff);
+  }
+  printf("CPU Frequency = %lu\n", CLK_GetCPUFreq());
 
   /* Setup a periodic timer that expires after 10 seconds. */
   etimer_set(&timer, CLOCK_SECOND * 10);
 
   while(1) {
-    unsigned int tzv = tz_version();
-    printf("TZ version = %u.%u\n", (tzv>>8)&0xff, tzv & 0xff);
-    printf("CPU Frequency = %lu\n", CLK_GetCPUFreq());
-
     /* Wait for the periodic timer to expire and then restart the timer. */
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
     etimer_reset(&timer);
