@@ -27,6 +27,8 @@ ifeq ($(NS), 1)
         CONTIKI_CPU_SOURCEFILES += spi-arch.c
 else
         CONTIKI_CPU_SOURCEFILES += clk.c
+        CONTIKI_CPU_SOURCEFILES += secure_init.c secure_heap.c
+        CONTIKI_CPU_SOURCEFILES += secure_context.c secure_context_port.c
 endif
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
