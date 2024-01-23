@@ -1,8 +1,10 @@
-ifneq ($(NS), 1)
-LDSCRIPT ?= $(CONTIKI_CPU)/m2354_s.ld
-LDFLAGS += -mcmse
-else
+ifeq ($(NS), 1)
 LDSCRIPT ?= $(CONTIKI_CPU)/m2354.ld
+CFLAGS += -DTRUSTZONE_NONSECURE
+else
+LDSCRIPT ?= $(CONTIKI_CPU)/m2354_s.ld
+CFLAGS += -DTRUSTZONE_SECURE
+CFLAGS += -mcmse
 endif
 
 CFLAGS +=

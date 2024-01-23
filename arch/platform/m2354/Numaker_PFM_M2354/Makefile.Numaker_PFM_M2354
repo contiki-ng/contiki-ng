@@ -18,14 +18,11 @@ ifeq ($(NS), 1)
 	RAM_START = $(shell printf "0x%x" $$(($(RAM_NS_START) + $(RAM_S_SZ))) )
 	RAM_LENGTH =  $(shell printf "0x%x" $$(($(RAM_SZ) - $(RAM_S_SZ))) )
 
-	CFLAGS += -DTRUSTZONE_NONSECURE
 	LDFLAGS += -Wl,--defsym,ld_flash_start=$(FLASH_START),--defsym,ld_flash_length=$(FLASH_LENGTH),--defsym,ld_ram_start=$(RAM_START),--defsym,ld_ram_length=$(RAM_LENGTH)
 else
 	FLASH_START = 0x0
 	FLASH_LENGTH = $(FLASH_S_SZ)
 	RAM_LENGTH =  $(RAM_S_SZ)
-	CFLAGS += -DTRUSTZONE_SECURE
-        CFLAGS += -mcmse
 
 	LDFLAGS += -Wl,--defsym,ld_flash_start=$(FLASH_START),--defsym,ld_flash_length=$(FLASH_LENGTH),--defsym,ld_ram_length=$(RAM_LENGTH)
 endif
