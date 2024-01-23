@@ -61,7 +61,7 @@ void led_orange_init(void)
 
 void led_orange_on(void)
 {
-    PA10 = 1;
+    PA10 = 0;
 }
 
 void peri_init(void)
