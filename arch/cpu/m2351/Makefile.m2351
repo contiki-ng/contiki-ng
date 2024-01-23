@@ -39,5 +39,5 @@ CFLAGS += -g
 
 ### This rule is used to generate the correct linker script
 
-include $(CONTIKI)/$(CONTIKI_NG_CORTEX_DIR)/cm23/Makefile.cm23
+include $(CONTIKI)/$(CONTIKI_NG_CM23_DIR)/Makefile.cm23
 
