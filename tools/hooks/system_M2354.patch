@@ -1,0 +1,21 @@
+diff --git a/Library/Device/Nuvoton/M2354/Source/system_M2354.c b/Library/Device/Nuvoton/M2354/Source/system_M2354.c
+index 985e40c2..9794ec61 100644
+--- a/Library/Device/Nuvoton/M2354/Source/system_M2354.c
++++ b/Library/Device/Nuvoton/M2354/Source/system_M2354.c
+@@ -12,6 +12,7 @@
+ 
+ #include <stdio.h>
+ #include <stdint.h>
++#include <inttypes.h>
+ #include "NuMicro.h"
+ 
+ #if defined (__ARM_FEATURE_CMSE) &&  (__ARM_FEATURE_CMSE == 3U)
+@@ -235,7 +236,7 @@ void SCU_IRQHandler(void)
+             if(u32Reg & (1 << i))
+             {
+                 u32Addr = M32(SCU_BASE + info[i] + 4);
+-                printf("  %s(0x%08x) Alarm! illegal access by %s\n", ipname[i], u32Addr, master[M32(SCU_BASE + info[i])]);
++                printf("  %s(0x%08"PRIx32") Alarm! illegal access by %s\n", ipname[i], u32Addr, master[M32(SCU_BASE + info[i])]);
+                 SCU->SVINTSTS = (1 << i);
+                 break;
+             }

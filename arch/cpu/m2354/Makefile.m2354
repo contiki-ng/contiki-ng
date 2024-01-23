@@ -9,15 +9,15 @@ CFLAGS +=
 
 ### CPU-dependent directories
 CONTIKI_CPU_DIRS = .  dev
-CONTIKI_CPU_DIRS += Device/Nuvoton/M2354/Source
-CONTIKI_CPU_DIRS += Device/Nuvoton/M2354/Source/GCC
-CONTIKI_CPU_DIRS += StdDriver/src 
+CONTIKI_CPU_DIRS += bsp/Library/Device/Nuvoton/M2354/Source
+CONTIKI_CPU_DIRS += bsp/Library/Device/Nuvoton/M2354/Source/GCC
+CONTIKI_CPU_DIRS += bsp/Library/StdDriver/src
 
 ### CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += startup_M2354.S
 CONTIKI_CPU_SOURCEFILES += system_M2354.c
 CONTIKI_CPU_SOURCEFILES += handler.c clock.c
-CONTIKI_CPU_SOURCEFILES += _timer.c
+CONTIKI_CPU_SOURCEFILES += nu_timer.c
 CONTIKI_CPU_SOURCEFILES += uart.c dbg.c
 
 ifeq ($(NS), 1)
@@ -33,8 +33,8 @@ endif
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
 
-CFLAGS += -I$(CONTIKI_CPU)/Device/Nuvoton/M2354/Include
-CFLAGS += -I$(CONTIKI_CPU)/StdDriver/inc
+CFLAGS += -I$(CONTIKI_CPU)/bsp/Library/Device/Nuvoton/M2354/Include
+CFLAGS += -I$(CONTIKI_CPU)/bsp/Library/StdDriver/inc
 CFLAGS += -g
 
 ### This rule is used to generate the correct linker script
