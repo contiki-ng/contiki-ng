@@ -1,15 +1,16 @@
 #include "contiki.h"
 #include "NuMicro.h"
+#include "platform_secure.h"
 
 int dbg_putchar(int c)
 {
 	if (c == '\n') {
-		while(UART0->FIFOSTS & UART_FIFOSTS_TXFULL_Msk);
-		UART0->DAT = '\r';
+		while(UART_CONSOLE->FIFOSTS & UART_FIFOSTS_TXFULL_Msk);
+		UART_CONSOLE->DAT = '\r';
 	}
 
-	while(UART0->FIFOSTS & UART_FIFOSTS_TXFULL_Msk);
-	UART0->DAT = c;
+	while(UART_CONSOLE->FIFOSTS & UART_FIFOSTS_TXFULL_Msk);
+	UART_CONSOLE->DAT = c;
 
 	return c;
 }
