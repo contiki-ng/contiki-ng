@@ -13,9 +13,6 @@ MEMORY
   FLASH (rx) : ORIGIN = _ld_flash_start, LENGTH = _ld_flash_length - 0x1000
   NSC (rx)   : ORIGIN = _ld_flash_start + _ld_flash_length - 0x1000, LENGTH = 0x1000
   RAM (rwx)  : ORIGIN = _ld_ram_start,   LENGTH = _ld_ram_length - 0x1000
-
-  AC_FLASH (rx) : ORIGIN = 0x0001A000, LENGTH = 0x14000
-  AC_RAM (rwx) : ORIGIN = 0x20007000, LENGTH = 0x1000
 }
 
 /* Library configurations */
@@ -93,15 +90,6 @@ SECTIONS
 		*(privileged_functions)
 		. = ALIGN(32);
 		__privileged_functions_end__ = . - 1;
-	} > FLASH
-
-	.freertos_system_calls :
-	{
-		. = ALIGN(32);
-		__syscalls_flash_start__ = .;
-		*(freertos_system_calls)
-		. = ALIGN(32);
-		__syscalls_flash_end__ = . - 1;
 	} > FLASH
 
 	.text :
