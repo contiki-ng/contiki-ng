@@ -1,4 +1,4 @@
-PART_H=$(CONTIKI)/$(CONTIKI_NG_ARCH_PLATFORM_DIR)/$(TARGET)/$(BOARD)/partition_M2351_tz.h
+PART_H=$(CONTIKI)/$(CONTIKI_NG_ARCH_PLATFORM_DIR)/$(TARGET)/$(BOARD)/partition.h
 FLASH_SZ=0x100000
 FLASH_S_SZ=$(strip $(shell grep -E "\#define[[:blank:]]+FMC_SECURE_ROM_SIZE" $(PART_H) | sed "s/\#define[[:blank:]]\+FMC_SECURE_ROM_SIZE//"))
 FLASH_NS_START=0x10000000
