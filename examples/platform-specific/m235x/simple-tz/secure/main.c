@@ -5,7 +5,12 @@
 #include "cpu.h"
 #include "board.h"
 
+#if CONTIKI_TARGET_M2354
 #include "partition_M2354.h"
+#elif  CONTIKI_TARGET_M2351
+#include "partition_M2351.h"
+#endif
+
 #define NONSECURE_START_ADDRESS (FMC_NON_SECURE_BASE)
 
 typedef __attribute__( ( cmse_nonsecure_call ) ) void ( *NonSecureResetHandler_t )( uint32_t );
