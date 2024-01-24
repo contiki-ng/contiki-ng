@@ -220,6 +220,14 @@ bool heapmem_free(void *ptr);
 void heapmem_stats(heapmem_stats_t *stats);
 
 /**
+ * \brief              Print debugging information for the heap memory
+ *                     management.
+ * \param print_chunks Determines whether to print information about
+ *                     all allocated chunks.
+ */
+void heapmem_print_debug_info(bool print_chunks);
+
+/**
  * \brief       Obtain the minimum alignment of allocated addresses.
  * \return      The alignment value, which is a power of two.
  */
