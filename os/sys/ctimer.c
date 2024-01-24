@@ -123,6 +123,20 @@ ctimer_reset(struct ctimer *c)
 }
 /*---------------------------------------------------------------------------*/
 void
+ctimer_reset_with_new_interval(struct ctimer *c, clock_time_t interval)
+{
+  if(initialized) {
+    PROCESS_CONTEXT_BEGIN(&ctimer_process);
+    etimer_reset_with_new_interval(&c->etimer, interval);
+    PROCESS_CONTEXT_END(&ctimer_process);
+  } else {
+    c->etimer.timer.interval = interval;
+  }
+
+  list_add(ctimer_list, c);
+}
+/*---------------------------------------------------------------------------*/
+void
 ctimer_restart(struct ctimer *c)
 {
   if(initialized) {
