@@ -45,7 +45,7 @@
 	url = https://github.com/SiliconLabs/gecko_sdk.git
 [submodule "arch/cpu/m2351/bsp"]
 	path = arch/cpu/m2351/bsp
-	url = https://github.com/OpenNuvoton/M2351BSP.git
+	url = https://github.com/k2m/M2351BSP.git
 [submodule "arch/cpu/m2354/bsp"]
 	path = arch/cpu/m2354/bsp
-	url = https://github.com/OpenNuvoton/M2354BSP.git
+	url = https://github.com/k2m/M2354BSP.git
