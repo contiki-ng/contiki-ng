@@ -51,7 +51,7 @@
 #include "dev/gpio.h"
 #include "dev/ioc.h"
 #include "lib/list.h"
-#include "dev/sha256.h"
+#include "lib/sha-256.h"
 #include "net/linkaddr.h"
 #include <stdio.h>
 #include <stdint.h>
@@ -399,26 +399,10 @@ at_cmd_sha256_callback(struct at_cmd *cmd, uint8_t len, char *data)
   /* Format: AT&SHA256=s, where s is a string up to 64 bytes */
   uint8_t i;
   char tmp[4], sha256[32], sha256_res[64];
-  static sha256_state_t state;
 
-  crypto_init();
-  if(sha256_init(&state) != CRYPTO_SUCCESS) {
-    AT_RESPONSE(AT_DEFAULT_RESPONSE_ERROR);
-    return;
-  }
-
-  if(sha256_process(&state, &data[10],
-                    len - (cmd->cmd_hdr_len)) != CRYPTO_SUCCESS) {
-    AT_RESPONSE(AT_DEFAULT_RESPONSE_ERROR);
-    return;
-  }
-
-  if(sha256_done(&state, sha256) != CRYPTO_SUCCESS) {
-    AT_RESPONSE(AT_DEFAULT_RESPONSE_ERROR);
-    return;
-  }
-
-  crypto_disable();
+  SHA_256.hash((const uint8_t *)&data[10],
+      len - (cmd->cmd_hdr_len),
+      (uint8_t *)sha256);
 
   PRINTF("Input: %s:\n", &data[10]);
   snprintf(tmp, 3, "%02X", sha256[0]);

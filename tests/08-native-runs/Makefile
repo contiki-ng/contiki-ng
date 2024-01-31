@@ -17,7 +17,8 @@ examples/snmp-server/native:./10-snmp-server.sh \
 tests/08-native-runs/11-aes-ccm/native:./11-aes-ccm.sh \
 tests/08-native-runs/12-heapmem/native:./12-heapmem.sh:DEFINES=HEAPMEM_DEBUG=0 \
 tests/08-native-runs/12-heapmem/native:./12-heapmem.sh:DEFINES=HEAPMEM_DEBUG=1 \
-tests/08-native-runs/13-coffee/native:./13-coffee.sh
+tests/08-native-runs/13-coffee/native:./13-coffee.sh \
+tests/08-native-runs/14-sha-256/native:./14-sha-256.sh
 
 
 include ../Makefile.compile-test
