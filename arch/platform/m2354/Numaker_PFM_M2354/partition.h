@@ -1,5 +1,5 @@
 /**************************************************************************//**
- * @file     partition_M2354.h
+ * @file     partition.h
  * @version  V3.00
  * @brief    SAU configuration for secure/nonsecure region settings.
  *

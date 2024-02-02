@@ -82,3 +82,7 @@
 typedef int16_t coffee_page_t;
 
 #endif /* CFS_COFFEE_ARCH_H_ */
+/**
+ * @}
+ * @}
+ */
