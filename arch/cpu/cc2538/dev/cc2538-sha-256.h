@@ -7,6 +7,10 @@
  * Copyright (c) 2013, ADVANSEE - http://www.advansee.com/
  * All rights reserved.
  *
+ * Adaptation to platform-independent API:
+ * Copyright (c) 2021, Uppsala universitet
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -37,7 +41,7 @@
  * \addtogroup cc2538-crypto
  * @{
  *
- * \defgroup cc2538-sha256 cc2538 SHA-256
+ * \defgroup cc2538-sha-256 cc2538 SHA-256
  *
  * Driver for the cc2538 SHA-256 mode of the security core
  * @{
@@ -45,57 +49,15 @@
  * \file
  * Header file for the cc2538 SHA-256 driver
  */
-#ifndef SHA256_H_
-#define SHA256_H_
 
-#include "contiki.h"
-#include "dev/crypto.h"
+#ifndef CC2538_SHA_256_H_
+#define CC2538_SHA_256_H_
 
-#include <stdint.h>
-/*---------------------------------------------------------------------------*/
-/** \name SHA-256 structures
- * @{
- */
-typedef struct {
-  uint64_t length;
-  uint32_t state[8];
-  uint32_t curlen;
-  uint8_t  buf[64];
-  uint8_t  new_digest;
-  uint8_t  final_digest;
-} sha256_state_t;
-/** @} */
-/*---------------------------------------------------------------------------*/
-/** \name SHA-256 functions
- * @{
- */
+#include "lib/sha-256.h"
 
-/** \brief Initializes the hash state
- * \param state Pointer to hash state to initialize
- * \return \c CRYPTO_SUCCESS if successful, or CRYPTO/SHA256 error code
- */
-uint8_t sha256_init(sha256_state_t *state);
+extern const struct sha_256_driver cc2538_sha_256_driver;
 
-/** \brief Processes a block of memory through the hash
- * \param state Pointer to hash state
- * \param data Pointer to the data to hash
- * \param len Length of the data to hash in bytes (octets)
- * \return \c CRYPTO_SUCCESS if successful, or CRYPTO/SHA256 error code
- * \note This function must be called only after \c sha256_init().
- */
-uint8_t sha256_process(sha256_state_t *state, const void *data, uint32_t len);
-
-/** \brief Terminates hash session to get the digest
- * \param state Pointer to hash state
- * \param hash Pointer to hash
- * \return \c CRYPTO_SUCCESS if successful, or CRYPTO/SHA256 error code
- * \note This function must be called only after \c sha256_process().
- */
-uint8_t sha256_done(sha256_state_t *state, void *hash);
-
-/** @} */
-
-#endif /* SHA256_H_ */
+#endif /* CC2538_SHA_256_H_ */
 
 /**
  * @}

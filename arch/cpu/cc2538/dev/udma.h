@@ -45,6 +45,7 @@
 #define UDMA_H_
 
 #include "contiki.h"
+#include <stdbool.h>
 
 /*
  * Enable all uDMA channels unless a conf file tells us to do otherwise.
@@ -549,6 +550,11 @@
 #define UDMA_CHCTL_XFERMODE_PER_SGA  0x00000007  /**< Peripheral Scatter-Gather Alt */
 /** @} */
 /*---------------------------------------------------------------------------*/
+
+/**
+ * \brief Checks if data can be DMAed from the given address
+ */
+bool udma_is_valid_source_address(uintptr_t address);
 
 /**
  * \brief Initialise the uDMA driver
