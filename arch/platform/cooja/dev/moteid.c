@@ -32,6 +32,7 @@
 #include "lib/simEnvChange.h"
 #include "lib/random.h"
 #include "lib/csprng.h"
+#include "lib/sha-256.h"
 #include <string.h>
 
 // COOJA variables
@@ -44,13 +45,15 @@ static void
 doInterfaceActionsBeforeTick(void)
 {
   if (simMoteIDChanged) {
-    struct csprng_seed csprng_seed = { 0 };
+    struct csprng_seed csprng_seed;
 
     simMoteIDChanged = 0;
     random_init(simRandomSeed);
-    memcpy(csprng_seed.u8,
-        &simRandomSeed,
-        MIN(sizeof(simRandomSeed), sizeof(csprng_seed.u8)));
+
+    sha_256_hkdf(NULL, 0,
+                 (const uint8_t *)&simRandomSeed, sizeof(simRandomSeed),
+                 NULL, 0,
+                 csprng_seed.u8, sizeof(csprng_seed.u8));
     csprng_feed(&csprng_seed);
   }
 }
