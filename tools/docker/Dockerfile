@@ -159,6 +159,9 @@ RUN wget -nv https://sourceforge.net/projects/doxygen/files/rel-1.10.0/doxygen-1
     tar xf ccache-4.8.2-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.8.2-linux-x86_64/ccache && \
     rm ccache-*-linux-x86_64.tar.xz
 
+# Install additional tools for the nRF5 SDK.
+RUN nrfutil install nrf5sdk-tools
+
 # By default, we use a Docker bind mount to share the repo with the host,
 # with Docker run option:
 # -v <HOST_CONTIKI_NG_ABS_PATH>:/home/user/contiki-ng
