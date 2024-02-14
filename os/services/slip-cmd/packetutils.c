@@ -68,12 +68,23 @@ packetutils_deserialize_atts(const uint8_t *data, int size)
   int i, cnt, pos;
 
   pos = 0;
+  if(size < 1) {
+    PRINTF("packetutils: too small buffer for deserialization: %d\n", size);
+    return -1;
+  }
   cnt = data[pos++];
   PRINTF("packetutils: deserializing %d packet atts:", cnt);
   if(cnt > PACKETBUF_NUM_ATTRS) {
     PRINTF(" *** too many: %u!\n", PACKETBUF_NUM_ATTRS);
     return -1;
   }
+
+  if(1 + cnt * 3 > size) {
+    PRINTF(" *** need %d bytes to read %d attrs, but got only %d bytes!\n",
+           1 + cnt * 3, cnt, size);
+    return -1;
+  }
+
   for(i = 0; i < cnt; i++) {
     if(data[pos] >= PACKETBUF_NUM_ATTRS) {
       /* illegal attribute identifier */
