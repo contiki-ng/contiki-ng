@@ -48,28 +48,31 @@
 /**
  * \brief Set a key to use in subsequent encryption & decryption operations.
  * \param key The key to use
+ * \return True on success
  *
  * The size of the key must be AES_128_KEY_LENGTH.
  */
-void cc26xx_aes_set_key(const uint8_t *key);
+bool cc26xx_aes_set_key(const uint8_t key[static AES_128_KEY_LENGTH]);
 
 /**
  * \brief Encrypt a message using the SoC AES-128 hardware implementation
  * \param plaintext_and_result In: message to encrypt, out: the encrypted message.
+ * \return True on success
  *
  * The size of the message must be AES_128_BLOCK_SIZE.
  * The key to use in the encryption must be set before calling this function.
  */
-void cc26xx_aes_encrypt(uint8_t *plaintext_and_result);
+bool cc26xx_aes_encrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE]);
 
 /**
  * \brief Decrypt a message using the SoC AES-128 hardware implementation
  * \param cyphertext_and_result In: message to decrypt, out: the decrypted message.
+ * \return True on successs
  *
  * The size of the message must be AES_128_BLOCK_SIZE.
  * The key to use in the decryption must be set before calling this function.
  */
-void cc26xx_aes_decrypt(uint8_t *cyphertext_and_result);
+bool cc26xx_aes_decrypt(uint8_t cyphertext_and_result[static AES_128_BLOCK_SIZE]);
 
 extern const struct aes_128_driver cc26xx_aes_128_driver;
 

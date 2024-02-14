@@ -91,8 +91,8 @@ galois_mul2(uint8_t value)
   return ((value << 1) ^ xor_val);
 }
 /*---------------------------------------------------------------------------*/
-static void
-set_key(const uint8_t *key)
+static bool
+set_key(const uint8_t key[static AES_128_KEY_LENGTH])
 {
   uint8_t i;
   uint8_t j;
@@ -111,10 +111,11 @@ set_key(const uint8_t *key)
     }
     rcon = galois_mul2(rcon);
   }
+  return true;
 }
 /*---------------------------------------------------------------------------*/
-static void
-encrypt(uint8_t *state)
+static bool
+encrypt(uint8_t state[static AES_128_BLOCK_SIZE])
 {
   uint8_t buf1, buf2, buf3, buf4, round, i;
 
@@ -181,6 +182,7 @@ encrypt(uint8_t *state)
       state[i] = state[i] ^ round_keys[round][i];
     }
   }
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 const struct aes_128_driver aes_128_driver = {

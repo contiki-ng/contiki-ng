@@ -101,7 +101,7 @@ csma_security_set_key(uint8_t index, const uint8_t *key)
 #define N_KEYS (sizeof(keys) / sizeof(aes_key))
 /*---------------------------------------------------------------------------*/
 static int
-aead(uint8_t hdrlen, int forward)
+aead(uint8_t hdrlen, bool forward)
 {
   uint8_t totlen;
   uint8_t nonce[CCM_STAR_NONCE_LENGTH];
@@ -189,7 +189,7 @@ csma_security_create_frame(void)
     LOG_DBG("\n");
 #endif
 
-    if(!aead(hdr_len, 1)) {
+    if(!aead(hdr_len, true)) {
       LOG_ERR("failed to encrypt packet to ");
       LOG_ERR_LLADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
       LOG_ERR_("\n");
@@ -283,7 +283,7 @@ csma_security_parse_frame(void)
   }
 
   packetbuf_set_datalen(packetbuf_datalen() - MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) & 0x07));
-  if(!aead(hdr_len, 0)) {
+  if(!aead(hdr_len, false)) {
     LOG_INFO("received unauthentic frame %u from ",
              (unsigned int) anti_replay_get_counter());
     LOG_INFO_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));

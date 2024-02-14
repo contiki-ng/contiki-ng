@@ -84,8 +84,8 @@ UNIT_TEST(aesccm_encrypt)
       printf("TEST: encrypt in: %u + %u bytes\n",
         (unsigned)a_len, (unsigned)m_len);
 
-      CCM_STAR.set_key(key_bytes);
-      CCM_STAR.aead(
+      UNIT_TEST_ASSERT(CCM_STAR.set_key(key_bytes));
+      UNIT_TEST_ASSERT(CCM_STAR.aead(
           nonce_bytes,
           buffer + a_len,
           m_len,
@@ -94,7 +94,7 @@ UNIT_TEST(aesccm_encrypt)
           buffer + a_len + m_len,
           MICLEN,
           1
-      );
+      ));
 
       success = !memcmp(buffer, ciphertext_bytes, a_len + m_len + MICLEN);
       printf("TEST: encrypt out: %u bytes --- %s\n", (unsigned)(a_len + m_len + MICLEN), success ? "OK" : "FAIL");
@@ -137,8 +137,8 @@ UNIT_TEST(aesccm_decrypt)
 
     printf("TEST: decrypt in: %u bytes\n", (unsigned)strlen(ciphertext_string));
 
-    CCM_STAR.set_key(key_bytes);
-    CCM_STAR.aead(
+    UNIT_TEST_ASSERT(CCM_STAR.set_key(key_bytes));
+    UNIT_TEST_ASSERT(CCM_STAR.aead(
         nonce_bytes,
         buffer + a_len,
         m_len,
@@ -147,7 +147,7 @@ UNIT_TEST(aesccm_decrypt)
         generated_mic,
         MICLEN,
         0
-    );
+    ));
 
     auth_check = !memcmp(generated_mic, buffer + a_len + m_len, MICLEN);
     if(hdr_string != NULL && cleartext_string != NULL) {

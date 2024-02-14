@@ -42,19 +42,22 @@
 #include "lib/aes-128.h"
 #include <string.h>
 
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "ccm*"
+#define LOG_LEVEL LOG_LEVEL_NONE
+
 /* As per RFC 3610. L == 2 (m_len is two bytes long). */
 #define CCM_STAR_AUTH_FLAGS(a_len, mic_len) (((a_len) ? 1u << 6 : 0) \
     | ((((mic_len) - 2u) >> 1) << 3) \
     | 1u)
 #define CCM_STAR_ENCRYPTION_FLAGS 1
-/* Valid values are 4, 6, 8, 10, 12, 14, and 16 octets */
-#define MIC_LEN_VALID(x) ((x) >= 4 && (x) <= 16 && (x) % 2 == 0)
 
 /*---------------------------------------------------------------------------*/
 static void
-set_iv(uint8_t *iv,
+set_iv(uint8_t iv[static AES_128_BLOCK_SIZE],
     uint8_t flags,
-    const uint8_t *nonce,
+    const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
     uint16_t counter)
 {
   iv[0] = flags;
@@ -64,8 +67,8 @@ set_iv(uint8_t *iv,
 }
 /*---------------------------------------------------------------------------*/
 /* XORs the block m[pos] ... m[pos + 15] with K_{counter} */
-static void
-ctr_step(const uint8_t *nonce,
+static bool
+ctr_step(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
     uint16_t pos,
     uint8_t *m_and_result, uint16_t m_len,
     uint16_t counter)
@@ -73,15 +76,18 @@ ctr_step(const uint8_t *nonce,
   uint8_t a[AES_128_BLOCK_SIZE];
 
   set_iv(a, CCM_STAR_ENCRYPTION_FLAGS, nonce, counter);
-  AES_128.encrypt(a);
+  if(!AES_128.encrypt(a)) {
+    return false;
+  }
 
   for(uint_fast8_t i = 0; (pos + i < m_len) && (i < AES_128_BLOCK_SIZE); i++) {
     m_and_result[pos + i] ^= a[i];
   }
+  return true;
 }
 /*---------------------------------------------------------------------------*/
-static void
-mic(const uint8_t *nonce,
+static bool
+mic(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
     const uint8_t *m, uint16_t m_len,
     const uint8_t *a, uint16_t a_len,
     uint8_t *result, uint8_t mic_len)
@@ -89,7 +95,9 @@ mic(const uint8_t *nonce,
   uint8_t x[AES_128_BLOCK_SIZE];
 
   set_iv(x, CCM_STAR_AUTH_FLAGS(a_len, mic_len), nonce, m_len);
-  AES_128.encrypt(x);
+  if(!AES_128.encrypt(x)) {
+    return false;
+  }
 
   if(a_len) {
     x[0] ^= (a_len >> 8);
@@ -99,7 +107,9 @@ mic(const uint8_t *nonce,
       x[2 + pos] ^= a[pos];
     }
 
-    AES_128.encrypt(x);
+    if(!AES_128.encrypt(x)) {
+      return false;
+    }
 
     /* 32-bit pos to reach the end of the loop if a_len is large */
     for(; pos < a_len; pos += AES_128_BLOCK_SIZE) {
@@ -108,7 +118,9 @@ mic(const uint8_t *nonce,
           i++) {
         x[i] ^= a[pos + i];
       }
-      AES_128.encrypt(x);
+      if(!AES_128.encrypt(x)) {
+        return false;
+      }
     }
   }
 
@@ -120,57 +132,65 @@ mic(const uint8_t *nonce,
           i++) {
         x[i] ^= m[pos + i];
       }
-      AES_128.encrypt(x);
+      if(!AES_128.encrypt(x)) {
+        return false;
+      }
     }
   }
 
-  ctr_step(nonce, 0, x, AES_128_BLOCK_SIZE, 0);
+  if(!ctr_step(nonce, 0, x, AES_128_BLOCK_SIZE, 0)) {
+    return false;
+  }
 
   memcpy(result, x, mic_len);
+  return true;
 }
 /*---------------------------------------------------------------------------*/
-static void
-ctr(const uint8_t *nonce, uint8_t *m, uint16_t m_len)
+static bool
+ctr(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
+    uint8_t *m, uint16_t m_len)
 {
   uint16_t counter = 1;
   /* 32-bit pos to reach the end of the loop if m_len is large */
   for(uint32_t pos = 0; pos < m_len; pos += AES_128_BLOCK_SIZE) {
-    ctr_step(nonce, pos, m, m_len, counter++);
+    if(!ctr_step(nonce, pos, m, m_len, counter++)) {
+      return false;
+    }
   }
+  return true;
 }
 /*---------------------------------------------------------------------------*/
-static void
-set_key(const uint8_t *key)
+static bool
+set_key(const uint8_t key[static AES_128_KEY_LENGTH])
 {
-  AES_128.set_key(key);
+  return AES_128.set_key(key);
 }
 /*---------------------------------------------------------------------------*/
-static void
-aead(const uint8_t* nonce,
+static bool
+aead(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
     uint8_t* m, uint16_t m_len,
     const uint8_t* a, uint16_t a_len,
     uint8_t *result, uint8_t mic_len,
-    int forward)
+    bool forward)
 {
-  if(!MIC_LEN_VALID(mic_len)) {
-    return;
+  /* validate MIC length */
+  if(mic_len > AES_128_BLOCK_SIZE) {
+    LOG_ERR("MICs longer than %u bytes are not allowed\n", AES_128_BLOCK_SIZE);
+    return false;
   }
 
-  if(!forward) {
-    /* decrypt */
-    ctr(nonce, m, m_len);
+  /* decrypt in the forward direction */
+  if(!forward && !ctr(nonce, m, m_len)) {
+    return false;
   }
 
-  mic(nonce,
-      m, m_len,
-      a, a_len,
-      result,
-      mic_len);
-
-  if(forward) {
-    /* encrypt */
-    ctr(nonce, m, m_len);
+  /* create MIC */
+  if(!mic(nonce, m, m_len, a, a_len, result, mic_len)) {
+    return false;
   }
+
+  /* encrypt in the reverse direction */
+  return !forward || ctr(nonce, m, m_len);
 }
 /*---------------------------------------------------------------------------*/
 const struct ccm_star_driver ccm_star_driver = {

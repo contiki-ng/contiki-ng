@@ -41,6 +41,7 @@
 #define AES_128_H_
 
 #include "contiki.h"
+#include <stdbool.h>
 
 #define AES_128_BLOCK_SIZE 16
 #define AES_128_KEY_LENGTH 16
@@ -58,13 +59,15 @@ struct aes_128_driver {
 
   /**
    * \brief Sets the current key.
+   * \return True on success.
    */
-  void (* set_key)(const uint8_t *key);
+  bool (* set_key)(const uint8_t key[static AES_128_KEY_LENGTH]);
 
   /**
    * \brief Encrypts.
+   * \return True on success.
    */
-  void (* encrypt)(uint8_t *plaintext_and_result);
+  bool (* encrypt)(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE]);
 };
 
 extern const struct aes_128_driver AES_128;
