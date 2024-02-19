@@ -28,7 +28,23 @@ include $(CONTIKI_CPU)/Makefile.cc2538
 
 MODULES += $(CONTIKI_NG_STORAGE_DIR)/cfs
 
-BSL_FLAGS += -e -w -v -b 450000
+ifndef PORT
+	ifndef MOTE
+		MOTE = 1
+	endif
+	ifeq ($(BOARD),openmote-b)
+		INDEX = $(shell echo $(MOTE)*2-1 | bc)
+	else
+		INDEX = $(shell echo $(MOTE)-1 | bc)
+	endif
+	PORT=/dev/ttyUSB$(INDEX)
+endif
+
+BSL_FLAGS += -e -w -v -b 460800
+
+ifeq ($(BOARD),openmote-b)
+	BSL_FLAGS += --bootloader-invert-lines
+endif
 
 ifdef PORT
   BSL_FLAGS += -p $(PORT)

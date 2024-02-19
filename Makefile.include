@@ -686,6 +686,9 @@ savetarget:
 ifneq ($(BOARD),)
 	@echo >>Makefile.target "BOARD = $(BOARD)"
 endif
+ifneq ($(BOARD_REVISION),)
+	@echo >>Makefile.target "BOARD_REVISION = $(BOARD_REVISION)"
+endif
 
 savedefines:
 	@rm -f Makefile.$(TARGET).defines
@@ -697,6 +700,7 @@ viewconf:
 	@echo "----------------- Make variables: --------------"
 	@echo "##### \"TARGET\": ________________________________ $(TARGET)"
 	@echo "##### \"BOARD\": _________________________________ $(BOARD)"
+	@echo "##### \"BOARD_REVISION\": ________________________ $(BOARD_REVISION)"
 	@echo "##### \"MAKE_MAC\": ______________________________ $(MAKE_MAC)"
 	@echo "##### \"MAKE_NET\": ______________________________ $(MAKE_NET)"
 	@echo "##### \"MAKE_ROUTING\": __________________________ $(MAKE_ROUTING)"
