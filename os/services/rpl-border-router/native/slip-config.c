@@ -43,6 +43,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <termios.h>
+#include <net/if.h>
 #include <sys/ioctl.h>
 #include <err.h>
 #include "contiki.h"
@@ -54,7 +55,7 @@ int slip_config_timestamp = 0;
 const char *slip_config_siodev = NULL;
 const char *slip_config_host = NULL;
 const char *slip_config_port = NULL;
-char slip_config_tundev[32] = { "" };
+char slip_config_tundev[IFNAMSIZ + 1] = { "" };
 uint16_t slip_config_basedelay = 0;
 
 #ifndef BAUDRATE
