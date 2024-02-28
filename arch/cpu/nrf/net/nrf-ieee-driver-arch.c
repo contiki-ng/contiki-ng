@@ -736,8 +736,8 @@ read_frame(void *buf, unsigned short bufsize)
   /* timestamps.sfd will be used in TSCH Module for slot calculation */
   NRF_RTIMER_TIMER->TASKS_CAPTURE[0] = 1;
   uint64_t now = RTIMER_NOW();
-  timestamps.framestart = now - ((NRF_RTIMER_TIMER->CC[0] - timestamps.framestart) / (float)62500 * RTIMER_SECOND);
-  timestamps.end = now - ((NRF_RTIMER_TIMER->CC[0] - timestamps.end) / (float)62500 * RTIMER_SECOND);
+  timestamps.framestart = now - ((NRF_RTIMER_TIMER->CC[0] - timestamps.framestart) * RTIMER_SECOND / 62500 );
+  timestamps.end = now - ((NRF_RTIMER_TIMER->CC[0] - timestamps.end) * RTIMER_SECOND / 62500);
 
   /*
    * Timestamp in rtimer ticks of the reception of the SFD. The SFD was
