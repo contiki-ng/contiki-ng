@@ -53,6 +53,7 @@
 #include "rtimer-arch.h"
 #include "rtimer.h"
 #include "soc-rtc.h"
+#include "lib/list.h"
 #include "sys/energest.h"
 #include "sys/process.h"
 
@@ -61,7 +62,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
+/*---------------------------------------------------------------------------*/
+LIST(modules_list);
 /*---------------------------------------------------------------------------*/
 /*
  * Don't consider deep sleep mode if the next RTC event is scheduled to fire
@@ -84,6 +86,8 @@
   __WFI();                                                                     \
   } while (0)
 /*---------------------------------------------------------------------------*/
+/* check if list_init() has been called */
+static bool has_modules_list_initialized = false;
 /*
  * Notify all modules that we're back on and rely on them to restore clocks
  * and power domains as required.
@@ -91,6 +95,7 @@
 static void
 wake_up(void)
 {
+  lpm_registered_module_t *module;
 
   ENERGEST_SWITCH(ENERGEST_TYPE_DEEP_LPM, ENERGEST_TYPE_CPU);
 
@@ -103,6 +108,15 @@ wake_up(void)
    */
   nrfx_clock_hfclk_start();
   nrf_timer_task_trigger(NRF_RTIMER_TIMER, NRF_TIMER_TASK_START);
+
+    /* Notify all registered modules that we've just woken up */
+  for(module = list_head(modules_list); module != NULL;
+      module = module->next) {
+    if(module->wakeup) {
+      module->wakeup();
+    }
+  }
+
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
@@ -151,6 +165,7 @@ check_next_etimer(rtimer_clock_t now, rtimer_clock_t *next_etimer, bool *next_et
 static uint8_t
 setup_sleep_mode(void)
 {
+  lpm_registered_module_t *module;
   uint8_t max_pm = LPM_MODE_MAX_SUPPORTED;
   uint8_t pm;
 
@@ -164,6 +179,17 @@ setup_sleep_mode(void)
   /* Check if any events fired before we turned interrupts off. If so, abort */
   if(LPM_MODE_MAX_SUPPORTED == LPM_MODE_AWAKE || process_nevents()) {
     return LPM_MODE_AWAKE;
+  }
+
+  /* Collect max allowed PM permission from interested modules */
+  for(module = list_head(modules_list); module != NULL;
+      module = module->next) {
+    if(module->request_max_pm) {
+      uint8_t module_pm = module->request_max_pm();
+      if(module_pm < max_pm) {
+        max_pm = module_pm;
+      }
+    }
   }
 
   now = RTIMER_NOW();
@@ -240,6 +266,22 @@ lpm_sleep(void)
 static void
 deep_sleep(void)
 {
+  lpm_registered_module_t *module;
+
+  /*
+   * Notify all registered modules that we are dropping to mode X. We do not
+   * need to do this for simple sleep.
+   *
+   * This is a chance for modules to delay us a little bit until an ongoing
+   * operation has finished (e.g. uart TX) or to configure themselves for
+   * deep sleep.
+   */
+  for(module = list_head(modules_list); module != NULL;
+      module = module->next) {
+    if(module->shutdown) {
+      module->shutdown(LPM_MODE_DEEP_SLEEP);
+    }
+  }
   /* Pat the dog: We don't want it to shout right after we wake up */
   watchdog_periodic();
 
@@ -263,11 +305,35 @@ deep_sleep(void)
 }
 /*---------------------------------------------------------------------------*/
 void
+lpm_register_module(lpm_registered_module_t *module)
+{
+  list_add(modules_list, module);
+}
+/*---------------------------------------------------------------------------*/
+void
+lpm_unregister_module(lpm_registered_module_t *module)
+{
+  list_remove(modules_list, module);
+}
+/*---------------------------------------------------------------------------*/
+void
+lpm_init()
+{
+  list_init(modules_list);
+  has_modules_list_initialized = true;
+}
+/*---------------------------------------------------------------------------*/
+void
 lpm_drop()
 {
   uint8_t max_pm;
   int abort;
   int_master_status_t status;
+
+  /* dont forget to call list_init() before using lpm_drop() */
+  if (!has_modules_list_initialized) {
+    return;
+  }
 
   status = critical_enter();
   abort = process_nevents();
