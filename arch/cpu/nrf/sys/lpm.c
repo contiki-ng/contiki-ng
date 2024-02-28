@@ -79,12 +79,9 @@
 /* Minimal safe sleep-time */
 #define MIN_SAFE_SCHEDULE     US_TO_RTIMERTICKS(1000) /* 1.0 ms */
 /*---------------------------------------------------------------------------*/
-/* Prototype of a function in clock.c. Called every time we come out of DS */
-void clock_update(void);
-/*---------------------------------------------------------------------------*/
 #define assert_wfi()                                                           \
   do {                                                                         \
-    __asm("wfi" ::);                                                           \
+  __WFI();                                                                     \
   } while (0)
 /*---------------------------------------------------------------------------*/
 /*
