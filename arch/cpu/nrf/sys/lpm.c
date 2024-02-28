@@ -38,7 +38,7 @@
  * This implementation is based on the cc26x0-cc13x0 platform.
  *
  * \file
- *         Low Power Mode (LPM) driver for the nRF52
+ *         Low Power Mode (LPM) driver for the nrf platform.
  *
  * \author
  *         Marcel Graber <marcel@clever.design>
@@ -71,7 +71,7 @@
 
 /* Wake up this much time earlier before the next rtimer */
 /* needed for HFXO power-up and debonce time             */
-#define SLEEP_GUARD_TIME      US_TO_RTIMERTICKS(1500) /* 2.0 ms */
+#define SLEEP_GUARD_TIME      US_TO_RTIMERTICKS(1500) /* 1.5 ms */
 
 /* Maximum allowed sleep-time, must be shorter than watchdog timeout */
 #define MAX_SLEEP_TIME        RTIMER_SECOND
@@ -200,7 +200,7 @@ setup_sleep_mode(void)
     }
   } else if(max_pm == LPM_MODE_DEEP_SLEEP) {
     /* Watchdog is not enabled, so deep sleep can continue an arbitrary long time.
-     * On the other hand, when we have to start again the system, it takes a while
+     * On the other hand, when we have to start the system again, it takes a while
      * till the HFXO is stable and the system is ready to run. Therefore, we have
      * early wakeup before the next rtimer should be scheduled. */
     if(next_rtimer_set) {

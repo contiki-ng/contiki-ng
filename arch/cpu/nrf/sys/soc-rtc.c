@@ -63,7 +63,7 @@
 #error CLOCK_CONF_SIZE must be 4 (32 bit)
 #endif
 #if RTIMER_SECOND != 32768
-#error RIMTER_SECOND must be 32768 when using the NRF_RTC
+#error RTIMER_SECOND must be 32768 when using the NRF_RTC
 #endif
 
 #ifdef NRF_CLOCK_CONF_RTC_INSTANCE
@@ -72,16 +72,14 @@
 #define NRF_CLOCK_RTC_INSTANCE 0
 #endif
 
-/* Prototype of a function in clock.c. Called every time the handler fires */
-void clock_update(void);
 /*---------------------------------------------------------------------------*/
 /**< RTC instance used for platform clock */
 static const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(NRF_CLOCK_RTC_INSTANCE);
 /*---------------------------------------------------------------------------*/
-static rtimer_clock_t last_isr_time = 0;
-static clock_time_t rtc_max_clock_ticks = 0;
-static rtimer_clock_t rtc_max_rtimer_ticks = 0;
-static volatile uint32_t overflow = 0;
+static rtimer_clock_t last_isr_time;
+static clock_time_t rtc_max_clock_ticks;
+static rtimer_clock_t rtc_max_rtimer_ticks;
+static volatile uint32_t overflow;
 /*---------------------------------------------------------------------------*/
 static void
 clock_handler(nrfx_clock_evt_type_t event)
@@ -96,10 +94,9 @@ clock_handler(nrfx_clock_evt_type_t event)
 static void
 rtc_handler(nrfx_rtc_int_type_t int_type)
 {
-  uint32_t next;
   if(int_type == SOC_RTC_SYSTEM_CH) {
     clock_update();
-    next = (nrfx_rtc_counter_get(&rtc) + COMPARE_INCREMENT) & MULTIPLE_256_MASK;
+    uint32_t next = (nrfx_rtc_counter_get(&rtc) + COMPARE_INCREMENT) & MULTIPLE_256_MASK;
     nrfx_rtc_cc_set(&rtc, SOC_RTC_SYSTEM_CH, next, true);
   } else if(int_type == SOC_RTC_RTIMER_CH) {
     /* rtimer event */
@@ -134,19 +131,13 @@ lfclk_config(void)
 static void
 rtc_config(void)
 {
-  nrfx_err_t err_code;
-
   /*Initialize RTC instance */
   nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
   config.prescaler = RTC_FREQ_TO_PRESCALER(32768); /* full speed... */
   config.interrupt_priority = 6;
   config.reliable = 0;
 
-  err_code = nrfx_rtc_init(&rtc, &config, rtc_handler);
-
-  if(err_code != NRFX_SUCCESS) {
-    return;
-  }
+  nrfx_rtc_init(&rtc, &config, rtc_handler);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -175,7 +166,6 @@ soc_rtc_init(void)
 void
 soc_rtc_schedule_one_shot(uint32_t channel, rtimer_clock_t ticks)
 {
-  /* clock_time_t next = (clock_time_t)RTC_WRAP(ticks); // % rtc_max_rtimer_ticks; */
   clock_time_t next = (clock_time_t)ticks; // % rtc_max_rtimer_ticks;
   if(channel == SOC_RTC_SYSTEM_CH) {
     /* system/etimeer tick will be triggered only every CLOCK_SECOND tick 1/128 */
