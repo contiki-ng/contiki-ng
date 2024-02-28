@@ -1355,14 +1355,18 @@ uip_process(uint8_t flag)
         uip_ext_bitmap |= UIP_EXT_HDR_BITMAP_HBHO;
       }
 #endif /*UIP_CONF_IPV6_CHECKS*/
-      switch(ext_hdr_options_process(next_header)) {
-      case 0:
-        break; /* done */
-      case 1:
-        goto drop; /* silently discard */
-      case 2:
-        goto send; /* send icmp error message (created in
-                      ext_hdr_options_process) and discard */
+      /* HBH options should have been processed already if
+         UIP_CONF_ROUTER != 0. */
+      if(!UIP_CONF_ROUTER) {
+        switch(ext_hdr_options_process(next_header)) {
+        case 0:
+          break; /* done */
+        case 1:
+          goto drop; /* silently discard */
+        case 2:
+          goto send; /* send icmp error message (created in
+                        ext_hdr_options_process) and discard */
+        }
       }
       break;
     case UIP_PROTO_DESTO:
