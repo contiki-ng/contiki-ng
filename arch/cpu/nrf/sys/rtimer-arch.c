@@ -41,7 +41,8 @@
  * @{
  *
  * \file
- *         Implementation of the architecture dependent rtimer functions for the nRF
+ *         Implementation of the architecture dependent rtimer functions
+ *         for the nRF
  * \author
  *         Marcel Graber <marcel@clever.design>
  *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
@@ -52,37 +53,25 @@
 #include "sys/rtimer.h"
 #include "sys/soc-rtc.h"
 
-#include "nrf.h"
-#include "hal/nrf_timer.h"
-
 /*---------------------------------------------------------------------------*/
 static volatile rtimer_clock_t next_trigger = 0;
 /*---------------------------------------------------------------------------*/
 void
 rtimer_arch_init(void)
 {
-
   /* good place to initialize the RTC, used as base tick for rtimer */
   soc_rtc_init();
-
-  nrf_timer_event_clear(NRF_RTIMER_TIMER, NRF_TIMER_EVENT_COMPARE0);
-  nrf_timer_frequency_set(NRF_RTIMER_TIMER, NRF_TIMER_FREQ_62500Hz);
-  nrf_timer_bit_width_set(NRF_RTIMER_TIMER, NRF_TIMER_BIT_WIDTH_32);
-  nrf_timer_mode_set(NRF_RTIMER_TIMER, NRF_TIMER_MODE_TIMER);
-  nrf_timer_int_enable(NRF_RTIMER_TIMER, NRF_TIMER_INT_COMPARE0_MASK);
-  nrf_timer_task_trigger(NRF_RTIMER_TIMER, NRF_TIMER_TASK_START);
 }
 /*---------------------------------------------------------------------------*/
 /**
  *
- * This function schedules a one-shot event with the AON RTC.
+ * This function schedules a one-shot event with the RTC.
  *
- * This functions converts \e to a value suitable for the AON RTC.
  */
 void
 rtimer_arch_schedule(rtimer_clock_t t)
 {
-  /* Convert the rtimer tick value to a value suitable for the AON RTC */
+  /* Convert the rtimer tick value to a value suitable for the RTC */
   soc_rtc_schedule_one_shot(SOC_RTC_RTIMER_CH, (clock_time_t)t);
   next_trigger = t;
 }
@@ -91,7 +80,7 @@ rtimer_arch_schedule(rtimer_clock_t t)
  * \brief Returns the current real-time clock time
  * \return The current rtimer time in ticks
  *
- * The value is read from the AON RTC counter and converted to a number of
+ * The value is read from the RTC counter and converted to a number of
  * rtimer ticks
  *
  */

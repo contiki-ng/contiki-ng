@@ -566,6 +566,14 @@ init(void)
   /* Request the HF clock */
   nrfx_clock_hfclk_start();
 
+  /* Enable Timers which will be needed in PPI */
+  nrf_timer_event_clear(NRF_RTIMER_TIMER, NRF_TIMER_EVENT_COMPARE0);
+  nrf_timer_frequency_set(NRF_RTIMER_TIMER, NRF_TIMER_FREQ_62500Hz);
+  nrf_timer_bit_width_set(NRF_RTIMER_TIMER, NRF_TIMER_BIT_WIDTH_32);
+  nrf_timer_mode_set(NRF_RTIMER_TIMER, NRF_TIMER_MODE_TIMER);
+  nrf_timer_int_enable(NRF_RTIMER_TIMER, NRF_TIMER_INT_COMPARE0_MASK);
+  nrf_timer_task_trigger(NRF_RTIMER_TIMER, NRF_TIMER_TASK_START);
+
   /* Start the RF driver process */
   process_start(&nrf_ieee_rf_process, NULL);
 
