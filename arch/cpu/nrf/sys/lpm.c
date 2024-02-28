@@ -217,10 +217,8 @@ setup_sleep_mode(void)
       }
     }
   }
-  if (trigger_etimer != RTIMER_CLOCK_MAX) {
-    if (trigger_etimer > now) {
+  if (trigger_etimer != RTIMER_CLOCK_MAX && trigger_etimer > now) {
       soc_rtc_schedule_one_shot(SOC_RTC_SYSTEM_CH, trigger_etimer);
-    }
   }
 
   return max_pm;
