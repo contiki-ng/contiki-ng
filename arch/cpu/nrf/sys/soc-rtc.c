@@ -38,6 +38,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "clock.h"
+#include "clock-arch.h"
 
 #include "soc-rtc.h"
 
@@ -53,10 +54,6 @@
 #include "sys/log.h"
 #define LOG_MODULE "RTC"
 #define LOG_LEVEL LOG_LEVEL_INFO
-
-/*---------------------------------------------------------------------------*/
-/* Prototype of a function in clock.c. Called every time the handler fires */
-void clock_update(void);
 
 /*---------------------------------------------------------------------------*/
 #define COMPARE_INCREMENT (RTIMER_SECOND / CLOCK_SECOND)
