@@ -91,25 +91,6 @@ void lpm_shutdown(uint32_t wakeup_pin, uint32_t io_pull, uint32_t wake_on);
  */
 void lpm_pin_set_default_state(uint32_t ioid);
 /*---------------------------------------------------------------------------*/
-/* /\*---------------------------------------------------------------------------*\/ */
-/* /\** */
-/*  * @brief Stop and wait for an interrupt */
-/*  *\/ */
-/* static inline void */
-/* lpm_drop(void) */
-/* { */
-/*   int_master_status_t status; */
-/*   int abort; */
-/*   status = critical_enter(); */
-/*   abort = process_nevents(); */
-/*   if(!abort) { */
-/*     ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM); */
-/*     __WFI(); */
-/*     ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU); */
-/*   } */
-/*   critical_exit(status); */
-/* } */
-/* /\*---------------------------------------------------------------------------*\/ */
 #endif /* LPM_H */
 
 /** @} */
