@@ -71,6 +71,8 @@ platform_init_stage_one(void)
 void
 platform_init_stage_two(void)
 {
+  lpm_init();
+
   button_hal_init();
 
   /* Seed value is ignored since hardware RNG is used. */

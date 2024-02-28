@@ -57,6 +57,33 @@
 #define LPM_MODE_MAX_SUPPORTED LPM_MODE_MAX_SUPPORTED_CONF
 #endif
 /*---------------------------------------------------------------------------*/
+typedef struct lpm_registered_module {
+  struct lpm_registered_module *next;
+  uint8_t (*request_max_pm)(void);
+  void (*shutdown)(uint8_t mode);
+  void (*wakeup)(void);
+} lpm_registered_module_t;
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Declare a variable to be used in order to get notifications from LPM
+ * \param n the variable name to be declared
+ * \param m A pointer to a function which will tell the LPM module the max
+ *          PM this module is willing to handle. This function will return
+ *          LPM_MODE_SLEEP, LPM_MODE_DEEP_SLEEP etc. The LPM module will ask all
+ *          registered modules and will trigger the highest LPM permitted
+ * \param s A pointer to a function which will receive a notification just
+ *          before entering the low power mode. The callee can prepare for the
+ *          imminent LPM state. The argument to this function will be the
+ *          upcoming low power mode. This function can e.g. turn off a
+ *          peripheral before the LPM module shuts down the power domain.
+ * \param w A pointer to a function which will be called just after we have
+ *          woken up. This can be used to e.g. turn a peripheral back on. This
+ *          function is in charge of turning power domains back on. This
+ *          function will normally be called within an interrupt context.
+ */
+#define LPM_MODULE(n, m, s, w) static lpm_registered_module_t n = \
+  { NULL, m, s, w }
+/*---------------------------------------------------------------------------*/
 /**
  * \brief Drop the cortex to sleep / deep sleep and shut down peripherals
  *
@@ -71,13 +98,31 @@ void lpm_drop(void);
 void lpm_sleep(void);
 
 /**
- * \brief Put the chip in shutdown power mode
- * \param wakeup_pin The GPIO pin which will wake us up. Must be IOID_0 etc...
- * \param io_pull Pull configuration for the shutdown pin: IOC_NO_IOPULL,
- *        IOC_IOPULL_UP or IOC_IOPULL_DOWN
- * \param wake_on High or Low (IOC_WAKE_ON_LOW or IOC_WAKE_ON_HIGH)
+ * \brief Register a module for LPM notifications.
+ * \param module A pointer to the data structure with the module definition
+ *
+ * When the LPM module is about to drop to some low power mode, it will first
+ * notify all modules about this.
+ *
+ * This function must not be called before the module has been initialised
+ * with lpm_init(). The code does not perform checks: This is the caller's
+ * responsibility.
  */
-void lpm_shutdown(uint32_t wakeup_pin, uint32_t io_pull, uint32_t wake_on);
+void lpm_register_module(lpm_registered_module_t *module);
+
+/**
+ * \brief Unregister a module from LPM notifications.
+ * \param module A pointer to the data structure with the module definition
+ *
+ * When a previously registered module is no longer interested in LPM
+ * notifications, this function can be used to unregister it.
+ */
+void lpm_unregister_module(lpm_registered_module_t *module);
+
+/**
+ * \brief Initialise the low-power mode management module
+ */
+void lpm_init(void);
 
 /**
  * \brief Sets an IOID to a default state

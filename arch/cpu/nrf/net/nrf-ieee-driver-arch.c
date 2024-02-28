@@ -62,6 +62,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>
+#include "lpm.h"
 
 #include "nrf.h"
 
@@ -549,10 +550,27 @@ channel_clear(void)
   return NRF_CCA_CLEAR;
 }
 /*---------------------------------------------------------------------------*/
+static uint8_t
+request(void)
+{
+  /*
+   * prevent lpm from going into deep sleep if the radio is powered on
+   */
+  if(radio_is_powered()) {
+    return LPM_MODE_SLEEP;
+  }
+
+  return LPM_MODE_MAX_SUPPORTED;
+}
+/*---------------------------------------------------------------------------*/
+LPM_MODULE(nrf_rf_lpm_module, request, NULL, NULL);
+/*---------------------------------------------------------------------------*/
 static int
 init(void)
 {
   LOG_DBG("Init\n");
+
+  lpm_register_module(&nrf_rf_lpm_module);
 
   last_rssi = 0;
   last_lqi = 0;
