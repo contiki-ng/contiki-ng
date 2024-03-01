@@ -54,7 +54,7 @@ PROCESS_THREAD(hello_world_process, ev, data)
   etimer_set(&timer, CLOCK_SECOND * 10);
 
   while(1) {
-    printf("Hello, world\n");
+    printf("Our group members are Mun Le Zong, Swann Tet Aung, Tan Rui Yang and Galvin Chan Shi Yuan\n");
 
     /* Wait for the periodic timer to expire and then restart the timer. */
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
