@@ -1,6 +1,4 @@
-# Assignment 2 Report
-
-## Task 1: Finding the clock resolution for rtimer and etimer
+### Task 1: Finding the clock resolution for rtimer and etimer
 
 - etimer-buzzer
   - Value of `CLOCK_SECOND`: 128
