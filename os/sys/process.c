@@ -102,6 +102,9 @@ static void call_process(struct process *p, process_event_t ev, process_data_t d
 process_event_t
 process_alloc_event(void)
 {
+  if(lastevent == (process_event_t)~0U) {
+    return PROCESS_EVENT_NONE;
+  }
   return lastevent++;
 }
 /*---------------------------------------------------------------------------*/

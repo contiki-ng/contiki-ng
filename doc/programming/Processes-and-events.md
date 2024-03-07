@@ -111,12 +111,14 @@ Contiki-NG uses a based of system-defined events for common operations, as liste
 
 ### User-defined Events
 
-One can also specify new events that are not covered in the system-defined events. The event variable should be defined and declared with an appropriate scope, so that all expected users of the event can access it. The basic case is to have it used only within a single module, and then it can be defined as `static` at the top of the module.
+One can also specify a limited number of new events that are not covered in the system-defined events. The event variable should be defined and declared with an appropriate scope, so that all expected users of the event can access it. The basic case is to have it used only within a single module, and then it can be defined as `static` at the top of the module.
 
 ```c
 static process_event_t my_app_event;
 [...]
 my_app_event = process_alloc_event();
 ```
+
+If the allocation fails, the `process_alloc_event` function returns `PROCESS_EVENT_NONE`.
 
 Note that there is no support for deallocating events.

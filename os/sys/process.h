@@ -441,7 +441,8 @@ process_current = p
 
 /**
  * \brief      Allocate a global event number.
- * \return     The allocated event number
+ * \return     The allocated event number on success,
+ *             or PROCESS_EVENT_NONE on failure.
  *
  *             In Contiki, event numbers above 128 are global and may
  *             be posted from one process to another. This function
