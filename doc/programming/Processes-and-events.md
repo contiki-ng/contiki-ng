@@ -109,16 +109,20 @@ Contiki-NG uses a based of system-defined events for common operations, as liste
 |PROCESS_EVENT_COM             | 0x89 | Unused.                                                |
 |PROCESS_EVENT_MAX             | 0x8a | The maximum number of the system-defined events.       |
 
-### User-defined Events
+### User-defined Global Events
 
-One can also specify a limited number of new events that are not covered in the system-defined events. The event variable should be defined and declared with an appropriate scope, so that all expected users of the event can access it. The basic case is to have it used only within a single module, and then it can be defined as `static` at the top of the module.
+One can also allocate a limited number of new events that are not pre-defined by the system. The new event number should be stored in a variable with an appropriate scope so that all expected users of the event can access it.
 
 ```c
-static process_event_t my_app_event;
+process_event_t my_app_event;
 [...]
 my_app_event = process_alloc_event();
 ```
 
-If the allocation fails, the `process_alloc_event` function returns `PROCESS_EVENT_NONE`.
+If the allocation fails, the `process_alloc_event` function returns `PROCESS_EVENT_NONE` (0x80).
 
 Note that there is no support for deallocating events.
+
+### Module-local Events
+
+For events that are used in a single module, one can use any of the event numbers in the range 0 - 0x7f.
