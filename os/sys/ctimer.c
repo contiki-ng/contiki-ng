@@ -85,11 +85,9 @@ PROCESS_THREAD(ctimer_process, ev, data)
 void
 ctimer_init(void)
 {
-  initialized = false;
   list_init(ctimer_list);
   process_start(&ctimer_process, NULL);
 }
-/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 void
 ctimer_set_with_process(struct ctimer *c, clock_time_t t,
