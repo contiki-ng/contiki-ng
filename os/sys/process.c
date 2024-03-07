@@ -82,7 +82,7 @@ static struct event_data events[PROCESS_CONF_NUMEVENTS];
 process_num_events_t process_maxevents;
 #endif
 
-static volatile unsigned char poll_requested;
+static volatile bool poll_requested;
 
 #define PROCESS_STATE_NONE        0
 #define PROCESS_STATE_RUNNING     1
@@ -231,7 +231,7 @@ do_poll(void)
 {
   struct process *p;
 
-  poll_requested = 0;
+  poll_requested = false;
   /* Call the processes that needs to be polled. */
   for(p = process_list; p != NULL; p = p->next) {
     if(p->needspoll) {
@@ -379,7 +379,7 @@ process_poll(struct process *p)
     if(p->state == PROCESS_STATE_RUNNING ||
        p->state == PROCESS_STATE_CALLED) {
       p->needspoll = 1;
-      poll_requested = 1;
+      poll_requested = true;
       PROCESS_POLL_REQUESTED();
     }
   }
