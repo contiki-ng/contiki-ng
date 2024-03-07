@@ -97,14 +97,13 @@ tcpip_handler(void)
       trickle_timer_inconsistency(&tt);
 
       /*
-       * Here tt.ct.etimer.timer.{start + interval} points to time t in the
-       * current interval. However, between t and I it points to the interval's
-       * end so if you're going to use this, do so with caution.
+       * Here the timer expiration time points to time t in the current
+       * interval. However, between t and I it points to the interval's end so
+       * if you're going to use this, do so with caution.
        */
       PRINTF("At %lu: Trickle inconsistency. Scheduled TX for %lu\n",
              (unsigned long)clock_time(),
-             (unsigned long)(tt.ct.etimer.timer.start +
-                             tt.ct.etimer.timer.interval));
+             (unsigned long)ctimer_expiration_time(&tt.ct));
     }
   }
   return;
