@@ -450,6 +450,11 @@ process_current = p
  *
  * \note       There currently is no way to deallocate an allocated event
  *             number.
+
+ * \note       For local events within a module, there is no need to
+ *             allocate the event number using this function. One can
+ *             simply use an arbitrary event number in the range of
+ *             0 - 127 for this purpose.
  */
 process_event_t process_alloc_event(void);
 
