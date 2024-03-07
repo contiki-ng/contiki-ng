@@ -317,7 +317,7 @@ handle_dao_timer(void *ptr)
 
   ctimer_stop(&instance->dao_timer);
 
-  if(etimer_expired(&instance->dao_lifetime_timer.etimer)) {
+  if(ctimer_expired(&instance->dao_lifetime_timer)) {
     set_dao_lifetime_timer(instance);
   }
 }
@@ -331,7 +331,7 @@ schedule_dao(rpl_instance_t *instance, clock_time_t latency)
     return;
   }
 
-  if(!etimer_expired(&instance->dao_timer.etimer)) {
+  if(!ctimer_expired(&instance->dao_timer)) {
     LOG_DBG("DAO timer already scheduled\n");
   } else {
     if(latency != 0) {
