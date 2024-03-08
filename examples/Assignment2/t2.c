@@ -219,7 +219,7 @@ void printStateDuration(rtimer_clock_t currentTime)
 
   stateDurationTick = currentTime - stateBeginTime;
   stateDurationSecond = stateDurationTick / RTIMER_SECOND;
-  printf("State Duration: %d ticks, %d seconds\n", stateDurationTick, stateDurationSecond);
+  printf("%d ticks, %d seconds\n", stateDurationTick, stateDurationSecond);
 }
 
 // Adopted from examples/Assignment2/rtimer-lightSensor.c
@@ -236,8 +236,12 @@ void rtimerTimeout(struct rtimer *timer, void *ptr)
         transitToBuzzState();
       } 
       
-      printf("Idle ");
+      printf("Idle State Duration: ");
       printStateDuration(currentTime);
+
+      if (state == 1) {
+        stateBeginTime = currentTime;
+      }
 
       break;
     
@@ -248,9 +252,8 @@ void rtimerTimeout(struct rtimer *timer, void *ptr)
 
       initOptSensor(); // update new reading
 
-      printf("Buzz ");
+      printf("Buzz State Starts: ");
       printStateDuration(currentTime);
-      stateBeginTime = currentTime;
       break;
 
     case 2:
@@ -269,10 +272,13 @@ void rtimerTimeout(struct rtimer *timer, void *ptr)
 
       initOptSensor(); // update new reading
 
-      printf("Wait ");
+      printf("Wait State Starts: ");
       printStateDuration(currentTime);
 
-      stateBeginTime = currentTime;
+      if (state == 0) {
+        stateBeginTime = currentTime;
+      }
+
       break;
   }
 }
