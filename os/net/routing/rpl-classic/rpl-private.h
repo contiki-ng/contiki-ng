@@ -343,6 +343,9 @@ rpl_of_t *rpl_find_of(rpl_ocp_t);
 void rpl_schedule_dao(rpl_instance_t *);
 void rpl_schedule_dao_immediately(rpl_instance_t *);
 void rpl_schedule_unicast_dio_immediately(rpl_instance_t *instance);
+void rpl_schedule_unicast_dao_immediately(
+    rpl_instance_t *instance, rpl_parent_t *parent,
+    uip_ipaddr_t *prefix, uint8_t lifetime);
 void rpl_cancel_dao(rpl_instance_t *instance);
 void rpl_schedule_probing(rpl_instance_t *instance);
 void rpl_schedule_probing_now(rpl_instance_t *instance);

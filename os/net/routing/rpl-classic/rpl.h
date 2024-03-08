@@ -265,6 +265,10 @@ struct rpl_instance {
 #if RPL_WITH_DAO_ACK
   struct ctimer dao_retransmit_timer;
 #endif /* RPL_WITH_DAO_ACK */
+  struct ctimer unicast_dao_timer;
+  rpl_parent_t *unicast_dao_target;
+  uip_ipaddr_t *unicast_dao_prefix;
+  uint8_t unicast_dao_lifetime;
 };
 
 /*---------------------------------------------------------------------------*/

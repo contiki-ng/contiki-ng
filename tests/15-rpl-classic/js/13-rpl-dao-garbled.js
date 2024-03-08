@@ -16,8 +16,6 @@ while(true) {
   else if(id == 1) {
     // Fail if garbled DAO is received
     if(msg.contains("icmpv6 bad checksum")) {
-      // FIXME Logic inverted to showcase issue. Revert when implementing fix.
-      log.testOK();
       log.testFailed();
     }
 
@@ -31,14 +29,12 @@ while(true) {
     else if(msg.contains("No more routes to fd00::203:3:3:3")) {
       // Route has been removed, verify it was preceded as expected
       if(forwarding_error_occurred && no_path_dao_received) {
-        // FIXME Logic inverted to showcase issue. Revert when implementing fix.
-        log.testFailed();
+        log.testOK();
       }
 
       log.log("Forwarding error occurred: " + forwarding_error_occurred + "\n")
       log.log("No-path DAO received: " + no_path_dao_received + "\n")
-      // FIXME Logic inverted to showcase issue. Revert when implementing fix.
-      log.testOK();
+      log.testFailed();
     }
   }
 }
