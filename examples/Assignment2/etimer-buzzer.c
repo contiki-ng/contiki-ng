@@ -59,7 +59,6 @@ do_etimer_timeout()
 	buzzer_stop(); 
   else 
 	buzzer_start(buzzerFrequency[f]);
-
 }
 
 PROCESS_THREAD(process_etimer, ev, data)
