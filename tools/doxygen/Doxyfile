@@ -1028,7 +1028,9 @@ EXCLUDE_PATTERNS       = */cpu/cc26x0-cc13x0/lib/* \
                          */cpu/gecko/lib/* \
                          */platform/stm32nucleo-spirit1/stm32cube-lib/* \
                          */os/net/security/tinydtls/* \
-                         */cpu/arm/CMSIS/*
+                         */cpu/arm/CMSIS/* \
+                         */cpu/m2351/bsp/* \
+                         */cpu/m2354/bsp/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
