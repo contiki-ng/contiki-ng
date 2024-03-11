@@ -265,8 +265,6 @@ void rtimerTimeout(struct rtimer *timer, void *ptr)
 
         if (checkForLuxChange())
         { // if significant change in lux
-            // reset lux readings for buzz state
-            luxReading = getLuxReading();
             f = 0;
             transitToBuzzState();
         }

@@ -17,7 +17,7 @@ AUTOSTART_PROCESSES(&task2);
 /* Variable Declaration */
 static int mpuReadings[6] = {0};
 static int luxReading = 0;
-int buzzerFrequency[8]={2093,2349,2637,2794,3156,3520,3951,4186}; // hgh notes on a piano
+int buzzerFrequency[8] = {2093, 2349, 2637, 2794, 3156, 3520, 3951, 4186}; // hgh notes on a piano
 
 static int state = 0;
 
@@ -51,7 +51,7 @@ static void printStateDuration(rtimer_clock_t currentTime);
 /* Function Definition */
 
 // Init sensors
-static void initMpuSensor(void) 
+static void initMpuSensor(void)
 {
   mpu_9250_sensor.configure(SENSORS_ACTIVE, MPU_9250_SENSOR_TYPE_ALL); // IMU Sensor
 }
@@ -71,7 +71,8 @@ static void getMpuReading(int mpuReading[])
 // Adopted from examples/Assignment2/rtimer-IMUSensor.c
 static void printMpuReading(int reading)
 {
-  if(reading < 0) {
+  if (reading < 0)
+  {
     printf("-");
     reading = -reading;
   }
@@ -121,7 +122,8 @@ static void printOldAndNewMpuReading(int oldMpuReading[], int newMpuReading[])
 static int checkForMpuChange()
 {
   int prevMpuReading[6];
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < 6; i++)
+  {
     prevMpuReading[i] = mpuReadings[i];
   }
 
@@ -129,28 +131,32 @@ static int checkForMpuChange()
   printOldAndNewMpuReading(prevMpuReading, mpuReadings);
 
   // check for significant change in distance
-  for (int i = 0; i < 3; i++) {
-    if (abs(mpuReadings[i] - prevMpuReading[i]) > 5000) {
+  for (int i = 0; i < 3; i++)
+  {
+    if (abs(mpuReadings[i] - prevMpuReading[i]) > 5000)
+    {
       printf("MPU: Significant change in distance\n");
       return 1;
     }
   }
 
   // check for significant change in acceleration
-  for (int i = 3; i < 6; i++) {
-    if (abs(mpuReadings[i] - prevMpuReading[i]) > 1000) {
+  for (int i = 3; i < 6; i++)
+  {
+    if (abs(mpuReadings[i] - prevMpuReading[i]) > 1000)
+    {
       printf("MPU: Significant change in acceleration\n");
       return 1;
     }
   }
-  
+
   printf("MPU: No significant change\n");
   return 0;
 }
 
-static void initOptSensor(void) 
+static void initOptSensor(void)
 {
-  SENSORS_ACTIVATE(opt_3001_sensor);  // Light Sensor
+  SENSORS_ACTIVATE(opt_3001_sensor); // Light Sensor
 }
 
 // Adopted from examples/Assignment2/rtimer-lightSensor.c
@@ -158,10 +164,11 @@ static int getLuxReading(void)
 {
   int value = opt_3001_sensor.value(0);
 
-  if (value == CC26XX_SENSOR_READING_ERROR) {
+  if (value == CC26XX_SENSOR_READING_ERROR)
+  {
     printf("OPT: CC26XX_SENSOR_READING_ERROR\n");
     value = -1;
-  } 
+  }
   initOptSensor(); // update new reading
   return value;
 }
@@ -171,16 +178,18 @@ static int checkForLuxChange()
   int prevLuxReading = luxReading;
   luxReading = getLuxReading();
   printOldAndNewLuxReading(prevLuxReading, luxReading);
-  
-  if (luxReading == -1) { // error
+
+  if (luxReading == -1)
+  { // error
     printf("OPT: Failed\n");
     return 0;
   }
 
   float prevLuxReadingFloat = prevLuxReading / 100 + (prevLuxReading % 100) / 100.0;
   float luxReadingFloat = luxReading / 100 + (luxReading % 100) / 100.0;
-  
-  if (abs(luxReadingFloat - prevLuxReadingFloat) < 300) { // check if change in lux is above 300
+
+  if (abs(luxReadingFloat - prevLuxReadingFloat) < 300)
+  { // check if change in lux is above 300
     printf("OPT: No significant change\n");
     return 0;
   }
@@ -227,59 +236,66 @@ void rtimerTimeout(struct rtimer *timer, void *ptr)
 {
   rtimer_clock_t currentTime = RTIMER_NOW(); // get current time
 
-  switch(state) {
-    case 0:
-      rtimerCounter = 3;
-      rtimer_set(&rtimerTimer, currentTime + sampleIntervalDuration, 0, rtimerTimeout, NULL);
+  switch (state)
+  {
+  case 0:
+    rtimerCounter = 3;
+    rtimer_set(&rtimerTimer, currentTime + sampleIntervalDuration, 0, rtimerTimeout, NULL);
 
-      if (checkForMpuChange() || checkForLuxChange()) { // if significant change in lux or mpu
-        transitToBuzzState();
-      } 
-      
-      printf("Idle State Duration: ");
-      printStateDuration(currentTime);
+    if (checkForMpuChange() || checkForLuxChange())
+    { // if significant change in lux or mpu
+      transitToBuzzState();
+    }
 
-      if (state == 1) {
-        stateBeginTime = currentTime;
-      }
+    printf("Idle State Duration: ");
+    printStateDuration(currentTime);
 
-      break;
-    
-    case 1:
-      buzzer_start(buzzerFrequency[rtimerCounter]); // buzz from 4th to 1st note, total 4 notes
-      rtimer_set(&rtimerTimer, currentTime + buzzDuration, 0, rtimerTimeout, NULL); // buzz for 2 seconds
-      transitToWaitState();
+    if (state == 1)
+    {
+      stateBeginTime = currentTime;
+    }
 
-      initOptSensor(); // update new reading
+    break;
 
-      printf("Buzz State Starts: ");
-      printStateDuration(currentTime);
-      break;
+  case 1:
+    buzzer_start(buzzerFrequency[rtimerCounter]);                                 // buzz from 4th to 1st note, total 4 notes
+    rtimer_set(&rtimerTimer, currentTime + buzzDuration, 0, rtimerTimeout, NULL); // buzz for 2 seconds
+    transitToWaitState();
 
-    case 2:
-      buzzer_stop();
-      rtimer_set(&rtimerTimer, currentTime + waitDuration, 0, rtimerTimeout, NULL); // wait for 2 seconds
-      
-      if (rtimerCounter == 0) { // total 16 seconds
-        // reset lux and mpu readings for idle state
-        luxReading = getLuxReading(); 
-        getMpuReading(mpuReadings);
-        transitToIdleState();
-      } else {
-        rtimerCounter--;
-        transitToBuzzState(); // buzz again
-      }
+    initOptSensor(); // update new reading
 
-      initOptSensor(); // update new reading
+    printf("Buzz State Starts: ");
+    printStateDuration(currentTime);
+    break;
 
-      printf("Wait State Starts: ");
-      printStateDuration(currentTime);
+  case 2:
+    buzzer_stop();
+    rtimer_set(&rtimerTimer, currentTime + waitDuration, 0, rtimerTimeout, NULL); // wait for 2 seconds
 
-      if (state == 0) {
-        stateBeginTime = currentTime;
-      }
+    if (rtimerCounter == 0)
+    { // total 16 seconds
+      // reset lux and mpu readings for idle state
+      luxReading = getLuxReading();
+      getMpuReading(mpuReadings);
+      transitToIdleState();
+    }
+    else
+    {
+      rtimerCounter--;
+      transitToBuzzState(); // buzz again
+    }
 
-      break;
+    initOptSensor(); // update new reading
+
+    printf("Wait State Starts: ");
+    printStateDuration(currentTime);
+
+    if (state == 0)
+    {
+      stateBeginTime = currentTime;
+    }
+
+    break;
   }
 }
 
@@ -289,12 +305,13 @@ void rtimerTimeout(struct rtimer *timer, void *ptr)
 PROCESS_THREAD(task2, ev, data)
 {
   PROCESS_BEGIN();
-  
+
   initOptSensor(); // init light sensor reading
   initMpuSensor(); // init IMU sensor reading
   stateBeginTime = RTIMER_NOW();
 
-  while (1) {
+  while (1)
+  {
     rtimer_set(&rtimerTimer, RTIMER_NOW() + sampleIntervalDuration, 0, rtimerTimeout, NULL);
     PROCESS_YIELD();
   }
