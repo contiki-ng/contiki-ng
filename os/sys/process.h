@@ -103,7 +103,6 @@ typedef uint8_t       process_num_events_t;
 #define PROCESS_EVENT_MAX             0x8a
 
 #define PROCESS_BROADCAST NULL
-#define PROCESS_ZOMBIE ((struct process *)0x1)
 
 /**
  * \name Process protothread functions
