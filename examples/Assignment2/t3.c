@@ -26,7 +26,7 @@ static struct rtimer rtimerTimer;
 static rtimer_clock_t stateBeginTime;
 static rtimer_clock_t sampleIntervalDuration = RTIMER_SECOND / 4;
 static rtimer_clock_t buzzDuration = RTIMER_SECOND * 2;
-static rtimer_clock_t waitDuration = RTIMER_SECOND * 4;
+static rtimer_clock_t waitDuration = RTIMER_SECOND * 2;
 
 /*----------------------------------------*/
 // Function Declaration
@@ -295,12 +295,13 @@ void rtimerTimeout(struct rtimer *timer, void *ptr)
 
     case 3:
         buzzer_stop();
-        rtimer_set(&rtimerTimer, currentTime + waitDuration, 0, rtimerTimeout, NULL); // wait for 4 seconds
+        rtimer_set(&rtimerTimer, currentTime + waitDuration, 0, rtimerTimeout, NULL); // wait for 2 seconds
+
+        initOptSensor();                                                              // update new reading
+        rtimer_set(&rtimerTimer, currentTime + waitDuration, 0, rtimerTimeout, NULL); // wait for another 2 seconds
 
         f = (f + 1) % 8;
         transitToBuzzState();
-
-        initOptSensor(); // update new reading
 
         printf("Wait State Starts: ");
         printStateDuration(currentTime);
