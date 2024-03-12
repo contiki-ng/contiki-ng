@@ -85,10 +85,10 @@ PROCESS_THREAD(task2, ev, data)
                 state = BUZZ;
                 num_buzzed = 0;
                 break;
-                
+
             case BUZZ:
                 if (num_buzzed == 4){
-                    state = IDLE
+                    state = IDLE;
                 } else {
                     num_buzzed++;
                     buzzer_start(2794);
@@ -98,7 +98,7 @@ PROCESS_THREAD(task2, ev, data)
                 break;
 
             case WAIT:
-                buzzer_stop()
+                buzzer_stop();
                 wait(2);
                 state = BUZZ;
                 break;
