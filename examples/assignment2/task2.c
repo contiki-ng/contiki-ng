@@ -31,7 +31,9 @@
 #include <stdio.h>
 
 #include "contiki.h"
-#include "sys/rtimer.h"
+
+#include "sys/etimer.h"
+#include "buzzer.h"
 
 #include "board-peripherals.h"
 
@@ -39,10 +41,6 @@
 
 PROCESS(task2, "task2");
 AUTOSTART_PROCESSES(&task2);
-
-static int counter_rtimer;
-static struct rtimer timer_rtimer;
-static rtimer_clock_t timeout_rtimer = RTIMER_SECOND /4;  
 
 static int state;
 static int num_buzzed;
@@ -54,22 +52,16 @@ static int num_buzzed;
 
 
 /*---------------------------------------------------------------------------*/
-void
-do_rtimer_timeout(struct rtimer *timer, void *ptr)
-{
-    printf("Timer interrupt triggered\r\n");
-    process_poll(&task2);
-}
-
 
 
 static void wait(int seconds)
 {
+    clock_time_t curr_tick;
+    clock_time_t end_tick;
+    curr_tick = clock_time();
+    end_tick = curr_tick + seconds * CLOCK_SECOND;
     
-    rtimer_clock_t timeout_rtimer = seconds * RTIMER_SECOND;
-    rtimer_set(&timer_rtimer, RTIMER_NOW() + timeout_rtimer, 0, do_rtimer_timeout, NULL);
-    PROCESS_YIELD();
-    
+    while (clock_time() < end_tick);
 }
 
 PROCESS_THREAD(task2, ev, data)
@@ -77,7 +69,7 @@ PROCESS_THREAD(task2, ev, data)
     PROCESS_BEGIN();
 
     state = IDLE;
-    while(1) {
+    while (1) {
         switch (state) {
             case IDLE :
                 // if significant motion
@@ -105,6 +97,7 @@ PROCESS_THREAD(task2, ev, data)
 
             default:
                 // DIE
+                break;
         }
     }
 
