@@ -42,6 +42,10 @@ endif
 
 BSL_FLAGS += -e -w -v -b 450000
 
+ifeq ($(BOARD),openmote-b)
+	BSL_FLAGS += --bootloader-invert-lines
+endif
+
 ifdef PORT
   BSL_FLAGS += -p $(PORT)
 endif
