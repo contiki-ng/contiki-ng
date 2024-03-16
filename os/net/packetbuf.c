@@ -48,9 +48,8 @@
 #include "net/packetbuf.h"
 #include "sys/cc.h"
 
-struct packetbuf_attr packetbuf_attrs[PACKETBUF_NUM_ATTRS];
-struct packetbuf_addr packetbuf_addrs[PACKETBUF_NUM_ADDRS];
-
+static struct packetbuf temp;
+struct packetbuf *packetbuf = &temp;
 
 static uint16_t buflen, bufptr;
 static uint8_t hdrlen;
@@ -179,9 +178,9 @@ void
 packetbuf_attr_clear(void)
 {
   int i;
-  memset(packetbuf_attrs, 0, sizeof(packetbuf_attrs));
+  memset(packetbuf->attrs, 0, sizeof(packetbuf->attrs));
   for(i = 0; i < PACKETBUF_NUM_ADDRS; ++i) {
-    linkaddr_copy(&packetbuf_addrs[i].addr, &linkaddr_null);
+    linkaddr_copy(&packetbuf->addrs[i].addr, &linkaddr_null);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -189,46 +188,48 @@ void
 packetbuf_attr_copyto(struct packetbuf_attr *attrs,
                       struct packetbuf_addr *addrs)
 {
-  memcpy(attrs, packetbuf_attrs, sizeof(packetbuf_attrs));
-  memcpy(addrs, packetbuf_addrs, sizeof(packetbuf_addrs));
+  memcpy(attrs, packetbuf->attrs, sizeof(packetbuf->attrs));
+  memcpy(addrs, packetbuf->addrs, sizeof(packetbuf->addrs));
 }
 /*---------------------------------------------------------------------------*/
 void
 packetbuf_attr_copyfrom(struct packetbuf_attr *attrs,
                         struct packetbuf_addr *addrs)
 {
-  memcpy(packetbuf_attrs, attrs, sizeof(packetbuf_attrs));
-  memcpy(packetbuf_addrs, addrs, sizeof(packetbuf_addrs));
+  memcpy(packetbuf->attrs, attrs, sizeof(packetbuf->attrs));
+  memcpy(packetbuf->addrs, addrs, sizeof(packetbuf->addrs));
 }
 /*---------------------------------------------------------------------------*/
 void
 packetbuf_set_attr(uint8_t type, const packetbuf_attr_t val)
 {
-  packetbuf_attrs[type].val = val;
+  packetbuf->attrs[type].val = val;
 }
 /*---------------------------------------------------------------------------*/
 packetbuf_attr_t
 packetbuf_attr(uint8_t type)
 {
-  return packetbuf_attrs[type].val;
+  return packetbuf->attrs[type].val;
 }
 /*---------------------------------------------------------------------------*/
 void
 packetbuf_set_addr(uint8_t type, const linkaddr_t *addr)
 {
-  linkaddr_copy(&packetbuf_addrs[type - PACKETBUF_ADDR_FIRST].addr, addr);
+  linkaddr_copy(&packetbuf->addrs[type - PACKETBUF_ADDR_FIRST].addr, addr);
 }
 /*---------------------------------------------------------------------------*/
 const linkaddr_t *
 packetbuf_addr(uint8_t type)
 {
-  return &packetbuf_addrs[type - PACKETBUF_ADDR_FIRST].addr;
+  return &packetbuf->addrs[type - PACKETBUF_ADDR_FIRST].addr;
 }
 /*---------------------------------------------------------------------------*/
 bool
 packetbuf_holds_broadcast(void)
 {
-  return linkaddr_cmp(&packetbuf_addrs[PACKETBUF_ADDR_RECEIVER - PACKETBUF_ADDR_FIRST].addr, &linkaddr_null);
+  return linkaddr_cmp(
+      &packetbuf->addrs[PACKETBUF_ADDR_RECEIVER - PACKETBUF_ADDR_FIRST].addr,
+      &linkaddr_null);
 }
 /*---------------------------------------------------------------------------*/
 
