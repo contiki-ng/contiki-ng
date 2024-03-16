@@ -39,11 +39,11 @@
  */
 
 /**
- * \addtogroup csma
+ * \addtogroup llsec802154
  * @{
  */
 
-#include "net/mac/csma/anti-replay.h"
+#include "net/mac/anti-replay.h"
 #include "net/packetbuf.h"
 #include "net/mac/llsec802154.h"
 
