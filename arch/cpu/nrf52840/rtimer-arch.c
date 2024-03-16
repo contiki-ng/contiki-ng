@@ -72,6 +72,13 @@ rtimer_arch_schedule(rtimer_clock_t t)
   nrf_timer_cc_write(TIMER_INSTANCE, NRF_TIMER_CC_CHANNEL0, t);
 }
 /*---------------------------------------------------------------------------*/
+int
+rtimer_arch_schedule_precise(rtimer_clock_t t)
+{
+  rtimer_arch_schedule(t);
+  return RTIMER_OK;
+}
+/*---------------------------------------------------------------------------*/
 rtimer_clock_t
 rtimer_arch_now()
 {

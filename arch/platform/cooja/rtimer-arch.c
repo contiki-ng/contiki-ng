@@ -61,11 +61,31 @@ rtimer_arch_init(void)
   simRtimerPending = 0;
 }
 /*---------------------------------------------------------------------------*/
+static int
+schedule(rtimer_clock_t t, bool auto_delay)
+{
+  if(!RTIMER_CLOCK_LT(simRtimerCurrentTicks, t - RTIMER_GUARD_TIME)) {
+    if(auto_delay) {
+      t = simRtimerCurrentTicks + RTIMER_GUARD_TIME;
+    } else {
+      return RTIMER_ERR_TIME;
+    }
+  }
+  simRtimerNextExpirationTime = t;
+  simRtimerPending = 1;
+  return RTIMER_OK;
+}
+/*---------------------------------------------------------------------------*/
 void
 rtimer_arch_schedule(rtimer_clock_t t)
 {
-  simRtimerNextExpirationTime = t;
-  simRtimerPending = 1;
+  schedule(t, true);
+}
+/*---------------------------------------------------------------------------*/
+int
+rtimer_arch_schedule_precise(rtimer_clock_t t)
+{
+  return schedule(t, false);
 }
 /*---------------------------------------------------------------------------*/
 rtimer_clock_t

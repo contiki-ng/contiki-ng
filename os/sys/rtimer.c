@@ -74,6 +74,20 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
   return RTIMER_OK;
 }
 /*---------------------------------------------------------------------------*/
+int
+rtimer_set_precise(struct rtimer *rtimer)
+{
+  if(next_rtimer) {
+    return RTIMER_ERR_ALREADY_SCHEDULED;
+  }
+
+  int result = rtimer_arch_schedule_precise(rtimer->time);
+  if(result == RTIMER_OK) {
+    next_rtimer = rtimer;
+  }
+  return result;
+}
+/*---------------------------------------------------------------------------*/
 void
 rtimer_run_next(void)
 {
