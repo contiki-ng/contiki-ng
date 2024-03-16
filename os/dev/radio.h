@@ -1007,6 +1007,30 @@ struct radio_driver {
 };
 /** @} */
 /*---------------------------------------------------------------------------*/
+
+extern const uint8_t radio_shr[RADIO_SHR_LEN];
+
+/**
+ * \brief Gets the current RSSI.
+ */
+radio_value_t radio_get_rssi(void);
+
+/**
+ * \brief  Reads the PHY header and initializes the packetbuf's datalen.
+ * \return The frame's length in bytes.
+ */
+uint_fast16_t radio_read_phy_header_to_packetbuf(void);
+
+/**
+ * \brief Reads payload bytes and appends them to the packetbuf.
+ */
+radio_async_result_t radio_read_payload_to_packetbuf(uint_fast16_t bytes);
+
+/**
+ * \brief Provides the number of payload bytes that were not read, yet.
+ */
+uint_fast16_t radio_remaining_payload_bytes(void);
+
 #endif /* RADIO_H_ */
 /*---------------------------------------------------------------------------*/
 /** @} */
