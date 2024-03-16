@@ -45,21 +45,23 @@
 #include "net/packetbuf.h"
 #include "net/mac/framer/frame802154.h"
 #include "net/mac/llsec802154.h"
+#include "dev/watchdog.h"
 
 #if LLSEC802154_USES_FRAME_COUNTER
 
 /* This node's current frame counter value */
-static uint32_t counter;
+static uint32_t my_counter;
 
 /*---------------------------------------------------------------------------*/
 void
 anti_replay_set_counter(void)
 {
-  frame802154_frame_counter_t reordered_counter;
-
-  ++counter;
-  reordered_counter.u32 = LLSEC802154_HTONL(counter);
-
+  if(++my_counter == UINT32_MAX) {
+    watchdog_reboot();
+  }
+  frame802154_frame_counter_t reordered_counter = {
+    .u32 = LLSEC802154_HTONL(my_counter)
+  };
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1,
                      reordered_counter.u16[0]);
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3,
