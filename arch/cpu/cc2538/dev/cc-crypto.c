@@ -28,59 +28,56 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 /**
- * \addtogroup cc2538
- * @{
- *
- * \defgroup cc2538-crypto cc2538 AES/SHA cryptoprocessor
- *
- * Driver for the cc2538 AES/SHA cryptoprocessor
+ * \addtogroup cc-crypto
  * @{
  *
  * \file
- * Header file for the cc2538 AES/SHA cryptoprocessor driver
+ *         Implementation of general functions of the AES/SHA cryptoprocessor.
+ * \author
+ *         Konrad Krentz <konrad.krentz@gmail.com>
  */
-#ifndef CRYPTO_H_
-#define CRYPTO_H_
 
-#include "contiki.h"
+#include "dev/crypto/cc/cc-crypto.h"
 #include "dev/sys-ctrl.h"
 #include "reg.h"
-/*---------------------------------------------------------------------------*/
-/** \name Crypto macros
- * @{
- */
 
-/** \brief Indicates whether the AES/SHA cryptoprocessor is enabled
- * \return Boolean value indicating whether the AES/SHA cryptoprocessor is
- * enabled
- */
-#define CRYPTO_IS_ENABLED() (!!(REG(SYS_CTRL_RCGCSEC) & SYS_CTRL_RCGCSEC_AES))
+struct cc_crypto *const cc_crypto = (struct cc_crypto *)0x4008B000;
+
+/*---------------------------------------------------------------------------*/
+void
+cc_crypto_init(void)
+{
+  volatile int i;
+
+  cc_crypto_enable();
+
+  /* Reset the AES/SHA cryptoprocessor */
+  REG(SYS_CTRL_SRSEC) |= SYS_CTRL_SRSEC_AES;
+  for(i = 0; i < 16; i++);
+  REG(SYS_CTRL_SRSEC) &= ~SYS_CTRL_SRSEC_AES;
+}
+/*---------------------------------------------------------------------------*/
+void
+cc_crypto_enable(void)
+{
+  /* Enable the clock for the AES/SHA cryptoprocessor */
+  REG(SYS_CTRL_RCGCSEC) |= SYS_CTRL_RCGCSEC_AES;
+}
+/*---------------------------------------------------------------------------*/
+void
+cc_crypto_disable(void)
+{
+  /* Gate the clock for the AES/SHA cryptoprocessor */
+  REG(SYS_CTRL_RCGCSEC) &= ~SYS_CTRL_RCGCSEC_AES;
+}
+/*---------------------------------------------------------------------------*/
+bool
+cc_crypto_is_enabled(void)
+{
+  return REG(SYS_CTRL_RCGCSEC) & SYS_CTRL_RCGCSEC_AES;
+}
+/*---------------------------------------------------------------------------*/
 
 /** @} */
-/*---------------------------------------------------------------------------*/
-/** \name Crypto functions
- * @{
- */
-
-/** \brief Enables and resets the AES/SHA cryptoprocessor
- */
-void crypto_init(void);
-
-/** \brief Enables the AES/SHA cryptoprocessor
- */
-void crypto_enable(void);
-
-/** \brief Disables the AES/SHA cryptoprocessor
- * \note Call this function to save power when the cryptoprocessor is unused.
- */
-void crypto_disable(void);
-
-/** @} */
-
-#endif /* CRYPTO_H_ */
-
-/**
- * @}
- * @}
- */

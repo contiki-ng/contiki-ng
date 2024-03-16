@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, ADVANSEE - http://www.advansee.com/
+ * Copyright (c) 2015, Benoît Thébaudeau <benoit.thebaudeau.dev@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,45 +28,22 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 /**
- * \addtogroup cc2538-crypto
+ * \addtogroup cc-crypto
  * @{
  *
  * \file
- * Implementation of the cc2538 AES/SHA cryptoprocessor driver
+ *       Header file of the AES-CCM* driver for CCXXXX MCUs.
  */
-#include "contiki.h"
-#include "dev/sys-ctrl.h"
-#include "dev/crypto.h"
-#include "reg.h"
 
-/*---------------------------------------------------------------------------*/
-void
-crypto_init(void)
-{
-  volatile int i;
+#ifndef CC_CCM_STAR_H_
+#define CC_CCM_STAR_H_
 
-  crypto_enable();
+#include "lib/ccm-star.h"
 
-  /* Reset the AES/SHA cryptoprocessor */
-  REG(SYS_CTRL_SRSEC) |= SYS_CTRL_SRSEC_AES;
-  for(i = 0; i < 16; i++);
-  REG(SYS_CTRL_SRSEC) &= ~SYS_CTRL_SRSEC_AES;
-}
-/*---------------------------------------------------------------------------*/
-void
-crypto_enable(void)
-{
-  /* Enable the clock for the AES/SHA cryptoprocessor */
-  REG(SYS_CTRL_RCGCSEC) |= SYS_CTRL_RCGCSEC_AES;
-}
-/*---------------------------------------------------------------------------*/
-void
-crypto_disable(void)
-{
-  /* Gate the clock for the AES/SHA cryptoprocessor */
-  REG(SYS_CTRL_RCGCSEC) &= ~SYS_CTRL_RCGCSEC_AES;
-}
-/*---------------------------------------------------------------------------*/
+extern const struct ccm_star_driver cc_ccm_star_driver;
+
+#endif /* CC_CCM_STAR_H_ */
 
 /** @} */
