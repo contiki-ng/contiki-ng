@@ -88,6 +88,20 @@ rtimer_arch_schedule_precise(rtimer_clock_t t)
   return schedule(t, false);
 }
 /*---------------------------------------------------------------------------*/
+bool
+rtimer_arch_cancel(void)
+{
+  if(!simRtimerPending) {
+    return false;
+  }
+  rtimer_clock_t soonest_cancelation = RTIMER_NOW() + RTIMER_GUARD_TIME;
+  if(RTIMER_CLOCK_LT(soonest_cancelation, simRtimerNextExpirationTime)) {
+    simRtimerNextExpirationTime = soonest_cancelation;
+    return true;
+  }
+  return false;
+}
+/*---------------------------------------------------------------------------*/
 rtimer_clock_t
 rtimer_arch_next(void)
 {
@@ -103,7 +117,7 @@ rtimer_arch_pending(void)
 int
 rtimer_arch_check(void)
 {
-  if (simRtimerCurrentTicks == simRtimerNextExpirationTime) {
+  if(simRtimerCurrentTicks >= simRtimerNextExpirationTime) {
     /* Execute rtimer */
     simRtimerPending = 0;
     rtimer_run_next();

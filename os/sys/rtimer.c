@@ -106,5 +106,14 @@ rtimer_has_timed_out(rtimer_clock_t timeout)
   return RTIMER_CLOCK_LT(timeout, RTIMER_NOW());
 }
 /*---------------------------------------------------------------------------*/
+bool
+rtimer_cancel(void)
+{
+  if(next_rtimer == NULL) {
+    return false;
+  }
+  return rtimer_arch_cancel();
+}
+/*---------------------------------------------------------------------------*/
 
 /** @}*/

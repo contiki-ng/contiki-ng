@@ -48,6 +48,7 @@
 #include <stdbool.h>
 
 static int schedule(rtimer_clock_t t, bool auto_delay);
+static void set_sleep_timer_value(rtimer_clock_t);
 
 /*---------------------------------------------------------------------------*/
 static volatile rtimer_clock_t next_trigger;
@@ -85,9 +86,6 @@ schedule(rtimer_clock_t t, bool auto_delay)
   int result = RTIMER_OK;
   rtimer_clock_t now;
 
-  /* STLOAD must be 1 */
-  while((REG(SMWDTHROSC_STLOAD) & SMWDTHROSC_STLOAD_STLOAD) != 1);
-
   INTERRUPTS_DISABLE();
 
   now = RTIMER_NOW();
@@ -104,17 +102,9 @@ schedule(rtimer_clock_t t, bool auto_delay)
     }
   }
 
-  atomic_cas_uint8(&busy, 0, 1);
-
   if(result == RTIMER_OK) {
-    /* ST0 latches ST[1:3] and must be written last */
-    REG(SMWDTHROSC_ST3) = (t >> 24) & 0x000000FF;
-    REG(SMWDTHROSC_ST2) = (t >> 16) & 0x000000FF;
-    REG(SMWDTHROSC_ST1) = (t >> 8) & 0x000000FF;
-    REG(SMWDTHROSC_ST0) = t & 0x000000FF;
+    set_sleep_timer_value(t);
   }
-
-  atomic_cas_uint8(&busy, 1, 0);
 
   INTERRUPTS_ENABLE();
 
@@ -127,6 +117,45 @@ schedule(rtimer_clock_t t, bool auto_delay)
 
   NVIC_EnableIRQ(SMT_IRQn);
   return RTIMER_OK;
+}
+/*---------------------------------------------------------------------------*/
+bool
+rtimer_arch_cancel(void)
+{
+  INTERRUPTS_DISABLE();
+
+  rtimer_clock_t soonest_cancelation = RTIMER_NOW() + RTIMER_GUARD_TIME;
+  bool result = RTIMER_CLOCK_LT(soonest_cancelation, next_trigger);
+  if(result) {
+    /* clear STCS so as to enable setting a new sleep timer value */
+    REG(SMWDTHROSC_STCS) = 0;
+    set_sleep_timer_value(soonest_cancelation);
+  }
+
+  INTERRUPTS_ENABLE();
+
+  if(result) {
+    next_trigger = soonest_cancelation;
+  }
+
+  return result;
+}
+/*---------------------------------------------------------------------------*/
+static void
+set_sleep_timer_value(rtimer_clock_t t)
+{
+  atomic_cas_uint8(&busy, 0, 1);
+
+  /* STLOAD must be 1 */
+  while((REG(SMWDTHROSC_STLOAD) & SMWDTHROSC_STLOAD_STLOAD) != 1);
+
+  /* ST0 latches ST[1:3] and must be written last */
+  REG(SMWDTHROSC_ST3) = (t >> 24) & 0x000000FF;
+  REG(SMWDTHROSC_ST2) = (t >> 16) & 0x000000FF;
+  REG(SMWDTHROSC_ST1) = (t >> 8) & 0x000000FF;
+  REG(SMWDTHROSC_ST0) = t & 0x000000FF;
+
+  atomic_cas_uint8(&busy, 1, 0);
 }
 /*---------------------------------------------------------------------------*/
 rtimer_clock_t
