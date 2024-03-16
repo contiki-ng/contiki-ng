@@ -44,6 +44,7 @@
 
 #include "contiki-net.h"
 #include "net/queuebuf.h"
+#include "net/mac/framer/frame802154.h"
 
 #if WITH_SWAP
 #include "cfs/cfs.h"
@@ -455,6 +456,24 @@ queuebuf_attr(struct queuebuf *b, uint8_t type)
 {
   struct queuebuf_data *buframptr = queuebuf_load_to_ram(b);
   return buframptr->attrs[type].val;
+}
+/*---------------------------------------------------------------------------*/
+bool
+queuebuf_holds_data_frame(struct queuebuf *b)
+{
+  return queuebuf_attr(b, PACKETBUF_ATTR_FRAME_TYPE) == FRAME802154_DATAFRAME;
+}
+/*---------------------------------------------------------------------------*/
+bool
+queuebuf_holds_cmd_frame(struct queuebuf *b)
+{
+  return queuebuf_attr(b, PACKETBUF_ATTR_FRAME_TYPE) == FRAME802154_CMDFRAME;
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+queuebuf_get_dispatch_byte(struct queuebuf *b)
+{
+  return ((uint8_t *)queuebuf_dataptr(b))[0];
 }
 /*---------------------------------------------------------------------------*/
 void
