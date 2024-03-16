@@ -179,6 +179,13 @@ int rtimer_set(struct rtimer *task, rtimer_clock_t time,
 void rtimer_run_next(void);
 
 /**
+ * \brief      Tells if a timestamp lies in the past
+ * \param t    The timestamp
+ * \return     true if the timeout lies in the past
+ */
+bool rtimer_has_timed_out(rtimer_clock_t t);
+
+/**
  * \brief      Get the current clock time
  * \return     The current time
  *
