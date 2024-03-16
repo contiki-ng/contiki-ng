@@ -592,7 +592,9 @@ encrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE])
 /*---------------------------------------------------------------------------*/
 const struct aes_128_driver cc2420_aes_128_driver = {
   set_key,
-  encrypt
+  encrypt,
+  aes_128_get_lock,
+  aes_128_release_lock
 };
 /*---------------------------------------------------------------------------*/
 static void

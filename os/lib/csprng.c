@@ -93,18 +93,23 @@ csprng_rand(uint8_t *result, size_t len)
     return true;
   }
 
+  while(!AES_128.get_lock());
   if(!AES_128.set_key(seed.key)) {
-    return false;
+    goto error;
   }
   for(; pos < len; pos += CSPRNG_STATE_LEN) {
     if(!AES_128.encrypt(seed.state)) {
-      return false;
+      goto error;
     }
     read_state_bytes = MIN(len - pos, CSPRNG_STATE_LEN);
     memcpy(result + pos, seed.state, read_state_bytes);
   }
+  AES_128.release_lock();
 
   return true;
+error:
+  AES_128.release_lock();
+  return false;
 }
 /*---------------------------------------------------------------------------*/
 

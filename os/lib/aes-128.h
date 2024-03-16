@@ -55,6 +55,10 @@
 #define AES_128            aes_128_driver
 #endif /* AES_128_CONF */
 
+#ifndef AES_128_CONF_WITH_LOCKING
+#define AES_128_CONF_WITH_LOCKING 0
+#endif /* AES_128_CONF_WITH_LOCKING */
+
 /**
  * Structure of AES drivers.
  */
@@ -71,9 +75,22 @@ struct aes_128_driver {
    * \return True on success.
    */
   bool (* encrypt)(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE]);
+
+  /**
+   * \brief Reserves exclusive access.
+   */
+  bool (* get_lock)(void);
+
+  /**
+   * \brief Unblocks access.
+   */
+  void (* release_lock)(void);
 };
 
 extern const struct aes_128_driver AES_128;
+
+bool aes_128_get_lock(void);
+void aes_128_release_lock(void);
 
 #endif /* AES_128_H_ */
 

@@ -188,9 +188,21 @@ aead(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
   return !forward || ctr(nonce, m, m_len);
 }
 /*---------------------------------------------------------------------------*/
+bool
+ccm_star_can_use_asynchronously(void)
+{
+  if(!CCM_STAR.get_lock()) {
+    return false;
+  }
+  CCM_STAR.release_lock();
+  return true;
+}
+/*---------------------------------------------------------------------------*/
 const struct ccm_star_driver ccm_star_driver = {
   set_key,
-  aead
+  aead,
+  aes_128_get_lock,
+  aes_128_release_lock
 };
 /*---------------------------------------------------------------------------*/
 

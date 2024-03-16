@@ -46,6 +46,7 @@
  */
 
 #include "lib/aes-128.h"
+#include "sys/mutex.h"
 #include <string.h>
 
 static const uint8_t sbox[256] = {
@@ -83,6 +84,9 @@ static const uint8_t sbox[256] = {
   0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
 };
 static uint8_t round_keys[11][AES_128_KEY_LENGTH];
+#if AES_128_CONF_WITH_LOCKING
+static mutex_t lock;
+#endif /* AES_128_CONF_WITH_LOCKING */
 
 /*---------------------------------------------------------------------------*/
 /* multiplies by 2 in GF(2) */
@@ -187,9 +191,29 @@ encrypt(uint8_t state[static AES_128_BLOCK_SIZE])
   return true;
 }
 /*---------------------------------------------------------------------------*/
+bool
+aes_128_get_lock(void)
+{
+#if AES_128_CONF_WITH_LOCKING
+  return mutex_try_lock(&lock);
+#else /* AES_128_CONF_WITH_LOCKING */
+  return true;
+#endif /* AES_128_CONF_WITH_LOCKING */
+}
+/*---------------------------------------------------------------------------*/
+void
+aes_128_release_lock(void)
+{
+#if AES_128_CONF_WITH_LOCKING
+  mutex_unlock(&lock);
+#endif /* AES_128_CONF_WITH_LOCKING */
+}
+/*---------------------------------------------------------------------------*/
 const struct aes_128_driver aes_128_driver = {
   set_key,
-  encrypt
+  encrypt,
+  aes_128_get_lock,
+  aes_128_release_lock
 };
 /*---------------------------------------------------------------------------*/
 
