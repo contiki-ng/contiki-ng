@@ -93,7 +93,7 @@ UNIT_TEST(aesccm_encrypt)
                     buffer + a_len, m_len,
                     buffer, a_len,
                     buffer + a_len + m_len, MICLEN,
-                    1);
+                    true);
 
       success = !memcmp(buffer, ciphertext_bytes, a_len + m_len + MICLEN);
       printf("TEST: encrypt out: %u bytes --- %s\n",
@@ -149,7 +149,7 @@ UNIT_TEST(aesccm_decrypt)
                   buffer + a_len, m_len,
                   buffer, a_len,
                   generated_mic, MICLEN,
-                  0);
+                  false);
 
     auth_check = !memcmp(generated_mic, buffer + a_len + m_len, MICLEN);
     if(hdr_string != NULL && cleartext_string != NULL) {

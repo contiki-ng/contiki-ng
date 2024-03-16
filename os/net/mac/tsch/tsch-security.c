@@ -198,7 +198,7 @@ tsch_security_secure_frame(uint8_t *hdr, uint8_t *outbuf,
   CCM_STAR.aead(nonce,
                 outbuf + a_len, m_len,
                 outbuf, a_len,
-                outbuf + hdrlen + datalen, mic_len, 1);
+                outbuf + hdrlen + datalen, mic_len, true);
 
   return mic_len;
 }
@@ -263,7 +263,7 @@ tsch_security_parse_frame(const uint8_t *hdr, int hdrlen, int datalen,
   CCM_STAR.aead(nonce,
                 (uint8_t *)hdr + a_len, m_len,
                 (uint8_t *)hdr, a_len,
-                generated_mic, mic_len, 0);
+                generated_mic, mic_len, false);
 
   if(mic_len > 0 && memcmp(generated_mic, hdr + hdrlen + datalen, mic_len) != 0) {
     return 0;
