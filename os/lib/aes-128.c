@@ -94,7 +94,7 @@ galois_mul2(uint8_t value)
 }
 /*---------------------------------------------------------------------------*/
 static void
-set_key(const uint8_t *key)
+set_key(const uint8_t key[static AES_128_KEY_LENGTH])
 {
   uint8_t i;
   uint8_t j;
@@ -116,7 +116,7 @@ set_key(const uint8_t *key)
 }
 /*---------------------------------------------------------------------------*/
 static void
-encrypt(uint8_t *state)
+encrypt(uint8_t state[static AES_128_BLOCK_SIZE])
 {
   uint8_t buf1, buf2, buf3, buf4, round, i;
 
