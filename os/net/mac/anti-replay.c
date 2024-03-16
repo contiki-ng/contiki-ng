@@ -49,18 +49,23 @@
 
 #if LLSEC802154_USES_FRAME_COUNTER
 
+#if ANTI_REPLAY_WITH_SUPPRESSION
+uint32_t anti_replay_my_broadcast_counter;
+uint32_t anti_replay_my_unicast_counter;
+#else /* ANTI_REPLAY_WITH_SUPPRESSION */
 /* This node's current frame counter value */
 static uint32_t my_counter;
+#endif /* ANTI_REPLAY_WITH_SUPPRESSION */
 
 /*---------------------------------------------------------------------------*/
-void
-anti_replay_set_counter(void)
+static void
+order_and_set_counter(uint32_t counter)
 {
-  if(++my_counter == UINT32_MAX) {
+  if(counter == UINT32_MAX) {
     watchdog_reboot();
   }
   frame802154_frame_counter_t reordered_counter = {
-    .u32 = LLSEC802154_HTONL(my_counter)
+    .u32 = LLSEC802154_HTONL(counter)
   };
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1,
                      reordered_counter.u16[0]);
@@ -68,16 +73,28 @@ anti_replay_set_counter(void)
                      reordered_counter.u16[1]);
 }
 /*---------------------------------------------------------------------------*/
+void
+anti_replay_set_counter(struct anti_replay_info *receiver_info)
+{
+#if ANTI_REPLAY_WITH_SUPPRESSION
+  if(packetbuf_holds_broadcast()) {
+    order_and_set_counter(++anti_replay_my_broadcast_counter);
+  } else {
+    order_and_set_counter(++receiver_info->my_unicast_counter);
+  }
+#else /* ANTI_REPLAY_WITH_SUPPRESSION */
+  order_and_set_counter(++my_counter);
+#endif /* ANTI_REPLAY_WITH_SUPPRESSION */
+}
+/*---------------------------------------------------------------------------*/
 uint32_t
 anti_replay_get_counter(void)
 {
   frame802154_frame_counter_t disordered_counter;
-
   disordered_counter.u16[0] =
       packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1);
   disordered_counter.u16[1] =
       packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3);
-
   return LLSEC802154_HTONL(disordered_counter.u32);
 }
 /*---------------------------------------------------------------------------*/
@@ -85,6 +102,9 @@ void
 anti_replay_init_info(struct anti_replay_info *info)
 {
   memset(info, 0, sizeof(struct anti_replay_info));
+#if ANTI_REPLAY_WITH_SUPPRESSION
+  info->my_unicast_counter = anti_replay_my_unicast_counter;
+#endif /* ANTI_REPLAY_WITH_SUPPRESSION */
 }
 /*---------------------------------------------------------------------------*/
 bool
@@ -142,6 +162,40 @@ anti_replay_get_counter_lsbs(void)
   return packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1) & 0xFF;
 }
 /*---------------------------------------------------------------------------*/
+#if ANTI_REPLAY_WITH_SUPPRESSION
+void
+anti_replay_write_my_broadcast_counter(uint8_t *dst)
+{
+  frame802154_frame_counter_t reordered_counter = {
+    reordered_counter.u32 =
+        LLSEC802154_HTONL(anti_replay_my_broadcast_counter)
+  };
+  memcpy(dst, reordered_counter.u8, 4);
+}
+/*---------------------------------------------------------------------------*/
+void
+anti_replay_restore_counter(const struct anti_replay_info *info, uint8_t lsbs)
+{
+  frame802154_frame_counter_t copied_counter = {
+    copied_counter.u32 = LLSEC802154_HTONL(packetbuf_holds_broadcast()
+                                           ? info->last_broadcast_counter
+                                           : info->last_unicast_counter)
+  };
+
+  if(lsbs < copied_counter.u8[0]) {
+    copied_counter.u8[1]++;
+    if(!copied_counter.u8[1]) {
+      copied_counter.u8[2]++;
+      if(!copied_counter.u8[2]) {
+        copied_counter.u8[3]++;
+      }
+    }
+  }
+  copied_counter.u8[0] = lsbs;
+  anti_replay_parse_counter(copied_counter.u8);
+}
+/*---------------------------------------------------------------------------*/
+#else /* ANTI_REPLAY_WITH_SUPPRESSION */
 void
 anti_replay_set_counter_to(frame802154_frame_counter_t *counter)
 {
@@ -150,6 +204,7 @@ anti_replay_set_counter_to(frame802154_frame_counter_t *counter)
   }
   counter->u32 = my_counter;
 }
+#endif /* ANTI_REPLAY_WITH_SUPPRESSION */
 /*---------------------------------------------------------------------------*/
 #endif /* LLSEC802154_USES_FRAME_COUNTER */
 

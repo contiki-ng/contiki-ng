@@ -172,7 +172,7 @@ create(void)
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
   if(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) > 0 &&
      LLSEC_KEY_INDEX != 0xffff) {
-    anti_replay_set_counter();
+    anti_replay_set_counter(NULL);
   }
 
   hdr_len = framer_802154.create();
