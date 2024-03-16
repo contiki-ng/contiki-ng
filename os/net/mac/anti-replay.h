@@ -46,6 +46,7 @@
 #define ANTI_REPLAY_H
 
 #include "contiki.h"
+#include <stdbool.h>
 
 struct anti_replay_info {
   uint32_t last_broadcast_counter;
@@ -63,17 +64,16 @@ void anti_replay_set_counter(void);
 uint32_t anti_replay_get_counter(void);
 
 /**
- * \brief Initializes the anti-replay information about the sender
+ * \brief      Initializes the anti-replay information about the sender
  * \param info Anti-replay information about the sender
  */
 void anti_replay_init_info(struct anti_replay_info *info);
 
 /**
- * \brief               Checks if received frame was replayed
- * \param info          Anti-replay information about the sender
- * \retval 0            <-> received frame was not replayed
+ * \brief      Checks if received frame was replayed
+ * \param info Anti-replay information about the sender
  */
-int anti_replay_was_replayed(struct anti_replay_info *info);
+bool anti_replay_was_replayed(struct anti_replay_info *info);
 
 #endif /* ANTI_REPLAY_H */
 

@@ -60,20 +60,24 @@ anti_replay_set_counter(void)
 
   ++counter;
   reordered_counter.u32 = LLSEC802154_HTONL(counter);
-  
-  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1, reordered_counter.u16[0]);
-  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3, reordered_counter.u16[1]);
+
+  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1,
+                     reordered_counter.u16[0]);
+  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3,
+                     reordered_counter.u16[1]);
 }
 /*---------------------------------------------------------------------------*/
 uint32_t
 anti_replay_get_counter(void)
 {
   frame802154_frame_counter_t disordered_counter;
-  
-  disordered_counter.u16[0] = packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1);
-  disordered_counter.u16[1] = packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3);
-  
-  return LLSEC802154_HTONL(disordered_counter.u32); 
+
+  disordered_counter.u16[0] =
+      packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1);
+  disordered_counter.u16[1] =
+      packetbuf_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3);
+
+  return LLSEC802154_HTONL(disordered_counter.u32);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -84,28 +88,26 @@ anti_replay_init_info(struct anti_replay_info *info)
       = anti_replay_get_counter();
 }
 /*---------------------------------------------------------------------------*/
-int
+bool
 anti_replay_was_replayed(struct anti_replay_info *info)
 {
-  uint32_t received_counter;
-  
-  received_counter = anti_replay_get_counter();
-  
+  uint32_t received_counter = anti_replay_get_counter();
+
   if(packetbuf_holds_broadcast()) {
     /* broadcast */
     if(received_counter <= info->last_broadcast_counter) {
-      return 1;
+      return true;
     } else {
       info->last_broadcast_counter = received_counter;
-      return 0;
+      return false;
     }
   } else {
     /* unicast */
     if(received_counter <= info->last_unicast_counter) {
-      return 1;
+      return true;
     } else {
       info->last_unicast_counter = received_counter;
-      return 0;
+      return false;
     }
   }
 }
