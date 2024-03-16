@@ -240,6 +240,11 @@ bool rtimer_has_timed_out(rtimer_clock_t t);
 /** \brief Busy-wait for a fixed duration */
 #define RTIMER_BUSYWAIT(duration) RTIMER_BUSYWAIT_UNTIL(0, duration)
 
+#ifndef RTIMER_BUSYWAIT_UNTIL_TIMEOUT
+#define RTIMER_BUSYWAIT_UNTIL_TIMEOUT(timeout) \
+  while(!rtimer_has_timed_out(timeout))
+#endif /* RTIMER_BUSYWAIT_UNTIL_TIMEOUT */
+
 /*---------------------------------------------------------------------------*/
 
 /**

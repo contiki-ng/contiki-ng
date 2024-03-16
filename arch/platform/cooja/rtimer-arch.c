@@ -30,6 +30,7 @@
  *
  */
 
+#include <assert.h>
 #include <signal.h>
 #include <sys/time.h>
 #include <stddef.h>
@@ -53,6 +54,19 @@ int simRtimerPending;
 rtimer_clock_t simRtimerNextExpirationTime;
 rtimer_clock_t simRtimerCurrentTicks;
 
+/*---------------------------------------------------------------------------*/
+void
+rtimer_arch_busy_wait_until_timeout(rtimer_clock_t timeout)
+{
+  while(!rtimer_has_timed_out(timeout)) {
+    assert(!simRtimerPending);
+    simRtimerNextExpirationTime = timeout + 1;
+    simRtimerPending = 1;
+    simProcessRunValue = 1;
+    cooja_mt_yield();
+    simRtimerPending = 0;
+  }
+}
 /*---------------------------------------------------------------------------*/
 void
 rtimer_arch_init(void)

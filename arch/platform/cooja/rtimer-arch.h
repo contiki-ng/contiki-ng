@@ -63,4 +63,9 @@ rtimer_clock_t rtimer_arch_next(void);
     c;                                                              \
   })
 
+void rtimer_arch_busy_wait_until_timeout(rtimer_clock_t timeout);
+
+#define RTIMER_BUSYWAIT_UNTIL_TIMEOUT(timeout) \
+  rtimer_arch_busy_wait_until_timeout(timeout)
+
 #endif /* RTIMER_ARCH_H_ */
