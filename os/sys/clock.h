@@ -81,11 +81,13 @@
 /* Define clock_time_t before including contiki.h, so etimer.h
  * and other header files have clock_time_t defined. */
 #if CLOCK_SIZE == 4
+#define CLOCK_MAX UINT32_MAX
 typedef uint32_t clock_time_t;
 #define CLOCK_LT(a, b)  ((int32_t)((a) - (b)) < 0)
 #define CLOCK_PRI PRIu32
 #elif CLOCK_SIZE == 8
 typedef uint64_t clock_time_t;
+#define CLOCK_MAX UINT64_MAX
 #define CLOCK_LT(a, b)  ((int64_t)((a) - (b)) < 0)
 #define CLOCK_PRI PRIu64
 #else
@@ -154,6 +156,11 @@ void clock_wait(clock_time_t t);
  * \note Interrupts could increase the delay by a variable amount.
  */
 void clock_delay_usec(uint16_t dt);
+
+/**
+ * \brief Generates a random clock_time_t value.
+ */
+clock_time_t clock_random(clock_time_t max);
 
 /**
  * Deprecated platform-specific routines.
