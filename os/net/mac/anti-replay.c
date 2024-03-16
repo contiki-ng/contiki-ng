@@ -82,9 +82,7 @@ anti_replay_get_counter(void)
 void
 anti_replay_init_info(struct anti_replay_info *info)
 {
-  info->last_broadcast_counter
-      = info->last_unicast_counter
-      = anti_replay_get_counter();
+  memset(info, 0, sizeof(struct anti_replay_info));
 }
 /*---------------------------------------------------------------------------*/
 bool
