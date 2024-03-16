@@ -53,6 +53,9 @@
 #include "lib/list.h"
 #include "lib/memb.h"
 #include "lib/assert.h"
+#include "services/akes/akes-mac.h"
+#include "services/akes/akes-delete.h"
+#include "services/akes/akes-nbr.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -232,6 +235,12 @@ send_one_packet(struct neighbor_queue *n, struct packet_queue *q)
               if(len == CSMA_ACK_LEN && ackbuf[2] == dsn) {
                 /* Ack received */
                 ret = MAC_TX_OK;
+#if AKES_MAC_ENABLED
+                akes_nbr_entry_t *entry = akes_nbr_get_receiver_entry();
+                if(!akes_mac_is_helloack() && entry && entry->permanent) {
+                  AKES_DELETE_STRATEGY.prolong_permanent_neighbor(entry->permanent);
+                }
+#endif /* AKES_MAC_ENABLED */
               } else {
                 /* Not an ack or ack not for us: collision */
                 ret = MAC_TX_COLLISION;
@@ -451,8 +460,10 @@ csma_output_packet(mac_callback_t sent, void *ptr)
   struct neighbor_queue *n;
   const linkaddr_t *addr = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
 
+#if !AKES_MAC_ENABLED
   mac_sequence_set_dsn();
   packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
+#endif /* !AKES_MAC_ENABLED */
 
   /* Look for the neighbor entry */
   n = neighbor_queue_from_addr(addr);
