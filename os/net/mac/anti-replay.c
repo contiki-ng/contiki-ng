@@ -112,6 +112,13 @@ anti_replay_was_replayed(struct anti_replay_info *info)
   }
 }
 /*---------------------------------------------------------------------------*/
+void
+anti_replay_parse_counter(const uint8_t *p)
+{
+  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1, p[0] | p[1] << 8);
+  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3, p[2] | p[3] << 8);
+}
+/*---------------------------------------------------------------------------*/
 #endif /* LLSEC802154_USES_FRAME_COUNTER */
 
 /** @} */

@@ -75,6 +75,11 @@ void anti_replay_init_info(struct anti_replay_info *info);
  */
 bool anti_replay_was_replayed(struct anti_replay_info *info);
 
+/**
+ * \brief Parses the frame counter to packetbuf attributes
+ */
+void anti_replay_parse_counter(const uint8_t *p);
+
 #endif /* ANTI_REPLAY_H */
 
 /** @} */
