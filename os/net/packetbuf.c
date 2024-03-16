@@ -45,6 +45,7 @@
 #include <string.h>
 
 #include "contiki-net.h"
+#include "net/mac/framer/frame802154.h"
 #include "net/packetbuf.h"
 #include "sys/cc.h"
 
@@ -220,6 +221,24 @@ packetbuf_holds_broadcast(void)
   return linkaddr_cmp(
       &packetbuf->addrs[PACKETBUF_ADDR_RECEIVER - PACKETBUF_ADDR_FIRST].addr,
       &linkaddr_null);
+}
+/*---------------------------------------------------------------------------*/
+bool
+packetbuf_holds_data_frame(void)
+{
+  return packetbuf_attr(PACKETBUF_ATTR_FRAME_TYPE) == FRAME802154_DATAFRAME;
+}
+/*---------------------------------------------------------------------------*/
+bool
+packetbuf_holds_cmd_frame(void)
+{
+  return packetbuf_attr(PACKETBUF_ATTR_FRAME_TYPE) == FRAME802154_CMDFRAME;
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+packetbuf_get_dispatch_byte(void)
+{
+  return ((uint8_t *)packetbuf_dataptr())[0];
 }
 /*---------------------------------------------------------------------------*/
 

@@ -293,6 +293,23 @@ const linkaddr_t *packetbuf_addr(uint8_t type);
  */
 bool              packetbuf_holds_broadcast(void);
 
+/**
+ * \brief       Checks whether the current packet is a data frame.
+ * \retval true iff the current packet is a data frame
+ */
+bool              packetbuf_holds_data_frame(void);
+
+/**
+ * \brief       Checks whether the current packet is a MAC command frame.
+ * \retval true iff the current packet is a MAC command frame
+ */
+bool              packetbuf_holds_cmd_frame(void);
+
+/**
+ * \brief Returns the first byte of the payload.
+ */
+uint8_t           packetbuf_get_dispatch_byte(void);
+
 void              packetbuf_attr_clear(void);
 
 void              packetbuf_attr_copyto(struct packetbuf_attr *attrs,
