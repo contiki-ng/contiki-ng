@@ -50,6 +50,18 @@ const linkaddr_t linkaddr_null;
 
 /*---------------------------------------------------------------------------*/
 void
+linkaddr_write(uint8_t dest[static LINKADDR_SIZE], const linkaddr_t *src)
+{
+  memcpy(dest, src->u8, LINKADDR_SIZE);
+}
+/*---------------------------------------------------------------------------*/
+void
+linkaddr_read(linkaddr_t *dest, uint8_t src[static LINKADDR_SIZE])
+{
+  memcpy(dest->u8, src, LINKADDR_SIZE);
+}
+/*---------------------------------------------------------------------------*/
+void
 linkaddr_copy(linkaddr_t *dest, const linkaddr_t *src)
 {
 	memcpy(dest, src, LINKADDR_SIZE);
