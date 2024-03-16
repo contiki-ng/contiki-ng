@@ -54,13 +54,6 @@ struct packetbuf *packetbuf = &temp;
 static uint16_t buflen, bufptr;
 static uint8_t hdrlen;
 
-/* The declarations below ensure that the packet buffer is aligned on
-   an even 32-bit boundary. On some platforms (most notably the
-   msp430 or OpenRISC), having a potentially misaligned packet buffer may lead to
-   problems when accessing words. */
-static uint32_t packetbuf_aligned[(PACKETBUF_SIZE + 3) / 4];
-static uint8_t *pb = (uint8_t *)packetbuf_aligned;
-
 #define DEBUG 0
 #if DEBUG
 #include <stdio.h>
@@ -86,7 +79,7 @@ packetbuf_copyfrom(const void *from, uint16_t len)
 
   packetbuf_clear();
   l = MIN(PACKETBUF_SIZE, len);
-  memcpy(pb, from, l);
+  memcpy(packetbuf->data, from, l);
   buflen = l;
   return l;
 }
@@ -113,7 +106,7 @@ packetbuf_hdralloc(int size)
 
   /* shift data to the right */
   for(i = packetbuf_totlen() - 1; i >= 0; i--) {
-    pb[i + size] = pb[i];
+    packetbuf->data[i + size] = packetbuf->data[i];
   }
   hdrlen += size;
   return 1;
@@ -141,13 +134,13 @@ packetbuf_set_datalen(uint16_t len)
 void *
 packetbuf_dataptr(void)
 {
-  return pb + packetbuf_hdrlen();
+  return packetbuf->data + packetbuf_hdrlen();
 }
 /*---------------------------------------------------------------------------*/
 void *
 packetbuf_hdrptr(void)
 {
-  return pb;
+  return packetbuf->data;
 }
 /*---------------------------------------------------------------------------*/
 uint16_t
