@@ -44,6 +44,7 @@
 #define ANTI_REPLAY_H
 
 #include "contiki.h"
+#include "net/mac/framer/frame802154.h"
 #include <stdbool.h>
 
 struct anti_replay_info {
@@ -77,6 +78,26 @@ bool anti_replay_was_replayed(struct anti_replay_info *info);
  * \brief Parses the frame counter to packetbuf attributes
  */
 void anti_replay_parse_counter(const uint8_t *p);
+
+/**
+ * \brief Writes the frame counter of packetbuf to dst
+ */
+void anti_replay_write_counter(uint8_t *dst);
+
+/**
+ * \brief Reads the frame counter from the specified destination.
+ */
+uint32_t anti_replay_read_counter(const uint8_t *src);
+
+/**
+ * \brief Gets the LSBs of the packetbuf's frame counter
+ */
+uint8_t anti_replay_get_counter_lsbs(void);
+
+/**
+ * \brief Increments frame counter and stores it in counter
+ */
+void anti_replay_set_counter_to(frame802154_frame_counter_t *counter);
 
 #endif /* ANTI_REPLAY_H */
 
