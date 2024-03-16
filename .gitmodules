@@ -12,7 +12,7 @@
 	url = https://github.com/g-oikonomou/sensniff.git
 [submodule "tools/cooja"]
 	path = tools/cooja
-	url = https://github.com/contiki-ng/cooja.git
+	url = https://github.com/kkrentz/cooja.git
 [submodule "tests/18-coap-lwm2m/example-lwm2m-standalone"]
 	path = tests/18-coap-lwm2m/example-lwm2m-standalone
 	url = https://github.com/contiki-ng/example-lwm2m-standalone.git

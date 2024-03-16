@@ -211,7 +211,9 @@
 #define RFCORE_XREG_FRMCTRL0_AUTOACK 0x00000020 /**< Transmit ACK frame enable */
 #define RFCORE_XREG_FRMCTRL0_ENERGY_SCAN 0x00000010 /**< RSSI register content control */
 #define RFCORE_XREG_FRMCTRL0_RX_MODE 0x0000000C /**< Set RX modes */
+#define RFCORE_XREG_FRMCTRL0_RX_MODE_LOOP 0x00000008 /**< Set loop mode */
 #define RFCORE_XREG_FRMCTRL0_TX_MODE 0x00000003 /**< Set test modes for TX */
+#define RFCORE_XREG_FRMCTRL0_TX_MODE_LOOP 0x00000002 /**< Set loop mode */
 /** @} */
 /*---------------------------------------------------------------------------*/
 /** \name RFCORE_XREG_FRMCTRL1 register bit masks

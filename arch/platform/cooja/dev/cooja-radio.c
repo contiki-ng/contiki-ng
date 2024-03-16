@@ -28,6 +28,7 @@
  *
  */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -42,6 +43,10 @@
 
 #include "dev/radio.h"
 #include "dev/cooja-radio.h"
+
+#include "sys/log.h"
+#define LOG_MODULE "cooja-radio"
+#define LOG_LEVEL LOG_LEVEL_NONE
 
 /*
  * The maximum number of bytes this driver can accept from the MAC layer for
@@ -76,12 +81,16 @@ enum {
 };
 
 /* COOJA */
-char simReceiving = 0;
-char simInDataBuffer[COOJA_RADIO_BUFSIZE];
-int simInSize = 0;
+int simReceiving = 0;
+char simInDataBuffer[RADIO_HEADER_LEN + RADIO_MAX_PAYLOAD];
+int simReceivedBytes = 0;
+int simPendingIncomingFrame = 0;
 rtimer_clock_t simLastPacketTimestamp = 0;
-char simOutDataBuffer[COOJA_RADIO_BUFSIZE];
-int simOutSize = 0;
+int simTransmitting;
+char simOutDataBuffer[RADIO_HEADER_LEN + RADIO_MAX_PAYLOAD];
+int simIsSequence = 0;
+int simStopSequence = 0;
+int simPendingOutgoingFrame = 0;
 char simRadioHWOn = 1;
 int simSignalStrength       = RSSI_NO_SIGNAL;
 int simLastSignalStrength   = RSSI_NO_SIGNAL;
@@ -89,6 +98,14 @@ char simPower = 100;
 int simRadioChannel = MAX_CHANNEL;
 int simLQI      = LQI_NO_SIGNAL;
 int simLastLQI  = LQI_NO_SIGNAL;
+int simShrSearching = RADIO_SHR_SEARCH_EN;
+int simShrInterrupt = 0;
+int simFifopInterrupt = 0;
+int simFifopThreshold = RADIO_MAX_PAYLOAD;
+int simTxdoneInterrupt = 0;
+int simRxdoneInterrupt = 0;
+int simAutoCrc = 1;
+int simShallEnterRxAfterTx = 0;
 
 
 
@@ -99,6 +116,11 @@ static int poll_mode = 0; /* default 0, disabled */
 static int auto_ack = 0; /* AUTO_ACK is not supported; always 0 */
 static int addr_filter = 0; /* ADDRESS_FILTER is not supported; always 0 */
 static int send_on_cca = (COOJA_TRANSMIT_ON_CCA != 0);
+static radio_shr_callback_t shr_callback;
+static radio_fifop_callback_t fifop_callback;
+static radio_txdone_callback_t txdone_callback;
+static uint_fast16_t read_bytes;
+static uint_fast8_t sequence_pos;
 
 PROCESS(cooja_radio_process, "cooja radio process");
 /*---------------------------------------------------------------------------*/
@@ -132,6 +154,12 @@ radio_set_channel(int channel)
   simRadioChannel = channel;
 }
 /*---------------------------------------------------------------------------*/
+static void
+set_shr_search(int enable)
+{
+  simShrSearching = enable;
+}
+/*---------------------------------------------------------------------------*/
 void
 radio_set_txpower(unsigned char power)
 {
@@ -156,13 +184,12 @@ radio_LQI(void)
 {
   return simLQI;
 }
-
+/*---------------------------------------------------------------------------*/
 static
 int radio_lqi_last(void)
 {
   return simLastLQI;
 }
-
 /*---------------------------------------------------------------------------*/
 static int
 radio_on(void)
@@ -176,49 +203,71 @@ static int
 radio_off(void)
 {
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
+  ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
   simRadioHWOn = 0;
+  simPendingOutgoingFrame = 0;
   return 1;
 }
 /*---------------------------------------------------------------------------*/
-static void
-doInterfaceActionsBeforeTick(void)
+void
+cooja_radio_check(void)
 {
   if(!simRadioHWOn) {
-    simInSize = 0;
-    return;
-  }
-  if(simReceiving) {
+    simPendingIncomingFrame = 0;
+  } else if(simReceiving) {
     simLastSignalStrength = simSignalStrength;
-    simLastLQI              = simLQI;
-    return;
+    simLastLQI = simLQI;
   }
 
-  if(simInSize > 0) {
+  /* acknowledge interrupts */
+  if(simShrInterrupt) {
+    simShrInterrupt = 0;
+    if(shr_callback) {
+      shr_callback();
+    }
+  }
+  if(simFifopInterrupt) {
+    simFifopInterrupt = 0;
+    if(fifop_callback) {
+      fifop_callback();
+    }
+  }
+  if(simRxdoneInterrupt) {
+    simRxdoneInterrupt = 0;
+    if(fifop_callback) {
+      fifop_callback();
+    }
     process_poll(&cooja_radio_process);
+  }
+  if(simTxdoneInterrupt) {
+    simTxdoneInterrupt = 0;
+    if(simShallEnterRxAfterTx) {
+      ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
+    } else {
+      ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
+    }
+    if(txdone_callback) {
+      txdone_callback();
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
 static int
 radio_read(void *buf, unsigned short bufsize)
 {
-  int tmp = simInSize;
-
-  if(simInSize == 0) {
+  if(!simPendingIncomingFrame) {
     return 0;
   }
-  if(bufsize < simInSize) {
-    simInSize = 0; /* rx flush */
+  simPendingIncomingFrame = 0; /* rx flush */
+  if(bufsize < simInDataBuffer[0]) {
     return 0;
   }
-
-  memcpy(buf, simInDataBuffer, simInSize);
-  simInSize = 0;
+  memcpy(buf, simInDataBuffer + 1, simInDataBuffer[0]);
   if(!poll_mode) {
     packetbuf_set_attr(PACKETBUF_ATTR_RSSI, radio_signal_strength_last());
     packetbuf_set_attr(PACKETBUF_ATTR_LINK_QUALITY, radio_lqi_last() );
   }
-
-  return tmp;
+  return simInDataBuffer[0];
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -234,7 +283,6 @@ static int
 radio_send(const void *payload, unsigned short payload_len)
 {
   int result;
-  int radio_was_on = simRadioHWOn;
 
   if(payload_len > COOJA_RADIO_BUFSIZE) {
     return RADIO_TX_ERR;
@@ -242,11 +290,12 @@ radio_send(const void *payload, unsigned short payload_len)
   if(payload_len == 0) {
     return RADIO_TX_ERR;
   }
-  if(simOutSize > 0) {
+  if(simPendingOutgoingFrame) {
     return RADIO_TX_ERR;
   }
 
-  if(radio_was_on) {
+  simShallEnterRxAfterTx = simRadioHWOn;
+  if(simRadioHWOn) {
     ENERGEST_SWITCH(ENERGEST_TYPE_LISTEN, ENERGEST_TYPE_TRANSMIT);
   } else {
     /* Turn on radio temporarily */
@@ -268,24 +317,25 @@ radio_send(const void *payload, unsigned short payload_len)
     result = RADIO_TX_COLLISION;
   } else {
     /* Copy packet data to temporary storage */
-    memcpy(simOutDataBuffer, payload, payload_len);
-    simOutSize = payload_len;
+    simOutDataBuffer[0] = payload_len;
+    memcpy(simOutDataBuffer + 1, payload, payload_len);
+    simPendingOutgoingFrame = 1;
 
     /* Transmit */
-    while(simOutSize > 0) {
+    do {
+      simProcessRunValue = 1;
       cooja_mt_yield();
-    }
+    } while(simTransmitting);
 
     result = RADIO_TX_OK;
   }
 
-  if(radio_was_on) {
+  if(simShallEnterRxAfterTx) {
     ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
   } else {
     ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
   }
 
-  simRadioHWOn = radio_was_on;
   return result;
 }
 /*---------------------------------------------------------------------------*/
@@ -318,7 +368,7 @@ receiving_packet(void)
 static int
 pending_packet(void)
 {
-  return !simReceiving && simInSize > 0;
+  return !simReceiving && simPendingIncomingFrame;
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(cooja_radio_process, ev, data)
@@ -441,6 +491,12 @@ set_value(radio_param_t param, radio_value_t value)
      * */
     radio_set_channel(value);
     return RADIO_RESULT_OK;
+  case RADIO_PARAM_SHR_SEARCH:
+    if((value != RADIO_SHR_SEARCH_EN) && (value != RADIO_SHR_SEARCH_DIS)) {
+      return RADIO_RESULT_INVALID_VALUE;
+    }
+    set_shr_search(value);
+    return RADIO_RESULT_OK;
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
   }
@@ -465,22 +521,199 @@ set_object(radio_param_t param, const void *src, size_t size)
   return RADIO_RESULT_NOT_SUPPORTED;
 }
 /*---------------------------------------------------------------------------*/
-const struct radio_driver cooja_radio_driver =
+static radio_async_result_t
+async_enter(void)
 {
-    init,
-    prepare_packet,
-    transmit_packet,
-    radio_send,
-    radio_read,
-    channel_clear,
-    receiving_packet,
-    pending_packet,
-    radio_on,
-    radio_off,
-    get_value,
-    set_value,
-    get_object,
-    set_object
+  radio_off();
+  poll_mode = 1;
+  simAutoCrc = 0;
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_prepare(uint8_t *payload, uint_fast16_t payload_len)
+{
+  if(payload_len > RADIO_MAX_PAYLOAD) {
+    return RADIO_ASYNC_INVALID_PARAMETER;
+  }
+  simOutDataBuffer[0] = payload_len;
+  memcpy(simOutDataBuffer + 1, payload, payload_len);
+  simIsSequence = 0;
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_reprepare(uint_fast16_t offset, uint8_t *patch, uint_fast16_t patch_len)
+{
+  if((offset + patch_len) > RADIO_MAX_PAYLOAD) {
+    return RADIO_ASYNC_INVALID_PARAMETER;
+  }
+  memcpy(simOutDataBuffer + RADIO_HEADER_LEN + offset, patch, patch_len);
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_transmit(bool shall_enter_rx_after_tx)
+{
+  simShallEnterRxAfterTx = shall_enter_rx_after_tx;
+  simRadioHWOn = 1;
+  simPendingOutgoingFrame = 1;
+  ENERGEST_SWITCH(ENERGEST_TYPE_LISTEN, ENERGEST_TYPE_TRANSMIT);
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_on(void)
+{
+  if(simRadioHWOn) {
+    LOG_WARN("already on\n");
+    return RADIO_ASYNC_REDUNDANT_CALL;
+  }
+  ENERGEST_ON(ENERGEST_TYPE_LISTEN);
+  simRadioHWOn = 1;
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_off(void)
+{
+  if(!simRadioHWOn) {
+    LOG_WARN("already off\n");
+    return RADIO_ASYNC_REDUNDANT_CALL;
+  }
+  radio_off();
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static void
+async_set_shr_callback(radio_shr_callback_t cb)
+{
+  shr_callback = cb;
+}
+/*---------------------------------------------------------------------------*/
+static void
+async_set_fifop_callback(radio_fifop_callback_t cb, uint_fast16_t threshold)
+{
+  if(threshold > RADIO_MAX_PAYLOAD) {
+    LOG_WARN("truncating FIFOP threshold\n");
+    threshold = RADIO_MAX_PAYLOAD;
+  }
+  fifop_callback = cb;
+  simFifopThreshold = threshold;
+}
+/*---------------------------------------------------------------------------*/
+static void
+async_set_txdone_callback(radio_txdone_callback_t cb)
+{
+  txdone_callback = cb;
+}
+/*---------------------------------------------------------------------------*/
+static uint_fast16_t
+async_read_phy_header(void)
+{
+  while(!simReceivedBytes) {
+    simProcessRunValue = 1;
+    cooja_mt_yield();
+  }
+  read_bytes = 0;
+  return simInDataBuffer[0];
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_read_payload(uint8_t *buf, uint_fast16_t bytes)
+{
+  if(simInDataBuffer[0] < bytes) {
+    return RADIO_ASYNC_INVALID_PARAMETER;
+  }
+  while(simReceivedBytes - RADIO_HEADER_LEN - read_bytes < bytes) {
+    simProcessRunValue = 1;
+    cooja_mt_yield();
+  }
+  memcpy(buf, simInDataBuffer + RADIO_HEADER_LEN + read_bytes, bytes);
+  read_bytes += bytes;
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static uint_fast16_t
+async_read_payload_bytes(void)
+{
+  return read_bytes;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_prepare_sequence(uint8_t *sequence, uint_fast16_t sequence_len)
+{
+  if(sequence_len > RADIO_MAX_SEQUENCE_LEN) {
+    return RADIO_ASYNC_INVALID_PARAMETER;
+  }
+  memcpy(simOutDataBuffer,
+         sequence + RADIO_SHR_LEN,
+         sequence_len - RADIO_SHR_LEN);
+  sequence_pos = (sequence_len - RADIO_SHR_LEN) & 0x7F;
+  simIsSequence = 1;
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_append_to_sequence(uint8_t *appendix, uint_fast16_t appendix_len)
+{
+  if(appendix_len > RADIO_MAX_SEQUENCE_LEN) {
+    return RADIO_ASYNC_INVALID_PARAMETER;
+  }
+  for(uint_fast16_t i = 0; i < appendix_len; i++) {
+    simOutDataBuffer[0x7F & sequence_pos++] = appendix[i];
+  }
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_transmit_sequence(void)
+{
+  return async_transmit(false);
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_finish_sequence(void)
+{
+  simStopSequence = 1;
+  while(simStopSequence) {
+    simProcessRunValue = 1;
+    cooja_mt_yield();
+  }
+  ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+const struct radio_driver cooja_radio_driver = {
+  init,
+  prepare_packet,
+  transmit_packet,
+  radio_send,
+  radio_read,
+  channel_clear,
+  receiving_packet,
+  pending_packet,
+  radio_on,
+  radio_off,
+  get_value,
+  set_value,
+  get_object,
+  set_object,
+  async_enter,
+  async_prepare,
+  async_reprepare,
+  async_transmit,
+  async_on,
+  async_off,
+  async_set_shr_callback,
+  async_set_fifop_callback,
+  async_set_txdone_callback,
+  async_read_phy_header,
+  async_read_payload,
+  async_read_payload_bytes,
+  async_prepare_sequence,
+  async_append_to_sequence,
+  async_transmit_sequence,
+  async_finish_sequence
 };
 /*---------------------------------------------------------------------------*/
-COOJA_PRE_TICK_ACTION(COOJA_RADIO_INIT_PRIO, doInterfaceActionsBeforeTick)
