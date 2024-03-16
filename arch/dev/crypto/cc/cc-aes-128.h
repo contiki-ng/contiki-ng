@@ -51,6 +51,7 @@
 #define CC_AES_128_KEY_AREA 0
 #endif /* CC_AES_128_CONF_KEY_AREA */
 
+extern uint_fast8_t cc_aes_128_active_key_area;
 extern const struct aes_128_driver cc_aes_128_driver;
 
 #endif /* CC_AES_128_H_ */

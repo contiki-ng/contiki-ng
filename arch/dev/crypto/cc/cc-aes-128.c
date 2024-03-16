@@ -49,6 +49,8 @@
 #define LOG_MODULE "cc-aes-128"
 #define LOG_LEVEL LOG_LEVEL_NONE
 
+uint_fast8_t cc_aes_128_active_key_area = CC_AES_128_KEY_AREA;
+
 /*---------------------------------------------------------------------------*/
 static bool
 set_key(const uint8_t key[static AES_128_KEY_LENGTH])
@@ -74,9 +76,10 @@ set_key(const uint8_t key[static AES_128_KEY_LENGTH])
    * value because CC_CRYPTO_KEY_STORE_SIZE_KEY_SIZE_128 is the reset value.
    * Moreover, this would clear all other loaded keys. */
   /* clear key to write */
-  cc_crypto->key_store.written_area = 1 << CC_AES_128_KEY_AREA;
+  uint32_t area_mask = 1 << cc_aes_128_active_key_area;
+  cc_crypto->key_store.written_area = area_mask;
   /* enable key to write */
-  cc_crypto->key_store.write_area = 1 << CC_AES_128_KEY_AREA;
+  cc_crypto->key_store.write_area = area_mask;
 
   /* configure DMAC */
   /* enable DMA channel 0 */
@@ -106,7 +109,7 @@ set_key(const uint8_t key[static AES_128_KEY_LENGTH])
   }
 
   /* check that key was written */
-  if(!(cc_crypto->key_store.written_area & 1 << CC_AES_128_KEY_AREA)) {
+  if(!(cc_crypto->key_store.written_area & area_mask)) {
     LOG_ERR("error at line %d\n", __LINE__);
     goto exit;
   }
@@ -146,7 +149,7 @@ encrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE])
   cc_crypto->ctrl.alg_sel = CC_CRYPTO_CTRL_ALG_SEL_AES;
 
   /* configure the key store to provide pre-loaded AES key */
-  cc_crypto->key_store.read_area = CC_AES_128_KEY_AREA;
+  cc_crypto->key_store.read_area = cc_aes_128_active_key_area;
 
   /* wait until the key is loaded to the AES module */
   while(cc_crypto->key_store.read_area & CC_CRYPTO_KEY_STORE_READ_AREA_BUSY);
