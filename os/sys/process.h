@@ -53,12 +53,14 @@
 #ifndef PROCESS_H_
 #define PROCESS_H_
 
+#include <stdbool.h>
+
 #include "sys/pt.h"
 #include "sys/cc.h"
 
-typedef unsigned char process_event_t;
+typedef uint8_t       process_event_t;
 typedef void *        process_data_t;
-typedef unsigned char process_num_events_t;
+typedef uint8_t       process_num_events_t;
 
 /**
  * \name Return values
@@ -88,6 +90,20 @@ typedef unsigned char process_num_events_t;
 #define PROCESS_CONF_NUMEVENTS 32
 #endif /* PROCESS_CONF_NUMEVENTS */
 
+/*
+ * The process_num_events_t type is an uint8_t. It must be able store
+ * the value of PROCESS_CONF_NUMEVENTS + 1, for the additional
+ * boolean value indicating whether a poll has been requested.
+ */
+#if PROCESS_CONF_NUMEVENTS > 128
+#error PROCESS_CONF_NUMEVENTS must be at most 128.
+#endif
+
+/* This requirement allows the compiler to optimize modulo operations. */
+#if PROCESS_CONF_NUMEVENTS & (PROCESS_CONF_NUMEVENTS - 1)
+#error PROCESS_CONF_NUMEVENTS must be a power of 2.
+#endif
+
 #define PROCESS_EVENT_NONE            0x80
 #define PROCESS_EVENT_INIT            0x81
 #define PROCESS_EVENT_POLL            0x82
@@ -101,7 +117,6 @@ typedef unsigned char process_num_events_t;
 #define PROCESS_EVENT_MAX             0x8a
 
 #define PROCESS_BROADCAST NULL
-#define PROCESS_ZOMBIE ((struct process *)0x1)
 
 /**
  * \name Process protothread functions
@@ -318,11 +333,12 @@ struct process {
 #define PROCESS_NAME_STRING(process) ""
 #else
   const char *name;
-#define PROCESS_NAME_STRING(process) (process)->name
+#define PROCESS_NAME_STRING(process) ((process) != NULL ? (process)->name : "")
 #endif
   PT_THREAD((* thread)(struct pt *, process_event_t, process_data_t));
   struct pt pt;
-  unsigned char state, needspoll;
+  uint8_t state;
+  bool needspoll;
 };
 
 /**
@@ -503,7 +519,7 @@ void process_init(void);
  * \return The number of events that are currently waiting in the
  * event queue.
  */
-int process_run(void);
+process_num_events_t process_run(void);
 
 
 /**
@@ -512,10 +528,10 @@ int process_run(void);
  * This function checks if a specific process is running.
  *
  * \param p The process.
- * \retval Non-zero if the process is running.
- * \retval Zero if the process is not running.
+ * \retval true if the process is running.
+ * \retval false if the process is not running.
  */
-int process_is_running(struct process *p);
+bool process_is_running(struct process *p);
 
 /**
  *  Number of events waiting to be processed.
@@ -523,7 +539,7 @@ int process_is_running(struct process *p);
  * \return The number of events that are currently waiting to be
  * processed.
  */
-int process_nevents(void);
+process_num_events_t process_nevents(void);
 
 /** @} */
 
