@@ -175,7 +175,7 @@ main(void)
   platform_main_loop();
 #else
   while(1) {
-    uint8_t r;
+    process_num_events_t r;
     do {
       r = process_run();
       watchdog_periodic();

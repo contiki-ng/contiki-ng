@@ -96,10 +96,10 @@ tz_api_poll(void)
   }
   is_poll_running = true;
 
-  int event_count = process_nevents();
+  process_num_events_t event_count = process_nevents();
 
   if(event_count > 0) {
-    LOG_DBG("Processing %d event%s at %lu\n", event_count,
+    LOG_DBG("Processing %u event%s at %lu\n", event_count,
 	    event_count == 1 ? "" : "s", (unsigned long)clock_time());
   }
 
