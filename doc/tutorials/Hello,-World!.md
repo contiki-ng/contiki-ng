@@ -12,7 +12,7 @@ To run `hello-world` in native mode, type:
 ```shell
 $ cd examples/hello-world
 $ make TARGET=native
-$ ./hello-world.native
+$ build/native/hello-world.native
 ```
 
 You first see the Contiki-NG boot messages and then a line with the string "Hello, world". This line will repeat periodically. Contiki-NG debugging messages will also be printed. Note that the warning regarding opening the tun device can be ignored, as this example does not depend on the networking functionality.

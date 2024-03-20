@@ -20,7 +20,7 @@
       <source>[CONTIKI_DIR]/examples/hello-world/hello-world.c</source>
       <commands>$(MAKE) TARGET=z1 clean
 $(MAKE) -j$(CPUS) hello-world.z1 TARGET=z1</commands>
-      <firmware>[CONTIKI_DIR]/examples/hello-world/hello-world.z1</firmware>
+      <firmware>[CONTIKI_DIR]/examples/hello-world/build/z1/hello-world.z1</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>

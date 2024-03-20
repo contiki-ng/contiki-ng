@@ -10,7 +10,7 @@ IPADDR=fd00::302:304:506:708
 
 # Starting Contiki-NG native node
 echo "Starting native node"
-sudo $CONTIKI/examples/hello-world/hello-world.native &
+sudo $CONTIKI/examples/hello-world/build/native/hello-world.native &
 CPID=$!
 sleep 2
 

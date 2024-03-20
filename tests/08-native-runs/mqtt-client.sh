@@ -41,7 +41,7 @@ sleep 2
 
 # Starting Contiki-NG native node
 echo "Starting native node"
-sudo $VALGRIND_CMD $CODE_DIR/$CODE.native > $CLIENT_LOG 2> $CLIENT_ERR &
+sudo $VALGRIND_CMD $CODE_DIR/build/native/$CODE.native > $CLIENT_LOG 2> $CLIENT_ERR &
 CPID=$!
 
 # The mqtt-client will publish every 30 secs. Wait for 45

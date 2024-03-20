@@ -41,17 +41,17 @@ Should Talk Over Wireless Network
     Execute Command             emulation CreateIEEE802_15_4Medium "wireless"
     Execute Command             wireless SetRangeWirelessFunction 11
 
-    Create Machine              @${CURDIR}/udp-server.cc2538dk       "server"      1
+    Create Machine              @${CURDIR}/build/cc2538dk/udp-server.cc2538dk       "server"      1
     Execute Command             wireless SetPosition radio 0 0 0
     ${server-tester}=           Create Terminal Tester      ${UART}     machine=server
     Execute Command             mach clear
 
-    Create Machine              @${CURDIR}/udp-client.cc2538dk       "client-1"    2
+    Create Machine              @${CURDIR}/build/cc2538dk/udp-client.cc2538dk       "client-1"    2
     Execute Command             wireless SetPosition radio 10 0 0
     ${client1-tester}=          Create Terminal Tester      ${UART}     machine=client-1
     Execute Command             mach clear
 
-    Create Machine              @${CURDIR}/udp-client.cc2538dk       "client-2"    3
+    Create Machine              @${CURDIR}/build/cc2538dk/udp-client.cc2538dk       "client-2"    3
     Execute Command             wireless SetPosition radio 0 10 0
     ${client2-tester}=          Create Terminal Tester      ${UART}     machine=client-2
     Execute Command             mach clear
