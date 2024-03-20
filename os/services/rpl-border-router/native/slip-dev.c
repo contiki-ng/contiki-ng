@@ -55,8 +55,8 @@
 #include "net/packetbuf.h"
 #include "cmd.h"
 #include "border-router-cmds.h"
+#include "sys/platform.h"
 
-extern int slip_config_verbose;
 extern int slip_config_flowcontrol;
 extern const char *slip_config_siodev;
 extern const char *slip_config_host;
@@ -162,7 +162,7 @@ void
 slip_packet_input(unsigned char *data, int len)
 {
   packetbuf_copyfrom(data, len);
-  if(slip_config_verbose > 0) {
+  if(flag_verbose > 0) {
     printf("Packet input over SLIP: %d\n", len);
   }
   NETSTACK_MAC.input();
@@ -216,13 +216,13 @@ after_fread:
       } else if(inbuf[0] == DEBUG_LINE_MARKER) {
         fwrite(inbuf + 1, inbufptr - 1, 1, stdout);
       } else if(is_sensible_string(inbuf, inbufptr)) {
-        if(slip_config_verbose == 1) {   /* strings already echoed below for verbose>1 */
+        if(flag_verbose == 1) {   /* strings already echoed below for verbose>1 */
           fwrite(inbuf, inbufptr, 1, stdout);
         }
       } else {
-        if(slip_config_verbose > 2) {
+        if(flag_verbose > 2) {
           printf("Packet from SLIP of length %d - write TUN\n", inbufptr);
-          if(slip_config_verbose > 4) {
+          if(flag_verbose > 4) {
 #if WIRESHARK_IMPORT_FORMAT
             printf("0000");
             for(i = 0; i < inbufptr; i++) {
@@ -271,11 +271,11 @@ after_fread:
 
     /* Echo lines as they are received for verbose=2,3,5+ */
     /* Echo all printable characters for verbose==4 */
-    if(slip_config_verbose == 4) {
+    if(flag_verbose == 4) {
       if(c == 0 || c == '\r' || c == '\n' || c == '\t' || (c >= ' ' && c <= '~')) {
         fwrite(&c, 1, 1, stdout);
       }
-    } else if(slip_config_verbose >= 2) {
+    } else if(flag_verbose >= 2) {
       if(c == '\n' && is_sensible_string(inbuf, inbufptr)) {
         fwrite(inbuf, inbufptr, 1, stdout);
         inbufptr = 0;
@@ -364,9 +364,9 @@ write_to_serial(int outfd, const uint8_t *inbuf, int len)
   const uint8_t *p = inbuf;
   int i;
 
-  if(slip_config_verbose > 2) {
+  if(flag_verbose > 2) {
     printf("Packet from TUN of length %d - write SLIP\n", len);
-    if(slip_config_verbose > 4) {
+    if(flag_verbose > 4) {
 #if WIRESHARK_IMPORT_FORMAT
       printf("0000");
       for(i = 0; i < len; i++) {

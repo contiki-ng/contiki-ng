@@ -46,8 +46,8 @@
 #include <sys/ioctl.h>
 #include <err.h>
 #include "contiki.h"
+#include "sys/platform.h"
 
-int slip_config_verbose = 0;
 const char *slip_config_ipaddr;
 int slip_config_flowcontrol = 0;
 int slip_config_timestamp = 0;
@@ -62,116 +62,29 @@ uint16_t slip_config_basedelay = 0;
 #endif
 speed_t slip_config_b_rate = BAUDRATE;
 
+#define BAUDRATE_PRIO CONTIKI_VERBOSE_PRIO + 20
+
+CONTIKI_USAGE(300, " ipaddress\n"
+              "example parameters: -L -v=2 -s ttyUSB1 fd00::1/64\n\n");
+CONTIKI_EXTRA_HELP(300,
+                   "\nVerbosity level:\n"
+                   "  0   No messages\n"
+                   "  1   Encapsulated SLIP debug messages (default)\n"
+                   "  2   Printable strings after they are received\n"
+                   "  3   Printable strings and SLIP packet notifications\n"
+                   "  4   All printable characters as they are received\n"
+                   "  5   All SLIP packets in hex\n");
 /*---------------------------------------------------------------------------*/
-int
-slip_config_handle_arguments(int argc, char **argv)
+CC_CONSTRUCTOR(CONTIKI_MIN_INIT_PRIO - 1) static void
+init_slip_config_data(void)
 {
-  const char *prog;
-  int c;
-  int baudrate = 115200;
-
-  slip_config_verbose = 0;
-
-  prog = argv[0];
-  while((c = getopt(argc, argv, "B:H:D:Lhs:t:v::d::a:p:T")) != -1) {
-    switch(c) {
-    case 'B':
-      baudrate = atoi(optarg);
-      break;
-
-    case 'H':
-      slip_config_flowcontrol = 1;
-      break;
-
-    case 'L':
-      slip_config_timestamp = 1;
-      break;
-
-    case 's':
-      if(strncmp("/dev/", optarg, 5) == 0) {
-        slip_config_siodev = optarg + 5;
-      } else {
-        slip_config_siodev = optarg;
-      }
-      break;
-
-    case 't':
-      if(strncmp("/dev/", optarg, 5) == 0) {
-        strncpy(slip_config_tundev, optarg + 5, sizeof(slip_config_tundev) - 1);
-      } else {
-        strncpy(slip_config_tundev, optarg, sizeof(slip_config_tundev) - 1);
-      }
-      slip_config_tundev[sizeof(slip_config_tundev) - 1] = '\0';
-      break;
-
-    case 'a':
-      slip_config_host = optarg;
-      break;
-
-    case 'p':
-      slip_config_port = optarg;
-      break;
-
-    case 'd':
-      slip_config_basedelay = 10;
-      if(optarg) {
-        slip_config_basedelay = atoi(optarg);
-      }
-      break;
-
-    case 'v':
-      slip_config_verbose = 2;
-      if(optarg) {
-        slip_config_verbose = atoi(optarg);
-      }
-      break;
-
-    case '?':
-    case 'h':
-    default:
-      fprintf(stderr, "usage:  %s [options] ipaddress\n", prog);
-      fprintf(stderr, "example: border-router.native -L -v2 -s ttyUSB1 fd00::1/64\n");
-      fprintf(stderr, "Options are:\n");
-#ifdef linux
-      fprintf(stderr, " -B baudrate    9600,19200,38400,57600,115200,921600 (default 115200)\n");
-#else
-      fprintf(stderr, " -B baudrate    9600,19200,38400,57600,115200 (default 115200)\n");
-#endif
-      fprintf(stderr, " -H             Hardware CTS/RTS flow control (default disabled)\n");
-      fprintf(stderr, " -L             Log output format (adds time stamps)\n");
-      fprintf(stderr, " -s siodev      Serial device (default /dev/ttyUSB0)\n");
-      fprintf(stderr, " -a host        Connect via TCP to server at <host>\n");
-      fprintf(stderr, " -p port        Connect via TCP to server at <host>:<port>\n");
-      fprintf(stderr, " -t tundev      Name of interface (default tun0)\n");
-#ifdef __APPLE__
-      fprintf(stderr, " -v level       Verbosity level\n");
-#else
-      fprintf(stderr, " -v[level]      Verbosity level\n");
-#endif
-      fprintf(stderr, "    -v0         No messages\n");
-      fprintf(stderr, "    -v1         Encapsulated SLIP debug messages (default)\n");
-      fprintf(stderr, "    -v2         Printable strings after they are received\n");
-      fprintf(stderr, "    -v3         Printable strings and SLIP packet notifications\n");
-      fprintf(stderr, "    -v4         All printable characters as they are received\n");
-      fprintf(stderr, "    -v5         All SLIP packets in hex\n");
-#ifndef __APPLE__
-      fprintf(stderr, "    -v          Equivalent to -v3\n");
-#endif
-      fprintf(stderr, " -d[basedelay]  Minimum delay between outgoing SLIP packets.\n");
-      fprintf(stderr, "                Actual delay is basedelay*(#6LowPAN fragments) milliseconds.\n");
-      fprintf(stderr, "                -d is equivalent to -d10.\n");
-      exit(1);
-      break;
-    }
-  }
-  argc -= optind - 1;
-  argv += optind - 1;
-
-  if(argc != 2 && argc != 3) {
-    err(1, "usage: %s [-B baudrate] [-H] [-L] [-s siodev] [-t tundev] [-T] [-v verbosity] [-d delay] [-a serveraddress] [-p serverport] ipaddress", prog);
-  }
-  slip_config_ipaddr = argv[1];
-
+  strcpy(slip_config_tundev, "tun0");
+}
+/*---------------------------------------------------------------------------*/
+static int
+baudrate_callback(char *optarg)
+{
+  int baudrate = atoi(optarg);
   switch(baudrate) {
   case -2:
     break;			/* Use default. */
@@ -196,14 +109,98 @@ slip_config_handle_arguments(int argc, char **argv)
     break;
 #endif
   default:
-    err(1, "unknown baudrate %d", baudrate);
-    break;
+    fprintf(stderr, "unknown baudrate %s", optarg);
+    return 1;
+  }
+  return 0;
+}
+CONTIKI_OPTION(BAUDRATE_PRIO, {"B", required_argument, NULL, 0},
+               baudrate_callback,
+#ifdef linux
+               "baudrate (9600,19200,38400,57600,115200,921600)"
+#else
+               "baudrate (9600,19200,38400,57600,115200)"
+#endif
+               " (default 115200)\n");
+CONTIKI_OPTION(BAUDRATE_PRIO + 1,
+               {"H", no_argument, &slip_config_flowcontrol, 1}, NULL,
+               "hardware CTS/RTS flow control (default disabled)\n");
+CONTIKI_OPTION(BAUDRATE_PRIO + 2,
+               {"L", no_argument, &slip_config_timestamp, 1}, NULL,
+               "log output format (adds time stamps)\n");
+static int
+device_callback(char *optarg)
+{
+  slip_config_siodev = optarg + (strncmp("/dev/", optarg, 5) == 0 ? 5 : 0);
+  return 0;
+}
+CONTIKI_OPTION(BAUDRATE_PRIO + 3, {"s", required_argument, NULL, 0},
+               device_callback, "serial device (default /dev/ttyUSB0)\n");
+static int
+host_callback(char *optarg)
+{
+  slip_config_host = optarg;
+  return 0;
+}
+CONTIKI_OPTION(BAUDRATE_PRIO + 4, {"a", required_argument, NULL, 0},
+               host_callback, "connect via TCP to server at <value>\n");
+static int
+port_callback(char *optarg)
+{
+  slip_config_port = optarg;
+  return 0;
+}
+CONTIKI_OPTION(BAUDRATE_PRIO + 5, {"p", required_argument, NULL, 0},
+               port_callback, "connect via TCP to server on port <value>\n");
+static int
+dev_callback(char *optarg)
+{
+  strncpy(slip_config_tundev,
+          optarg + (strncmp("/dev/", optarg, 5) == 0 ? 5 : 0),
+          sizeof(slip_config_tundev) - 1);
+  slip_config_tundev[sizeof(slip_config_tundev) - 1] = '\0';
+  return 0;
+}
+CONTIKI_OPTION(BAUDRATE_PRIO + 6, {"t", required_argument, NULL, 0},
+               dev_callback, "name of interface (default tun0)\n");
+static int
+delay_callback(char *optarg)
+{
+  slip_config_basedelay = optarg ? atoi(optarg) : 10;
+  if(slip_config_basedelay < 0 ||
+     (slip_config_basedelay == 0 && optarg && optarg[0] != '0')) {
+    fprintf(stderr, "Delay '%s' could not be parsed as a number\n", optarg);
+    return 1;
   }
 
-  if(*slip_config_tundev == '\0') {
-    /* Use default. */
-    strcpy(slip_config_tundev, "tun0");
+  return 0;
+}
+CONTIKI_OPTION(BAUDRATE_PRIO + 7, {"d", optional_argument, NULL, 0},
+               delay_callback,
+               "minimum delay between outgoing SLIP packets (default 10)\n"
+               "\t\tActual delay is basedelay * (#6LowPAN fragments)"
+               " milliseconds.\n");
+/*---------------------------------------------------------------------------*/
+int
+slip_config_handle_arguments(int argc, char **argv)
+{
+  if(argc != 2 && argc != 3) {
+    err(1, "usage: %s [-B baudrate] [-H] [-L] [-s siodev] [-t tundev] [-T] [-v verbosity] [-d delay] [-a serveraddress] [-p serverport] ipaddress", argv[0]);
   }
+  slip_config_ipaddr = argv[1];
   return 1;
 }
 /*---------------------------------------------------------------------------*/
+/* Hidden compatibility options with legacy parameter names. */
+CONTIKI_OPTION(CONTIKI_VERBOSE_PRIO + 1,
+               {"v0", no_argument, &flag_verbose, 0}, NULL, NULL);
+CONTIKI_OPTION(CONTIKI_VERBOSE_PRIO + 2,
+               {"v1", no_argument, &flag_verbose, 1}, NULL, NULL);
+CONTIKI_OPTION(CONTIKI_VERBOSE_PRIO + 3,
+               {"v2", no_argument, &flag_verbose, 2}, NULL, NULL);
+CONTIKI_OPTION(CONTIKI_VERBOSE_PRIO + 4,
+               {"v3", no_argument, &flag_verbose, 3}, NULL, NULL);
+CONTIKI_OPTION(CONTIKI_VERBOSE_PRIO + 5,
+               {"v4", no_argument, &flag_verbose, 4}, NULL, NULL);
+CONTIKI_OPTION(CONTIKI_VERBOSE_PRIO + 6,
+               {"v5", no_argument, &flag_verbose, 5}, NULL, NULL);
