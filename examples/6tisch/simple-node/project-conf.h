@@ -70,6 +70,8 @@
 /*******************************************************/
 
 /* Logging */
+/* Use the default log level on Z1 to save ROM. */
+#ifndef CONTIKI_TARGET_Z1
 #define LOG_CONF_LEVEL_RPL                         LOG_LEVEL_WARN
 #define LOG_CONF_LEVEL_TCPIP                       LOG_LEVEL_WARN
 #define LOG_CONF_LEVEL_IPV6                        LOG_LEVEL_WARN
@@ -80,6 +82,8 @@
 #ifndef CONTIKI_TARGET_SIMPLELINK
 #define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_WARN
 #endif
+#endif
+
 #define TSCH_LOG_CONF_PER_SLOT                     1
 
 #endif /* PROJECT_CONF_H_ */
