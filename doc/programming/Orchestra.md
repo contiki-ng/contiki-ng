@@ -4,7 +4,7 @@
 
 Orchestra is an autonomous scheduling solution for TSCH, where nodes maintain
 their own schedule solely based on their local RPL state. There is no centralized
-scheduler nor negociatoin with neighbors, i.e. no traffic overhead. The default
+scheduler nor negotiation with neighbors, i.e. no traffic overhead. The default
 Orchestra rules can be used out-of-box in any RPL network, reducing contention
 to a low level. Orchestra is described and evaluated in
 [*Orchestra: Robust Mesh Networks Through Autonomously Scheduled TSCH*](http://www.simonduquennoy.net/papers/duquennoy15orchestra.pdf), ACM SenSys'15.
