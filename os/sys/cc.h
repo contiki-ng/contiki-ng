@@ -181,4 +181,12 @@
 #define CC_CONCAT3(s1, s2, s3) s1##s2##s3
 #define CC_CONCAT_EXT_3(s1, s2, s3) CC_CONCAT3(s1, s2, s3)
 
+/* Provide static_assert macro in C11-C17. */
+#if __STDC_VERSION__ >= 201112L && __STDC_VERSION__ < 202311L && \
+  !defined __cplusplus
+#ifndef static_assert
+#define static_assert _Static_assert
+#endif
+#endif
+
 #endif /* CC_H_ */
