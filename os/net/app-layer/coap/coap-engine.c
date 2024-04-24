@@ -134,8 +134,10 @@ call_service(coap_message_t *request, coap_message_t *response,
 /*- Server Part -------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
-/* the discover resource is automatically included for CoAP */
+#if COAP_WELL_KNOWN_RESOURCE_ENABLED
+/* The discover resource is included by default for CoAP */
 extern coap_resource_t res_well_known_core;
+#endif
 
 /*---------------------------------------------------------------------------*/
 /*- Internal API ------------------------------------------------------------*/
@@ -380,7 +382,9 @@ coap_engine_init(void)
   list_init(coap_handlers);
   list_init(coap_resource_services);
 
+#if COAP_WELL_KNOWN_RESOURCE_ENABLED
   coap_activate_resource(&res_well_known_core, ".well-known/core");
+#endif
 
   coap_transport_init();
   coap_init_connection();

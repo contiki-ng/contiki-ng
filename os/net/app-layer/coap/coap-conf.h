@@ -112,5 +112,10 @@
 #define COAP_OBSERVER_URL_LEN 20
 #endif
 
+/* Enable the well-known resource (well-known/core) by default */
+#ifndef COAP_WELL_KNOWN_RESOURCE_ENABLED
+#define COAP_WELL_KNOWN_RESOURCE_ENABLED  1
+#endif
+
 #endif /* COAP_CONF_H_ */
 /** @} */
