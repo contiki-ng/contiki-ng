@@ -45,6 +45,7 @@
 #include "os/dev/ble-hal.h"
 #include "../../ble-addr.h"
 #include "rf_common_cmd.h"
+#include <stdint.h>
 
 #define RF_BLE_CMD_OK    1
 #define RF_BLE_CMD_ERROR 0

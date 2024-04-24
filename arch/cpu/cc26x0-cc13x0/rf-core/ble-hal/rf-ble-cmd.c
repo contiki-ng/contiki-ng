@@ -45,6 +45,7 @@
 #include "rf_ble_cmd.h"
 #include "rf-core/rf-core.h"
 #include "rf-core/ble-hal/rf-ble-cmd.h"
+#include <inttypes.h>
 
 /*---------------------------------------------------------------------------*/
 #include "sys/log.h"
