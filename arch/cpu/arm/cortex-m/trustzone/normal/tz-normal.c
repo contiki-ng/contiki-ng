@@ -98,7 +98,7 @@ platform_main_loop(void)
   process_start(&tz_normal_process, NULL);
 
   while(1) {
-    uint8_t r;
+    process_num_events_t r;
     do {
       r = process_run();
       watchdog_periodic();

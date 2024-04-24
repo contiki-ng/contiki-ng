@@ -128,7 +128,7 @@ platform_main_loop(void)
   tz_fault_init();
 
   /* Process all events before switching to non-secure */
-  uint8_t r;
+  process_num_events_t r;
   do {
     r = process_run();
     watchdog_periodic();

@@ -51,7 +51,7 @@ autostart_start(struct process * const processes[])
 
   for(i = 0; processes[i] != NULL; ++i) {
     process_start(processes[i], NULL);
-    LOG_DBG("starting process '%s'\n", processes[i]->name);
+    LOG_DBG("starting process '%s'\n", PROCESS_NAME_STRING(processes[i]));
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -62,7 +62,7 @@ autostart_exit(struct process * const processes[])
 
   for(i = 0; processes[i] != NULL; ++i) {
     process_exit(processes[i]);
-    LOG_DBG("stopping process '%s'\n", processes[i]->name);
+    LOG_DBG("stopping process '%s'\n", PROCESS_NAME_STRING(processes[i]));
   }
 }
 /*---------------------------------------------------------------------------*/
