@@ -35,29 +35,29 @@ jobs:
         # Always run all jobs in the matrix, even if one fails
         fail-fast: false
         matrix:
-            os: [ ubuntu-latest, macos-latest ]
+            os: [ ubuntu-latest, macos-13 ]
             test: [ documentation, compile-base, compile-arm-ports, rpl-lite, rpl-classic, renode-simulation, simulation-base, ipv6, ieee802154, tun-rpl-br, script-base, native-runs, ipv6-nbr, coap-lwm2m, packet-parsing ]
             exclude:
               # Renode tests done by Linux (more CI runners available).
-              - os: macos-latest
+              - os: macos-13
                 test: renode-simulation
               # Runs on x86, already have intermittent failures there.
-              - os: macos-latest
+              - os: macos-13
                 test: simulation-base
               # No arm-none-eabi-gcc installed.
-              - os: macos-latest
+              - os: macos-13
                 test: compile-arm-ports
               # Uses zoul as dummy target, fails on missing arm-none-eabi-gcc.
               # Tests/build system should be fixed.
-              - os: macos-latest
+              - os: macos-13
                 test: tun-rpl-br
               # tests/utils.sh: kill_bg contains ps --ppid (not portable).
-              - os: macos-latest
+              - os: macos-13
                 test: native-runs
-              - os: macos-latest
+              - os: macos-13
                 test: coap-lwm2m
               # Failed simulations for no obvious reason, Cooja issue?
-              - os: macos-latest
+              - os: macos-13
                 test: ieee802154
 
     # The type of runner that the job will run on
@@ -79,7 +79,7 @@ jobs:
 
     # Install sha256 command on macOS so print-dockerhash.sh can work.
     - name: install macOS software
-      if: matrix.os == 'macos-latest'
+      if: matrix.os == 'macos-13'
       run: |
         brew install coreutils make mosquitto mtr rlwrap
         # Doxygen version needs to be in sync with Doxyfile.
@@ -99,7 +99,7 @@ jobs:
 
     # Valgrind takes a long time to build, so only install when required.
     - name: install macOS valgrind
-      if: matrix.os == 'macos-latest' && matrix.test == 'native-runs'
+      if: matrix.os == 'macos-13' && matrix.test == 'native-runs'
       run: |
         # 3 cores on CI runners, so use make -j6 for homebrew.
         export HOMEBREW_MAKE_JOBS=6
@@ -210,14 +210,14 @@ jobs:
 
     # Pre-install a Java 21 on macOS to avoid 503 responses in Gradle.
     - name: Setup Java 21
-      if: matrix.os == 'macos-latest'
+      if: matrix.os == 'macos-13'
       uses: actions/setup-java@v4
       with:
         java-version: 21
         distribution: 'zulu'
 
     - name: Execute tests
-      if: matrix.os == 'macos-latest'
+      if: matrix.os == 'macos-13'
       run: |
         # Silence Doxygen warnings (not compilied with -Duse_libclang=ON).
         perl -pi -e 's/^CLANG_ASSISTED_PARSING/# CLANG_ASSISTED_PARSING/g;' \
