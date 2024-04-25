@@ -61,7 +61,7 @@ jobs:
                 test: ieee802154
 
     # Default job name is too long to be visible in the "Checks" tab.
-    name: ${{ matrix.test }}/${{ matrix.os }}
+    name: ${{ matrix.test }}/${{ matrix.os == 'macos-13' && 'macos-x64' || matrix.os }}
     # The type of runner that the job will run on
     runs-on: ${{ matrix.os }}
     # Checks-out the contiki-ng $GITHUB_WORKSPACE, so your job can access it
