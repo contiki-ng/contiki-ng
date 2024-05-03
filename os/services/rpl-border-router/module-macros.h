@@ -30,3 +30,7 @@
 
 #define BUILD_WITH_RPL_BORDER_ROUTER               1
 #define UIP_FALLBACK_INTERFACE         rpl_interface
+
+#if CONTIKI_TARGET_OPENMOTE
+#define LPM_CONF_ENABLE 0
+#endif /* CONTIKI_TARGET_OPENMOTE */
