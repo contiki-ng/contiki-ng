@@ -9,7 +9,7 @@ BASENAME=$(basename $0 .sh)
 IPADDR=fd00::302:304:506:708
 
 # Starting Contiki-NG native node
-sudo $CONTIKI/examples/snmp-server/snmp-server.native &
+sudo $CONTIKI/examples/snmp-server/build/native/snmp-server.native &
 CPID=$!
 printf "\r\n"
 

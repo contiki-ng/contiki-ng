@@ -27,7 +27,7 @@ do
     test_files=("$i")
     echo Injecting file $i
   fi
-  timeout -k 1s 2s "$CODE_DIR/$CODE.native" "${test_files[@]}"
+  timeout -k 1s 2s "$CODE_DIR/build/native/$CODE.native" "${test_files[@]}"
   INJECTOR_EXIT_CODE=$?
   echo "exit code:" $INJECTOR_EXIT_CODE
 

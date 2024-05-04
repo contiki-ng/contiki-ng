@@ -16,7 +16,7 @@ emulation CreateIEEE802_15_4Medium "wireless"
 wireless SetRangeWirelessFunction 11
 
 ######################### UDP SERVER - begin #########################
-$bin=@udp-server.cc2538dk
+$bin=@build/cc2538dk/udp-server.cc2538dk
 $name="server"
 i @scripts/single-node/cc2538.resc
 connector Connect radio wireless
@@ -25,7 +25,7 @@ mach clear
 ########################## UDP SERVER - end ##########################
 
 ######################### UDP CLIENT - begin #########################
-$bin=@udp-client.cc2538dk
+$bin=@build/cc2538dk/udp-client.cc2538dk
 $name="client-1"
 i @scripts/single-node/cc2538.resc
 connector Connect radio wireless
