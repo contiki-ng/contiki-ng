@@ -496,7 +496,7 @@ clean:
 	$(Q)rm -rf $(BUILD_DIR_TARGET)
 
 distclean:
-	$(Q)[ $(TARGETDIRS) = "" ] || for TARG in `ls $(TARGETDIRS)`; do \
+	$(Q)[ "$(TARGETDIRS)" = "" ] || for TARG in `ls $(TARGETDIRS)`; do \
 		$(MAKE) TARGET=$$TARG clean; \
 	done
 	$(Q)rm -rf $(BUILD_DIR)
