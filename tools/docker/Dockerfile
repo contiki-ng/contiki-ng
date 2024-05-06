@@ -95,7 +95,7 @@ RUN wget -nv -O /usr/local/bin/nrfutil https://developer.nordicsemi.com/.pc-tool
   apt-get -qq clean
 
 # Install Renode from github releases
-ARG RENODE_VERSION=1.14.0
+ARG RENODE_VERSION=1.15.0
 RUN wget -nv https://github.com/renode/renode/releases/download/v${RENODE_VERSION}/renode_${RENODE_VERSION}_amd64.deb \
   && apt-get -qq -y --no-install-recommends install ./renode_${RENODE_VERSION}_amd64.deb > /dev/null \
   && python3 -m pip -q install -r /opt/renode/tests/requirements.txt \
