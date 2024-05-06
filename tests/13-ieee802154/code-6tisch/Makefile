@@ -1,6 +1,6 @@
 all:
 
-APPS    += unit-test
+MODULES += os/services/unit-test
 MODULES += os/net/mac/tsch/sixtop
 
 PROJECT_SOURCEFILES += common.c
