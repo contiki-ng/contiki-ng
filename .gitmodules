@@ -43,3 +43,6 @@
 [submodule "arch/cpu/gecko/lib/gecko_sdk"]
 	path = arch/cpu/gecko/lib/gecko_sdk
 	url = https://github.com/SiliconLabs/gecko_sdk.git
+[submodule "os/net/security/micro-ecc"]
+	path = os/net/security/micro-ecc
+	url = https://github.com/kmackay/micro-ecc
