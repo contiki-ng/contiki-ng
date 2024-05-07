@@ -31,9 +31,11 @@
  */
 
 #include "contiki.h"
-#include "contiki-net.h"
 #include "net/ipv6/simple-udp.h"
 #include "net/ipv6/uip.h"
+#include "services/akes/akes-nbr.h"
+#include "services/akes/akes-mac.h"
+#include "services/akes/akes-trickle.h"
 #include "sys/node-id.h"
 #include <stdio.h>
 
@@ -53,12 +55,12 @@ static uint8_t bitmap;
 /*---------------------------------------------------------------------------*/
 static void
 server_callback(struct simple_udp_connection *c,
-                const uip_ipaddr_t *sender_addr,
-                uint16_t sender_port,
-                const uip_ipaddr_t *receiver_addr,
-                uint16_t receiver_port,
-                const uint8_t *data,
-                uint16_t datalen)
+         const uip_ipaddr_t *sender_addr,
+         uint16_t sender_port,
+         const uip_ipaddr_t *receiver_addr,
+         uint16_t receiver_port,
+         const uint8_t *data,
+         uint16_t datalen)
 {
   if((datalen != 1) || (data[0] > 7)) {
     printf("=check-me= FAILED - invalid\n");
@@ -76,12 +78,12 @@ server_callback(struct simple_udp_connection *c,
 /*---------------------------------------------------------------------------*/
 static void
 client_callback(struct simple_udp_connection *c,
-                const uip_ipaddr_t *sender_addr,
-                uint16_t sender_port,
-                const uip_ipaddr_t *receiver_addr,
-                uint16_t receiver_port,
-                const uint8_t *data,
-                uint16_t datalen)
+         const uip_ipaddr_t *sender_addr,
+         uint16_t sender_port,
+         const uip_ipaddr_t *receiver_addr,
+         uint16_t receiver_port,
+         const uint8_t *data,
+         uint16_t datalen)
 {
   printf("=check-me= FAILED - client_callback should not be called\n");
 }
@@ -93,23 +95,35 @@ PROCESS_THREAD(broadcast_test_process, ev, data)
   uip_create_linklocal_allnodes_mcast(&ipaddr);
 
   simple_udp_register(&server_connection,
-                      UDP_SERVER_PORT,
-                      NULL,
-                      UDP_CLIENT_PORT,
-                      server_callback);
+      UDP_SERVER_PORT,
+      NULL,
+      UDP_CLIENT_PORT,
+      server_callback);
   simple_udp_register(&client_connection,
-                      UDP_CLIENT_PORT,
-                      NULL,
-                      UDP_SERVER_PORT,
-                      client_callback);
+      UDP_CLIENT_PORT,
+      NULL,
+      UDP_SERVER_PORT,
+      client_callback);
+
+  /* wait for session key establishment */
+  etimer_set(&timer, CLOCK_SECOND);
+  while(1) {
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
+    if(akes_nbr_head(AKES_NBR_PERMANENT)) {
+      break;
+    }
+    etimer_reset(&timer);
+  }
 
   if(node_id == 1) {
     for(; counter < 8; counter++) {
-      etimer_set(&timer, CLOCK_SECOND);
+      etimer_set(&timer, CLOCK_SECOND + clock_random(CLOCK_SECOND));
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));
+
       simple_udp_sendto(&client_connection, &counter, 1, &ipaddr);
     }
   } else {
+    akes_trickle_stop();
     printf("=check-me= DONE\n");
   }
 
