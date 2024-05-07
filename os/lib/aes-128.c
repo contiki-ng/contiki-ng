@@ -37,6 +37,8 @@
  */
 
 /**
+ * \addtogroup crypto
+ * @{
  * \file
  *         Wrapped AES-128 implementation from Texas Instruments.
  * \author
@@ -188,3 +190,5 @@ const struct aes_128_driver aes_128_driver = {
   encrypt
 };
 /*---------------------------------------------------------------------------*/
+
+/** @} */

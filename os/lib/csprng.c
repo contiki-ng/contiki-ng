@@ -31,15 +31,12 @@
  */
 
 /**
+ * \addtogroup csprng
+ * @{
  * \file
  *         An OFB-AES-128-based CSPRNG.
  * \author
  *         Konrad Krentz <konrad.krentz@gmail.com>
- */
-
-/**
- * \addtogroup csprng
- * @{
  */
 
 #include "lib/csprng.h"

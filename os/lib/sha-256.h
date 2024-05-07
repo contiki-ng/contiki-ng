@@ -31,6 +31,8 @@
  */
 
 /**
+ * \addtogroup crypto
+ * @{
  * \file
  *         Platform-independent SHA-256 API.
  * \author
@@ -165,3 +167,5 @@ void sha_256_hkdf(const uint8_t *salt, size_t salt_len,
       uint8_t *okm, uint_fast16_t okm_len);
 
 #endif /* SHA_256_H_ */
+
+/** @} */
