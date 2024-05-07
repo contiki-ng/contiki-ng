@@ -39,6 +39,8 @@
 
 #include "unit-test.h"
 
+struct pt unit_test_pt;
+
 /*---------------------------------------------------------------------------*/
 /**
  * Print the results of a unit test.
