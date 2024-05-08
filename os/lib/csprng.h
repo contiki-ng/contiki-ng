@@ -31,27 +31,22 @@
  */
 
 /**
+ * \addtogroup lib
+ * @{
+ *
+ * \defgroup crypto Cryptographic primitives
+ * @{
+ *
+ * \defgroup csprng Cryptographically-secure PRNG
+ * In contrast to a normal PRNG, a CSPRNG generates a stream of pseudo-random
+ * numbers that is indistinguishable from the uniform distribution to a
+ * computationally-bounded adversary who does not know the seed.
+ * @{
+ *
  * \file
  *         An OFB-AES-128-based CSPRNG.
  * \author
  *         Konrad Krentz <konrad.krentz@gmail.com>
- */
-
-/**
- * \addtogroup lib
- * @{
- */
-
-/**
- * \defgroup csprng Cryptographically-secure PRNG
- *
- * \brief Expands a truly random seed into a stream of pseudo-random numbers.
- *
- * In contrast to a normal PRNG, a CSPRNG generates a stream of pseudo-random
- * numbers that is indistinguishable from the uniform distribution to a
- * computationally-bounded adversary who does not know the seed.
- *
- * @{
  */
 
 #ifndef CSPRNG_H_
@@ -111,5 +106,6 @@ bool csprng_rand(uint8_t *result, unsigned len);
 
 #endif /* CSPRNG_H_ */
 
+/** @} */
 /** @} */
 /** @} */

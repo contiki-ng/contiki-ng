@@ -25,6 +25,13 @@
  * SUCH DAMAGE.
  */
 
+/**
+ * \addtogroup crypto
+ * @{
+ * \file
+ * Software implementation of SHA-256.
+ */
+
 #include "lib/sha-256.h"
 #include "net/ipv6/uip.h"
 #include "sys/cc.h"
@@ -459,3 +466,5 @@ const struct sha_256_driver sha_256_driver = {
   sha_256_hash,
 };
 /*---------------------------------------------------------------------------*/
+
+/** @} */

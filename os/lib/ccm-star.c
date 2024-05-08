@@ -31,6 +31,8 @@
  */
 
 /**
+ * \addtogroup crypto
+ * @{
  * \file
  *         AES_128-based CCM* implementation.
  * \author
@@ -178,3 +180,5 @@ const struct ccm_star_driver ccm_star_driver = {
   aead
 };
 /*---------------------------------------------------------------------------*/
+
+/** @} */

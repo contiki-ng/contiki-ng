@@ -31,6 +31,8 @@
  */
 
 /**
+ * \addtogroup crypto
+ * @{
  * \file
  *         AES-128.
  * \author
@@ -70,3 +72,5 @@ struct aes_128_driver {
 extern const struct aes_128_driver AES_128;
 
 #endif /* AES_128_H_ */
+
+/** @} */
