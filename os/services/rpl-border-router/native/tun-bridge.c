@@ -47,6 +47,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <termios.h>
+#include <net/if.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
@@ -68,7 +69,7 @@
 #include "border-router.h"
 
 extern const char *slip_config_ipaddr;
-extern char slip_config_tundev[32];
+extern char slip_config_tundev[IFNAMSIZ + 1];
 extern uint16_t slip_config_basedelay;
 
 static int tunfd;
@@ -82,77 +83,34 @@ static const struct select_callback tun_select_callback = {
 
 int ssystem(const char *fmt, ...)
      __attribute__((__format__ (__printf__, 1, 2)));
-int
-ssystem(const char *fmt, ...) __attribute__((__format__ (__printf__, 1, 2)));
+void ifconf_cleanup(const char *dev);
+void ifconf(const char *tundev, const char *ipaddr);
+int devopen(const char *dev, int flags);
 
-int
-ssystem(const char *fmt, ...)
-{
-  char cmd[128];
-  va_list ap;
-  va_start(ap, fmt);
-  vsnprintf(cmd, sizeof(cmd), fmt, ap);
-  va_end(ap);
-  printf("%s\n", cmd);
-  fflush(stdout);
-  return system(cmd);
-}
+
 /*---------------------------------------------------------------------------*/
 void
 cleanup(void)
 {
-  ssystem("ifconfig %s down", slip_config_tundev);
-#ifndef linux
-  ssystem("sysctl -w net.ipv6.conf.all.forwarding=1");
-#endif
-  ssystem("netstat -nr"
-	  " | awk '{ if ($2 == \"%s\") print \"route delete -net \"$1; }'"
-	  " | sh",
-	  slip_config_tundev);
+  ifconf_cleanup(slip_config_tundev);
 }
 /*---------------------------------------------------------------------------*/
-void
+void CC_NORETURN
 sigcleanup(int signo)
 {
   fprintf(stderr, "signal %d\n", signo);
   exit(0);			/* exit(0) will call cleanup() */
 }
 /*---------------------------------------------------------------------------*/
-void
-ifconf(const char *tundev, const char *ipaddr)
-{
-#ifdef linux
-  ssystem("ifconfig %s inet `hostname` up", tundev);
-  ssystem("ifconfig %s add %s", tundev, ipaddr);
-#elif defined(__APPLE__)
-  ssystem("ifconfig %s inet6 %s up", tundev, ipaddr);
-  ssystem("sysctl -w net.inet.ip.forwarding=1");
-#else
-  ssystem("ifconfig %s inet `hostname` %s up", tundev, ipaddr);
-  ssystem("sysctl -w net.inet.ip.forwarding=1");
-#endif /* !linux */
-
-  /* Print the configuration to the console. */
-  ssystem("ifconfig %s\n", tundev);
-}
-/*---------------------------------------------------------------------------*/
-int
-devopen(const char *dev, int flags)
-{
-  char t[32];
-  strcpy(t, "/dev/");
-  strncat(t, dev, sizeof(t) - 5);
-  return open(t, flags);
-}
-/*---------------------------------------------------------------------------*/
 #ifdef linux
 int
-tun_alloc(char *dev)
+tun_alloc(char *dev, uint16_t devsize)
 {
   struct ifreq ifr;
   int fd, err;
-
+  LOG_INFO("Opening: %s\n", dev);
   if((fd = open("/dev/net/tun", O_RDWR)) < 0) {
+    /* Error message handled by caller */
     return -1;
   }
 
@@ -162,21 +120,26 @@ tun_alloc(char *dev)
    *        IFF_NO_PI - Do not provide packet information
    */
   ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-  if(*dev != 0) {
-    strncpy(ifr.ifr_name, dev, IFNAMSIZ - 1);
+  if(*dev != '\0') {
+    memcpy(ifr.ifr_name, dev, MIN(sizeof(ifr.ifr_name), devsize));
   }
-
   if((err = ioctl(fd, TUNSETIFF, (void *)&ifr)) < 0) {
+    /* Error message handled by caller */
     close(fd);
     return err;
   }
-  strcpy(dev, ifr.ifr_name);
+  LOG_INFO("Using '%s' vs '%s'\n", dev, ifr.ifr_name);
+  strncpy(dev, ifr.ifr_name, MIN(devsize - 1, sizeof(ifr.ifr_name)));
+  dev[devsize - 1] = '\0';
+  LOG_INFO("Using %s\n", dev);
   return fd;
 }
 #else
+/*---------------------------------------------------------------------------*/
 int
-tun_alloc(char *dev)
+tun_alloc(char *dev, uint16_t devsize)
 {
+  LOG_INFO("Opening: %s\n", dev);
   return devopen(dev, O_RDWR);
 }
 #endif
@@ -194,11 +157,12 @@ tun_init()
 
   LOG_INFO("Opening tun interface:%s\n", slip_config_tundev);
 
-  tunfd = tun_alloc(slip_config_tundev);
-
+  tunfd = tun_alloc(slip_config_tundev, sizeof(slip_config_tundev));
   if(tunfd == -1) {
     err(1, "tun_init: tun_alloc failed");
   }
+
+  LOG_INFO("Tun open:%d\n", tunfd);
 
   select_set_callback(tunfd, &tun_select_callback);
 
@@ -215,10 +179,8 @@ tun_init()
 static int
 tun_output(uint8_t *data, int len)
 {
-  /* fprintf(stderr, "*** Writing to tun...%d\n", len); */
   if(write(tunfd, data, len) != len) {
     err(1, "serial_to_tun: write");
-    return -1;
   }
   return 0;
 }
@@ -286,7 +248,6 @@ handle_fd(fd_set *rset, fd_set *wset)
 
     if(FD_ISSET(tunfd, rset)) {
       size = tun_input(uip_buf, sizeof(uip_buf));
-      /* printf("TUN data incoming read:%d\n", size); */
       uip_len = size;
       tcpip_input();
 
