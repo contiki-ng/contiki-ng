@@ -2435,7 +2435,8 @@ PREDEFINED             = NETSTACK_CONF_WITH_IPV6:=1 \
                          DOXYGEN:=1 \
                          DOXYGEN_SHOULD_SKIP_THIS:=1 \
                          "ASCCMD(name, flags, args):=void CMD_ASCII(name)" \
-                         MQTT_CONF_VERSION:=MQTT_PROTOCOL_VERSION_5
+                         MQTT_CONF_VERSION:=MQTT_PROTOCOL_VERSION_5 \
+                         "PT_THREAD(name_args):=char name_args"
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
