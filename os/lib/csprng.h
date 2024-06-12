@@ -54,6 +54,7 @@
 
 #include "contiki.h"
 #include "lib/aes-128.h"
+#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -102,7 +103,7 @@ void csprng_feed(struct csprng_seed *new_seed);
  *               Cycle Size of The Key Stream in Output Feedback Encipherment].
  * \return       Returns true on success and false otherwise.
  */
-bool csprng_rand(uint8_t *result, unsigned len);
+bool csprng_rand(uint8_t *result, size_t len);
 
 #endif /* CSPRNG_H_ */
 
