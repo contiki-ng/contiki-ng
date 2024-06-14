@@ -50,14 +50,14 @@
 #define LOG_LEVEL LOG_LEVEL_NONE
 
 static struct csprng_seed seed;
-static unsigned read_state_bytes;
+static size_t read_state_bytes;
 static bool seeded;
 
 /*---------------------------------------------------------------------------*/
 void
 csprng_feed(struct csprng_seed *new_seed)
 {
-  uint8_t i;
+  size_t i;
 
   /*
    * By XORing the current seed with the new seed, the seed of this CSPRNG
@@ -78,9 +78,9 @@ csprng_feed(struct csprng_seed *new_seed)
 }
 /*---------------------------------------------------------------------------*/
 bool
-csprng_rand(uint8_t *result, unsigned len)
+csprng_rand(uint8_t *result, size_t len)
 {
-  unsigned pos;
+  size_t pos;
 
   if(!seeded) {
     return false;
