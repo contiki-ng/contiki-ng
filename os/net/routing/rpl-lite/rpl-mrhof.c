@@ -209,6 +209,40 @@ within_hysteresis(rpl_nbr_t *nbr) {
 /*---------------------------------------------------------------------------*/
 static rpl_nbr_t *
 best_parent(rpl_nbr_t *nbr1, rpl_nbr_t *nbr2) {
+#if RPL_LIMIT_CONN_TO_NODE
+    printf("Conf is enable\n");
+
+    printf("RANK, (1):%d (2):%d\n", nbr1->rank, nbr2->rank);
+
+    int nbr1_is_acceptable;
+    int nbr2_is_acceptable;
+
+    nbr1_is_acceptable = nbr1 != NULL && nbr_is_acceptable_parent(nbr1);
+    nbr2_is_acceptable = nbr2 != NULL && nbr_is_acceptable_parent(nbr2);
+
+    printf("ACCEPTABLE, (1):%d (2):%d\n", nbr1_is_acceptable, nbr2_is_acceptable);
+
+    if (!nbr1_is_acceptable) {
+        return nbr2_is_acceptable ? nbr2 : NULL;
+    }
+    if (!nbr2_is_acceptable) {
+        return nbr1_is_acceptable ? nbr1 : NULL;
+    }
+
+    /* Maintain stability of the preferred parent. Switch only if the gain
+    is greater than RANK_THRESHOLD, or if the neighbor has been better than the
+    current parent for at more than TIME_THRESHOLD. */
+    if (nbr1 == curr_instance.dag.preferred_parent && within_hysteresis(nbr2)) {
+        return nbr1;
+    }
+    if (nbr2 == curr_instance.dag.preferred_parent && within_hysteresis(nbr1)) {
+        return nbr2;
+    }
+
+    return nbr_path_cost(nbr1) < nbr_path_cost(nbr2) ? nbr2 : nbr1;
+#else
+    LOG_INFO("THIS IS A TEST, Conf is disable\n");
+
     int nbr1_is_acceptable;
     int nbr2_is_acceptable;
 
@@ -233,6 +267,7 @@ best_parent(rpl_nbr_t *nbr1, rpl_nbr_t *nbr2) {
     }
 
     return nbr_path_cost(nbr1) < nbr_path_cost(nbr2) ? nbr1 : nbr2;
+#endif
 }
 /*---------------------------------------------------------------------------*/
 #if !RPL_WITH_MC

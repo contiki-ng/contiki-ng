@@ -198,6 +198,15 @@
 #define RPL_VALIDATE_DIO_FUNC RPL_CONF_VALIDATE_DIO_FUNC
 #endif
 
+/*
+ *
+ */
+#ifdef RPL_CONF_LIMIT_CONN_TO_NODE
+#define RPL_LIMIT_CONN_TO_NODE RPL_CONF_LIMIT_CONN_TO_NODE
+#else
+#define RPL_LIMIT_CONN_TO_NODE 0
+#endif
+
 /******************************************************************************/
 /********************************** Timing ************************************/
 /******************************************************************************/
