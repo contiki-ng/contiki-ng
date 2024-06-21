@@ -30,17 +30,17 @@
  *
  */
 
- /**
- * \addtogroup rpl-lite
- * @{
- *
- * \file
- *	Header file for rpl-timers module
- * \author
- *	Joakim Eriksson <joakime@sics.se>, Nicolas Tsiftes <nvt@sics.se>,
- *  Simon DUquennoy <simon.duquennoy@inria.fr>
- *
- */
+/**
+* \addtogroup rpl-lite
+* @{
+*
+* \file
+*	Header file for rpl-timers module
+* \author
+*	Joakim Eriksson <joakime@sics.se>, Nicolas Tsiftes <nvt@sics.se>,
+*  Simon DUquennoy <simon.duquennoy@inria.fr>
+*
+*/
 
 #ifndef RPL_TIMERS_H
 #define RPL_TIMERS_H
@@ -124,13 +124,12 @@ void rpl_timers_schedule_state_update(void);
  * Cancelled any scheduled state update.
 */
 static inline void
-rpl_timers_unschedule_state_update(void)
-{
-  if(curr_instance.used) {
-    ctimer_stop(&curr_instance.dag.state_update);
-  }
+rpl_timers_unschedule_state_update(void) {
+    if (curr_instance.used) {
+        ctimer_stop(&curr_instance.dag.state_update);
+    }
 }
 
- /** @} */
+/** @} */
 
 #endif /* RPL_TIMERS_H */

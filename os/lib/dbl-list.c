@@ -44,183 +44,184 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+
 /*---------------------------------------------------------------------------*/
 struct dll {
-  struct dll *next;
-  struct dll *previous;
+    struct dll *next;
+    struct dll *previous;
 };
+
 /*---------------------------------------------------------------------------*/
 void
-dbl_list_init(dbl_list_t dll)
-{
-  *dll = NULL;
+dbl_list_init(dbl_list_t dll) {
+    *dll = NULL;
 }
+
 /*---------------------------------------------------------------------------*/
 void *
-dbl_list_head(const_dbl_list_t dll)
-{
-  return *dll;
+dbl_list_head(const_dbl_list_t dll) {
+    return *dll;
 }
+
 /*---------------------------------------------------------------------------*/
 void *
-dbl_list_tail(const_dbl_list_t dll)
-{
-  struct dll *this;
+dbl_list_tail(const_dbl_list_t dll) {
+    struct dll *this;
 
-  if(*dll == NULL) {
-    return NULL;
-  }
-
-  for(this = *dll; this->next != NULL; this = this->next);
-
-  return this;
-}
-/*---------------------------------------------------------------------------*/
-void
-dbl_list_remove(dbl_list_t dll, const void *element)
-{
-  struct dll *this, *previous, *next;
-
-  if(*dll == NULL || element == NULL) {
-    return;
-  }
-
-  for(this = *dll; this != NULL; this = this->next) {
-    if(this == element) {
-      previous = this->previous;
-      next = this->next;
-
-      if(previous) {
-        previous->next = this->next;
-      }
-
-      if(next) {
-        next->previous = this->previous;
-      }
-
-      if(*dll == this) {
-        *dll = next;
-      }
-
-      return;
+    if (*dll == NULL) {
+        return NULL;
     }
-  }
+
+    for (this = *dll; this->next != NULL; this = this->next);
+
+    return this;
 }
+
 /*---------------------------------------------------------------------------*/
 void
-dbl_list_add_head(dbl_list_t dll, void *element)
-{
-  struct dll *head;
+dbl_list_remove(dbl_list_t dll, const void *element) {
+    struct dll *this, *previous, *next;
 
-  if(element == NULL) {
-    return;
-  }
+    if (*dll == NULL || element == NULL) {
+        return;
+    }
 
-  /* Don't add twice */
-  dbl_list_remove(dll, element);
+    for (this = *dll; this != NULL; this = this->next) {
+        if (this == element) {
+            previous = this->previous;
+            next = this->next;
 
-  head = dbl_list_head(dll);
+            if (previous) {
+                previous->next = this->next;
+            }
 
-  ((struct dll *)element)->previous = NULL;
-  ((struct dll *)element)->next = head;
+            if (next) {
+                next->previous = this->previous;
+            }
 
-  if(head) {
-    /* If the list was not empty, update ->previous on the old head */
-    head->previous = element;
-  }
+            if (*dll == this) {
+                *dll = next;
+            }
 
-  *dll = element;
+            return;
+        }
+    }
 }
+
 /*---------------------------------------------------------------------------*/
 void
-dbl_list_add_tail(dbl_list_t dll, void *element)
-{
-  struct dll *tail;
+dbl_list_add_head(dbl_list_t dll, void *element) {
+    struct dll *head;
 
-  if(element == NULL) {
-    return;
-  }
+    if (element == NULL) {
+        return;
+    }
 
-  /* Don't add twice */
-  dbl_list_remove(dll, element);
+    /* Don't add twice */
+    dbl_list_remove(dll, element);
 
-  tail = dbl_list_tail(dll);
+    head = dbl_list_head(dll);
 
-  if(tail == NULL) {
-    /* The list was empty */
+    ((struct dll *) element)->previous = NULL;
+    ((struct dll *) element)->next = head;
+
+    if (head) {
+        /* If the list was not empty, update ->previous on the old head */
+        head->previous = element;
+    }
+
     *dll = element;
-  } else {
-    tail->next = element;
-  }
-
-  ((struct dll *)element)->previous = tail;
-  ((struct dll *)element)->next = NULL;
 }
+
 /*---------------------------------------------------------------------------*/
 void
-dbl_list_add_after(dbl_list_t dll, void *existing, void *element)
-{
-  if(element == NULL || existing == NULL) {
-    return;
-  }
+dbl_list_add_tail(dbl_list_t dll, void *element) {
+    struct dll *tail;
 
-  /* Don't add twice */
-  dbl_list_remove(dll, element);
+    if (element == NULL) {
+        return;
+    }
 
-  ((struct dll *)element)->next = ((struct dll *)existing)->next;
-  ((struct dll *)element)->previous = existing;
+    /* Don't add twice */
+    dbl_list_remove(dll, element);
 
-  if(((struct dll *)existing)->next) {
-    ((struct dll *)existing)->next->previous = element;
-  }
-  ((struct dll *)existing)->next = element;
+    tail = dbl_list_tail(dll);
+
+    if (tail == NULL) {
+        /* The list was empty */
+        *dll = element;
+    } else {
+        tail->next = element;
+    }
+
+    ((struct dll *) element)->previous = tail;
+    ((struct dll *) element)->next = NULL;
 }
+
 /*---------------------------------------------------------------------------*/
 void
-dbl_list_add_before(dbl_list_t dll, void *existing, void *element)
-{
-  if(element == NULL || existing == NULL) {
-    return;
-  }
+dbl_list_add_after(dbl_list_t dll, void *existing, void *element) {
+    if (element == NULL || existing == NULL) {
+        return;
+    }
 
-  /* Don't add twice */
-  dbl_list_remove(dll, element);
+    /* Don't add twice */
+    dbl_list_remove(dll, element);
 
-  ((struct dll *)element)->next = existing;
-  ((struct dll *)element)->previous = ((struct dll *)existing)->previous;
+    ((struct dll *) element)->next = ((struct dll *) existing)->next;
+    ((struct dll *) element)->previous = existing;
 
-  if(((struct dll *)existing)->previous) {
-    ((struct dll *)existing)->previous->next = element;
-  }
-  ((struct dll *)existing)->previous = element;
-
-  /* If we added before the list's head, we must update the head */
-  if(*dll == existing) {
-    *dll = element;
-  }
+    if (((struct dll *) existing)->next) {
+        ((struct dll *) existing)->next->previous = element;
+    }
+    ((struct dll *) existing)->next = element;
 }
+
+/*---------------------------------------------------------------------------*/
+void
+dbl_list_add_before(dbl_list_t dll, void *existing, void *element) {
+    if (element == NULL || existing == NULL) {
+        return;
+    }
+
+    /* Don't add twice */
+    dbl_list_remove(dll, element);
+
+    ((struct dll *) element)->next = existing;
+    ((struct dll *) element)->previous = ((struct dll *) existing)->previous;
+
+    if (((struct dll *) existing)->previous) {
+        ((struct dll *) existing)->previous->next = element;
+    }
+    ((struct dll *) existing)->previous = element;
+
+    /* If we added before the list's head, we must update the head */
+    if (*dll == existing) {
+        *dll = element;
+    }
+}
+
 /*---------------------------------------------------------------------------*/
 unsigned long
-dbl_list_length(const_dbl_list_t dll)
-{
-  unsigned long len = 0;
-  struct dll *this;
+dbl_list_length(const_dbl_list_t dll) {
+    unsigned long len = 0;
+    struct dll *this;
 
-  if(*dll == NULL) {
-    return 0;
-  }
+    if (*dll == NULL) {
+        return 0;
+    }
 
-  for(this = *dll; this != NULL; this = this->next) {
-    len++;
-  }
+    for (this = *dll; this != NULL; this = this->next) {
+        len++;
+    }
 
-  return len;
+    return len;
 }
+
 /*---------------------------------------------------------------------------*/
 bool
-dbl_list_is_empty(const_dbl_list_t dll)
-{
-  return *dll == NULL ? true : false;
+dbl_list_is_empty(const_dbl_list_t dll) {
+    return *dll == NULL ? true : false;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

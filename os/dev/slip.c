@@ -40,7 +40,8 @@
 #define SLIP_ESC_END 0334
 #define SLIP_ESC_ESC 0335
 /*---------------------------------------------------------------------------*/
-PROCESS(slip_process, "SLIP driver");
+PROCESS(slip_process,
+"SLIP driver");
 /*---------------------------------------------------------------------------*/
 #if SLIP_CONF_WITH_STATS
 static uint16_t slip_rubbish, slip_twopackets, slip_overflow, slip_ip_drop;
@@ -53,10 +54,10 @@ static uint16_t slip_rubbish, slip_twopackets, slip_overflow, slip_ip_drop;
 #define RX_BUFSIZE (UIP_BUFSIZE + 16)
 /*---------------------------------------------------------------------------*/
 enum {
-  STATE_TWOPACKETS = 0, /* We have 2 packets and drop incoming data. */
-  STATE_OK = 1,
-  STATE_ESC = 2,
-  STATE_RUBBISH = 3,
+    STATE_TWOPACKETS = 0, /* We have 2 packets and drop incoming data. */
+    STATE_OK = 1,
+    STATE_ESC = 2,
+    STATE_RUBBISH = 3,
 };
 /*---------------------------------------------------------------------------*/
 /*
@@ -75,252 +76,259 @@ static uint8_t rxbuf[RX_BUFSIZE];
 static uint16_t pkt_end;    /* SLIP_END tracker. */
 
 static void (*input_callback)(void) = NULL;
-/*---------------------------------------------------------------------------*/
-void
-slip_set_input_callback(void (*c)(void))
-{
-  input_callback = c;
-}
-/*---------------------------------------------------------------------------*/
-void
-slip_send(void)
-{
-  slip_write(uip_buf, uip_len);
-}
-/*---------------------------------------------------------------------------*/
-void
-slip_write(const void *_ptr, int len)
-{
-  const uint8_t *ptr = _ptr;
-  uint16_t i;
-  uint8_t c;
 
-  slip_arch_writeb(SLIP_END);
+/*---------------------------------------------------------------------------*/
+void
+slip_set_input_callback(void (*c)(void)) {
+    input_callback = c;
+}
 
-  for(i = 0; i < len; ++i) {
-    c = *ptr++;
-    if(c == SLIP_END) {
-      slip_arch_writeb(SLIP_ESC);
-      c = SLIP_ESC_END;
-    } else if(c == SLIP_ESC) {
-      slip_arch_writeb(SLIP_ESC);
-      c = SLIP_ESC_ESC;
+/*---------------------------------------------------------------------------*/
+void
+slip_send(void) {
+    slip_write(uip_buf, uip_len);
+}
+
+/*---------------------------------------------------------------------------*/
+void
+slip_write(const void *_ptr, int len) {
+    const uint8_t *ptr = _ptr;
+    uint16_t i;
+    uint8_t c;
+
+    slip_arch_writeb(SLIP_END);
+
+    for (i = 0; i < len; ++i) {
+        c = *ptr++;
+        if (c == SLIP_END) {
+            slip_arch_writeb(SLIP_ESC);
+            c = SLIP_ESC_END;
+        } else if (c == SLIP_ESC) {
+            slip_arch_writeb(SLIP_ESC);
+            c = SLIP_ESC_ESC;
+        }
+        slip_arch_writeb(c);
     }
-    slip_arch_writeb(c);
-  }
 
-  slip_arch_writeb(SLIP_END);
+    slip_arch_writeb(SLIP_END);
 }
+
 /*---------------------------------------------------------------------------*/
 static void
-rxbuf_init(void)
-{
-  begin = next_free = pkt_end = 0;
-  state = STATE_OK;
+rxbuf_init(void) {
+    begin = next_free = pkt_end = 0;
+    state = STATE_OK;
 }
+
 /*---------------------------------------------------------------------------*/
 static uint16_t
-slip_poll_handler(uint8_t *outbuf, uint16_t blen)
-{
-  /*
-   * Interrupt can not change begin but may change pkt_end.
-   * If pkt_end != begin it will not change again.
-   */
-  if(begin != pkt_end) {
-    uint16_t len;
-    uint16_t cur_next_free;
-    uint16_t cur_ptr;
-    int esc = 0;
+slip_poll_handler(uint8_t *outbuf, uint16_t blen) {
+    /*
+     * Interrupt can not change begin but may change pkt_end.
+     * If pkt_end != begin it will not change again.
+     */
+    if (begin != pkt_end) {
+        uint16_t len;
+        uint16_t cur_next_free;
+        uint16_t cur_ptr;
+        int esc = 0;
 
-    if(begin < pkt_end) {
-      uint16_t i;
-      len = 0;
-      for(i = begin; i < pkt_end; ++i) {
-        if(len > blen) {
-          len = 0;
-          break;
-        }
-        if(esc) {
-          if(rxbuf[i] == SLIP_ESC_ESC) {
-            outbuf[len] = SLIP_ESC;
-            len++;
-          } else if(rxbuf[i] == SLIP_ESC_END) {
-            outbuf[len] = SLIP_END;
-            len++;
-          }
-          esc = 0;
-        } else if(rxbuf[i] == SLIP_ESC) {
-          esc = 1;
+        if (begin < pkt_end) {
+            uint16_t i;
+            len = 0;
+            for (i = begin; i < pkt_end; ++i) {
+                if (len > blen) {
+                    len = 0;
+                    break;
+                }
+                if (esc) {
+                    if (rxbuf[i] == SLIP_ESC_ESC) {
+                        outbuf[len] = SLIP_ESC;
+                        len++;
+                    } else if (rxbuf[i] == SLIP_ESC_END) {
+                        outbuf[len] = SLIP_END;
+                        len++;
+                    }
+                    esc = 0;
+                } else if (rxbuf[i] == SLIP_ESC) {
+                    esc = 1;
+                } else {
+                    outbuf[len] = rxbuf[i];
+                    len++;
+                }
+            }
         } else {
-          outbuf[len] = rxbuf[i];
-          len++;
+            uint16_t i;
+            len = 0;
+            for (i = begin; i < RX_BUFSIZE; ++i) {
+                if (len > blen) {
+                    len = 0;
+                    break;
+                }
+                if (esc) {
+                    if (rxbuf[i] == SLIP_ESC_ESC) {
+                        outbuf[len] = SLIP_ESC;
+                        len++;
+                    } else if (rxbuf[i] == SLIP_ESC_END) {
+                        outbuf[len] = SLIP_END;
+                        len++;
+                    }
+                    esc = 0;
+                } else if (rxbuf[i] == SLIP_ESC) {
+                    esc = 1;
+                } else {
+                    outbuf[len] = rxbuf[i];
+                    len++;
+                }
+            }
+            for (i = 0; i < pkt_end; ++i) {
+                if (len > blen) {
+                    len = 0;
+                    break;
+                }
+                if (esc) {
+                    if (rxbuf[i] == SLIP_ESC_ESC) {
+                        outbuf[len] = SLIP_ESC;
+                        len++;
+                    } else if (rxbuf[i] == SLIP_ESC_END) {
+                        outbuf[len] = SLIP_END;
+                        len++;
+                    }
+                    esc = 0;
+                } else if (rxbuf[i] == SLIP_ESC) {
+                    esc = 1;
+                } else {
+                    outbuf[len] = rxbuf[i];
+                    len++;
+                }
+            }
         }
-      }
-    } else {
-      uint16_t i;
-      len = 0;
-      for(i = begin; i < RX_BUFSIZE; ++i) {
-        if(len > blen) {
-          len = 0;
-          break;
+
+        /* Remove data from buffer together with the copied packet. */
+        pkt_end = pkt_end + 1;
+        if (pkt_end == RX_BUFSIZE) {
+            pkt_end = 0;
         }
-        if(esc) {
-          if(rxbuf[i] == SLIP_ESC_ESC) {
-            outbuf[len] = SLIP_ESC;
-            len++;
-          } else if(rxbuf[i] == SLIP_ESC_END) {
-            outbuf[len] = SLIP_END;
-            len++;
-          }
-          esc = 0;
-        } else if(rxbuf[i] == SLIP_ESC) {
-          esc = 1;
+        if (pkt_end != next_free) {
+            cur_next_free = next_free;
+            cur_ptr = pkt_end;
+            while (cur_ptr != cur_next_free) {
+                if (rxbuf[cur_ptr] == SLIP_END) {
+                    uint16_t tmp_begin = pkt_end;
+                    pkt_end = cur_ptr;
+                    begin = tmp_begin;
+                    /* One more packet is buffered, need to be polled again! */
+                    process_poll(&slip_process);
+                    break;
+                }
+                cur_ptr++;
+                if (cur_ptr == RX_BUFSIZE) {
+                    cur_ptr = 0;
+                }
+            }
+            if (cur_ptr == cur_next_free) {
+                /* no more pending full packet found */
+                begin = pkt_end;
+            }
         } else {
-          outbuf[len] = rxbuf[i];
-          len++;
+            begin = pkt_end;
         }
-      }
-      for(i = 0; i < pkt_end; ++i) {
-        if(len > blen) {
-          len = 0;
-          break;
-        }
-        if(esc) {
-          if(rxbuf[i] == SLIP_ESC_ESC) {
-            outbuf[len] = SLIP_ESC;
-            len++;
-          } else if(rxbuf[i] == SLIP_ESC_END) {
-            outbuf[len] = SLIP_END;
-            len++;
-          }
-          esc = 0;
-        } else if(rxbuf[i] == SLIP_ESC) {
-          esc = 1;
-        } else {
-          outbuf[len] = rxbuf[i];
-          len++;
-        }
-      }
+        return len;
     }
 
-    /* Remove data from buffer together with the copied packet. */
-    pkt_end = pkt_end + 1;
-    if(pkt_end == RX_BUFSIZE) {
-      pkt_end = 0;
-    }
-    if(pkt_end != next_free) {
-      cur_next_free = next_free;
-      cur_ptr = pkt_end;
-      while(cur_ptr != cur_next_free) {
-        if(rxbuf[cur_ptr] == SLIP_END) {
-          uint16_t tmp_begin = pkt_end;
-          pkt_end = cur_ptr;
-          begin = tmp_begin;
-          /* One more packet is buffered, need to be polled again! */
-          process_poll(&slip_process);
-          break;
-        }
-        cur_ptr++;
-        if(cur_ptr == RX_BUFSIZE) {
-          cur_ptr = 0;
-        }
-      }
-      if(cur_ptr == cur_next_free) {
-        /* no more pending full packet found */
-        begin = pkt_end;
-      }
-    } else {
-      begin = pkt_end;
-    }
-    return len;
-  }
-
-  return 0;
+    return 0;
 }
+
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(slip_process, ev, data)
+PROCESS_THREAD(slip_process, ev, data
+)
 {
-  PROCESS_BEGIN();
+PROCESS_BEGIN();
 
-  rxbuf_init();
+rxbuf_init();
 
-  while(1) {
-    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
-    /* Move packet from rxbuf to buffer provided by uIP. */
-    uip_len = slip_poll_handler(uip_buf, UIP_BUFSIZE);
+while(1) {
+PROCESS_YIELD_UNTIL(ev
+== PROCESS_EVENT_POLL);
+/* Move packet from rxbuf to buffer provided by uIP. */
+uip_len = slip_poll_handler(uip_buf, UIP_BUFSIZE);
 
-    if(uip_len > 0) {
-      if(input_callback) {
-        input_callback();
-      }
-      tcpip_input();
-    }
-  }
+if(uip_len > 0) {
+if(input_callback) {
+input_callback();
 
-  PROCESS_END();
 }
+
+tcpip_input();
+
+}
+}
+
+PROCESS_END();
+
+}
+
 /*---------------------------------------------------------------------------*/
 int
-slip_input_byte(unsigned char c)
-{
-  uint16_t cur_end;
-  switch(state) {
-  case STATE_RUBBISH:
-    if(c == SLIP_END) {
-      state = STATE_OK;
+slip_input_byte(unsigned char c) {
+    uint16_t cur_end;
+    switch (state) {
+        case STATE_RUBBISH:
+            if (c == SLIP_END) {
+                state = STATE_OK;
+            }
+            return 0;
+
+        case STATE_ESC:
+            if (c != SLIP_ESC_END && c != SLIP_ESC_ESC) {
+                state = STATE_RUBBISH;
+                SLIP_STATISTICS(slip_rubbish++);
+                next_free = pkt_end;    /* remove rubbish */
+                return 0;
+            }
+            state = STATE_OK;
+            break;
     }
-    return 0;
 
-  case STATE_ESC:
-    if(c != SLIP_ESC_END && c != SLIP_ESC_ESC) {
-      state = STATE_RUBBISH;
-      SLIP_STATISTICS(slip_rubbish++);
-      next_free = pkt_end;    /* remove rubbish */
-      return 0;
+    if (c == SLIP_ESC) {
+        state = STATE_ESC;
     }
-    state = STATE_OK;
-    break;
-  }
 
-  if(c == SLIP_ESC) {
-    state = STATE_ESC;
-  }
-
-  /* add_char: */
-  cur_end = next_free;
-  next_free = next_free + 1;
-  if(next_free == RX_BUFSIZE) {
-    next_free = 0;
-  }
-  if(next_free == begin) {         /* rxbuf is full */
-    state = STATE_RUBBISH;
-    SLIP_STATISTICS(slip_overflow++);
-    next_free = pkt_end;            /* remove rubbish */
-    return 0;
-  }
-  rxbuf[cur_end] = c;
-
-  if(c == SLIP_END) {
-    /*
-     * We have a new packet, possibly of zero length.
-     *
-     * There may already be one packet buffered.
-     */
-    if(cur_end != pkt_end) {  /* Non zero length. */
-      if(begin == pkt_end) {  /* None buffered. */
-        pkt_end = cur_end;
-      } else {
-        SLIP_STATISTICS(slip_twopackets++);
-      }
-      process_poll(&slip_process);
-      return 1;
-    } else {
-      /* Empty packet, reset the pointer */
-      next_free = cur_end;
+    /* add_char: */
+    cur_end = next_free;
+    next_free = next_free + 1;
+    if (next_free == RX_BUFSIZE) {
+        next_free = 0;
     }
-    return 0;
-  }
+    if (next_free == begin) {         /* rxbuf is full */
+        state = STATE_RUBBISH;
+        SLIP_STATISTICS(slip_overflow++);
+        next_free = pkt_end;            /* remove rubbish */
+        return 0;
+    }
+    rxbuf[cur_end] = c;
 
-  return 0;
+    if (c == SLIP_END) {
+        /*
+         * We have a new packet, possibly of zero length.
+         *
+         * There may already be one packet buffered.
+         */
+        if (cur_end != pkt_end) {  /* Non zero length. */
+            if (begin == pkt_end) {  /* None buffered. */
+                pkt_end = cur_end;
+            } else {
+                SLIP_STATISTICS(slip_twopackets++);
+            }
+            process_poll(&slip_process);
+            return 1;
+        } else {
+            /* Empty packet, reset the pointer */
+            next_free = cur_end;
+        }
+        return 0;
+    }
+
+    return 0;
 }
 /*---------------------------------------------------------------------------*/

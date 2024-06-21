@@ -66,11 +66,11 @@
  *
  */
 struct ringbuf {
-  uint8_t *data;
-  uint8_t mask;
+    uint8_t *data;
+    uint8_t mask;
 
-  /* XXX these must be 8-bit quantities to avoid race conditions. */
-  uint8_t put_ptr, get_ptr;
+    /* XXX these must be 8-bit quantities to avoid race conditions. */
+    uint8_t put_ptr, get_ptr;
 };
 
 /**
@@ -87,11 +87,10 @@ struct ringbuf {
  *
  */
 static inline void
-ringbuf_init(struct ringbuf *r, uint8_t *a, uint8_t size_power_of_two)
-{
-  r->data = a;
-  r->mask = size_power_of_two - 1;
-  r->put_ptr = r->get_ptr = 0;
+ringbuf_init(struct ringbuf *r, uint8_t *a, uint8_t size_power_of_two) {
+    r->data = a;
+    r->mask = size_power_of_two - 1;
+    r->put_ptr = r->get_ptr = 0;
 }
 
 /**
@@ -105,7 +104,7 @@ ringbuf_init(struct ringbuf *r, uint8_t *a, uint8_t size_power_of_two)
  *             handler.
  *
  */
-int     ringbuf_put(struct ringbuf *r, uint8_t c);
+int ringbuf_put(struct ringbuf *r, uint8_t c);
 
 
 /**
@@ -118,21 +117,21 @@ int     ringbuf_put(struct ringbuf *r, uint8_t c);
  *             handler.
  *
  */
-int     ringbuf_get(struct ringbuf *r);
+int ringbuf_get(struct ringbuf *r);
 
 /**
  * \brief      Get the size of a ring buffer
  * \param r    A pointer to a struct ringbuf to hold the state of the ring buffer
  * \return     The size of the buffer.
  */
-int     ringbuf_size(struct ringbuf *r);
+int ringbuf_size(struct ringbuf *r);
 
 /**
  * \brief      Get the number of elements currently in the ring buffer
  * \param r    A pointer to a struct ringbuf to hold the state of the ring buffer
  * \return     The number of elements in the buffer.
  */
-int     ringbuf_elements(struct ringbuf *r);
+int ringbuf_elements(struct ringbuf *r);
 
 #endif /* RINGBUF_H_ */
 

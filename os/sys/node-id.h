@@ -30,42 +30,43 @@
  *
  */
 
- /**
-  * \addtogroup sys
-  * @{
-  *
-  * \defgroup node-id Node ID management
-  * @{
-  *
-  * \file
-  *    Node-id (simple 16-bit identifiers) handling
-  * \author Simon Duquennoy <simon.duquennoy@ri.se>
-  *
-  */
+/**
+ * \addtogroup sys
+ * @{
+ *
+ * \defgroup node-id Node ID management
+ * @{
+ *
+ * \file
+ *    Node-id (simple 16-bit identifiers) handling
+ * \author Simon Duquennoy <simon.duquennoy@ri.se>
+ *
+ */
 
 #ifndef NODE_ID_H_
 #define NODE_ID_H_
 
 #include "contiki.h"
 #include "net/linkaddr.h"
+
 #if BUILD_WITH_DEPLOYMENT
 #include "services/deployment/deployment.h"
 #endif
 
 /* A global variable that hosts the node ID */
 extern uint16_t node_id;
+
 /**
  * Initialize the node ID. Must be called after initialized of linkaddr
  */
 static inline void
-node_id_init(void)
-{
+node_id_init(void) {
 #if BUILD_WITH_DEPLOYMENT
-  deployment_init();
+    deployment_init();
 #else /* BUILD_WITH_DEPLOYMENT */
-  /* Initialize with a default value derived from linkaddr */
-  node_id = linkaddr_node_addr.u8[LINKADDR_SIZE - 1]
-            + (linkaddr_node_addr.u8[LINKADDR_SIZE - 2] << 8);
+    /* Initialize with a default value derived from linkaddr */
+    node_id = linkaddr_node_addr.u8[LINKADDR_SIZE - 1]
+              + (linkaddr_node_addr.u8[LINKADDR_SIZE - 2] << 8);
 #endif /* BUILD_WITH_DEPLOYMENT */
 }
 

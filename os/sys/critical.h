@@ -62,11 +62,10 @@
  * critical_exit().
  */
 static inline int_master_status_t
-critical_enter()
-{
-  int_master_status_t status = int_master_read_and_disable();
-  memory_barrier();
-  return status;
+critical_enter() {
+    int_master_status_t status = int_master_read_and_disable();
+    memory_barrier();
+    return status;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -78,10 +77,9 @@ critical_enter()
  * call to critical_enter().
  */
 static inline void
-critical_exit(int_master_status_t status)
-{
-  memory_barrier();
-  int_master_status_set(status);
+critical_exit(int_master_status_t status) {
+    memory_barrier();
+    int_master_status_set(status);
 }
 /*---------------------------------------------------------------------------*/
 #endif /* CRITICAL_H_ */

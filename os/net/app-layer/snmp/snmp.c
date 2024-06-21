@@ -49,69 +49,79 @@
 
 /*---------------------------------------------------------------------------*/
 #define SNMP_SERVER_PORT UIP_HTONS(SNMP_PORT)
-PROCESS(snmp_process, "SNMP Process");
+PROCESS(snmp_process,
+"SNMP Process");
 
 static struct uip_udp_conn *snmp_udp_conn;
+
 /*---------------------------------------------------------------------------*/
 void
-snmp_init()
-{
-  snmp_mib_init();
-  process_start(&snmp_process, NULL);
+snmp_init() {
+    snmp_mib_init();
+    process_start(&snmp_process, NULL);
 }
 /*---------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(snmp_process, ev, data)
+PROCESS_THREAD(snmp_process, ev, data
+)
 {
-  PROCESS_BEGIN();
+PROCESS_BEGIN();
 
-  snmp_packet_t snmp_packet;
+snmp_packet_t snmp_packet;
 
-  /* new connection with remote host */
-  snmp_udp_conn = udp_new(NULL, 0, NULL);
-  if(snmp_udp_conn == NULL) {
-    LOG_ERR("No UDP connection available, exiting the process!\n");
-    PROCESS_EXIT();
-  }
+/* new connection with remote host */
+snmp_udp_conn = udp_new(NULL, 0, NULL);
+if(snmp_udp_conn == NULL) {
+LOG_ERR("No UDP connection available, exiting the process!\n");
 
-  udp_bind(snmp_udp_conn, SNMP_SERVER_PORT);
-  LOG_DBG("Listening on port %u\n", uip_ntohs(snmp_udp_conn->lport));
+PROCESS_EXIT();
 
-  while(1) {
-    PROCESS_YIELD();
+}
 
-    if(ev != tcpip_event) {
-      continue;
-    }
+udp_bind(snmp_udp_conn, SNMP_SERVER_PORT);
+LOG_DBG("Listening on port %u\n", uip_ntohs(snmp_udp_conn->lport));
 
-    if(!uip_newdata()) {
-      continue;
-    }
+while(1) {
+PROCESS_YIELD();
 
-    LOG_DBG("receiving UDP datagram from [");
-    LOG_DBG_6ADDR(&UIP_IP_BUF->srcipaddr);
-    LOG_DBG_("]:%u", uip_ntohs(UIP_UDP_BUF->srcport));
-    LOG_DBG_(" Length: %u\n", uip_datalen());
+if(ev != tcpip_event) {
+continue;
+}
 
-    /* Setup SNMP packet */
-    snmp_packet.in = (uint8_t *)uip_appdata;
-    snmp_packet.used = uip_datalen();
+if(!uip_newdata()) {
+continue;
+}
 
-    snmp_packet.out = (uint8_t *)(uip_appdata + UIP_BUFSIZE - UIP_IPUDPH_LEN);
-    snmp_packet.max = UIP_BUFSIZE - UIP_IPUDPH_LEN;
+LOG_DBG("receiving UDP datagram from [");
+LOG_DBG_6ADDR(&UIP_IP_BUF->srcipaddr);
+LOG_DBG_("]:%u", uip_ntohs(UIP_UDP_BUF->srcport));
+LOG_DBG_(" Length: %u\n", uip_datalen());
 
-    /* Handle the request */
-    if(!snmp_engine(&snmp_packet)) {
-      LOG_DBG("Error while handling the request\n");
-      continue;
-    }
+/* Setup SNMP packet */
+snmp_packet.
+in = (uint8_t *) uip_appdata;
+snmp_packet.
+used = uip_datalen();
 
-    LOG_DBG("Sending response\n");
-    /* Send the response */
-    uip_udp_packet_sendto(snmp_udp_conn, snmp_packet.out, snmp_packet.used, &UIP_IP_BUF->srcipaddr, UIP_UDP_BUF->srcport);
-  } /* while (1) */
+snmp_packet.
+out = (uint8_t * )(uip_appdata + UIP_BUFSIZE - UIP_IPUDPH_LEN);
+snmp_packet.
+max = UIP_BUFSIZE - UIP_IPUDPH_LEN;
 
-  PROCESS_END();
+/* Handle the request */
+if(!snmp_engine(&snmp_packet)) {
+LOG_DBG("Error while handling the request\n");
+continue;
+}
+
+LOG_DBG("Sending response\n");
+/* Send the response */
+uip_udp_packet_sendto(snmp_udp_conn, snmp_packet
+.out, snmp_packet.used, &UIP_IP_BUF->srcipaddr, UIP_UDP_BUF->srcport);
+} /* while (1) */
+
+PROCESS_END();
+
 }
 /*---------------------------------------------------------------------------*/

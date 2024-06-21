@@ -58,6 +58,7 @@
  * \return The description string
 */
 const char *rpl_dag_state_to_str(enum rpl_dag_state state);
+
 /**
  * Returns the IPv6 address of the RPL DAG root, if any
  *
@@ -65,16 +66,19 @@ const char *rpl_dag_state_to_str(enum rpl_dag_state state);
  * \return 1 if the root address was copied, 0 otherwise
 */
 int rpl_dag_get_root_ipaddr(uip_ipaddr_t *ipaddr);
+
 /**
  * Start poisoning and leave the DAG after a delay
  *
 */
 void rpl_dag_poison_and_leave(void);
+
 /**
  * Leaves the current DAG
  *
 */
 void rpl_dag_leave(void);
+
 /**
  * A function called periodically. Used to age the DAG (decrease lifetime
  * and expire DAG accordingly)
@@ -115,7 +119,7 @@ int rpl_is_addr_in_our_dag(const uip_ipaddr_t *addr);
  * \param flags The prefix flags (from DIO)
 */
 void rpl_dag_init_root(uint8_t instance_id, uip_ipaddr_t *dag_id,
-  uip_ipaddr_t *prefix, unsigned prefix_len, uint8_t flags);
+                       uip_ipaddr_t *prefix, unsigned prefix_len, uint8_t flags);
 
 /**
  * Returns pointer to the default instance (for compatibility with legagy RPL code)
@@ -192,6 +196,6 @@ void rpl_dag_update_state(void);
 */
 void rpl_dag_init(void);
 
- /** @} */
+/** @} */
 
 #endif /* RPL_DAG_H */

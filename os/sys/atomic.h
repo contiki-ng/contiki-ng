@@ -62,9 +62,9 @@
  * This macro expands to atomic_generic_cas_uint8() or CPU-provided
  * implementation. Platform-independent code should use this macro
  * instead of atomic_generic_cas_uint8(). 
- */  
+ */
 #ifndef atomic_cas_uint8
-#define atomic_cas_uint8(t,o,n) atomic_generic_cas_uint8((t),(o),(n))
+#define atomic_cas_uint8(t, o, n) atomic_generic_cas_uint8((t),(o),(n))
 #endif /* atomic_cas_uint8 */
 
 /**

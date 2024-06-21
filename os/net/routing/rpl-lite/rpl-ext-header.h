@@ -39,8 +39,8 @@
  * \author Simon Duquennoy <simon.duquennoy@inria.fr>
  */
 
- #ifndef RPL_EXT_HEADER_H_
- #define RPL_EXT_HEADER_H_
+#ifndef RPL_EXT_HEADER_H_
+#define RPL_EXT_HEADER_H_
 
 /********** Public functions **********/
 
@@ -85,6 +85,6 @@ int rpl_ext_header_update(void);
 */
 bool rpl_ext_header_remove(void);
 
- /** @} */
+/** @} */
 
 #endif /* RPL_EXT_HEADER_H_ */

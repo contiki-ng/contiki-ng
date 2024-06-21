@@ -49,26 +49,29 @@
 
 typedef struct coap_separate {
 
-  coap_endpoint_t endpoint;
+    coap_endpoint_t endpoint;
 
-  coap_message_type_t type;
-  uint16_t mid;
+    coap_message_type_t type;
+    uint16_t mid;
 
-  uint8_t token_len;
-  uint8_t token[COAP_TOKEN_LEN];
+    uint8_t token_len;
+    uint8_t token[COAP_TOKEN_LEN];
 
-  uint32_t block1_num;
-  uint16_t block1_size;
+    uint32_t block1_num;
+    uint16_t block1_size;
 
-  uint32_t block2_num;
-  uint16_t block2_size;
+    uint32_t block2_num;
+    uint16_t block2_size;
 } coap_separate_t;
 
 int coap_separate_handler(coap_resource_t *resource, coap_message_t *request,
                           coap_message_t *response);
+
 void coap_separate_reject(void);
+
 void coap_separate_accept(coap_message_t *request,
                           coap_separate_t *separate_store);
+
 void coap_separate_resume(coap_message_t *response,
                           coap_separate_t *separate_store,
                           uint8_t code);

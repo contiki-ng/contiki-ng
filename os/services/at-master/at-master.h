@@ -29,6 +29,7 @@
  */
 #ifndef AT_MASTER_H_
 #define AT_MASTER_H_
+
 #include "contiki.h"
 /*---------------------------------------------------------------------------*/
 #define AT_DEFAULT_RESPONSE_OK    "\r\nOK\r\n"
@@ -40,9 +41,9 @@ extern process_event_t at_cmd_received_event;
 struct at_cmd;
 /*---------------------------------------------------------------------------*/
 typedef enum {
-  AT_STATUS_OK,
-  AT_STATUS_ERROR,
-  AT_STATUS_INVALID_ARGS_ERROR,
+    AT_STATUS_OK,
+    AT_STATUS_ERROR,
+    AT_STATUS_INVALID_ARGS_ERROR,
 } at_status_t;
 /*---------------------------------------------------------------------------*/
 /**
@@ -75,14 +76,15 @@ uint8_t at_send(char *s, uint8_t len);
 typedef void (*at_event_callback_t)(struct at_cmd *cmd,
                                     uint8_t len,
                                     char *data);
+
 /*---------------------------------------------------------------------------*/
 struct at_cmd {
-  struct at_cmd *next;
-  const char *cmd_header;
-  uint8_t cmd_hdr_len;
-  uint8_t cmd_max_len;
-  at_event_callback_t event_callback;
-  struct process *app_process;
+    struct at_cmd *next;
+    const char *cmd_header;
+    uint8_t cmd_hdr_len;
+    uint8_t cmd_max_len;
+    at_event_callback_t event_callback;
+    struct process *app_process;
 };
 /*---------------------------------------------------------------------------*/
 /**
@@ -101,6 +103,7 @@ at_status_t at_register(struct at_cmd *cmd,
                         const uint8_t cmd_hdr_len,
                         const uint8_t cmd_max_len,
                         at_event_callback_t event_callback);
+
 /*---------------------------------------------------------------------------*/
 struct at_cmd *at_list(void);
 /*---------------------------------------------------------------------------*/
@@ -120,4 +123,5 @@ at_status_t at_register(struct at_cmd *cmd,
                         const uint8_t cmd_hdr_len,
                         const uint8_t cmd_max_len,
                         at_event_callback_t event_callback);
+
 #endif /* AT_MASTER_H_ */

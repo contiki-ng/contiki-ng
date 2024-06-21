@@ -47,7 +47,10 @@
 #if ASSERT_RETURNS
 void _xassert(const char *, int);
 #else
-void _xassert(const char *, int) CC_NORETURN;
+
+void _xassert(const char *, int)
+
+CC_NORETURN;
 #endif /* ASSERT_RETURNS */
 #endif /* NDEBUG */
 

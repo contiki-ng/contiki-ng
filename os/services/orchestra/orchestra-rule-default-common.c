@@ -50,39 +50,39 @@ static uint16_t slotframe_handle = 0;
 
 /*---------------------------------------------------------------------------*/
 static int
-select_packet(uint16_t *slotframe, uint16_t *timeslot, uint16_t *channel_offset)
-{
-  /* We are the default slotframe, select anything */
-  if(slotframe != NULL) {
-    *slotframe = slotframe_handle;
-  }
-  if(timeslot != NULL) {
-    *timeslot = 0;
-  }
-  return 1;
+select_packet(uint16_t *slotframe, uint16_t *timeslot, uint16_t *channel_offset) {
+    /* We are the default slotframe, select anything */
+    if (slotframe != NULL) {
+        *slotframe = slotframe_handle;
+    }
+    if (timeslot != NULL) {
+        *timeslot = 0;
+    }
+    return 1;
 }
+
 /*---------------------------------------------------------------------------*/
 static void
-init(uint16_t sf_handle)
-{
-  slotframe_handle = sf_handle;
-  /* Default slotframe: for broadcast or unicast to neighbors we
-   * do not have a link to */
-  struct tsch_slotframe *sf_common = tsch_schedule_add_slotframe(slotframe_handle, ORCHESTRA_COMMON_SHARED_PERIOD);
-  tsch_schedule_add_link(sf_common,
-      LINK_OPTION_RX | LINK_OPTION_TX | LINK_OPTION_SHARED,
-      ORCHESTRA_COMMON_SHARED_TYPE, &tsch_broadcast_address,
-      0, ORCHESTRA_DEFAULT_COMMON_CHANNEL_OFFSET, 1);
+init(uint16_t sf_handle) {
+    slotframe_handle = sf_handle;
+    /* Default slotframe: for broadcast or unicast to neighbors we
+     * do not have a link to */
+    struct tsch_slotframe *sf_common = tsch_schedule_add_slotframe(slotframe_handle, ORCHESTRA_COMMON_SHARED_PERIOD);
+    tsch_schedule_add_link(sf_common,
+                           LINK_OPTION_RX | LINK_OPTION_TX | LINK_OPTION_SHARED,
+                           ORCHESTRA_COMMON_SHARED_TYPE, &tsch_broadcast_address,
+                           0, ORCHESTRA_DEFAULT_COMMON_CHANNEL_OFFSET, 1);
 }
+
 /*---------------------------------------------------------------------------*/
 struct orchestra_rule default_common = {
-  init,
-  NULL,
-  select_packet,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  "default common",
-  ORCHESTRA_COMMON_SHARED_PERIOD,
+        init,
+        NULL,
+        select_packet,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        "default common",
+        ORCHESTRA_COMMON_SHARED_PERIOD,
 };

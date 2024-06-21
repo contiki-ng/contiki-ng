@@ -30,17 +30,17 @@
  *
  */
 
- /**
- * \addtogroup rpl-lite
- * @{
- *
- * \file
- *	Header file for rpl-neighbor module
- * \author
- *	Joakim Eriksson <joakime@sics.se>, Nicolas Tsiftes <nvt@sics.se>,
- *  Simon DUquennoy <simon.duquennoy@inria.fr>
- *
- */
+/**
+* \addtogroup rpl-lite
+* @{
+*
+* \file
+*	Header file for rpl-neighbor module
+* \author
+*	Joakim Eriksson <joakime@sics.se>, Nicolas Tsiftes <nvt@sics.se>,
+*  Simon DUquennoy <simon.duquennoy@inria.fr>
+*
+*/
 
 #ifndef RPL_NEIGHBOR_H
 #define RPL_NEIGHBOR_H
@@ -198,6 +198,6 @@ int rpl_neighbor_snprint(char *buf, int buflen, rpl_nbr_t *nbr);
 typedef rpl_nbr_t rpl_parent_t;
 #define rpl_parent_get_from_ipaddr(addr) rpl_neighbor_get_from_ipaddr(addr)
 #define rpl_parent_get_ipaddr(nbr) rpl_neighbor_get_ipaddr(nbr)
- /** @} */
+/** @} */
 
 #endif /* RPL_NEIGHBOR_H */

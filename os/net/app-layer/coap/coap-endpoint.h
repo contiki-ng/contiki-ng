@@ -47,12 +47,13 @@
 #include <stdlib.h>
 
 #ifndef COAP_ENDPOINT_CUSTOM
+
 #include "net/ipv6/uip.h"
 
 typedef struct {
-  uip_ipaddr_t ipaddr;
-  uint16_t port;
-  uint8_t secure;
+    uip_ipaddr_t ipaddr;
+    uint16_t port;
+    uint8_t secure;
 } coap_endpoint_t;
 #endif /* COAP_ENDPOINT_CUSTOM */
 
@@ -98,8 +99,8 @@ void coap_endpoint_print(const coap_endpoint_t *ep);
  *             excluding the ending null-terminator or negative if an
  *             error occurred.
  */
-int  coap_endpoint_snprint(char *str, size_t size,
-                           const coap_endpoint_t *ep);
+int coap_endpoint_snprint(char *str, size_t size,
+                          const coap_endpoint_t *ep);
 
 /**
  * \brief      Parse a CoAP endpoint.

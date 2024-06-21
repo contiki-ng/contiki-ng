@@ -51,8 +51,8 @@
  * \brief ID<->MAC address mapping structure
  */
 struct id_mac {
-  uint16_t id;
-  linkaddr_t mac;
+    uint16_t id;
+    linkaddr_t mac;
 };
 
 /**

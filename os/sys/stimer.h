@@ -81,8 +81,8 @@
  * \hideinitializer
  */
 struct stimer {
-  unsigned long start;
-  unsigned long interval;
+    unsigned long start;
+    unsigned long interval;
 };
 
 /**
@@ -97,14 +97,15 @@ struct stimer {
  *
  */
 static inline void
-stimer_set(struct stimer *t, unsigned long interval)
-{
-  t->interval = interval;
-  t->start = clock_seconds();
+stimer_set(struct stimer *t, unsigned long interval) {
+    t->interval = interval;
+    t->start = clock_seconds();
 }
 
 void stimer_reset(struct stimer *t);
+
 void stimer_restart(struct stimer *t);
+
 bool stimer_expired(struct stimer *t);
 
 /**
@@ -118,9 +119,8 @@ bool stimer_expired(struct stimer *t);
  *
  */
 static inline unsigned long
-stimer_remaining(struct stimer *t)
-{
-  return t->start + t->interval - clock_seconds();
+stimer_remaining(struct stimer *t) {
+    return t->start + t->interval - clock_seconds();
 }
 
 

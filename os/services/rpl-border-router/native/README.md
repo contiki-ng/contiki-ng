@@ -8,11 +8,12 @@ applications on the host to transparently reach all the nodes in the
 
 This is designed to interact with the a ../slip-radio example running on a
 mote that is either directly USB/TTY connected, or is remote via a TCP
-connect.  What's on the SLIP interface is really not Serial Line IP, but SLIP
+connect. What's on the SLIP interface is really not Serial Line IP, but SLIP
 framed 15.4 packets.
 
 The native border router supports a number of commands on its stdin.
 Each are prefixed by !:
+
 * !G - global RPL repair root
 * !M - set MAC address (if coming from RADIO, i.e. SLIP link)
 * !C - show channel (if coming from RADIO, i.e. SLIP link)
@@ -20,8 +21,13 @@ Each are prefixed by !:
 * !Q - exit
 
 Queries are prefixed by ?:
-* ?M is used for requesting the MAC address from the radio in order to use it for uIP6 and its stateless address auto configuration of its IPv6 address. This will make the native border router have the address that correspond to the MAC address of the slip-radio. (response is !M from the slip-radio)
 
-* ?C is used for requesting the currently used channel for the slip-radio. The response is !C with a channel number (from the slip-radio).
+* ?M is used for requesting the MAC address from the radio in order to use it for uIP6 and its stateless address auto
+  configuration of its IPv6 address. This will make the native border router have the address that correspond to the MAC
+  address of the slip-radio. (response is !M from the slip-radio)
 
-* !C is used for setting the channel of the slip-radio (useful if the motes are using another channel than the one used in the slip-radio).
+* ?C is used for requesting the currently used channel for the slip-radio. The response is !C with a channel number (
+  from the slip-radio).
+
+* !C is used for setting the channel of the slip-radio (useful if the motes are using another channel than the one used
+  in the slip-radio).

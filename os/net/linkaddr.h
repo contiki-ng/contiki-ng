@@ -62,11 +62,11 @@
 #endif /* LINKADDR_SIZE */
 
 typedef union {
-  unsigned char u8[LINKADDR_SIZE];
+    unsigned char u8[LINKADDR_SIZE];
 #if LINKADDR_SIZE == 2
-  uint16_t u16;
+    uint16_t u16;
 #else
-  uint16_t u16[LINKADDR_SIZE/2];
+    uint16_t u16[LINKADDR_SIZE / 2];
 #endif /* LINKADDR_SIZE == 2 */
 } linkaddr_t;
 
@@ -121,9 +121,8 @@ extern const linkaddr_t linkaddr_null;
  *             This function sets the link-layer address of the node.
  *
  */
-static inline void linkaddr_set_node_addr(linkaddr_t *addr)
-{
-  linkaddr_copy(&linkaddr_node_addr, addr);
+static inline void linkaddr_set_node_addr(linkaddr_t *addr) {
+    linkaddr_copy(&linkaddr_node_addr, addr);
 }
 
 #endif /* LINKADDR_H_ */

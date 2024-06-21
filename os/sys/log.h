@@ -54,6 +54,7 @@
 #include <stdio.h>
 #include "net/linkaddr.h"
 #include "sys/log-conf.h"
+
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
@@ -101,9 +102,9 @@
 /* Per-module log level */
 
 struct log_module {
-  const char *name;
-  int *curr_log_level;
-  int max_log_level;
+    const char *name;
+    int *curr_log_level;
+    int max_log_level;
 };
 
 extern int curr_log_level_rpl;

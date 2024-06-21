@@ -54,6 +54,7 @@
  * \return The number of printed bytes
  */
 unsigned int dbg_send_bytes(const unsigned char *seq, unsigned int len);
+
 /**
  * \brief Print a character to debug output
  * \param c Character to print

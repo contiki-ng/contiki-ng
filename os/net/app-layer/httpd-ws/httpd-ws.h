@@ -66,10 +66,12 @@
 #endif /* WEBSERVER_CONF_OUTBUF_SIZE */
 
 struct httpd_ws_state;
-typedef char (* httpd_ws_script_t)(struct httpd_ws_state *s);
-typedef int (* httpd_ws_output_headers_t)(struct httpd_ws_state *s,
-                                          char *buffer, int buf_size,
-                                          int index);
+
+typedef char (*httpd_ws_script_t)(struct httpd_ws_state *s);
+
+typedef int (*httpd_ws_output_headers_t)(struct httpd_ws_state *s,
+                                         char *buffer, int buf_size,
+                                         int index);
 
 #define HTTPD_WS_GET      1
 #define HTTPD_WS_POST     2
@@ -83,28 +85,29 @@ typedef int (* httpd_ws_output_headers_t)(struct httpd_ws_state *s,
 #define HTTPD_WS_STATE_REQUEST_INPUT  4
 
 struct httpd_ws_state {
-  struct timer timer;
-  struct psock sin, sout;
-  struct pt outputpt;
-  char inputbuf[HTTPD_INBUF_SIZE];
-  char filename[HTTPD_PATHLEN];
-  const char *content_type;
-  uint16_t content_len;
-  char outbuf[HTTPD_OUTBUF_SIZE];
-  uint16_t outbuf_pos;
-  char state;
-  char request_type;
-  int response_index;
+    struct timer timer;
+    struct psock sin, sout;
+    struct pt outputpt;
+    char inputbuf[HTTPD_INBUF_SIZE];
+    char filename[HTTPD_PATHLEN];
+    const char *content_type;
+    uint16_t content_len;
+    char outbuf[HTTPD_OUTBUF_SIZE];
+    uint16_t outbuf_pos;
+    char state;
+    char request_type;
+    int response_index;
 
-  httpd_ws_output_headers_t output_extra_headers;
-  httpd_ws_script_t script;
+    httpd_ws_output_headers_t output_extra_headers;
+    httpd_ws_script_t script;
 
 #ifdef HTTPD_WS_CONF_USER_STATE
-  HTTPD_WS_CONF_USER_STATE;
+    HTTPD_WS_CONF_USER_STATE;
 #endif
 };
 
 void httpd_ws_init(void);
+
 void httpd_ws_appcall(void *state);
 
 struct httpd_ws_state *httpd_ws_request(char request_type,

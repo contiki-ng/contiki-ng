@@ -44,23 +44,23 @@
 #include "contiki.h"
 #include "dev/leds.h"
 #include "ipso-objects.h"
+
 /*---------------------------------------------------------------------------*/
 void
-ipso_objects_init(void)
-{
-  /* initialize any relevant object for the IPSO Objects */
+ipso_objects_init(void) {
+    /* initialize any relevant object for the IPSO Objects */
 #ifdef IPSO_TEMPERATURE
-  ipso_temperature_init();
+    ipso_temperature_init();
 #endif
 
 #if PLATFORM_HAS_BUTTON
-  ipso_button_init();
+    ipso_button_init();
 #endif
 
 #ifdef IPSO_LIGHT_CONTROL
-  ipso_light_control_init();
+    ipso_light_control_init();
 #elif PLATFORM_HAS_LEDS || LEDS_COUNT
-  ipso_leds_control_init();
+    ipso_leds_control_init();
 #endif
 }
 /*---------------------------------------------------------------------------*/

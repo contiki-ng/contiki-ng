@@ -88,7 +88,7 @@ unsigned short crc16_add(unsigned char b, unsigned short crc);
  *             entire data block.
  */
 unsigned short crc16_data(const unsigned char *data, int datalen,
-			  unsigned short acc);
+                          unsigned short acc);
 
 #endif /* CRC16_H_ */
 

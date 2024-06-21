@@ -49,46 +49,44 @@
 #define ROW_COUNT     16
 
 static const uint8_t toeplitz[COLUMN_COUNT + ROW_COUNT - 1] =
-    {  93 ,  50 , 210 , 134 ,  79 ,  52 , 237 , 192 ,  40 , 201 ,
-        3 , 184 , 152 ,  74 ,  27 ,  28 ,  32 , 111 ,  79 , 222 ,
-      174 ,  51 , 223 ,  66 , 152 , 211 , 234 , 124 ,  92 ,  64 ,
-      206 , 169 , 227 , 155 , 106 ,  87 , 207 , 135 , 238 , 101 ,
-      254 , 163 ,  55 ,  76 ,  50 ,  40 ,   4 , 149 ,  27 ,   1 ,
-      127 , 159 , 160 ,  91 , 251 , 179 , 186 , 200 , 225 ,  47 ,
-      235 , 223 ,  39 , 117 ,  19 };
+        {93, 50, 210, 134, 79, 52, 237, 192, 40, 201,
+         3, 184, 152, 74, 27, 28, 32, 111, 79, 222,
+         174, 51, 223, 66, 152, 211, 234, 124, 92, 64,
+         206, 169, 227, 155, 106, 87, 207, 135, 238, 101,
+         254, 163, 55, 76, 50, 40, 4, 149, 27, 1,
+         127, 159, 160, 91, 251, 179, 186, 200, 225, 47,
+         235, 223, 39, 117, 19};
 
 /*---------------------------------------------------------------------------*/
 static uint8_t
-get_toeplitz_element(uint8_t row, uint8_t column)
-{
-  uint8_t min;
+get_toeplitz_element(uint8_t row, uint8_t column) {
+    uint8_t min;
 
-  min = row < column ? row : column;
-  row -= min;
-  column -= min;
+    min = row < column ? row : column;
+    row -= min;
+    column -= min;
 
-  return toeplitz[row ? COLUMN_COUNT - 1 + row : column];
+    return toeplitz[row ? COLUMN_COUNT - 1 + row : column];
 }
 /*---------------------------------------------------------------------------*/
 /** Performs a multiplication within GF(256) */
 static uint8_t
-mul_gf_256(uint8_t a, uint8_t b)
-{
-  uint8_t p;
-  uint8_t i;
+mul_gf_256(uint8_t a, uint8_t b) {
+    uint8_t p;
+    uint8_t i;
 
-  p = 0;
-  for(i = 0; i < 8; i++) {
-    if(b & 1) {
-      p ^= a;
-      a <<= 1;
-      if(a & 0x100) {
-        a ^= 0x11b;
-      }
-      b >>= 1;
+    p = 0;
+    for (i = 0; i < 8; i++) {
+        if (b & 1) {
+            p ^= a;
+            a <<= 1;
+            if (a & 0x100) {
+                a ^= 0x11b;
+            }
+            b >>= 1;
+        }
     }
-  }
-  return p;
+    return p;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -96,56 +94,55 @@ mul_gf_256(uint8_t a, uint8_t b)
  * ber Generators Secure in a Changing Environment: Improved Security Bounds]
  */
 static void
-extract(uint8_t *target, uint8_t *source)
-{
-  uint8_t row;
-  uint8_t column;
+extract(uint8_t *target, uint8_t *source) {
+    uint8_t row;
+    uint8_t column;
 
-  for(row = 0; row < ROW_COUNT; row++) {
-    target[row] = 0;
-    for(column = 0; column < COLUMN_COUNT; column++) {
-      target[row] ^= mul_gf_256(get_toeplitz_element(row, column), source[column]);
+    for (row = 0; row < ROW_COUNT; row++) {
+        target[row] = 0;
+        for (column = 0; column < COLUMN_COUNT; column++) {
+            target[row] ^= mul_gf_256(get_toeplitz_element(row, column), source[column]);
+        }
     }
-  }
 }
+
 /*---------------------------------------------------------------------------*/
 static void
-seed_16_bytes(uint8_t *result)
-{
-  uint8_t bit_pos;
-  uint8_t byte_pos;
-  uint16_t iq_count;
-  uint8_t accumulator[COLUMN_COUNT];
-  radio_value_t iq;
+seed_16_bytes(uint8_t *result) {
+    uint8_t bit_pos;
+    uint8_t byte_pos;
+    uint16_t iq_count;
+    uint8_t accumulator[COLUMN_COUNT];
+    radio_value_t iq;
 
-  bit_pos = 0;
-  byte_pos = 0;
-  memset(accumulator, 0, COLUMN_COUNT);
+    bit_pos = 0;
+    byte_pos = 0;
+    memset(accumulator, 0, COLUMN_COUNT);
 
-  NETSTACK_RADIO.on();
-  for(iq_count = 0; iq_count < (COLUMN_COUNT * 8 / 2); iq_count++) {
-    NETSTACK_RADIO.get_value(RADIO_PARAM_IQ_LSBS, &iq);
+    NETSTACK_RADIO.on();
+    for (iq_count = 0; iq_count < (COLUMN_COUNT * 8 / 2); iq_count++) {
+        NETSTACK_RADIO.get_value(RADIO_PARAM_IQ_LSBS, &iq);
 
-    /* append I/Q LSBs to accumulator */
-    accumulator[byte_pos] |= iq << bit_pos;
-    bit_pos += 2;
-    if(bit_pos == 8) {
-      bit_pos = 0;
-      byte_pos++;
+        /* append I/Q LSBs to accumulator */
+        accumulator[byte_pos] |= iq << bit_pos;
+        bit_pos += 2;
+        if (bit_pos == 8) {
+            bit_pos = 0;
+            byte_pos++;
+        }
     }
-  }
-  NETSTACK_RADIO.off();
-  extract(result, accumulator);
+    NETSTACK_RADIO.off();
+    extract(result, accumulator);
 }
+
 /*---------------------------------------------------------------------------*/
 void
-iq_seeder_seed(void)
-{
-  struct csprng_seed seed;
+iq_seeder_seed(void) {
+    struct csprng_seed seed;
 
-  seed_16_bytes(seed.key);
-  seed_16_bytes(seed.state);
-  csprng_feed(&seed);
+    seed_16_bytes(seed.key);
+    seed_16_bytes(seed.state);
+    csprng_feed(&seed);
 }
 /*---------------------------------------------------------------------------*/
 

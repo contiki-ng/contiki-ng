@@ -42,19 +42,19 @@
  */
 
 #include "coap-log.h"
+
 /*---------------------------------------------------------------------------*/
 void
-coap_log_string(const char *text, size_t len)
-{
-  int i;
-  if(text == NULL) {
-    LOG_OUTPUT("(NULL STR)");
-    return;
-  }
+coap_log_string(const char *text, size_t len) {
+    int i;
+    if (text == NULL) {
+        LOG_OUTPUT("(NULL STR)");
+        return;
+    }
 
-  for(i = 0; i < len && *text != '\0'; i++, text++) {
-    LOG_OUTPUT("%c", *text);
-  }
+    for (i = 0; i < len && *text != '\0'; i++, text++) {
+        LOG_OUTPUT("%c", *text);
+    }
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

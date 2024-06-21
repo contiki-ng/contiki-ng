@@ -50,9 +50,9 @@
 #endif
 
 typedef struct {
-  lwm2m_object_instance_t instance;
-  uint16_t server_id;
-  uint32_t lifetime;
+    lwm2m_object_instance_t instance;
+    uint16_t server_id;
+    uint32_t lifetime;
 } lwm2m_server_t;
 
 lwm2m_server_t *lwm2m_server_add(uint16_t instance_id,

@@ -57,111 +57,110 @@ LIST(snmp_mib);
  * @return < 0 if oid1 < oid2, > 0 if oid1 > oid2 and 0 if they are equal
  */
 static inline int
-snmp_mib_cmp_oid(snmp_oid_t *oid1, snmp_oid_t *oid2)
-{
-  uint8_t i;
+snmp_mib_cmp_oid(snmp_oid_t *oid1, snmp_oid_t *oid2) {
+    uint8_t i;
 
-  i = 0;
-  while(i < oid1->length && i < oid2->length) {
-    if(oid1->data[i] != oid2->data[i]) {
-      if(oid1->data[i] < oid2->data[i]) {
-        return -1;
-      }
-      return 1;
-    }
-    i++;
-  }
-
-  if(i == oid1->length &&
-     i < oid2->length) {
-    return -1;
-  }
-
-  if(i < oid1->length &&
-     i == oid2->length) {
-    return 1;
-  }
-
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
-snmp_mib_resource_t *
-snmp_mib_find(snmp_oid_t *oid)
-{
-  snmp_mib_resource_t *resource;
-
-  resource = NULL;
-  for(resource = list_head(snmp_mib);
-      resource; resource = resource->next) {
-
-    if(!snmp_mib_cmp_oid(oid, &resource->oid)) {
-      return resource;
-    }
-  }
-
-  return NULL;
-}
-/*---------------------------------------------------------------------------*/
-snmp_mib_resource_t *
-snmp_mib_find_next(snmp_oid_t *oid)
-{
-  snmp_mib_resource_t *resource;
-
-  resource = NULL;
-  for(resource = list_head(snmp_mib);
-      resource; resource = resource->next) {
-
-    if(snmp_mib_cmp_oid(&resource->oid, oid) > 0) {
-      return resource;
-    }
-  }
-
-  return NULL;
-}
-/*---------------------------------------------------------------------------*/
-void
-snmp_mib_add(snmp_mib_resource_t *new_resource)
-{
-  snmp_mib_resource_t *resource;
-  uint8_t i;
-
-  for(resource = list_head(snmp_mib);
-      resource; resource = resource->next) {
-
-    if(snmp_mib_cmp_oid(&resource->oid, &new_resource->oid) > 0) {
-      break;
-    }
-  }
-  if(resource == NULL) {
-    list_add(snmp_mib, new_resource);
-  } else {
-    list_insert(snmp_mib, new_resource, resource);
-  }
-
-  if(LOG_DBG_ENABLED) {
-    /*
-     * We print the entire resource table
-     */
-    LOG_DBG("Table after insert.\n");
-    for(resource = list_head(snmp_mib);
-        resource; resource = resource->next) {
-
-      i = 0;
-      LOG_DBG("{");
-      while(i < resource->oid.length) {
-        LOG_DBG_("%lu", (unsigned long)resource->oid.data[i]);
-        i++;
-        if(i < resource->oid.length) {
-          LOG_DBG_(".");
+    i = 0;
+    while (i < oid1->length && i < oid2->length) {
+        if (oid1->data[i] != oid2->data[i]) {
+            if (oid1->data[i] < oid2->data[i]) {
+                return -1;
+            }
+            return 1;
         }
-      }
-      LOG_DBG_("}\n");
+        i++;
     }
-  }
+
+    if (i == oid1->length &&
+        i < oid2->length) {
+        return -1;
+    }
+
+    if (i < oid1->length &&
+        i == oid2->length) {
+        return 1;
+    }
+
+    return 0;
 }
+
+/*---------------------------------------------------------------------------*/
+snmp_mib_resource_t *
+snmp_mib_find(snmp_oid_t *oid) {
+    snmp_mib_resource_t *resource;
+
+    resource = NULL;
+    for (resource = list_head(snmp_mib);
+         resource; resource = resource->next) {
+
+        if (!snmp_mib_cmp_oid(oid, &resource->oid)) {
+            return resource;
+        }
+    }
+
+    return NULL;
+}
+
+/*---------------------------------------------------------------------------*/
+snmp_mib_resource_t *
+snmp_mib_find_next(snmp_oid_t *oid) {
+    snmp_mib_resource_t *resource;
+
+    resource = NULL;
+    for (resource = list_head(snmp_mib);
+         resource; resource = resource->next) {
+
+        if (snmp_mib_cmp_oid(&resource->oid, oid) > 0) {
+            return resource;
+        }
+    }
+
+    return NULL;
+}
+
 /*---------------------------------------------------------------------------*/
 void
-snmp_mib_init(void)
-{
-  list_init(snmp_mib);
+snmp_mib_add(snmp_mib_resource_t *new_resource) {
+    snmp_mib_resource_t *resource;
+    uint8_t i;
+
+    for (resource = list_head(snmp_mib);
+         resource; resource = resource->next) {
+
+        if (snmp_mib_cmp_oid(&resource->oid, &new_resource->oid) > 0) {
+            break;
+        }
+    }
+    if (resource == NULL) {
+        list_add(snmp_mib, new_resource);
+    } else {
+        list_insert(snmp_mib, new_resource, resource);
+    }
+
+    if (LOG_DBG_ENABLED) {
+        /*
+         * We print the entire resource table
+         */
+        LOG_DBG("Table after insert.\n");
+        for (resource = list_head(snmp_mib);
+             resource; resource = resource->next) {
+
+            i = 0;
+            LOG_DBG("{");
+            while (i < resource->oid.length) {
+                LOG_DBG_("%lu", (unsigned long) resource->oid.data[i]);
+                i++;
+                if (i < resource->oid.length) {
+                    LOG_DBG_(".");
+                }
+            }
+            LOG_DBG_("}\n");
+        }
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+void
+snmp_mib_init(void) {
+    list_init(snmp_mib);
 }

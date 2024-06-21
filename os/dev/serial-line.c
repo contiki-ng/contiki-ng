@@ -55,83 +55,93 @@
 static struct ringbuf rxbuf;
 static uint8_t rxbuf_data[BUFSIZE];
 
-PROCESS(serial_line_process, "Serial driver");
+PROCESS(serial_line_process,
+"Serial driver");
 
 process_event_t serial_line_event_message;
 
 /*---------------------------------------------------------------------------*/
 int
-serial_line_input_byte(unsigned char c)
-{
-  static uint8_t overflow = 0; /* Buffer overflow: ignore until END */
-  
-  if(!overflow) {
-    /* Add character */
-    if(ringbuf_put(&rxbuf, c) == 0) {
-      /* Buffer overflow: ignore the rest of the line */
-      overflow = 1;
-    }
-  } else {
-    /* Buffer overflowed:
-     * Only (try to) add terminator characters, otherwise skip */
-    if((c == END || c == END2) && ringbuf_put(&rxbuf, c) != 0) {
-      overflow = 0;
-    }
-  }
+serial_line_input_byte(unsigned char c) {
+    static uint8_t overflow = 0; /* Buffer overflow: ignore until END */
 
-  /* Wake up consumer process */
-  process_poll(&serial_line_process);
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(serial_line_process, ev, data)
-{
-  static char buf[BUFSIZE];
-  static int ptr;
-
-  PROCESS_BEGIN();
-
-  serial_line_event_message = process_alloc_event();
-  ptr = 0;
-
-  while(1) {
-    /* Fill application buffer until newline or empty */
-    int c = ringbuf_get(&rxbuf);
-    
-    if(c == -1) {
-      /* Buffer empty, wait for poll */
-      PROCESS_YIELD();
+    if (!overflow) {
+        /* Add character */
+        if (ringbuf_put(&rxbuf, c) == 0) {
+            /* Buffer overflow: ignore the rest of the line */
+            overflow = 1;
+        }
     } else {
-      if((c != END && c != END2)) {
-        if(ptr < BUFSIZE-1) {
-          buf[ptr++] = (uint8_t)c;
-        } else {
-          /* Ignore character (wait for EOL) */
+        /* Buffer overflowed:
+         * Only (try to) add terminator characters, otherwise skip */
+        if ((c == END || c == END2) && ringbuf_put(&rxbuf, c) != 0) {
+            overflow = 0;
         }
-      } else {
-        /* Terminate */
-        buf[ptr++] = (uint8_t)'\0';
-
-        /* Broadcast event */
-        process_post(PROCESS_BROADCAST, serial_line_event_message, buf);
-
-        /* Wait until all processes have handled the serial line event */
-        if(PROCESS_ERR_OK ==
-          process_post(PROCESS_CURRENT(), PROCESS_EVENT_CONTINUE, NULL)) {
-          PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);
-        }
-        ptr = 0;
-      }
     }
-  }
 
-  PROCESS_END();
+    /* Wake up consumer process */
+    process_poll(&serial_line_process);
+    return 1;
 }
+
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(serial_line_process, ev, data
+)
+{
+static char buf[BUFSIZE];
+static int ptr;
+
+PROCESS_BEGIN();
+
+serial_line_event_message = process_alloc_event();
+ptr = 0;
+
+while(1) {
+/* Fill application buffer until newline or empty */
+int c = ringbuf_get(&rxbuf);
+
+if(c == -1) {
+/* Buffer empty, wait for poll */
+PROCESS_YIELD();
+
+} else {
+if((c != END && c != END2)) {
+if(ptr < BUFSIZE-1) {
+buf[ptr++] = (uint8_t)
+c;
+} else {
+/* Ignore character (wait for EOL) */
+}
+} else {
+/* Terminate */
+buf[ptr++] = (uint8_t)'\0';
+
+/* Broadcast event */
+process_post(PROCESS_BROADCAST, serial_line_event_message, buf
+);
+
+/* Wait until all processes have handled the serial line event */
+if(PROCESS_ERR_OK ==
+
+process_post(PROCESS_CURRENT(), PROCESS_EVENT_CONTINUE, NULL
+
+)) {
+PROCESS_WAIT_EVENT_UNTIL(ev
+== PROCESS_EVENT_CONTINUE);
+}
+ptr = 0;
+}
+}
+}
+
+PROCESS_END();
+
+}
+
 /*---------------------------------------------------------------------------*/
 void
-serial_line_init(void)
-{
-  ringbuf_init(&rxbuf, rxbuf_data, sizeof(rxbuf_data));
-  process_start(&serial_line_process, NULL);
+serial_line_init(void) {
+    ringbuf_init(&rxbuf, rxbuf_data, sizeof(rxbuf_data));
+    process_start(&serial_line_process, NULL);
 }
 /*---------------------------------------------------------------------------*/

@@ -50,70 +50,70 @@
 /*---------------------------------------------------------------------------*/
 static size_t
 read_int(lwm2m_context_t *ctx, const uint8_t *inbuf, size_t len,
-         int32_t *value)
-{
-  lwm2m_tlv_t tlv;
-  size_t size;
-  size = lwm2m_tlv_read(&tlv, inbuf, len);
-  if(size > 0) {
-    *value = lwm2m_tlv_get_int32(&tlv);
-    ctx->last_value_len = tlv.length;
-  }
-  return size;
+         int32_t *value) {
+    lwm2m_tlv_t tlv;
+    size_t size;
+    size = lwm2m_tlv_read(&tlv, inbuf, len);
+    if (size > 0) {
+        *value = lwm2m_tlv_get_int32(&tlv);
+        ctx->last_value_len = tlv.length;
+    }
+    return size;
 }
+
 /*---------------------------------------------------------------------------*/
 static size_t
 read_string(lwm2m_context_t *ctx, const uint8_t *inbuf, size_t len,
-            uint8_t *value, size_t stringlen)
-{
-  lwm2m_tlv_t tlv;
-  size_t size;
-  size = lwm2m_tlv_read(&tlv, inbuf, len);
-  if(size > 0) {
-    if(stringlen <= tlv.length) {
-      /* The outbuffer can not contain the full string including ending zero */
-      return 0;
+            uint8_t *value, size_t stringlen) {
+    lwm2m_tlv_t tlv;
+    size_t size;
+    size = lwm2m_tlv_read(&tlv, inbuf, len);
+    if (size > 0) {
+        if (stringlen <= tlv.length) {
+            /* The outbuffer can not contain the full string including ending zero */
+            return 0;
+        }
+        memcpy(value, tlv.value, tlv.length);
+        value[tlv.length] = '\0';
+        ctx->last_value_len = tlv.length;
     }
-    memcpy(value, tlv.value, tlv.length);
-    value[tlv.length] = '\0';
-    ctx->last_value_len = tlv.length;
-  }
-  return size;
+    return size;
 }
+
 /*---------------------------------------------------------------------------*/
 static size_t
 read_float32fix(lwm2m_context_t *ctx, const uint8_t *inbuf, size_t len,
-                int32_t *value, int bits)
-{
-  lwm2m_tlv_t tlv;
-  size_t size;
-  size = lwm2m_tlv_read(&tlv, inbuf, len);
-  if(size > 0) {
-    lwm2m_tlv_float32_to_fix(&tlv, value, bits);
-    ctx->last_value_len = tlv.length;
-  }
-  return size;
+                int32_t *value, int bits) {
+    lwm2m_tlv_t tlv;
+    size_t size;
+    size = lwm2m_tlv_read(&tlv, inbuf, len);
+    if (size > 0) {
+        lwm2m_tlv_float32_to_fix(&tlv, value, bits);
+        ctx->last_value_len = tlv.length;
+    }
+    return size;
 }
+
 /*---------------------------------------------------------------------------*/
 static size_t
 read_boolean(lwm2m_context_t *ctx, const uint8_t *inbuf, size_t len,
-             int *value)
-{
-  lwm2m_tlv_t tlv;
-  size_t size;
-  size = lwm2m_tlv_read(&tlv, inbuf, len);
-  if(size > 0) {
-    *value = lwm2m_tlv_get_int32(&tlv) != 0;
-    ctx->last_value_len = tlv.length;
-  }
-  return size;
+             int *value) {
+    lwm2m_tlv_t tlv;
+    size_t size;
+    size = lwm2m_tlv_read(&tlv, inbuf, len);
+    if (size > 0) {
+        *value = lwm2m_tlv_get_int32(&tlv) != 0;
+        ctx->last_value_len = tlv.length;
+    }
+    return size;
 }
+
 /*---------------------------------------------------------------------------*/
 const lwm2m_reader_t lwm2m_tlv_reader = {
-  read_int,
-  read_string,
-  read_float32fix,
-  read_boolean
+        read_int,
+        read_string,
+        read_float32fix,
+        read_boolean
 };
 /*---------------------------------------------------------------------------*/
 /** @} */

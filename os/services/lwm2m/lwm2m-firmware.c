@@ -44,6 +44,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
+
 #define LOG_MODULE "lwm2m-fw"
 #define LOG_LEVEL  LOG_LEVEL_LWM2M
 
@@ -73,96 +74,94 @@ static uint8_t result = RESULT_DEFAULT;
 static lwm2m_object_instance_t reg_object;
 
 static const lwm2m_resource_id_t resources[] =
-  { WO(UPDATE_PACKAGE),
-    WO(UPDATE_PACKAGE_URI),
-    RO(UPDATE_STATE),
-    RO(UPDATE_RESULT),
-    EX(UPDATE_UPDATE)
-  };
+        {WO(UPDATE_PACKAGE),
+         WO(UPDATE_PACKAGE_URI),
+         RO(UPDATE_STATE),
+         RO(UPDATE_RESULT),
+         EX(UPDATE_UPDATE)
+        };
 
 /*---------------------------------------------------------------------------*/
 static lwm2m_status_t
 lwm2m_callback(lwm2m_object_instance_t *object,
-               lwm2m_context_t *ctx)
-{
-  uint32_t num;
-  uint8_t more;
-  uint16_t size;
-  uint32_t offset;
+               lwm2m_context_t *ctx) {
+    uint32_t num;
+    uint8_t more;
+    uint16_t size;
+    uint32_t offset;
 
-  LOG_DBG("Got request at: %d/%d/%d lv:%d\n", ctx->object_id,
-          ctx->object_instance_id, ctx->resource_id, ctx->level);
+    LOG_DBG("Got request at: %d/%d/%d lv:%d\n", ctx->object_id,
+            ctx->object_instance_id, ctx->resource_id, ctx->level);
 
-  if(ctx->level == 1 || ctx->level == 2) {
-    /* Should not happen - as it will be taken care of by the lwm2m engine itself. */
-    return LWM2M_STATUS_ERROR;
-  }
-
-  if(ctx->operation == LWM2M_OP_READ) {
-    switch(ctx->resource_id) {
-    case UPDATE_STATE:
-      lwm2m_object_write_int(ctx, state); /* 1 means idle */
-      return LWM2M_STATUS_OK;
-    case UPDATE_RESULT:
-      lwm2m_object_write_int(ctx, result); /* 0 means default */
-      return LWM2M_STATUS_OK;
-    }
-  } else if(ctx->operation == LWM2M_OP_WRITE) {
-
-    if(LOG_DBG_ENABLED) {
-      if(coap_get_header_block1(ctx->request, &num, &more, &size, &offset)) {
-        LOG_DBG("CoAP BLOCK1: %"PRIu32"/%u/%u offset:%"PRIu32
-                " LWM2M CTX->offset=%"PRIu32"\n",
-                num, more, size, offset, ctx->offset);
-      }
+    if (ctx->level == 1 || ctx->level == 2) {
+        /* Should not happen - as it will be taken care of by the lwm2m engine itself. */
+        return LWM2M_STATUS_ERROR;
     }
 
-    switch(ctx->resource_id) {
-    case UPDATE_PACKAGE:
-      /* The firmware is written */
-      LOG_DBG("Firmware received: %"PRIu32" %d fin:%d\n", ctx->offset,
-              (int)ctx->inbuf->size, lwm2m_object_is_final_incoming(ctx));
-      if(lwm2m_object_is_final_incoming(ctx)) {
-        state = STATE_DOWNLOADED;
-      } else {
-        state = STATE_DOWNLOADING;
-      }
-      return LWM2M_STATUS_OK;
-    case UPDATE_PACKAGE_URI:
-      /* The firmware URI is written */
-      LOG_DBG("Firmware URI received: %"PRIu32" %d fin:%d\n", ctx->offset,
-              (int)ctx->inbuf->size, lwm2m_object_is_final_incoming(ctx));
-      if(LOG_DBG_ENABLED) {
-        int i;
-        LOG_DBG("Data: '");
-        for(i = 0; i < ctx->inbuf->size; i++) {
-          LOG_DBG_("%c", ctx->inbuf->buffer[i]);
+    if (ctx->operation == LWM2M_OP_READ) {
+        switch (ctx->resource_id) {
+            case UPDATE_STATE:
+                lwm2m_object_write_int(ctx, state); /* 1 means idle */
+                return LWM2M_STATUS_OK;
+            case UPDATE_RESULT:
+                lwm2m_object_write_int(ctx, result); /* 0 means default */
+                return LWM2M_STATUS_OK;
         }
-        LOG_DBG_("'\n");
-      }
-      return LWM2M_STATUS_OK;
+    } else if (ctx->operation == LWM2M_OP_WRITE) {
+
+        if (LOG_DBG_ENABLED) {
+            if (coap_get_header_block1(ctx->request, &num, &more, &size, &offset)) {
+                LOG_DBG("CoAP BLOCK1: %"PRIu32"/%u/%u offset:%"PRIu32
+                                " LWM2M CTX->offset=%"PRIu32"\n",
+                        num, more, size, offset, ctx->offset);
+            }
+        }
+
+        switch (ctx->resource_id) {
+            case UPDATE_PACKAGE:
+                /* The firmware is written */
+                LOG_DBG("Firmware received: %"PRIu32" %d fin:%d\n", ctx->offset,
+                        (int) ctx->inbuf->size, lwm2m_object_is_final_incoming(ctx));
+                if (lwm2m_object_is_final_incoming(ctx)) {
+                    state = STATE_DOWNLOADED;
+                } else {
+                    state = STATE_DOWNLOADING;
+                }
+                return LWM2M_STATUS_OK;
+            case UPDATE_PACKAGE_URI:
+                /* The firmware URI is written */
+                LOG_DBG("Firmware URI received: %"PRIu32" %d fin:%d\n", ctx->offset,
+                        (int) ctx->inbuf->size, lwm2m_object_is_final_incoming(ctx));
+                if (LOG_DBG_ENABLED) {
+                    int i;
+                    LOG_DBG("Data: '");
+                    for (i = 0; i < ctx->inbuf->size; i++) {
+                        LOG_DBG_("%c", ctx->inbuf->buffer[i]);
+                    }
+                    LOG_DBG_("'\n");
+                }
+                return LWM2M_STATUS_OK;
+        }
+    } else if (ctx->operation == LWM2M_OP_EXECUTE && ctx->resource_id == UPDATE_UPDATE) {
+        /* Perform the update operation */
+        if (state == STATE_DOWNLOADED) {
+            return LWM2M_STATUS_OK;
+        }
+        /* Failure... */
     }
-  } else if(ctx->operation == LWM2M_OP_EXECUTE && ctx->resource_id == UPDATE_UPDATE) {
-    /* Perform the update operation */
-    if(state == STATE_DOWNLOADED) {
-      return LWM2M_STATUS_OK;
-    }
-    /* Failure... */
-  }
-  return LWM2M_STATUS_ERROR;
+    return LWM2M_STATUS_ERROR;
 }
 
 /*---------------------------------------------------------------------------*/
 void
-lwm2m_firmware_init(void)
-{
-  reg_object.object_id = 5;
-  reg_object.instance_id = 0;
-  reg_object.callback = lwm2m_callback;
-  reg_object.resource_ids = resources;
-  reg_object.resource_count = sizeof(resources) / sizeof(lwm2m_resource_id_t);
+lwm2m_firmware_init(void) {
+    reg_object.object_id = 5;
+    reg_object.instance_id = 0;
+    reg_object.callback = lwm2m_callback;
+    reg_object.resource_ids = resources;
+    reg_object.resource_count = sizeof(resources) / sizeof(lwm2m_resource_id_t);
 
-  lwm2m_engine_add_object(&reg_object);
+    lwm2m_engine_add_object(&reg_object);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

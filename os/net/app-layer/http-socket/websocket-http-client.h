@@ -71,25 +71,26 @@
 #endif /* WEBSOCKET_HTTP_CLIENT_CONF_MAX_HEADERLEN */
 
 struct websocket_http_client_state {
-  struct tcp_socket s;
-  uint8_t inputbuf[WEBSOCKET_HTTP_CLIENT_INPUTBUFSIZE];
-  uint8_t outputbuf[WEBSOCKET_HTTP_CLIENT_OUTPUTBUFSIZE];
-  char host[WEBSOCKET_HTTP_CLIENT_MAX_HOSTLEN];
-  char file[WEBSOCKET_HTTP_CLIENT_MAX_FILELEN];
-  char subprotocol[WEBSOCKET_HTTP_CLIENT_MAX_SUBPROTOCOLLEN];
-  char header[WEBSOCKET_HTTP_CLIENT_MAX_HEADERLEN];
-  uint16_t port;
+    struct tcp_socket s;
+    uint8_t inputbuf[WEBSOCKET_HTTP_CLIENT_INPUTBUFSIZE];
+    uint8_t outputbuf[WEBSOCKET_HTTP_CLIENT_OUTPUTBUFSIZE];
+    char host[WEBSOCKET_HTTP_CLIENT_MAX_HOSTLEN];
+    char file[WEBSOCKET_HTTP_CLIENT_MAX_FILELEN];
+    char subprotocol[WEBSOCKET_HTTP_CLIENT_MAX_SUBPROTOCOLLEN];
+    char header[WEBSOCKET_HTTP_CLIENT_MAX_HEADERLEN];
+    uint16_t port;
 
-  int state;
-  struct pt parse_header_pt;
-  int http_status;
-  int i;
+    int state;
+    struct pt parse_header_pt;
+    int http_status;
+    int i;
 
-  uip_ipaddr_t proxy_addr;
-  uint16_t proxy_port;
+    uip_ipaddr_t proxy_addr;
+    uint16_t proxy_port;
 };
 
 void websocket_http_client_init(struct websocket_http_client_state *s);
+
 void websocket_http_client_set_proxy(struct websocket_http_client_state *s,
                                      const uip_ipaddr_t *addr, uint16_t port);
 
@@ -99,10 +100,13 @@ int websocket_http_client_register(struct websocket_http_client_state *s,
                                    const char *file,
                                    const char *subprotocol,
                                    const char *hdr);
+
 int websocket_http_client_get(struct websocket_http_client_state *s);
+
 int websocket_http_client_send(struct websocket_http_client_state *s,
                                const uint8_t *data,
                                uint16_t datalen);
+
 int websocket_http_client_sendbuflen(struct websocket_http_client_state *s);
 
 void websocket_http_client_close(struct websocket_http_client_state *s);
@@ -114,10 +118,14 @@ int websocket_http_client_queuelen(struct websocket_http_client_state *s);
 /* Callback functions that have to be implemented by the application
    program. */
 void websocket_http_client_datahandler(struct websocket_http_client_state *s,
-				       const uint8_t *data, uint16_t len);
+                                       const uint8_t *data, uint16_t len);
+
 void websocket_http_client_connected(struct websocket_http_client_state *s);
+
 void websocket_http_client_timedout(struct websocket_http_client_state *s);
+
 void websocket_http_client_aborted(struct websocket_http_client_state *s);
+
 void websocket_http_client_closed(struct websocket_http_client_state *s);
 
 #endif /* WEBSOCKET_HTTP_CLIENT_H_ */

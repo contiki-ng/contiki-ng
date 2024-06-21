@@ -36,6 +36,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
+
 #define LOG_MODULE "BR"
 #define LOG_LEVEL LOG_LEVEL_INFO
 
@@ -43,35 +44,34 @@ uint8_t prefix_set;
 
 /*---------------------------------------------------------------------------*/
 void
-print_local_addresses(void)
-{
-  int i;
-  uint8_t state;
+print_local_addresses(void) {
+    int i;
+    uint8_t state;
 
-  LOG_INFO("Server IPv6 addresses:\n");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused &&
-       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      LOG_INFO("  ");
-      LOG_INFO_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      LOG_INFO_("\n");
+    LOG_INFO("Server IPv6 addresses:\n");
+    for (i = 0; i < UIP_DS6_ADDR_NB; i++) {
+        state = uip_ds6_if.addr_list[i].state;
+        if (uip_ds6_if.addr_list[i].isused &&
+            (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+            LOG_INFO("  ");
+            LOG_INFO_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
+            LOG_INFO_("\n");
+        }
     }
-  }
 }
+
 /*---------------------------------------------------------------------------*/
 void
-set_prefix_64(uip_ipaddr_t *prefix_64)
-{
-  prefix_set = 1;
-  NETSTACK_ROUTING.root_set_prefix(prefix_64, NULL);
-  NETSTACK_ROUTING.root_start();
+set_prefix_64(uip_ipaddr_t *prefix_64) {
+    prefix_set = 1;
+    NETSTACK_ROUTING.root_set_prefix(prefix_64, NULL);
+    NETSTACK_ROUTING.root_start();
 }
+
 /*---------------------------------------------------------------------------*/
 void
-rpl_border_router_init(void)
-{
-  PROCESS_NAME(border_router_process);
-  process_start(&border_router_process, NULL);
+rpl_border_router_init(void) {
+    PROCESS_NAME(border_router_process);
+    process_start(&border_router_process, NULL);
 }
 /*---------------------------------------------------------------------------*/

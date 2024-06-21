@@ -133,7 +133,7 @@
 /**
  * The linked list type.
  */
-typedef void ** list_t;
+typedef void **list_t;
 
 /**
  * The non-modifiable linked list type.
@@ -149,9 +149,8 @@ typedef void *const *const_list_t;
  * \param list The list to be initialized.
  */
 static inline void
-list_init(list_t list)
-{
-  *list = NULL;
+list_init(list_t list) {
+    *list = NULL;
 }
 
 /**
@@ -166,9 +165,8 @@ list_init(list_t list)
  * \sa list_tail()
  */
 static inline void *
-list_head(const_list_t list)
-{
-  return *list;
+list_head(const_list_t list) {
+    return *list;
 }
 
 /**
@@ -182,7 +180,7 @@ list_head(const_list_t list)
  *
  * \sa list_head()
  */
-void * list_tail(const_list_t list);
+void *list_tail(const_list_t list);
 
 /**
  * Remove the first object on a list.
@@ -193,12 +191,12 @@ void * list_tail(const_list_t list);
  * \param list The list.
  * \return Pointer to the removed element of list.
  */
-void * list_pop (list_t list);
+void *list_pop(list_t list);
 
 /**
  * Add an item to the start of the list.
  */
-void   list_push(list_t list, void *item);
+void list_push(list_t list, void *item);
 
 /**
  * Remove the last object on the list.
@@ -209,7 +207,7 @@ void   list_push(list_t list, void *item);
  * \return The removed object
  *
  */
-void * list_chop(list_t list);
+void *list_chop(list_t list);
 
 /**
  * Add an item at the end of a list.
@@ -222,7 +220,7 @@ void * list_chop(list_t list);
  * \sa list_push()
  *
  */
-void   list_add(list_t list, void *item);
+void list_add(list_t list, void *item);
 
 /**
  * Remove a specific element from a list.
@@ -233,7 +231,7 @@ void   list_add(list_t list, void *item);
  * \param item The item that is to be removed from the list.
  *
  */
-void   list_remove(list_t list, const void *item);
+void list_remove(list_t list, const void *item);
 
 /**
  * Get the length of a list.
@@ -243,7 +241,7 @@ void   list_remove(list_t list, const void *item);
  * \param list The list.
  * \return The length of the list.
  */
-int    list_length(const_list_t list);
+int list_length(const_list_t list);
 
 /**
  * Duplicate a list.
@@ -258,9 +256,8 @@ int    list_length(const_list_t list);
  * \param src The source list.
  */
 static inline void
-list_copy(list_t dest, const_list_t src)
-{
-  *dest = *src;
+list_copy(list_t dest, const_list_t src) {
+    *dest = *src;
 }
 
 /**
@@ -278,7 +275,7 @@ list_copy(list_t dest, const_list_t src)
  *             start of the list.
  *
  */
-void   list_insert(list_t list, void *previtem, void *newitem);
+void list_insert(list_t list, void *previtem, void *newitem);
 
 /**
  * \brief      Get the next item following this item
@@ -291,12 +288,11 @@ void   list_insert(list_t list, void *previtem, void *newitem);
  *             lists.
  */
 static inline void *
-list_item_next(const void *item)
-{
-  struct list {
-    struct list *next;
-  };
-  return item == NULL ? NULL : ((struct list *)item)->next;
+list_item_next(const void *item) {
+    struct list {
+        struct list *next;
+    };
+    return item == NULL ? NULL : ((struct list *) item)->next;
 }
 
 /**

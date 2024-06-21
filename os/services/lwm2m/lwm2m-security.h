@@ -66,27 +66,28 @@
 #endif /* LWM2M_SECURITY_CONF_KEY_SIZE */
 
 typedef struct {
-  lwm2m_object_instance_t instance;
-  uint16_t server_id;
-  uint8_t bootstrap;
-  uint8_t security_mode;
-  uint8_t server_uri[LWM2M_SECURITY_URI_SIZE];
-  uint8_t server_uri_len;
-  uint8_t public_key[LWM2M_SECURITY_KEY_SIZE];
-  uint8_t public_key_len;
-  uint8_t secret_key[LWM2M_SECURITY_KEY_SIZE];
-  uint8_t secret_key_len;
-  uint8_t server_public_key[LWM2M_SECURITY_KEY_SIZE];
-  uint8_t server_public_key_len;
+    lwm2m_object_instance_t instance;
+    uint16_t server_id;
+    uint8_t bootstrap;
+    uint8_t security_mode;
+    uint8_t server_uri[LWM2M_SECURITY_URI_SIZE];
+    uint8_t server_uri_len;
+    uint8_t public_key[LWM2M_SECURITY_KEY_SIZE];
+    uint8_t public_key_len;
+    uint8_t secret_key[LWM2M_SECURITY_KEY_SIZE];
+    uint8_t secret_key_len;
+    uint8_t server_public_key[LWM2M_SECURITY_KEY_SIZE];
+    uint8_t server_public_key_len;
 } lwm2m_security_server_t;
 
 lwm2m_security_server_t *lwm2m_security_get_first(void);
+
 lwm2m_security_server_t *lwm2m_security_get_next(lwm2m_security_server_t *last);
 
 lwm2m_security_server_t *lwm2m_security_add_server(uint16_t instance_id,
-                                                  uint16_t server_id,
-                                                  const uint8_t *server_uri,
-                                                  uint8_t server_uri_len);
+                                                   uint16_t server_id,
+                                                   const uint8_t *server_uri,
+                                                   uint8_t server_uri_len);
 
 int lwm2m_security_set_server_psk(lwm2m_security_server_t *server,
                                   const uint8_t *identity,

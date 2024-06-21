@@ -49,22 +49,21 @@ extern const cmd_handler_t cmd_handlers[];
 
 /*---------------------------------------------------------------------------*/
 int
-cmd_input(const uint8_t *data, int data_len)
-{
-  int i;
-  for(i = 0; cmd_handlers[i] != NULL; i++) {
-    if(cmd_handlers[i](data, data_len)) {
-      /* Command has been handled */
-      return 1;
+cmd_input(const uint8_t *data, int data_len) {
+    int i;
+    for (i = 0; cmd_handlers[i] != NULL; i++) {
+        if (cmd_handlers[i](data, data_len)) {
+            /* Command has been handled */
+            return 1;
+        }
     }
-  }
 
-  return 0;
+    return 0;
 }
+
 /*---------------------------------------------------------------------------*/
 void
-cmd_send(const uint8_t *data, int data_len)
-{
-  CMD_OUTPUT(data, data_len);
+cmd_send(const uint8_t *data, int data_len) {
+    CMD_OUTPUT(data, data_len);
 }
 /*---------------------------------------------------------------------------*/

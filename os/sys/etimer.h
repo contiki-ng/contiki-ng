@@ -77,9 +77,9 @@
  * \hideinitializer
  */
 struct etimer {
-  struct timer timer;
-  struct etimer *next;
-  struct process *p;
+    struct timer timer;
+    struct etimer *next;
+    struct process *p;
 };
 
 /**
@@ -198,9 +198,8 @@ clock_time_t etimer_start_time(struct etimer *et);
  *             returns true or false depending on its status.
  */
 static inline bool
-etimer_expired(struct etimer *et)
-{
-  return et->p == PROCESS_NONE;
+etimer_expired(struct etimer *et) {
+    return et->p == PROCESS_NONE;
 }
 
 /**

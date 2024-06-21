@@ -42,18 +42,25 @@
 #include <stdio.h>
 
 int border_router_cmd_handler(const uint8_t *data, int len);
+
 int slip_config_handle_arguments(int argc, char **argv);
+
 void write_to_slip(const uint8_t *buf, int len);
 
 void border_router_set_prefix_64(const uip_ipaddr_t *prefix_64);
+
 void border_router_set_mac(const uint8_t *data);
+
 void border_router_set_sensors(const char *data, int len);
+
 void border_router_print_stat(void);
 
 void tun_init(void);
 
 int slip_init(void);
+
 int slip_set_fd(int maxfd, fd_set *rset, fd_set *wset);
+
 void slip_handle_fd(fd_set *rset, fd_set *wset);
 
 #endif /* BORDER_ROUTER_H_ */

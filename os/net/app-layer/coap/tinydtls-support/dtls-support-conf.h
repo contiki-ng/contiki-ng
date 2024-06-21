@@ -52,7 +52,7 @@ typedef coap_endpoint_t session_t;
 #include <stdint.h>
 
 typedef struct {
-  struct ctimer retransmit_timer;
+    struct ctimer retransmit_timer;
 } dtls_support_context_state_t;
 
 #define DTLS_SUPPORT_CONF_CONTEXT_STATE dtls_support_context_state_t

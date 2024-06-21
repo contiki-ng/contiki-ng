@@ -54,7 +54,7 @@
 
 /*---------------------------------------------------------------------------*/
 /* IANA Routing Metric/Constraint Type as defined in RFC6551 */
-#define RPL_DAG_MC_NONE			            0 /* Local identifier for empty MC */
+#define RPL_DAG_MC_NONE                        0 /* Local identifier for empty MC */
 #define RPL_DAG_MC_NSA                  1 /* Node State and Attributes */
 #define RPL_DAG_MC_ENERGY               2 /* Node Energy */
 #define RPL_DAG_MC_HOPCOUNT             3 /* Hop Count */
@@ -77,13 +77,13 @@
 #define RPL_DAG_MC_AGGR_MULTIPLICATIVE  3
 
 /* The bit index within the flags field of the rpl_metric_object_energy structure. */
-#define RPL_DAG_MC_ENERGY_INCLUDED	     3
-#define RPL_DAG_MC_ENERGY_TYPE		       1
-#define RPL_DAG_MC_ENERGY_ESTIMATION	   0
+#define RPL_DAG_MC_ENERGY_INCLUDED         3
+#define RPL_DAG_MC_ENERGY_TYPE               1
+#define RPL_DAG_MC_ENERGY_ESTIMATION       0
 
 /* IANA Node Type Field as defined in RFC6551 */
-#define RPL_DAG_MC_ENERGY_TYPE_MAINS		    0
-#define RPL_DAG_MC_ENERGY_TYPE_BATTERY		  1
+#define RPL_DAG_MC_ENERGY_TYPE_MAINS            0
+#define RPL_DAG_MC_ENERGY_TYPE_BATTERY          1
 #define RPL_DAG_MC_ENERGY_TYPE_SCAVENGING   2
 
 /* IANA Objective Code Point as defined in RFC6550 */
@@ -124,17 +124,17 @@
 
 /*---------------------------------------------------------------------------*/
 /* RPL IPv6 extension header option. */
-#define RPL_HDR_OPT_LEN			               4
-#define RPL_HOP_BY_HOP_LEN		             (RPL_HDR_OPT_LEN + 2 + 2)
+#define RPL_HDR_OPT_LEN                           4
+#define RPL_HOP_BY_HOP_LEN                     (RPL_HDR_OPT_LEN + 2 + 2)
 #define RPL_RH_LEN                         4
 #define RPL_SRH_LEN                        4
 #define RPL_RH_TYPE_SRH                    3
-#define RPL_HDR_OPT_DOWN		               0x80
-#define RPL_HDR_OPT_DOWN_SHIFT  	         7
-#define RPL_HDR_OPT_RANK_ERR		           0x40
-#define RPL_HDR_OPT_RANK_ERR_SHIFT   	     6
-#define RPL_HDR_OPT_FWD_ERR		             0x20
-#define RPL_HDR_OPT_FWD_ERR_SHIFT   	     5
+#define RPL_HDR_OPT_DOWN                       0x80
+#define RPL_HDR_OPT_DOWN_SHIFT             7
+#define RPL_HDR_OPT_RANK_ERR                   0x40
+#define RPL_HDR_OPT_RANK_ERR_SHIFT         6
+#define RPL_HDR_OPT_FWD_ERR                     0x20
+#define RPL_HDR_OPT_FWD_ERR_SHIFT         5
 
 /*---------------------------------------------------------------------------*/
 #define RPL_INSTANCE_LOCAL_FLAG         0x80
@@ -152,6 +152,6 @@
 #define RPL_MOP_STORING_NO_MULTICAST    2
 #define RPL_MOP_STORING_MULTICAST       3
 
- /** @} */
+/** @} */
 
 #endif /* RPL_CONST_H */

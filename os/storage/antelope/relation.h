@@ -46,11 +46,11 @@
 #include "db-types.h"
 
 typedef uint32_t tuple_id_t;
-#define INVALID_TUPLE	(tuple_id_t)-1
+#define INVALID_TUPLE    (tuple_id_t)-1
 
 typedef enum db_direction {
-  DB_MEMORY = 0,
-  DB_STORAGE = 1
+    DB_MEMORY = 0,
+    DB_STORAGE = 1
 } db_direction_t;
 
 #define RELATION_HAS_TUPLES(rel) ((rel)->tuple_storage >= 0)
@@ -60,42 +60,59 @@ typedef enum db_direction {
  * and a set of keys. Each relation must have a primary key.
  */
 struct relation {
-  struct relation *next;
-  LIST_STRUCT(attributes);
-  attribute_t *primary_key;
-  size_t row_length;
-  attribute_id_t attribute_count;
-  tuple_id_t cardinality;
-  tuple_id_t next_row;
-  db_storage_id_t tuple_storage;
-  db_direction_t dir;
-  uint8_t references;
-  char name[RELATION_NAME_LENGTH + 1];
-  char tuple_filename[RELATION_NAME_LENGTH + 1];
+    struct relation *next;
+    LIST_STRUCT(attributes);
+    attribute_t *primary_key;
+    size_t row_length;
+    attribute_id_t attribute_count;
+    tuple_id_t cardinality;
+    tuple_id_t next_row;
+    db_storage_id_t tuple_storage;
+    db_direction_t dir;
+    uint8_t references;
+    char name[RELATION_NAME_LENGTH + 1];
+    char tuple_filename[RELATION_NAME_LENGTH + 1];
 };
 
 typedef struct relation relation_t;
 
 /* API for relations. */
 db_result_t relation_init(void);
+
 db_result_t relation_process_remove(void *);
+
 db_result_t relation_process_select(void *);
+
 db_result_t relation_process_join(void *);
+
 relation_t *relation_load(char *);
+
 db_result_t relation_release(relation_t *);
+
 relation_t *relation_create(char *, db_direction_t);
+
 db_result_t relation_rename(char *, char *);
+
 attribute_t *relation_attribute_add(relation_t *, db_direction_t, char *,
-				    domain_t, size_t);
+                                    domain_t, size_t);
+
 attribute_t *relation_attribute_get(relation_t *, char *);
+
 db_result_t relation_get_value(relation_t *, attribute_t *,
                                unsigned char *, attribute_value_t *);
+
 db_result_t relation_attribute_remove(relation_t *, char *);
+
 db_result_t relation_set_primary_key(relation_t *, char *);
+
 db_result_t relation_remove(char *, int);
+
 db_result_t relation_insert(relation_t *, attribute_value_t *);
+
 db_result_t relation_select(void *, relation_t *, void *);
+
 db_result_t relation_join(void *, void *);
+
 tuple_id_t relation_cardinality(relation_t *);
 
 #endif /* RELATION_H */

@@ -123,7 +123,8 @@ typedef uint64_t rtimer_clock_t;
 #define rtimer_init() rtimer_arch_init()
 
 struct rtimer;
-typedef void (* rtimer_callback_t)(struct rtimer *t, void *ptr);
+
+typedef void (*rtimer_callback_t)(struct rtimer *t, void *ptr);
 
 /**
  * \brief      Representation of a real-time task
@@ -133,19 +134,19 @@ typedef void (* rtimer_callback_t)(struct rtimer *t, void *ptr);
  *             support module for the real-time module.
  */
 struct rtimer {
-  rtimer_clock_t time;
-  rtimer_callback_t func;
-  void *ptr;
+    rtimer_clock_t time;
+    rtimer_callback_t func;
+    void *ptr;
 };
 
 /**
  * TODO: we need to document meanings of these symbols.
  */
 enum {
-  RTIMER_OK, /**< rtimer task is scheduled successfully */
-  RTIMER_ERR_FULL,
-  RTIMER_ERR_TIME,
-  RTIMER_ERR_ALREADY_SCHEDULED,
+    RTIMER_OK, /**< rtimer task is scheduled successfully */
+    RTIMER_ERR_FULL,
+    RTIMER_ERR_TIME,
+    RTIMER_ERR_ALREADY_SCHEDULED,
 };
 
 /**
@@ -163,7 +164,7 @@ enum {
  *
  */
 int rtimer_set(struct rtimer *task, rtimer_clock_t time,
-	       rtimer_clock_t duration, rtimer_callback_t func, void *ptr);
+               rtimer_clock_t duration, rtimer_callback_t func, void *ptr);
 
 /**
  * \brief      Execute the next real-time task and schedule the next task, if any

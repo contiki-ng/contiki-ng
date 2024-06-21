@@ -45,18 +45,18 @@
 /*- Client Part -------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 typedef struct coap_blocking_request_state {
-  coap_request_state_t state;
-  struct pt pt;
-  struct process *process;
+    coap_request_state_t state;
+    struct pt pt;
+    struct process *process;
 } coap_blocking_request_state_t;
 
-typedef void (* coap_blocking_response_handler_t)(coap_message_t *response);
+typedef void (*coap_blocking_response_handler_t)(coap_message_t *response);
 
 PT_THREAD(coap_blocking_request
-          (coap_blocking_request_state_t *blocking_state, process_event_t ev,
-           coap_endpoint_t *remote,
-           coap_message_t *request,
-           coap_blocking_response_handler_t request_callback));
+                  (coap_blocking_request_state_t * blocking_state, process_event_t ev,
+        coap_endpoint_t * remote,
+        coap_message_t * request,
+        coap_blocking_response_handler_t request_callback));
 
 #define COAP_BLOCKING_REQUEST(server_endpoint, request, chunk_handler)  \
   {                                                                     \

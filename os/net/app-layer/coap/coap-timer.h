@@ -52,17 +52,22 @@
 #include <stdint.h>
 
 typedef struct coap_timer coap_timer_t;
+
 struct coap_timer {
-  coap_timer_t *next;
-  void (* callback)(coap_timer_t *);
-  void *user_data;
-  uint64_t expiration_time;
+    coap_timer_t *next;
+
+    void (*callback)(coap_timer_t *);
+
+    void *user_data;
+    uint64_t expiration_time;
 };
 
 typedef struct {
-  void     (* init)(void);
-  uint64_t (* uptime)(void);
-  void     (* update)(void);
+    void (*init)(void);
+
+    uint64_t (*uptime)(void);
+
+    void (*update)(void);
 } coap_timer_driver_t;
 
 #ifndef COAP_TIMER_DRIVER
@@ -80,9 +85,8 @@ extern const coap_timer_driver_t COAP_TIMER_DRIVER;
  * \return      The number of milliseconds since boot.
  */
 static inline uint64_t
-coap_timer_uptime(void)
-{
-  return COAP_TIMER_DRIVER.uptime();
+coap_timer_uptime(void) {
+    return COAP_TIMER_DRIVER.uptime();
 }
 
 /**
@@ -90,9 +94,8 @@ coap_timer_uptime(void)
  * \return      The number of seconds since boot.
  */
 static inline uint32_t
-coap_timer_seconds(void)
-{
-  return (uint32_t)(COAP_TIMER_DRIVER.uptime() / 1000);
+coap_timer_seconds(void) {
+    return (uint32_t)(COAP_TIMER_DRIVER.uptime() / 1000);
 }
 
 /**
@@ -102,9 +105,8 @@ coap_timer_seconds(void)
  * \param callback A callback function.
  */
 static inline void
-coap_timer_set_callback(coap_timer_t *timer, void (* callback)(coap_timer_t *))
-{
-  timer->callback = callback;
+coap_timer_set_callback(coap_timer_t *timer, void (*callback)(coap_timer_t *)) {
+    timer->callback = callback;
 }
 
 /**
@@ -115,9 +117,8 @@ coap_timer_set_callback(coap_timer_t *timer, void (* callback)(coap_timer_t *))
  *              attached to the timer.
  */
 static inline void *
-coap_timer_get_user_data(coap_timer_t *timer)
-{
-  return timer->user_data;
+coap_timer_get_user_data(coap_timer_t *timer) {
+    return timer->user_data;
 }
 
 /**
@@ -127,9 +128,8 @@ coap_timer_get_user_data(coap_timer_t *timer)
  * \param data  An opaque pointer to user data.
  */
 static inline void
-coap_timer_set_user_data(coap_timer_t *timer, void *data)
-{
-  timer->user_data = data;
+coap_timer_set_user_data(coap_timer_t *timer, void *data) {
+    timer->user_data = data;
 }
 
 /**
@@ -139,9 +139,8 @@ coap_timer_set_user_data(coap_timer_t *timer, void *data)
  * \return      Non-zero if the timer has expired, zero otherwise.
  */
 static inline int
-coap_timer_expired(const coap_timer_t *timer)
-{
-  return timer->expiration_time <= coap_timer_uptime();
+coap_timer_expired(const coap_timer_t *timer) {
+    return timer->expiration_time <= coap_timer_uptime();
 }
 
 /**

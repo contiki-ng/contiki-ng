@@ -47,6 +47,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
+
 #define LOG_MODULE "coap"
 #define LOG_LEVEL  LOG_LEVEL_COAP
 
@@ -78,133 +79,132 @@
 static void
 well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
                             uint8_t *buffer, uint16_t preferred_size,
-                            int32_t *offset)
-{
-  size_t strpos = 0;            /* position in overall string (which is larger than the buffer) */
-  size_t bufpos = 0;            /* position within buffer (bytes written) */
-  size_t tmplen = 0;
-  coap_resource_t *resource = NULL;
+                            int32_t *offset) {
+    size_t strpos = 0;            /* position in overall string (which is larger than the buffer) */
+    size_t bufpos = 0;            /* position within buffer (bytes written) */
+    size_t tmplen = 0;
+    coap_resource_t *resource = NULL;
 
 #if COAP_LINK_FORMAT_FILTERING
-  /* For filtering. */
-  const char *filter = NULL;
-  const char *attrib = NULL;
-  const char *found = NULL;
-  const char *end = NULL;
-  char *value = NULL;
-  char lastchar = '\0';
-  int len = coap_get_header_uri_query(request, &filter);
+    /* For filtering. */
+    const char *filter = NULL;
+    const char *attrib = NULL;
+    const char *found = NULL;
+    const char *end = NULL;
+    char *value = NULL;
+    char lastchar = '\0';
+    int len = coap_get_header_uri_query(request, &filter);
 
-  if(len) {
-    value = strchr(filter, '=');
-    value[0] = '\0';
-    ++value;
-    len -= strlen(filter) + 1;
-
-    LOG_DBG("Filter %s = ", filter);
-    LOG_DBG_COAP_STRING(value, len);
-    LOG_DBG_("\n");
-
-    if(strcmp(filter, "href") == 0 && value[0] == '/') {
+    if(len) {
+      value = strchr(filter, '=');
+      value[0] = '\0';
       ++value;
-      --len;
-    }
+      len -= strlen(filter) + 1;
 
-    lastchar = value[len - 1];
-    value[len - 1] = '\0';
-  }
+      LOG_DBG("Filter %s = ", filter);
+      LOG_DBG_COAP_STRING(value, len);
+      LOG_DBG_("\n");
+
+      if(strcmp(filter, "href") == 0 && value[0] == '/') {
+        ++value;
+        --len;
+      }
+
+      lastchar = value[len - 1];
+      value[len - 1] = '\0';
+    }
 #endif /* COAP_LINK_FORMAT_FILTERING */
 
-  for(resource = coap_get_first_resource(); resource;
-      resource = coap_get_next_resource(resource)) {
+    for (resource = coap_get_first_resource(); resource;
+         resource = coap_get_next_resource(resource)) {
 #if COAP_LINK_FORMAT_FILTERING
-    /* Filtering */
-    if(len) {
-      if(strcmp(filter, "href") == 0) {
-        attrib = strstr(resource->url, value);
-        if(attrib == NULL || (value[-1] == '/' && attrib != resource->url)) {
-          continue;
-        }
-        end = attrib + strlen(attrib);
-      } else if(resource->attributes != NULL) {
-        attrib = strstr(resource->attributes, filter);
-        if(attrib == NULL
-           || (attrib[strlen(filter)] != '='
-               && attrib[strlen(filter)] != '"')) {
-          continue;
-        }
-        attrib += strlen(filter) + 2;
-        end = strchr(attrib, '"');
-      }
+        /* Filtering */
+        if(len) {
+          if(strcmp(filter, "href") == 0) {
+            attrib = strstr(resource->url, value);
+            if(attrib == NULL || (value[-1] == '/' && attrib != resource->url)) {
+              continue;
+            }
+            end = attrib + strlen(attrib);
+          } else if(resource->attributes != NULL) {
+            attrib = strstr(resource->attributes, filter);
+            if(attrib == NULL
+               || (attrib[strlen(filter)] != '='
+                   && attrib[strlen(filter)] != '"')) {
+              continue;
+            }
+            attrib += strlen(filter) + 2;
+            end = strchr(attrib, '"');
+          }
 
-      LOG_DBG("Filter: res has attrib %s (%s)\n", attrib, value);
-      found = attrib;
-      while((found = strstr(found, value)) != NULL) {
-        if(found > end) {
-          found = NULL;
-          break;
+          LOG_DBG("Filter: res has attrib %s (%s)\n", attrib, value);
+          found = attrib;
+          while((found = strstr(found, value)) != NULL) {
+            if(found > end) {
+              found = NULL;
+              break;
+            }
+            if(lastchar == found[len - 1] || lastchar == '*') {
+              break;
+            }
+            ++found;
+          }
+          if(found == NULL) {
+            continue;
+          }
+          LOG_DBG("Filter: res has prefix %s\n", found);
+          if(lastchar != '*'
+             && (found[len] != '"' && found[len] != ' ' && found[len] != '\0')) {
+            continue;
+          }
+          LOG_DBG("Filter: res has match\n");
         }
-        if(lastchar == found[len - 1] || lastchar == '*') {
-          break;
-        }
-        ++found;
-      }
-      if(found == NULL) {
-        continue;
-      }
-      LOG_DBG("Filter: res has prefix %s\n", found);
-      if(lastchar != '*'
-         && (found[len] != '"' && found[len] != ' ' && found[len] != '\0')) {
-        continue;
-      }
-      LOG_DBG("Filter: res has match\n");
-    }
 #endif
 
-    LOG_DBG("/%s (%p)\npos: s%zu, o%ld, b%zu\n", resource->url, resource,
-            strpos, (long)*offset, bufpos);
+        LOG_DBG("/%s (%p)\npos: s%zu, o%ld, b%zu\n", resource->url, resource,
+                strpos, (long) *offset, bufpos);
 
-    if(strpos > 0) {
-      ADD_CHAR_IF_POSSIBLE(',');
+        if (strpos > 0) {
+            ADD_CHAR_IF_POSSIBLE(',');
+        }
+        ADD_CHAR_IF_POSSIBLE('<');
+        ADD_CHAR_IF_POSSIBLE('/');
+        ADD_STRING_IF_POSSIBLE(resource->url, >=);
+        ADD_CHAR_IF_POSSIBLE('>');
+
+        if (resource->attributes != NULL && resource->attributes[0]) {
+            ADD_CHAR_IF_POSSIBLE(';');
+            ADD_STRING_IF_POSSIBLE(resource->attributes, >);
+        }
+
+        /* buffer full, but resource not completed yet; or: do not break if resource exactly fills buffer. */
+        if (bufpos > preferred_size && strpos - bufpos > *offset) {
+            LOG_DBG("BREAK at %s (%p)\n", resource->url, resource);
+            break;
+        }
     }
-    ADD_CHAR_IF_POSSIBLE('<');
-    ADD_CHAR_IF_POSSIBLE('/');
-    ADD_STRING_IF_POSSIBLE(resource->url, >=);
-    ADD_CHAR_IF_POSSIBLE('>');
 
-    if(resource->attributes != NULL && resource->attributes[0]) {
-      ADD_CHAR_IF_POSSIBLE(';');
-      ADD_STRING_IF_POSSIBLE(resource->attributes, >);
+    if (bufpos > 0) {
+        LOG_DBG("BUF %zu: ", bufpos);
+        LOG_DBG_COAP_STRING((char *) buffer, bufpos);
+        LOG_DBG_("\n");
+
+        coap_set_payload(response, buffer, bufpos);
+        coap_set_header_content_format(response, APPLICATION_LINK_FORMAT);
+    } else if (strpos > 0) {
+        LOG_DBG("well_known_core_handler(): bufpos<=0\n");
+
+        coap_set_status_code(response, BAD_OPTION_4_02);
+        coap_set_payload(response, "BlockOutOfScope", 15);
     }
 
-    /* buffer full, but resource not completed yet; or: do not break if resource exactly fills buffer. */
-    if(bufpos > preferred_size && strpos - bufpos > *offset) {
-      LOG_DBG("BREAK at %s (%p)\n", resource->url, resource);
-      break;
+    if (resource == NULL) {
+        LOG_DBG("DONE\n");
+        *offset = -1;
+    } else {
+        LOG_DBG("MORE at %s (%p)\n", resource->url, resource);
+        *offset += preferred_size;
     }
-  }
-
-  if(bufpos > 0) {
-    LOG_DBG("BUF %zu: ", bufpos);
-    LOG_DBG_COAP_STRING((char *)buffer, bufpos);
-    LOG_DBG_("\n");
-
-    coap_set_payload(response, buffer, bufpos);
-    coap_set_header_content_format(response, APPLICATION_LINK_FORMAT);
-  } else if(strpos > 0) {
-    LOG_DBG("well_known_core_handler(): bufpos<=0\n");
-
-    coap_set_status_code(response, BAD_OPTION_4_02);
-    coap_set_payload(response, "BlockOutOfScope", 15);
-  }
-
-  if(resource == NULL) {
-    LOG_DBG("DONE\n");
-    *offset = -1;
-  } else {
-    LOG_DBG("MORE at %s (%p)\n", resource->url, resource);
-    *offset += preferred_size;
-  }
 }
 /*---------------------------------------------------------------------------*/
 RESOURCE(res_well_known_core, "ct=40", well_known_core_get_handler, NULL,

@@ -32,19 +32,20 @@
 #include "contiki-net.h"
 
 #include "ip64/ip64-driver.h"
+
 /*---------------------------------------------------------------------------*/
 static void
-init(void)
-{
+init(void) {
 }
+
 /*---------------------------------------------------------------------------*/
 static int
-output(uint8_t *packet, uint16_t len)
-{
-  return 0;
+output(uint8_t *packet, uint16_t len) {
+    return 0;
 }
+
 /*---------------------------------------------------------------------------*/
 const struct ip64_driver ip64_null_driver = {
-  init,
-  output
+        init,
+        output
 };

@@ -47,13 +47,13 @@
  * registered unit test statically allocates an object of this type.
  */
 typedef struct unit_test {
-  const char * const descr;
-  const char * const test_file;
-  uint32_t assertions;
-  bool passed;
-  unsigned exit_line;
-  clock_time_t start;
-  clock_time_t end;
+    const char *const descr;
+    const char *const test_file;
+    uint32_t assertions;
+    bool passed;
+    unsigned exit_line;
+    clock_time_t start;
+    clock_time_t end;
 } unit_test_t;
 
 typedef void (*unit_test_report_function_t)(const unit_test_t *);
@@ -69,8 +69,8 @@ typedef void (*unit_test_report_function_t)(const unit_test_t *);
  * \param description A string that briefly describes the unit test.
  */
 #define UNIT_TEST_REGISTER(name, description) \
-  static unit_test_t unit_test_##name =	      \
-    {.descr = (description),   		      \
+  static unit_test_t unit_test_##name =          \
+    {.descr = (description),              \
      .test_file = __FILE__,                   \
      .assertions = 0,                         \
      .passed = false,                         \

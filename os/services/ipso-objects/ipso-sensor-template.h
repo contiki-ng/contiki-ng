@@ -53,27 +53,27 @@ typedef lwm2m_status_t (*ipso_sensor_get_value_millis_t)(const ipso_sensor_t *se
 
 /* Values of the IPSO object */
 typedef struct ipso_sensor_value {
-  lwm2m_object_instance_t reg_object;
-  const ipso_sensor_t *sensor;
-  uint8_t flags;
-  int32_t last_value;
-  int32_t min_value;
-  int32_t max_value;
+    lwm2m_object_instance_t reg_object;
+    const ipso_sensor_t *sensor;
+    uint8_t flags;
+    int32_t last_value;
+    int32_t min_value;
+    int32_t max_value;
 } ipso_sensor_value_t;
 
 /* Meta data about an IPSO sensor object */
 struct ipso_sensor {
-  /* LWM2M object type */
-  uint16_t object_id;
-  uint16_t instance_id;
-  /* When we read out the value we send in a context to write to */
-  ipso_sensor_get_value_millis_t get_value_in_millis;
-  int32_t min_range;
-  int32_t max_range;
-  char *unit;
-  /* update interval in seconds */
-  uint16_t update_interval;
-  ipso_sensor_value_t *sensor_value;
+    /* LWM2M object type */
+    uint16_t object_id;
+    uint16_t instance_id;
+    /* When we read out the value we send in a context to write to */
+    ipso_sensor_get_value_millis_t get_value_in_millis;
+    int32_t min_range;
+    int32_t max_range;
+    char *unit;
+    /* update interval in seconds */
+    uint16_t update_interval;
+    ipso_sensor_value_t *sensor_value;
 };
 
 #define IPSO_SENSOR(name, oid, get_value, ...)  \
@@ -86,6 +86,7 @@ struct ipso_sensor {
   }
 
 int ipso_sensor_add(const ipso_sensor_t *sensor);
+
 int ipso_sensor_remove(const ipso_sensor_t *sensor);
 
 #endif /* IPSO_SENSOR_TEMPLATE_H_ */

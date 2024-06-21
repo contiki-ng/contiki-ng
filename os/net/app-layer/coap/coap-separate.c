@@ -49,6 +49,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
+
 #define LOG_MODULE "coap"
 #define LOG_LEVEL  LOG_LEVEL_COAP
 
@@ -65,11 +66,10 @@
  * Service Unavailable</tt>. The client can then retry later.
  */
 void
-coap_separate_reject()
-{
-  /* TODO: Accept string pointer for custom error message */
-  coap_status_code = SERVICE_UNAVAILABLE_5_03;
-  coap_error_message = "AlreadyInUse";
+coap_separate_reject() {
+    /* TODO: Accept string pointer for custom error message */
+    coap_status_code = SERVICE_UNAVAILABLE_5_03;
+    coap_error_message = "AlreadyInUse";
 }
 /*----------------------------------------------------------------------------*/
 /**
@@ -86,70 +86,70 @@ coap_separate_reject()
  *   relevant information for the response.
  */
 void
-coap_separate_accept(coap_message_t *coap_req, coap_separate_t *separate_store)
-{
-  coap_transaction_t *const t = coap_get_transaction_by_mid(coap_req->mid);
+coap_separate_accept(coap_message_t *coap_req, coap_separate_t *separate_store) {
+    coap_transaction_t *const t = coap_get_transaction_by_mid(coap_req->mid);
 
-  LOG_DBG("Separate ACCEPT: /");
-  LOG_DBG_COAP_STRING(coap_req->uri_path, coap_req->uri_path_len);
-  LOG_DBG_(" MID %u\n", coap_req->mid);
-  if(t) {
-    /* send separate ACK for CON */
-    if(coap_req->type == COAP_TYPE_CON) {
-      coap_message_t ack[1];
-      const coap_endpoint_t *ep;
+    LOG_DBG("Separate ACCEPT: /");
+    LOG_DBG_COAP_STRING(coap_req->uri_path, coap_req->uri_path_len);
+    LOG_DBG_(" MID %u\n", coap_req->mid);
+    if (t) {
+        /* send separate ACK for CON */
+        if (coap_req->type == COAP_TYPE_CON) {
+            coap_message_t ack[1];
+            const coap_endpoint_t *ep;
 
-      ep = coap_get_src_endpoint(coap_req);
-      if(ep == NULL) {
-        LOG_ERR("ERROR: no endpoint in request\n");
-      } else {
-        /* ACK with empty code (0) */
-        coap_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
-        /* serializing into IPBUF: Only overwrites header parts that are already parsed into the request struct */
-        coap_sendto(ep, coap_databuf(),
-                    coap_serialize_message(ack, coap_databuf()));
-      }
+            ep = coap_get_src_endpoint(coap_req);
+            if (ep == NULL) {
+                LOG_ERR("ERROR: no endpoint in request\n");
+            } else {
+                /* ACK with empty code (0) */
+                coap_init_message(ack, COAP_TYPE_ACK, 0, coap_req->mid);
+                /* serializing into IPBUF: Only overwrites header parts that are already parsed into the request struct */
+                coap_sendto(ep, coap_databuf(),
+                            coap_serialize_message(ack, coap_databuf()));
+            }
+        }
+
+        /* store remote endpoint address */
+        coap_endpoint_copy(&separate_store->endpoint, &t->endpoint);
+
+        /* store correct response type */
+        separate_store->type =
+                coap_req->type == COAP_TYPE_CON ? COAP_TYPE_CON : COAP_TYPE_NON;
+        separate_store->mid = coap_get_mid(); /* if it was a NON, we burned one MID in the engine... */
+
+        memcpy(separate_store->token, coap_req->token, coap_req->token_len);
+        separate_store->token_len = coap_req->token_len;
+
+        separate_store->block1_num = coap_req->block1_num;
+        separate_store->block1_size = coap_req->block1_size;
+
+        separate_store->block2_num = coap_req->block2_num;
+        separate_store->block2_size =
+                coap_req->block2_size > 0 ? MIN(COAP_MAX_BLOCK_SIZE, coap_req->block2_size) : COAP_MAX_BLOCK_SIZE;
+
+        /* signal the engine to skip automatic response and clear transaction by engine */
+        coap_status_code = MANUAL_RESPONSE;
+    } else {
+        LOG_ERR("ERROR: Response transaction for separate request not found!\n");
+        coap_status_code = INTERNAL_SERVER_ERROR_5_00;
     }
-
-    /* store remote endpoint address */
-    coap_endpoint_copy(&separate_store->endpoint, &t->endpoint);
-
-    /* store correct response type */
-    separate_store->type =
-      coap_req->type == COAP_TYPE_CON ? COAP_TYPE_CON : COAP_TYPE_NON;
-    separate_store->mid = coap_get_mid(); /* if it was a NON, we burned one MID in the engine... */
-
-    memcpy(separate_store->token, coap_req->token, coap_req->token_len);
-    separate_store->token_len = coap_req->token_len;
-
-    separate_store->block1_num = coap_req->block1_num;
-    separate_store->block1_size = coap_req->block1_size;
-
-    separate_store->block2_num = coap_req->block2_num;
-    separate_store->block2_size = coap_req->block2_size > 0 ? MIN(COAP_MAX_BLOCK_SIZE, coap_req->block2_size) : COAP_MAX_BLOCK_SIZE;
-
-    /* signal the engine to skip automatic response and clear transaction by engine */
-    coap_status_code = MANUAL_RESPONSE;
-  } else {
-    LOG_ERR("ERROR: Response transaction for separate request not found!\n");
-    coap_status_code = INTERNAL_SERVER_ERROR_5_00;
-  }
 }
+
 /*----------------------------------------------------------------------------*/
 void
 coap_separate_resume(coap_message_t *response, coap_separate_t *separate_store,
-                     uint8_t code)
-{
-  coap_init_message(response, separate_store->type, code,
-                    separate_store->mid);
-  if(separate_store->token_len) {
-    coap_set_token(response, separate_store->token,
-                   separate_store->token_len);
-  }
-  if(separate_store->block1_size) {
-    coap_set_header_block1(response, separate_store->block1_num,
-                           0, separate_store->block1_size);
-  }
+                     uint8_t code) {
+    coap_init_message(response, separate_store->type, code,
+                      separate_store->mid);
+    if (separate_store->token_len) {
+        coap_set_token(response, separate_store->token,
+                       separate_store->token_len);
+    }
+    if (separate_store->block1_size) {
+        coap_set_header_block1(response, separate_store->block1_num,
+                               0, separate_store->block1_size);
+    }
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

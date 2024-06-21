@@ -48,18 +48,20 @@ typedef char (shell_commands_func)(struct pt *pt, shell_output_func output, char
 
 /* Command structure */
 struct shell_command_t {
-  const char *name;
-  shell_commands_func *func;
-  const char *help;
+    const char *name;
+    shell_commands_func *func;
+    const char *help;
 };
 
 struct shell_command_set_t {
-  struct shell_command_set_t *next;
-  const struct shell_command_t *const commands;
+    struct shell_command_set_t *next;
+    const struct shell_command_t *const commands;
 };
 
 void shell_command_set_register(struct shell_command_set_t *);
+
 int shell_command_set_deregister(struct shell_command_set_t *);
+
 const struct shell_command_t *shell_command_lookup(const char *);
 
 /**
@@ -68,6 +70,7 @@ const struct shell_command_t *shell_command_lookup(const char *);
 void shell_commands_init(void);
 
 #include "net/mac/tsch/tsch.h"
+
 #if TSCH_WITH_SIXTOP
 typedef void (*shell_command_6top_sub_cmd_t)(shell_output_func output,
                                              char *args);

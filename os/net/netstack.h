@@ -113,16 +113,16 @@
  * The structure of a network driver in Contiki.
  */
 struct network_driver {
-  char *name;
+    char *name;
 
-  /** Initialize the network driver */
-  void (*init)(void);
+    /** Initialize the network driver */
+    void (*init)(void);
 
-  /** Callback for getting notified of incoming packet in packetbuf. */
-  void (*input)(void);
+    /** Callback for getting notified of incoming packet in packetbuf. */
+    void (*input)(void);
 
-  /** Output funtion, sends from uipbuf. */
-  uint8_t (*output)(const linkaddr_t *localdest);
+    /** Output funtion, sends from uipbuf. */
+    uint8_t (*output)(const linkaddr_t *localdest);
 };
 
 extern const struct routing_driver NETSTACK_ROUTING;
@@ -132,30 +132,31 @@ extern const struct radio_driver NETSTACK_RADIO;
 extern const struct framer NETSTACK_FRAMER;
 
 static inline void
-netstack_init(void)
-{
-  NETSTACK_RADIO.init();
-  NETSTACK_MAC.init();
-  NETSTACK_NETWORK.init();
+netstack_init(void) {
+    NETSTACK_RADIO.init();
+    NETSTACK_MAC.init();
+    NETSTACK_NETWORK.init();
 }
 
 /* Netstack ip_packet_processor - for implementing packet filters, firewalls,
    debuggin info, etc */
 
 enum netstack_ip_action {
-  NETSTACK_IP_PROCESS = 0, /* Default behaviour - nothing else */
-  NETSTACK_IP_DROP = 1, /* Drop this packet before processing/sending anymore */
+    NETSTACK_IP_PROCESS = 0, /* Default behaviour - nothing else */
+    NETSTACK_IP_DROP = 1, /* Drop this packet before processing/sending anymore */
 };
 
 enum netstack_ip_callback_type {
-  NETSTACK_IP_INPUT = 0,
-  NETSTACK_IP_OUTPUT = 1,
+    NETSTACK_IP_INPUT = 0,
+    NETSTACK_IP_OUTPUT = 1,
 };
 
 struct netstack_ip_packet_processor {
-  struct netstack_ip_packet_processor *next;
-  enum netstack_ip_action (*process_input)(void);
-  enum netstack_ip_action (*process_output)(const linkaddr_t * localdest);
+    struct netstack_ip_packet_processor *next;
+
+    enum netstack_ip_action (*process_input)(void);
+
+    enum netstack_ip_action (*process_output)(const linkaddr_t *localdest);
 };
 
 /* This function is intended for the IP stack to call whenever input/output
@@ -163,20 +164,24 @@ struct netstack_ip_packet_processor {
 enum netstack_ip_action netstack_process_ip_callback(uint8_t type, const linkaddr_t *localdest);
 
 void netstack_ip_packet_processor_add(struct netstack_ip_packet_processor *p);
+
 void netstack_ip_packet_processor_remove(struct netstack_ip_packet_processor *p);
 
 /* Netstack sniffer - this will soon be deprecated... */
 
 struct netstack_sniffer {
-  struct netstack_sniffer *next;
-  void (*input_callback)(void);
-  void (*output_callback)(int mac_status);
+    struct netstack_sniffer *next;
+
+    void (*input_callback)(void);
+
+    void (*output_callback)(int mac_status);
 };
 
 #define NETSTACK_SNIFFER(name, input_callback, output_callback) \
   static struct netstack_sniffer name = { NULL, input_callback, output_callback }
 
 void netstack_sniffer_add(struct netstack_sniffer *s);
+
 void netstack_sniffer_remove(struct netstack_sniffer *s);
 
 #endif /* NETSTACK_H */

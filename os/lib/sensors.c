@@ -45,91 +45,104 @@ process_event_t sensors_event;
 
 static unsigned char num_sensors;
 
-PROCESS(sensors_process, "Sensors");
+PROCESS(sensors_process,
+"Sensors");
 
 /*---------------------------------------------------------------------------*/
 static int
-get_sensor_index(const struct sensors_sensor *s)
-{
-  int i;
-  for(i = 0; i < num_sensors; ++i) {
-    if(sensors[i] == s) {
-      return i;
+get_sensor_index(const struct sensors_sensor *s) {
+    int i;
+    for (i = 0; i < num_sensors; ++i) {
+        if (sensors[i] == s) {
+            return i;
+        }
     }
-  }
-  return i;
+    return i;
 }
+
 /*---------------------------------------------------------------------------*/
 const struct sensors_sensor *
-sensors_first(void)
-{
-  return sensors[0];
+sensors_first(void) {
+    return sensors[0];
 }
+
 /*---------------------------------------------------------------------------*/
 const struct sensors_sensor *
-sensors_next(const struct sensors_sensor *s)
-{
-  return sensors[get_sensor_index(s) + 1];
+sensors_next(const struct sensors_sensor *s) {
+    return sensors[get_sensor_index(s) + 1];
 }
+
 /*---------------------------------------------------------------------------*/
 void
-sensors_changed(const struct sensors_sensor *s)
-{
-  sensors_flags[get_sensor_index(s)] |= FLAG_CHANGED;
-  process_poll(&sensors_process);
+sensors_changed(const struct sensors_sensor *s) {
+    sensors_flags[get_sensor_index(s)] |= FLAG_CHANGED;
+    process_poll(&sensors_process);
 }
+
 /*---------------------------------------------------------------------------*/
 const struct sensors_sensor *
-sensors_find(const char *prefix)
-{
-  int i;
-  unsigned short len;
+sensors_find(const char *prefix) {
+    int i;
+    unsigned short len;
 
-  /* Search through all processes and search for the specified process
-     name. */
-  len = strlen(prefix);
+    /* Search through all processes and search for the specified process
+       name. */
+    len = strlen(prefix);
 
-  for(i = 0; i < num_sensors; ++i) {
-    if(strncmp(prefix, sensors[i]->type, len) == 0) {
-      return sensors[i];
+    for (i = 0; i < num_sensors; ++i) {
+        if (strncmp(prefix, sensors[i]->type, len) == 0) {
+            return sensors[i];
+        }
     }
-  }
-  return NULL;
+    return NULL;
 }
+
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(sensors_process, ev, data)
+PROCESS_THREAD(sensors_process, ev, data
+)
 {
-  static int i;
-  static int events;
+static int i;
+static int events;
 
-  PROCESS_BEGIN();
+PROCESS_BEGIN();
 
-  sensors_event = process_alloc_event();
+sensors_event = process_alloc_event();
 
-  for(i = 0; sensors[i] != NULL; ++i) {
-    sensors_flags[i] = 0;
-    sensors[i]->configure(SENSORS_HW_INIT, 0);
-  }
-  num_sensors = i;
+for(
+i = 0;
+sensors[i] !=
+NULL;
+++i) {
+sensors_flags[i] = 0;
+sensors[i]->configure(SENSORS_HW_INIT, 0);
+}
+num_sensors = i;
 
-  while(1) {
+while(1) {
 
-    PROCESS_WAIT_EVENT();
+PROCESS_WAIT_EVENT();
 
-    do {
-      events = 0;
-      for(i = 0; i < num_sensors; ++i) {
-	if(sensors_flags[i] & FLAG_CHANGED) {
-	  if(process_post(PROCESS_BROADCAST, sensors_event, (void *)sensors[i]) == PROCESS_ERR_OK) {
-	    PROCESS_WAIT_EVENT_UNTIL(ev == sensors_event);
-	  }
-	  sensors_flags[i] &= ~FLAG_CHANGED;
-	  events++;
-	}
-      }
-    } while(events);
-  }
+do {
+events = 0;
+for(
+i = 0;
+i<num_sensors;
+++i) {
+if(sensors_flags[i] & FLAG_CHANGED) {
+if(
+process_post(PROCESS_BROADCAST, sensors_event,
+(void *)sensors[i]) == PROCESS_ERR_OK) {
+PROCESS_WAIT_EVENT_UNTIL(ev
+== sensors_event);
+}
+sensors_flags[i] &= ~FLAG_CHANGED;
+events++;
+}
+}
+} while(events);
+}
 
-  PROCESS_END();
+PROCESS_END();
+
 }
 /*---------------------------------------------------------------------------*/

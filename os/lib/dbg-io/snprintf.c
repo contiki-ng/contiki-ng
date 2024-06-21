@@ -34,52 +34,53 @@
 #include <stdio.h>
 #include <strformat.h>
 #include <string.h>
+
 #undef snprintf
 #undef vsnprintf
 /*---------------------------------------------------------------------------*/
 struct fmt_buffer {
-  char *pos;
-  size_t left;
+    char *pos;
+    size_t left;
 };
+
 /*---------------------------------------------------------------------------*/
 static strformat_result
-buffer_str(void *user_data, const char *data, unsigned int len)
-{
-  struct fmt_buffer *buffer = (struct fmt_buffer *)user_data;
-  if(len >= buffer->left) {
-    len = buffer->left;
-    len--;
-  }
+buffer_str(void *user_data, const char *data, unsigned int len) {
+    struct fmt_buffer *buffer = (struct fmt_buffer *) user_data;
+    if (len >= buffer->left) {
+        len = buffer->left;
+        len--;
+    }
 
-  memcpy(buffer->pos, data, len);
-  buffer->pos += len;
-  buffer->left -= len;
-  return STRFORMAT_OK;
+    memcpy(buffer->pos, data, len);
+    buffer->pos += len;
+    buffer->left -= len;
+    return STRFORMAT_OK;
 }
+
 /*---------------------------------------------------------------------------*/
 int
-snprintf(char *str, size_t size, const char *format, ...)
-{
-  int res;
-  va_list ap;
-  va_start(ap, format);
-  res = vsnprintf(str, size, format, ap);
-  va_end(ap);
-  return res;
+snprintf(char *str, size_t size, const char *format, ...) {
+    int res;
+    va_list ap;
+    va_start(ap, format);
+    res = vsnprintf(str, size, format, ap);
+    va_end(ap);
+    return res;
 }
+
 /*---------------------------------------------------------------------------*/
 int
-vsnprintf(char *str, size_t size, const char *format, va_list ap)
-{
-  struct fmt_buffer buffer;
-  strformat_context_t ctxt;
-  int res;
-  ctxt.write_str = buffer_str;
-  ctxt.user_data = &buffer;
-  buffer.pos = str;
-  buffer.left = size;
-  res = format_str_v(&ctxt, format, ap);
-  *buffer.pos = '\0';
-  return res;
+vsnprintf(char *str, size_t size, const char *format, va_list ap) {
+    struct fmt_buffer buffer;
+    strformat_context_t ctxt;
+    int res;
+    ctxt.write_str = buffer_str;
+    ctxt.user_data = &buffer;
+    buffer.pos = str;
+    buffer.left = size;
+    res = format_str_v(&ctxt, format, ap);
+    *buffer.pos = '\0';
+    return res;
 }
 /*---------------------------------------------------------------------------*/

@@ -35,21 +35,28 @@
 #include "net/ipv6/uip.h"
 
 void ip64_init(void);
+
 int ip64_6to4(const uint8_t *ipv6packet, const uint16_t ipv6len,
               uint8_t *resultpacket);
+
 int ip64_4to6(const uint8_t *ipv4packet, const uint16_t ipv4len,
               uint8_t *resultpacket);
 
 void ip64_set_ipv4_address(const uip_ip4addr_t *ipv4addr,
                            const uip_ip4addr_t *netmask);
+
 void ip64_set_ipv6_address(const uip_ip6addr_t *ipv6addr);
 
 const uip_ip4addr_t *ip64_get_hostaddr(void);
+
 const uip_ip4addr_t *ip64_get_netmask(void);
+
 const uip_ip4addr_t *ip64_get_draddr(void);
 
 void ip64_set_hostaddr(const uip_ip4addr_t *hostaddr);
+
 void ip64_set_netmask(const uip_ip4addr_t *netmask);
+
 void ip64_set_draddr(const uip_ip4addr_t *draddr);
 
 int ip64_hostaddr_is_configured(void);

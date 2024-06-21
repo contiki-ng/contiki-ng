@@ -77,7 +77,7 @@ typedef list_t stack_t;
 #define STACK(name) LIST(name)
 /*---------------------------------------------------------------------------*/
 struct stack {
-  struct stack *next;
+    struct stack *next;
 };
 /*---------------------------------------------------------------------------*/
 /**
@@ -85,9 +85,8 @@ struct stack {
  * \param stack The stack
  */
 static inline void
-stack_init(stack_t stack)
-{
-  list_init(stack);
+stack_init(stack_t stack) {
+    list_init(stack);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -96,9 +95,8 @@ stack_init(stack_t stack)
  * \param element A pointer to the element to be added
  */
 static inline void
-stack_push(stack_t stack, void *element)
-{
-  list_push(stack, element);
+stack_push(stack_t stack, void *element) {
+    list_push(stack, element);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -109,9 +107,8 @@ stack_push(stack_t stack, void *element)
  * If this function returns NULL if the stack was empty (stack underflow)
  */
 static inline void *
-stack_pop(stack_t stack)
-{
-  return list_pop(stack);
+stack_pop(stack_t stack) {
+    return list_pop(stack);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -120,9 +117,8 @@ stack_pop(stack_t stack)
  * \return A pointer to the element at the top of the stack
  */
 static inline void *
-stack_peek(stack_t stack)
-{
-  return list_head(stack);
+stack_peek(stack_t stack) {
+    return list_head(stack);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -132,9 +128,8 @@ stack_peek(stack_t stack)
  * \retval false The stack has at least one element
  */
 static inline bool
-stack_is_empty(stack_t stack)
-{
-  return *stack == NULL ? true : false;
+stack_is_empty(stack_t stack) {
+    return *stack == NULL ? true : false;
 }
 /*---------------------------------------------------------------------------*/
 #endif /* STACK_H_ */

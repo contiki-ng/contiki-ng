@@ -78,6 +78,7 @@ void slip_set_input_callback(void (*callback)(void));
  * must be provided externally (slip_arch.c).
  */
 void slip_arch_init(void);
+
 void slip_arch_writeb(unsigned char c);
 
 #endif /* SLIP_H_ */

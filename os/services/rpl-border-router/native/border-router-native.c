@@ -50,6 +50,7 @@
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
+
 #define LOG_MODULE "BR"
 #define LOG_LEVEL LOG_LEVEL_INFO
 
@@ -66,84 +67,96 @@ extern const char *slip_config_ipaddr;
 
 CMD_HANDLERS(border_router_cmd_handler);
 
-PROCESS(border_router_process, "Border router process");
+PROCESS(border_router_process,
+"Border router process");
 
 /*---------------------------------------------------------------------------*/
 static void
-request_mac(void)
-{
-  write_to_slip((uint8_t *)"?M", 2);
+request_mac(void) {
+    write_to_slip((uint8_t *) "?M", 2);
 }
+
 /*---------------------------------------------------------------------------*/
 void
-border_router_set_mac(const uint8_t *data)
-{
-  memcpy(uip_lladdr.addr, data, sizeof(uip_lladdr.addr));
-  linkaddr_set_node_addr((linkaddr_t *)uip_lladdr.addr);
+border_router_set_mac(const uint8_t *data) {
+    memcpy(uip_lladdr.addr, data, sizeof(uip_lladdr.addr));
+    linkaddr_set_node_addr((linkaddr_t *) uip_lladdr.addr);
 
-  /* is this ok - should instead remove all addresses and
-     add them back again - a bit messy... ?*/
-  PROCESS_CONTEXT_BEGIN(&tcpip_process);
-  uip_ds6_init();
-  NETSTACK_ROUTING.init();
-  PROCESS_CONTEXT_END(&tcpip_process);
+    /* is this ok - should instead remove all addresses and
+       add them back again - a bit messy... ?*/
+    PROCESS_CONTEXT_BEGIN(&tcpip_process);
+    uip_ds6_init();
+    NETSTACK_ROUTING.init();
+    PROCESS_CONTEXT_END(&tcpip_process);
 
-  mac_set = 1;
+    mac_set = 1;
 }
+
 /*---------------------------------------------------------------------------*/
 void
-border_router_print_stat()
-{
-  printf("bytes received over SLIP: %ld\n", slip_received);
-  printf("bytes sent over SLIP: %ld\n", slip_sent);
+border_router_print_stat() {
+    printf("bytes received over SLIP: %ld\n", slip_received);
+    printf("bytes sent over SLIP: %ld\n", slip_sent);
 }
+
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(border_router_process, ev, data)
+PROCESS_THREAD(border_router_process, ev, data
+)
 {
-  static struct etimer et;
+static struct etimer et;
 
-  PROCESS_BEGIN();
-  prefix_set = 0;
+PROCESS_BEGIN();
 
-  PROCESS_PAUSE();
+prefix_set = 0;
 
-  process_start(&border_router_cmd_process, NULL);
+PROCESS_PAUSE();
 
-  LOG_INFO("RPL-Border router started\n");
+process_start(&border_router_cmd_process, NULL);
 
-  slip_config_handle_arguments(contiki_argc, contiki_argv);
+LOG_INFO("RPL-Border router started\n");
 
-  /* tun init is also responsible for setting up the SLIP connection */
-  tun_init();
+slip_config_handle_arguments(contiki_argc, contiki_argv
+);
 
-  while(!mac_set) {
-    etimer_set(&et, CLOCK_SECOND);
-    request_mac();
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-  }
+/* tun init is also responsible for setting up the SLIP connection */
+tun_init();
 
-  if(slip_config_ipaddr != NULL) {
-    uip_ipaddr_t prefix;
+while(!mac_set) {
+etimer_set(&et, CLOCK_SECOND);
 
-    if(uiplib_ipaddrconv((const char *)slip_config_ipaddr, &prefix)) {
-      LOG_INFO("Setting prefix ");
-      LOG_INFO_6ADDR(&prefix);
-      LOG_INFO_("\n");
-      set_prefix_64(&prefix);
-    } else {
-      LOG_ERR("Parse error: %s\n", slip_config_ipaddr);
-      exit(0);
-    }
-  }
+request_mac();
 
-  print_local_addresses();
+PROCESS_WAIT_EVENT_UNTIL (etimer_expired(
 
-  while(1) {
-    etimer_set(&et, CLOCK_SECOND * 2);
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    /* do anything here??? */
-  }
+&et));
+}
 
-  PROCESS_END();
+if(slip_config_ipaddr != NULL) {
+uip_ipaddr_t prefix;
+
+if(uiplib_ipaddrconv((const char *)slip_config_ipaddr, &prefix)) {
+LOG_INFO("Setting prefix ");
+LOG_INFO_6ADDR(&prefix);
+LOG_INFO_("\n");
+set_prefix_64(&prefix);
+} else {
+LOG_ERR("Parse error: %s\n", slip_config_ipaddr);
+exit(0);
+}
+}
+
+print_local_addresses();
+
+while(1) {
+etimer_set(&et, CLOCK_SECOND * 2);
+
+PROCESS_WAIT_EVENT_UNTIL (etimer_expired(
+
+&et));
+/* do anything here??? */
+}
+
+PROCESS_END();
+
 }
 /*---------------------------------------------------------------------------*/

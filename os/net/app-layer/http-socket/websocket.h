@@ -34,26 +34,27 @@
 #include "websocket-http-client.h"
 
 typedef enum {
-  WEBSOCKET_ERR = 0,
-  WEBSOCKET_OK = 1,
-  WEBSOCKET_IN_PROGRESS = 2,
-  WEBSOCKET_HOSTNAME_NOT_FOUND = 3,
-  WEBSOCKET_CONNECTED = 4,
-  WEBSOCKET_DATA = 5,
-  WEBSOCKET_RESET = 6,
-  WEBSOCKET_TIMEDOUT = 7,
-  WEBSOCKET_CLOSED = 8,
-  WEBSOCKET_PINGED = 9,
-  WEBSOCKET_DATA_RECEIVED = 10,
-  WEBSOCKET_PONG_RECEIVED = 11,
+    WEBSOCKET_ERR = 0,
+    WEBSOCKET_OK = 1,
+    WEBSOCKET_IN_PROGRESS = 2,
+    WEBSOCKET_HOSTNAME_NOT_FOUND = 3,
+    WEBSOCKET_CONNECTED = 4,
+    WEBSOCKET_DATA = 5,
+    WEBSOCKET_RESET = 6,
+    WEBSOCKET_TIMEDOUT = 7,
+    WEBSOCKET_CLOSED = 8,
+    WEBSOCKET_PINGED = 9,
+    WEBSOCKET_DATA_RECEIVED = 10,
+    WEBSOCKET_PONG_RECEIVED = 11,
 } websocket_result_t;
 
 struct websocket;
 
-typedef void (* websocket_callback)(struct websocket *s,
-				    websocket_result_t result,
-				    const uint8_t *data,
-				    uint16_t datalen);
+typedef void (*websocket_callback)(struct websocket *s,
+                                   websocket_result_t result,
+                                   const uint8_t *data,
+                                   uint16_t datalen);
+
 #ifdef WEBSOCKET_CONF_MAX_MSGLEN
 #define WEBSOCKET_MAX_MSGLEN WEBSOCKET_CONF_MAX_MSGLEN
 #else /* WEBSOCKET_CONF_MAX_MSGLEN */
@@ -61,29 +62,29 @@ typedef void (* websocket_callback)(struct websocket *s,
 #endif /* WEBSOCKET_CONF_MAX_MSGLEN */
 
 struct websocket {
-  struct websocket *next;     /* Must be first. */
-  struct websocket_http_client_state s;
-  websocket_callback callback;
+    struct websocket *next;     /* Must be first. */
+    struct websocket_http_client_state s;
+    websocket_callback callback;
 
-  uint8_t mask[4];
-  uint32_t left, len;
-  uint8_t opcode;
+    uint8_t mask[4];
+    uint32_t left, len;
+    uint8_t opcode;
 
-  uint8_t state;
+    uint8_t state;
 
-  uint8_t headercacheptr;
-  uint8_t headercache[10]; /* The maximum websocket header + mask is 6
+    uint8_t headercacheptr;
+    uint8_t headercache[10]; /* The maximum websocket header + mask is 6
                               + 4 bytes long */
 };
 
 enum {
-  WEBSOCKET_STATE_CLOSED = 0,
-  WEBSOCKET_STATE_DNS_REQUEST_SENT = 1,
-  WEBSOCKET_STATE_HTTP_REQUEST_SENT = 2,
-  WEBSOCKET_STATE_WAITING_FOR_HEADER = 3,
-  WEBSOCKET_STATE_RECEIVING_HEADER = 4,
-  WEBSOCKET_STATE_HEADER_RECEIVED = 5,
-  WEBSOCKET_STATE_RECEIVING_DATA = 6,
+    WEBSOCKET_STATE_CLOSED = 0,
+    WEBSOCKET_STATE_DNS_REQUEST_SENT = 1,
+    WEBSOCKET_STATE_HTTP_REQUEST_SENT = 2,
+    WEBSOCKET_STATE_WAITING_FOR_HEADER = 3,
+    WEBSOCKET_STATE_RECEIVING_HEADER = 4,
+    WEBSOCKET_STATE_HEADER_RECEIVED = 5,
+    WEBSOCKET_STATE_RECEIVING_DATA = 6,
 };
 
 
@@ -99,7 +100,7 @@ websocket_result_t websocket_open(struct websocket *s,
                                   websocket_callback c);
 
 int websocket_send(struct websocket *s,
-		   const uint8_t *data, uint16_t datalen);
+                   const uint8_t *data, uint16_t datalen);
 
 int websocket_send_str(struct websocket *s,
                        const char *strptr);

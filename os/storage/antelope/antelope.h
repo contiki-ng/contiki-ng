@@ -44,10 +44,15 @@
 typedef int (*db_output_function_t)(const char *, ...);
 
 void db_init(void);
+
 void db_set_output_function(db_output_function_t f);
+
 const char *db_get_result_message(db_result_t code);
+
 db_result_t db_print_header(db_handle_t *handle);
+
 db_result_t db_print_tuple(db_handle_t *handle);
+
 int db_processing(db_handle_t *handle);
 
 #endif /* DB_H */

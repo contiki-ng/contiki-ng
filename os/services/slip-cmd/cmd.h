@@ -42,12 +42,13 @@
 
 #define CMD_TYPE_ERR 'E'
 
-typedef int (* cmd_handler_t)(const uint8_t *data, int len);
+typedef int (*cmd_handler_t)(const uint8_t *data, int len);
 
 #define CMD_HANDLERS(...) \
 const cmd_handler_t cmd_handlers[] = {__VA_ARGS__, NULL}
 
 int cmd_input(const uint8_t *data, int data_len);
+
 void cmd_send(const uint8_t *data, int data_len);
 
 #endif /* CMD_H_ */

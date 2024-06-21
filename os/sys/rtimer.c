@@ -47,6 +47,7 @@
 #include "contiki.h"
 
 #include "sys/log.h"
+
 #define LOG_MODULE "RTimer"
 #define LOG_LEVEL LOG_LEVEL_NONE
 
@@ -55,35 +56,34 @@ static struct rtimer *next_rtimer;
 /*---------------------------------------------------------------------------*/
 int
 rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
-	   rtimer_clock_t duration,
-	   rtimer_callback_t func, void *ptr)
-{
-  LOG_DBG("rtimer_set time %lu\n", (unsigned long)time);
+           rtimer_clock_t duration,
+           rtimer_callback_t func, void *ptr) {
+    LOG_DBG("rtimer_set time %lu\n", (unsigned long) time);
 
-  if(next_rtimer) {
-    return RTIMER_ERR_ALREADY_SCHEDULED;
-  }
+    if (next_rtimer) {
+        return RTIMER_ERR_ALREADY_SCHEDULED;
+    }
 
-  rtimer->func = func;
-  rtimer->ptr = ptr;
+    rtimer->func = func;
+    rtimer->ptr = ptr;
 
-  rtimer->time = time;
-  next_rtimer = rtimer;
+    rtimer->time = time;
+    next_rtimer = rtimer;
 
-  rtimer_arch_schedule(time);
-  return RTIMER_OK;
+    rtimer_arch_schedule(time);
+    return RTIMER_OK;
 }
+
 /*---------------------------------------------------------------------------*/
 void
-rtimer_run_next(void)
-{
-  struct rtimer *t;
-  if(next_rtimer == NULL) {
-    return;
-  }
-  t = next_rtimer;
-  next_rtimer = NULL;
-  t->func(t, t->ptr);
+rtimer_run_next(void) {
+    struct rtimer *t;
+    if (next_rtimer == NULL) {
+        return;
+    }
+    t = next_rtimer;
+    next_rtimer = NULL;
+    t->func(t, t->ptr);
 }
 /*---------------------------------------------------------------------------*/
 

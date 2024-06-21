@@ -67,31 +67,30 @@ IPSO_SENSOR(temp_sensor, 3303, get_temp_value,
             .min_range = IPSO_TEMPERATURE_MIN, /* milli celcius */
             .unit = "Cel",
             .update_interval = 10
-            );
+);
 
 /*---------------------------------------------------------------------------*/
 static lwm2m_status_t
-get_temp_value(const ipso_sensor_t *s, int32_t *value)
-{
+get_temp_value(const ipso_sensor_t *s, int32_t *value) {
 #ifdef IPSO_TEMPERATURE
-  if(IPSO_TEMPERATURE.read_value != NULL &&
-     IPSO_TEMPERATURE.read_value(value) == 0) {
-    return LWM2M_STATUS_OK;
-  }
+    if(IPSO_TEMPERATURE.read_value != NULL &&
+       IPSO_TEMPERATURE.read_value(value) == 0) {
+      return LWM2M_STATUS_OK;
+    }
 #endif /* IPSO_TEMPERATURE */
-  return LWM2M_STATUS_ERROR;
+    return LWM2M_STATUS_ERROR;
 }
+
 /*---------------------------------------------------------------------------*/
 void
-ipso_temperature_init(void)
-{
+ipso_temperature_init(void) {
 #ifdef IPSO_TEMPERATURE
-  if(IPSO_TEMPERATURE.init) {
-    IPSO_TEMPERATURE.init();
-  }
+    if(IPSO_TEMPERATURE.init) {
+      IPSO_TEMPERATURE.init();
+    }
 #endif /* IPSO_TEMPERATURE */
 
-  ipso_sensor_add(&temp_sensor);
+    ipso_sensor_add(&temp_sensor);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

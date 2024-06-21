@@ -49,34 +49,34 @@
 extern process_event_t resolv_event_found;
 
 enum {
-  /** Hostname is fresh and usable. This response is cached and will eventually
-   *  expire to RESOLV_STATUS_EXPIRED.*/
-  RESOLV_STATUS_CACHED = 0,
+    /** Hostname is fresh and usable. This response is cached and will eventually
+     *  expire to RESOLV_STATUS_EXPIRED.*/
+    RESOLV_STATUS_CACHED = 0,
 
-  /** Hostname was not found in the cache. Use resolv_query() to look it up. */
-  RESOLV_STATUS_UNCACHED,
+    /** Hostname was not found in the cache. Use resolv_query() to look it up. */
+    RESOLV_STATUS_UNCACHED,
 
-  /** Hostname was found, but it's status has expired. The address returned
-   *  should not be used. Use resolv_query() to freshen it up.
-   */
-  RESOLV_STATUS_EXPIRED,
+    /** Hostname was found, but it's status has expired. The address returned
+     *  should not be used. Use resolv_query() to freshen it up.
+     */
+    RESOLV_STATUS_EXPIRED,
 
-  /** The server has returned a not-found response for this domain name.
-   *  This response is cached for the period described in the server.
-   *  You may issue a new query at any time using resolv_query(), but
-   *  you will generally want to wait until this domain's status becomes
-   *  RESOLV_STATUS_EXPIRED.
-   */
-  RESOLV_STATUS_NOT_FOUND,
+    /** The server has returned a not-found response for this domain name.
+     *  This response is cached for the period described in the server.
+     *  You may issue a new query at any time using resolv_query(), but
+     *  you will generally want to wait until this domain's status becomes
+     *  RESOLV_STATUS_EXPIRED.
+     */
+    RESOLV_STATUS_NOT_FOUND,
 
-  /** This hostname is in the process of being resolved. Try again soon. */
-  RESOLV_STATUS_RESOLVING,
+    /** This hostname is in the process of being resolved. Try again soon. */
+    RESOLV_STATUS_RESOLVING,
 
-  /** Some sort of server error was encountered while trying to look up this
-   *  record. This response is cached and will eventually expire to
-   *  RESOLV_STATUS_EXPIRED.
-   */
-  RESOLV_STATUS_ERROR,
+    /** Some sort of server error was encountered while trying to look up this
+     *  record. This response is cached and will eventually expire to
+     *  RESOLV_STATUS_EXPIRED.
+     */
+    RESOLV_STATUS_ERROR,
 };
 
 typedef uint8_t resolv_status_t;

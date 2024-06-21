@@ -46,25 +46,25 @@
 #include <stddef.h>
 
 enum {
-  LWM2M_TLV_TYPE_OBJECT_INSTANCE   = 0,
-  LWM2M_TLV_TYPE_RESOURCE_INSTANCE = 1,
-  LWM2M_TLV_TYPE_MULTI_RESOURCE    = 2,
-  LWM2M_TLV_TYPE_RESOURCE          = 3
+    LWM2M_TLV_TYPE_OBJECT_INSTANCE = 0,
+    LWM2M_TLV_TYPE_RESOURCE_INSTANCE = 1,
+    LWM2M_TLV_TYPE_MULTI_RESOURCE = 2,
+    LWM2M_TLV_TYPE_RESOURCE = 3
 };
 typedef uint8_t lwm2m_tlv_type_t;
 
 typedef enum {
-  LWM2M_TLV_LEN_TYPE_NO_LEN    = 0,
-  LWM2M_TLV_LEN_TYPE_8BIT_LEN  = 1,
-  LWM2M_TLV_LEN_TYPE_16BIT_LEN = 2,
-  LWM2M_TLV_LEN_TYPE_24BIT_LEN = 3
+    LWM2M_TLV_LEN_TYPE_NO_LEN = 0,
+    LWM2M_TLV_LEN_TYPE_8BIT_LEN = 1,
+    LWM2M_TLV_LEN_TYPE_16BIT_LEN = 2,
+    LWM2M_TLV_LEN_TYPE_24BIT_LEN = 3
 } lwm2m_tlv_len_type_t;
 
 typedef struct {
-  lwm2m_tlv_type_t type;
-  uint16_t id; /* can be 8-bit or 16-bit when serialized */
-  uint32_t length;
-  const uint8_t *value;
+    lwm2m_tlv_type_t type;
+    uint16_t id; /* can be 8-bit or 16-bit when serialized */
+    uint32_t length;
+    const uint8_t *value;
 } lwm2m_tlv_t;
 
 size_t lwm2m_tlv_get_size(const lwm2m_tlv_t *tlv);

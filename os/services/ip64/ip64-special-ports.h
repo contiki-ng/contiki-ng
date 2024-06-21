@@ -49,11 +49,13 @@
 /* Translate the special port to an IPv6 address for inbound
    packets. */
 int ip64_special_ports_translate_incoming(uint16_t incoming_port,
-					  uip_ip6addr_t *newaddr,
-					  uint16_t *newport);
+                                          uip_ip6addr_t *newaddr,
+                                          uint16_t *newport);
+
 int ip64_special_ports_translate_outgoing(uint16_t incoming_port,
-					  const uip_ip6addr_t *ip6addr,
-					  uint16_t *newport);
+                                          const uip_ip6addr_t *ip6addr,
+                                          uint16_t *newport);
+
 /* Check if an incoming (destination) port is special. */
 int ip64_special_ports_incoming_is_special(uint16_t port);
 

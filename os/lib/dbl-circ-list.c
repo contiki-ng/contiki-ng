@@ -44,184 +44,185 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+
 /*---------------------------------------------------------------------------*/
 struct dblcl {
-  struct dblcl *next;
-  struct dblcl *previous;
+    struct dblcl *next;
+    struct dblcl *previous;
 };
+
 /*---------------------------------------------------------------------------*/
 void
-dbl_circ_list_init(dbl_circ_list_t dblcl)
-{
-  *dblcl = NULL;
+dbl_circ_list_init(dbl_circ_list_t dblcl) {
+    *dblcl = NULL;
 }
+
 /*---------------------------------------------------------------------------*/
 void *
-dbl_circ_list_head(const_dbl_circ_list_t dblcl)
-{
-  return *dblcl;
+dbl_circ_list_head(const_dbl_circ_list_t dblcl) {
+    return *dblcl;
 }
+
 /*---------------------------------------------------------------------------*/
 void *
-dbl_circ_list_tail(const_dbl_circ_list_t dblcl)
-{
-  struct dblcl *this;
+dbl_circ_list_tail(const_dbl_circ_list_t dblcl) {
+    struct dblcl *this;
 
-  if(*dblcl == NULL) {
-    return NULL;
-  }
-
-  for(this = *dblcl; this->next != *dblcl; this = this->next);
-
-  return this;
-}
-/*---------------------------------------------------------------------------*/
-void
-dbl_circ_list_remove(dbl_circ_list_t dblcl, const void *element)
-{
-  struct dblcl *this;
-
-  if(*dblcl == NULL || element == NULL) {
-    return;
-  }
-
-  this = *dblcl;
-
-  do {
-    if(this == element) {
-      this->previous->next = this->next;
-      this->next->previous = this->previous;
-
-      /* We need to update the head of the list if we removed the head */
-      if(*dblcl == element) {
-        *dblcl = this->next == this ? NULL : this->next;
-      }
-
-      this->next = NULL;
-      this->previous = NULL;
-
-      return;
+    if (*dblcl == NULL) {
+        return NULL;
     }
 
-    this = this->next;
-  } while(this != *dblcl);
+    for (this = *dblcl; this->next != *dblcl; this = this->next);
+
+    return this;
 }
+
 /*---------------------------------------------------------------------------*/
 void
-dbl_circ_list_add_head(dbl_circ_list_t dblcl, void *element)
-{
-  struct dblcl *head;
+dbl_circ_list_remove(dbl_circ_list_t dblcl, const void *element) {
+    struct dblcl *this;
 
-  if(element == NULL) {
-    return;
-  }
+    if (*dblcl == NULL || element == NULL) {
+        return;
+    }
 
-  /* Don't add twice */
-  dbl_circ_list_remove(dblcl, element);
+    this = *dblcl;
 
-  head = dbl_circ_list_head(dblcl);
+    do {
+        if (this == element) {
+            this->previous->next = this->next;
+            this->next->previous = this->previous;
 
-  if(head == NULL) {
-    /* If the list was empty */
-    ((struct dblcl *)element)->next = element;
-    ((struct dblcl *)element)->previous = element;
-  } else {
-    /* If the list was not empty */
-    ((struct dblcl *)element)->next = head;
-    ((struct dblcl *)element)->previous = head->previous;
-    head->previous->next = element;
-    head->previous = element;
-  }
+            /* We need to update the head of the list if we removed the head */
+            if (*dblcl == element) {
+                *dblcl = this->next == this ? NULL : this->next;
+            }
 
-  *dblcl = element;
+            this->next = NULL;
+            this->previous = NULL;
+
+            return;
+        }
+
+        this = this->next;
+    } while (this != *dblcl);
 }
+
 /*---------------------------------------------------------------------------*/
 void
-dbl_circ_list_add_tail(dbl_circ_list_t dblcl, void *element)
-{
-  struct dblcl *tail;
+dbl_circ_list_add_head(dbl_circ_list_t dblcl, void *element) {
+    struct dblcl *head;
 
-  if(element == NULL) {
-    return;
-  }
+    if (element == NULL) {
+        return;
+    }
 
-  /* Don't add twice */
-  dbl_circ_list_remove(dblcl, element);
+    /* Don't add twice */
+    dbl_circ_list_remove(dblcl, element);
 
-  tail = dbl_circ_list_tail(dblcl);
+    head = dbl_circ_list_head(dblcl);
 
-  if(tail == NULL) {
-    /* If the list was empty */
-    ((struct dblcl *)element)->next = element;
-    ((struct dblcl *)element)->previous = element;
+    if (head == NULL) {
+        /* If the list was empty */
+        ((struct dblcl *) element)->next = element;
+        ((struct dblcl *) element)->previous = element;
+    } else {
+        /* If the list was not empty */
+        ((struct dblcl *) element)->next = head;
+        ((struct dblcl *) element)->previous = head->previous;
+        head->previous->next = element;
+        head->previous = element;
+    }
+
     *dblcl = element;
-  } else {
-    /* If the list was not empty */
-    ((struct dblcl *)element)->next = *dblcl;
-    ((struct dblcl *)element)->previous = tail;
-    tail->next->previous = element;
-    tail->next = element;
-  }
 }
+
 /*---------------------------------------------------------------------------*/
 void
-dbl_circ_list_add_after(dbl_circ_list_t dblcl, void *existing, void *element)
-{
-  if(element == NULL || existing == NULL) {
-    return;
-  }
+dbl_circ_list_add_tail(dbl_circ_list_t dblcl, void *element) {
+    struct dblcl *tail;
 
-  /* Don't add twice */
-  dbl_circ_list_remove(dblcl, element);
+    if (element == NULL) {
+        return;
+    }
 
-  ((struct dblcl *)element)->next = ((struct dblcl *)existing)->next;
-  ((struct dblcl *)element)->previous = existing;
-  ((struct dblcl *)existing)->next->previous = element;
-  ((struct dblcl *)existing)->next = element;
+    /* Don't add twice */
+    dbl_circ_list_remove(dblcl, element);
+
+    tail = dbl_circ_list_tail(dblcl);
+
+    if (tail == NULL) {
+        /* If the list was empty */
+        ((struct dblcl *) element)->next = element;
+        ((struct dblcl *) element)->previous = element;
+        *dblcl = element;
+    } else {
+        /* If the list was not empty */
+        ((struct dblcl *) element)->next = *dblcl;
+        ((struct dblcl *) element)->previous = tail;
+        tail->next->previous = element;
+        tail->next = element;
+    }
 }
+
 /*---------------------------------------------------------------------------*/
 void
-dbl_circ_list_add_before(dbl_circ_list_t dblcl, void *existing, void *element)
-{
-  if(element == NULL || existing == NULL) {
-    return;
-  }
+dbl_circ_list_add_after(dbl_circ_list_t dblcl, void *existing, void *element) {
+    if (element == NULL || existing == NULL) {
+        return;
+    }
 
-  /* Don't add twice */
-  dbl_circ_list_remove(dblcl, element);
+    /* Don't add twice */
+    dbl_circ_list_remove(dblcl, element);
 
-  ((struct dblcl *)element)->next = existing;
-  ((struct dblcl *)element)->previous = ((struct dblcl *)existing)->previous;
-  ((struct dblcl *)existing)->previous->next = element;
-  ((struct dblcl *)existing)->previous = element;
-
-  /* If we added before the list's head, we must update the head */
-  if(*dblcl == existing) {
-    *dblcl = element;
-  }
+    ((struct dblcl *) element)->next = ((struct dblcl *) existing)->next;
+    ((struct dblcl *) element)->previous = existing;
+    ((struct dblcl *) existing)->next->previous = element;
+    ((struct dblcl *) existing)->next = element;
 }
+
+/*---------------------------------------------------------------------------*/
+void
+dbl_circ_list_add_before(dbl_circ_list_t dblcl, void *existing, void *element) {
+    if (element == NULL || existing == NULL) {
+        return;
+    }
+
+    /* Don't add twice */
+    dbl_circ_list_remove(dblcl, element);
+
+    ((struct dblcl *) element)->next = existing;
+    ((struct dblcl *) element)->previous = ((struct dblcl *) existing)->previous;
+    ((struct dblcl *) existing)->previous->next = element;
+    ((struct dblcl *) existing)->previous = element;
+
+    /* If we added before the list's head, we must update the head */
+    if (*dblcl == existing) {
+        *dblcl = element;
+    }
+}
+
 /*---------------------------------------------------------------------------*/
 unsigned long
-dbl_circ_list_length(const_dbl_circ_list_t dblcl)
-{
-  unsigned long len = 1;
-  struct dblcl *this;
+dbl_circ_list_length(const_dbl_circ_list_t dblcl) {
+    unsigned long len = 1;
+    struct dblcl *this;
 
-  if(*dblcl == NULL) {
-    return 0;
-  }
+    if (*dblcl == NULL) {
+        return 0;
+    }
 
-  for(this = *dblcl; this->next != *dblcl; this = this->next) {
-    len++;
-  }
+    for (this = *dblcl; this->next != *dblcl; this = this->next) {
+        len++;
+    }
 
-  return len;
+    return len;
 }
+
 /*---------------------------------------------------------------------------*/
 bool
-dbl_circ_list_is_empty(const_dbl_circ_list_t dblcl)
-{
-  return *dblcl == NULL ? true : false;
+dbl_circ_list_is_empty(const_dbl_circ_list_t dblcl) {
+    return *dblcl == NULL ? true : false;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

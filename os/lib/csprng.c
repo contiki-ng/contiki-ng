@@ -46,6 +46,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
+
 #define LOG_MODULE "CSPRNG"
 #define LOG_LEVEL LOG_LEVEL_NONE
 
@@ -55,52 +56,51 @@ static bool seeded;
 
 /*---------------------------------------------------------------------------*/
 void
-csprng_feed(struct csprng_seed *new_seed)
-{
-  size_t i;
+csprng_feed(struct csprng_seed *new_seed) {
+    size_t i;
 
-  /*
-   * By XORing the current seed with the new seed, the seed of this CSPRNG
-   * remains secret as long as any of the mixed seeds remains secret.
-   */
-  for(i = 0; i < CSPRNG_SEED_LEN; i++) {
-    seed.u8[i] ^= new_seed->u8[i];
-  }
+    /*
+     * By XORing the current seed with the new seed, the seed of this CSPRNG
+     * remains secret as long as any of the mixed seeds remains secret.
+     */
+    for (i = 0; i < CSPRNG_SEED_LEN; i++) {
+        seed.u8[i] ^= new_seed->u8[i];
+    }
 
-  LOG_DBG("key = ");
-  LOG_DBG_BYTES(seed.key, CSPRNG_KEY_LEN);
-  LOG_DBG_("\n");
-  LOG_DBG("state = ");
-  LOG_DBG_BYTES(seed.state, CSPRNG_STATE_LEN);
-  LOG_DBG_("\n");
+    LOG_DBG("key = ");
+    LOG_DBG_BYTES(seed.key, CSPRNG_KEY_LEN);
+    LOG_DBG_("\n");
+    LOG_DBG("state = ");
+    LOG_DBG_BYTES(seed.state, CSPRNG_STATE_LEN);
+    LOG_DBG_("\n");
 
-  seeded = true;
+    seeded = true;
 }
+
 /*---------------------------------------------------------------------------*/
 bool
-csprng_rand(uint8_t *result, size_t len)
-{
-  size_t pos;
+csprng_rand(uint8_t *result, size_t len) {
+    size_t pos;
 
-  if(!seeded) {
-    return false;
-  }
+    if (!seeded) {
+        return false;
+    }
 
-  pos = MIN(len, CSPRNG_STATE_LEN - read_state_bytes);
-  memcpy(result, seed.state + read_state_bytes, pos);
-  read_state_bytes += pos;
-  if(pos == len) {
+    pos = MIN(len, CSPRNG_STATE_LEN - read_state_bytes);
+    memcpy(result, seed.state + read_state_bytes, pos);
+    read_state_bytes += pos;
+    if (pos == len) {
+        return true;
+    }
+
+    AES_128.set_key(seed.key);
+    for (; pos < len; pos += CSPRNG_STATE_LEN) {
+        AES_128.encrypt(seed.state);
+        read_state_bytes = MIN(len - pos, CSPRNG_STATE_LEN);
+        memcpy(result + pos, seed.state, read_state_bytes);
+    }
+
     return true;
-  }
-
-  AES_128.set_key(seed.key);
-  for(; pos < len; pos += CSPRNG_STATE_LEN) {
-    AES_128.encrypt(seed.state);
-    read_state_bytes = MIN(len - pos, CSPRNG_STATE_LEN);
-    memcpy(result + pos, seed.state, read_state_bytes);
-  }
-
-  return true;
 }
 /*---------------------------------------------------------------------------*/
 

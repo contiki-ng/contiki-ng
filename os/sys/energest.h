@@ -93,21 +93,21 @@
  * #define ENERGEST_CONF_ADDITIONS TYPE_NAME3, TYPE_NAME4
  */
 typedef enum energest_type {
-  ENERGEST_TYPE_CPU,
-  ENERGEST_TYPE_LPM,
-  ENERGEST_TYPE_DEEP_LPM,
-  ENERGEST_TYPE_TRANSMIT,
-  ENERGEST_TYPE_LISTEN,
+    ENERGEST_TYPE_CPU,
+    ENERGEST_TYPE_LPM,
+    ENERGEST_TYPE_DEEP_LPM,
+    ENERGEST_TYPE_TRANSMIT,
+    ENERGEST_TYPE_LISTEN,
 
 #ifdef ENERGEST_CONF_PLATFORM_ADDITIONS
-  ENERGEST_CONF_PLATFORM_ADDITIONS,
+    ENERGEST_CONF_PLATFORM_ADDITIONS,
 #endif /* ENERGEST_CONF_PLATFORM_ADDITIONS */
 
 #ifdef ENERGEST_CONF_ADDITIONS
-  ENERGEST_CONF_ADDITIONS,
+    ENERGEST_CONF_ADDITIONS,
 #endif /* ENERGEST_CONF_ADDITIONS */
 
-  ENERGEST_TYPE_MAX
+    ENERGEST_TYPE_MAX
 } energest_type_t;
 
 #if ENERGEST_CONF_ON
@@ -172,21 +172,20 @@ energest_switch(energest_type_t type_off, energest_type_t type_on)
 
 #else /* ENERGEST_CONF_ON */
 
-static inline void energest_init(void) { }
+static inline void energest_init(void) {}
 
-static inline void energest_flush(void) { }
+static inline void energest_flush(void) {}
 
 static inline uint64_t energest_type_time(energest_type_t type) { return 0; }
 
-static inline void energest_type_set(energest_type_t type, uint64_t time) { }
+static inline void energest_type_set(energest_type_t type, uint64_t time) {}
 
-static inline void energest_on(energest_type_t type) { }
+static inline void energest_on(energest_type_t type) {}
 
-static inline void energest_off(energest_type_t type) { }
+static inline void energest_off(energest_type_t type) {}
 
 static inline void energest_switch(energest_type_t type_off,
-                                   energest_type_t type_on)
-{
+                                   energest_type_t type_on) {
 }
 
 #define ENERGEST_ON(type) do { } while(0)

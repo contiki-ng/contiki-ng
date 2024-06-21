@@ -56,12 +56,12 @@ typedef lwm2m_status_t (*ipso_control_set_value_t)(ipso_control_t *control,
 
 /* Values of the IPSO control object */
 struct ipso_control {
-  lwm2m_object_instance_t reg_object;
-  uint8_t flags;
-  uint8_t value;  /* used to emulate on/off and dim-value */
-  uint32_t on_time; /* on-time in seconds */
-  uint64_t last_on_time;
-  ipso_control_set_value_t set_value;
+    lwm2m_object_instance_t reg_object;
+    uint8_t flags;
+    uint8_t value;  /* used to emulate on/off and dim-value */
+    uint32_t on_time; /* on-time in seconds */
+    uint64_t last_on_time;
+    ipso_control_set_value_t set_value;
 };
 
 #define IPSO_CONTROL(name, oid, iid, setv)                              \
@@ -72,30 +72,27 @@ struct ipso_control {
   }
 
 int ipso_control_add(ipso_control_t *control);
+
 int ipso_control_remove(ipso_control_t *control);
 
 static inline uint16_t
-ipso_control_get_object_id(const ipso_control_t *control)
-{
-  return control->reg_object.object_id;
+ipso_control_get_object_id(const ipso_control_t *control) {
+    return control->reg_object.object_id;
 }
 
 static inline uint16_t
-ipso_control_get_instance_id(const ipso_control_t *control)
-{
-  return control->reg_object.instance_id;
+ipso_control_get_instance_id(const ipso_control_t *control) {
+    return control->reg_object.instance_id;
 }
 
 static inline uint8_t
-ipso_control_is_on(const ipso_control_t *control)
-{
-  return (control->value & 0x80) != 0;
+ipso_control_is_on(const ipso_control_t *control) {
+    return (control->value & 0x80) != 0;
 }
 
 static inline uint8_t
-ipso_control_get_value(const ipso_control_t *control)
-{
-  return (control->value & 0x80) != 0 ? (control->value & 0x7f) : 0;
+ipso_control_get_value(const ipso_control_t *control) {
+    return (control->value & 0x80) != 0 ? (control->value & 0x7f) : 0;
 }
 
 lwm2m_status_t ipso_control_set_on(ipso_control_t *control, uint8_t onoroff);

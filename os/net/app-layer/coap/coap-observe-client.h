@@ -68,11 +68,11 @@
 
 /*----------------------------------------------------------------------------*/
 typedef enum {
-  OBSERVE_OK,
-  NOTIFICATION_OK,
-  OBSERVE_NOT_SUPPORTED,
-  ERROR_RESPONSE_CODE,
-  NO_REPLY_FROM_SERVER,
+    OBSERVE_OK,
+    NOTIFICATION_OK,
+    OBSERVE_NOT_SUPPORTED,
+    ERROR_RESPONSE_CODE,
+    NO_REPLY_FROM_SERVER,
 } coap_notification_flag_t;
 
 /*----------------------------------------------------------------------------*/
@@ -83,14 +83,14 @@ typedef void (*notification_callback_t)(coap_observee_t *subject,
                                         coap_notification_flag_t);
 
 struct coap_observee_s {
-  coap_observee_t *next;        /* for LIST */
-  coap_endpoint_t endpoint;
-  const char *url;
-  uint8_t token_len;
-  uint8_t token[COAP_TOKEN_LEN];
-  void *data;                   /* generic pointer for storing user data */
-  notification_callback_t notification_callback;
-  uint32_t last_observe;
+    coap_observee_t *next;        /* for LIST */
+    coap_endpoint_t endpoint;
+    const char *url;
+    uint8_t token_len;
+    uint8_t token[COAP_TOKEN_LEN];
+    void *data;                   /* generic pointer for storing user data */
+    notification_callback_t notification_callback;
+    uint32_t last_observe;
 };
 
 /*----------------------------------------------------------------------------*/
@@ -119,6 +119,7 @@ coap_observee_t *coap_obs_request_registration(const coap_endpoint_t *endpoint,
                                                notification_callback_t
                                                notification_callback,
                                                void *data);
+
 /* TODO: this function may be moved to coap.c */
 uint8_t coap_generate_token(uint8_t **token_ptr);
 

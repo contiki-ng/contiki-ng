@@ -86,6 +86,7 @@ void rpl_link_callback(const linkaddr_t *addr, int status, int numtx);
  * \return 1 if success, 0 otherwise
  */
 int rpl_set_prefix(rpl_prefix_t *prefix);
+
 /**
 * Set prefix from an IPv6 address
 *

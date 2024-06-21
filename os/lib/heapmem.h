@@ -85,12 +85,12 @@
 #endif
 /*****************************************************************************/
 typedef struct heapmem_stats {
-  size_t allocated;
-  size_t overhead;
-  size_t available;
-  size_t footprint;
-  size_t max_footprint;
-  size_t chunks;
+    size_t allocated;
+    size_t overhead;
+    size_t available;
+    size_t footprint;
+    size_t max_footprint;
+    size_t chunks;
 } heapmem_stats_t;
 /*****************************************************************************/
 typedef uint8_t heapmem_zone_t;
@@ -123,15 +123,15 @@ heapmem_zone_t heapmem_zone_register(const char *name, size_t zone_size);
   heapmem_free_debug((ptr), __FILE__, __LINE__)
 
 void *heapmem_alloc_debug(size_t size,
-			  const char *file, const unsigned line);
+              const char *file, const unsigned line);
 void *heapmem_zone_alloc_debug(heapmem_zone_t zone, size_t size,
-			  const char *file, const unsigned line);
+              const char *file, const unsigned line);
 void *heapmem_realloc_debug(void *ptr, size_t size,
-			    const char *file, const unsigned line);
+                const char *file, const unsigned line);
 void *heapmem_calloc_debug(size_t nmemb, size_t size,
-			   const char *file, const unsigned line);
+               const char *file, const unsigned line);
 bool heapmem_free_debug(void *ptr,
-			const char *file, const unsigned line);
+            const char *file, const unsigned line);
 
 #else
 

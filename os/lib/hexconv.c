@@ -37,62 +37,62 @@
 #include "lib/hexconv.h"
 #include "sys/cc.h"
 #include <stdio.h>
+
 /*---------------------------------------------------------------------------*/
 static inline int
-fromhex(char c)
-{
-  if(c >= '0' && c <= '9') {
-    return c - '0';
-  }
-  if(c >= 'a' && c <= 'f') {
-    return c - 'a' + 10;
-  }
-  if(c >= 'A' && c <= 'F') {
-    return c - 'A' + 10;
-  }
-  return -1;
-}
-/*---------------------------------------------------------------------------*/
-int
-hexconv_hexlify(const uint8_t *data, int data_len, char *text, int text_size)
-{
-  static const char *HEX = "0123456789abcdef";
-  int i, p;
-
-  for(i = 0, p = 0; p + 1 < text_size && i < data_len; i++) {
-    text[p++] = HEX[(data[i] >> 4) & 0xf];
-    text[p++] = HEX[data[i] & 0xf];
-  }
-  return p;
-}
-/*---------------------------------------------------------------------------*/
-int
-hexconv_unhexlify(const char *text, int text_len, uint8_t *buf, int buf_size)
-{
-  int i, p, c1, c2;
-
-  if((text_len & 1) != 0) {
-    /* The string must be of an even length */
-    return -1;
-  }
-
-  for(i = 0, p = 0; p < buf_size && i + 1 < text_len; i += 2, p++) {
-    c1 = fromhex(text[i]);
-    c2 = fromhex(text[i + 1]);
-    if(c1 < 0 || c2 < 0) {
-      return -1;
+fromhex(char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
     }
-    buf[p] = ((c1 << 4) & 0xf0) + (c2 & 0xf);
-  }
-  return p;
+    if (c >= 'a' && c <= 'f') {
+        return c - 'a' + 10;
+    }
+    if (c >= 'A' && c <= 'F') {
+        return c - 'A' + 10;
+    }
+    return -1;
 }
+
+/*---------------------------------------------------------------------------*/
+int
+hexconv_hexlify(const uint8_t *data, int data_len, char *text, int text_size) {
+    static const char *HEX = "0123456789abcdef";
+    int i, p;
+
+    for (i = 0, p = 0; p + 1 < text_size && i < data_len; i++) {
+        text[p++] = HEX[(data[i] >> 4) & 0xf];
+        text[p++] = HEX[data[i] & 0xf];
+    }
+    return p;
+}
+
+/*---------------------------------------------------------------------------*/
+int
+hexconv_unhexlify(const char *text, int text_len, uint8_t *buf, int buf_size) {
+    int i, p, c1, c2;
+
+    if ((text_len & 1) != 0) {
+        /* The string must be of an even length */
+        return -1;
+    }
+
+    for (i = 0, p = 0; p < buf_size && i + 1 < text_len; i += 2, p++) {
+        c1 = fromhex(text[i]);
+        c2 = fromhex(text[i + 1]);
+        if (c1 < 0 || c2 < 0) {
+            return -1;
+        }
+        buf[p] = ((c1 << 4) & 0xf0) + (c2 & 0xf);
+    }
+    return p;
+}
+
 /*---------------------------------------------------------------------------*/
 void
-hexconv_print(const uint8_t *data, int data_len)
-{
-  int i;
-  for(i = 0; i < data_len; i++) {
-    printf("%02x", data[i]);
-  }
+hexconv_print(const uint8_t *data, int data_len) {
+    int i;
+    for (i = 0; i < data_len; i++) {
+        printf("%02x", data[i]);
+    }
 }
 /*---------------------------------------------------------------------------*/

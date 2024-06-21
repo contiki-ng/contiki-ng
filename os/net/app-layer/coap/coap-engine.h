@@ -51,27 +51,28 @@ typedef struct coap_periodic_resource_s coap_periodic_resource_t;
 #include "coap-timer.h"
 
 typedef enum {
-  COAP_HANDLER_STATUS_CONTINUE,
-  COAP_HANDLER_STATUS_PROCESSED
+    COAP_HANDLER_STATUS_CONTINUE,
+    COAP_HANDLER_STATUS_PROCESSED
 } coap_handler_status_t;
 
 typedef coap_handler_status_t
-(* coap_handler_callback_t)(coap_message_t *request,
-                            coap_message_t *response,
-                            uint8_t *buffer, uint16_t buffer_size,
-                            int32_t *offset);
+(*coap_handler_callback_t)(coap_message_t *request,
+                           coap_message_t *response,
+                           uint8_t *buffer, uint16_t buffer_size,
+                           int32_t *offset);
 
 typedef struct coap_handler coap_handler_t;
 
 struct coap_handler {
-  coap_handler_t *next;
-  coap_handler_callback_t handler;
+    coap_handler_t *next;
+    coap_handler_callback_t handler;
 };
 
 #define COAP_HANDLER(name, handler) \
   coap_handler_t name = { NULL, handler }
 
 void coap_add_handler(coap_handler_t *handler);
+
 void coap_remove_handler(coap_handler_t *handler);
 
 void coap_engine_init(void);
@@ -86,37 +87,40 @@ coap_handler_status_t coap_call_handlers(coap_message_t *request,
                                          int32_t *offset);
 /*---------------------------------------------------------------------------*/
 /* signatures of handler functions */
-typedef void (* coap_resource_handler_t)(coap_message_t *request,
-                                         coap_message_t *response,
-                                         uint8_t *buffer,
-                                         uint16_t preferred_size,
-                                         int32_t *offset);
-typedef void (* coap_resource_periodic_handler_t)(void);
-typedef void (* coap_resource_response_handler_t)(void *data,
-                                                  coap_message_t *response);
-typedef void (* coap_resource_trigger_handler_t)(void);
+typedef void (*coap_resource_handler_t)(coap_message_t *request,
+                                        coap_message_t *response,
+                                        uint8_t *buffer,
+                                        uint16_t preferred_size,
+                                        int32_t *offset);
+
+typedef void (*coap_resource_periodic_handler_t)(void);
+
+typedef void (*coap_resource_response_handler_t)(void *data,
+                                                 coap_message_t *response);
+
+typedef void (*coap_resource_trigger_handler_t)(void);
 
 /* data structure representing a resource in CoAP */
 struct coap_resource_s {
-  coap_resource_t *next;            /* for LIST, points to next resource defined */
-  const char *url;                  /*handled URL */
-  coap_resource_flags_t flags;      /* handled CoAP methods */
-  const char *attributes;           /* link-format attributes */
-  coap_resource_handler_t get_handler;    /* handler function */
-  coap_resource_handler_t post_handler;   /* handler function */
-  coap_resource_handler_t put_handler;    /* handler function */
-  coap_resource_handler_t delete_handler; /* handler function */
-  union {
-    coap_periodic_resource_t *periodic;  /* special data depending on flags */
-    coap_resource_trigger_handler_t trigger;
-    coap_resource_trigger_handler_t resume;
-  };
+    coap_resource_t *next;            /* for LIST, points to next resource defined */
+    const char *url;                  /*handled URL */
+    coap_resource_flags_t flags;      /* handled CoAP methods */
+    const char *attributes;           /* link-format attributes */
+    coap_resource_handler_t get_handler;    /* handler function */
+    coap_resource_handler_t post_handler;   /* handler function */
+    coap_resource_handler_t put_handler;    /* handler function */
+    coap_resource_handler_t delete_handler; /* handler function */
+    union {
+        coap_periodic_resource_t *periodic;  /* special data depending on flags */
+        coap_resource_trigger_handler_t trigger;
+        coap_resource_trigger_handler_t resume;
+    };
 };
 
 struct coap_periodic_resource_s {
-  uint32_t period;
-  coap_timer_t periodic_timer;
-  const coap_resource_periodic_handler_t periodic_handler;
+    uint32_t period;
+    coap_timer_t periodic_timer;
+    const coap_resource_periodic_handler_t periodic_handler;
 };
 
 /*

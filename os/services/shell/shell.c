@@ -59,69 +59,68 @@ shell_output_6addr(shell_output_func output, const uip_ipaddr_t *ipaddr)
   SHELL_OUTPUT(output, "%s", buf);
 }
 #endif /* NETSTACK_CONF_WITH_IPV6 */
+
 /*---------------------------------------------------------------------------*/
 void
-shell_output_lladdr(shell_output_func output, const linkaddr_t *lladdr)
-{
-  if(lladdr == NULL) {
-    SHELL_OUTPUT(output, "(NULL LL addr)");
-    return;
-  } else {
-    unsigned int i;
-    for(i = 0; i < LINKADDR_SIZE; i++) {
-      if(i > 0 && i % 2 == 0) {
-        SHELL_OUTPUT(output, ".");
-      }
-      SHELL_OUTPUT(output, "%02x", lladdr->u8[i]);
+shell_output_lladdr(shell_output_func output, const linkaddr_t *lladdr) {
+    if (lladdr == NULL) {
+        SHELL_OUTPUT(output, "(NULL LL addr)");
+        return;
+    } else {
+        unsigned int i;
+        for (i = 0; i < LINKADDR_SIZE; i++) {
+            if (i > 0 && i % 2 == 0) {
+                SHELL_OUTPUT(output, ".");
+            }
+            SHELL_OUTPUT(output, "%02x", lladdr->u8[i]);
+        }
     }
-  }
 }
+
 /*---------------------------------------------------------------------------*/
 static void
-output_prompt(shell_output_func output)
-{
-  SHELL_OUTPUT(output, "#");
-  shell_output_lladdr(output, &linkaddr_node_addr);
-  SHELL_OUTPUT(output, "> ");
+output_prompt(shell_output_func output) {
+    SHELL_OUTPUT(output, "#");
+    shell_output_lladdr(output, &linkaddr_node_addr);
+    SHELL_OUTPUT(output, "> ");
 }
 /*---------------------------------------------------------------------------*/
-PT_THREAD(shell_input(struct pt *pt, shell_output_func output, const char *cmd))
-{
-  static char *args;
-  static const struct shell_command_t *cmd_descr = NULL;
+PT_THREAD(shell_input(struct pt *pt, shell_output_func output, const char *cmd)) {
+    static char *args;
+    static const struct shell_command_t *cmd_descr = NULL;
 
-  PT_BEGIN(pt);
+    PT_BEGIN(pt);
 
-  /* Shave off any leading spaces. */
-  while(*cmd == ' ') {
-    cmd++;
-  }
+                /* Shave off any leading spaces. */
+                while (*cmd == ' ') {
+                    cmd++;
+                }
 
-  /* Skip empty lines */
-  if(*cmd != '\0') {
-    /* Look for arguments */
-    args = strchr(cmd, ' ');
-    if(args != NULL) {
-      *args = '\0';
-      args++;
-    }
+                /* Skip empty lines */
+                if (*cmd != '\0') {
+                    /* Look for arguments */
+                    args = strchr(cmd, ' ');
+                    if (args != NULL) {
+                        *args = '\0';
+                        args++;
+                    }
 
-    cmd_descr = shell_command_lookup(cmd);
-    if(cmd_descr != NULL && cmd_descr->func != NULL) {
-      static struct pt cmd_pt;
-      PT_SPAWN(pt, &cmd_pt, cmd_descr->func(&cmd_pt, output, args));
-    } else {
-      SHELL_OUTPUT(output, "Command not found. Type 'help' for a list of commands\n");
-    }
-  }
+                    cmd_descr = shell_command_lookup(cmd);
+                    if (cmd_descr != NULL && cmd_descr->func != NULL) {
+                        static struct pt cmd_pt;
+                        PT_SPAWN(pt, &cmd_pt, cmd_descr->func(&cmd_pt, output, args));
+                    } else {
+                        SHELL_OUTPUT(output, "Command not found. Type 'help' for a list of commands\n");
+                    }
+                }
 
-  output_prompt(output);
-  PT_END(pt);
+                output_prompt(output);
+    PT_END(pt);
 }
+
 /*---------------------------------------------------------------------------*/
 void
-shell_init(void)
-{
-  shell_commands_init();
+shell_init(void) {
+    shell_commands_init();
 }
 /** @} */

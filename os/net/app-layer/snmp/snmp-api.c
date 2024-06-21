@@ -46,32 +46,31 @@
 
 /*---------------------------------------------------------------------------*/
 void
-snmp_api_set_string(snmp_varbind_t *varbind, snmp_oid_t *oid, char *string)
-{
-  memcpy(&varbind->oid, oid, sizeof(snmp_oid_t));
-  varbind->value_type = BER_DATA_TYPE_OCTET_STRING;
-  varbind->value.string.string = string;
-  varbind->value.string.length = strlen(string);
+snmp_api_set_string(snmp_varbind_t *varbind, snmp_oid_t *oid, char *string) {
+    memcpy(&varbind->oid, oid, sizeof(snmp_oid_t));
+    varbind->value_type = BER_DATA_TYPE_OCTET_STRING;
+    varbind->value.string.string = string;
+    varbind->value.string.length = strlen(string);
 }
+
 /*---------------------------------------------------------------------------*/
 void
-snmp_api_set_time_ticks(snmp_varbind_t *varbind, snmp_oid_t *oid, uint32_t integer)
-{
-  memcpy(&varbind->oid, oid, sizeof(snmp_oid_t));
-  varbind->value_type = BER_DATA_TYPE_TIMETICKS;
-  varbind->value.integer = integer;
+snmp_api_set_time_ticks(snmp_varbind_t *varbind, snmp_oid_t *oid, uint32_t integer) {
+    memcpy(&varbind->oid, oid, sizeof(snmp_oid_t));
+    varbind->value_type = BER_DATA_TYPE_TIMETICKS;
+    varbind->value.integer = integer;
 }
+
 /*---------------------------------------------------------------------------*/
 void
-snmp_api_set_oid(snmp_varbind_t *varbind, snmp_oid_t *oid, snmp_oid_t *ret_oid)
-{
-  memcpy(&varbind->oid, oid, sizeof(snmp_oid_t));
-  varbind->value_type = BER_DATA_TYPE_OBJECT_IDENTIFIER;
-  memcpy(&varbind->value.oid, ret_oid, sizeof(snmp_oid_t));
+snmp_api_set_oid(snmp_varbind_t *varbind, snmp_oid_t *oid, snmp_oid_t *ret_oid) {
+    memcpy(&varbind->oid, oid, sizeof(snmp_oid_t));
+    varbind->value_type = BER_DATA_TYPE_OBJECT_IDENTIFIER;
+    memcpy(&varbind->value.oid, ret_oid, sizeof(snmp_oid_t));
 }
+
 /*---------------------------------------------------------------------------*/
 void
-snmp_api_add_resource(snmp_mib_resource_t *new_resource)
-{
-  return snmp_mib_add(new_resource);
+snmp_api_add_resource(snmp_mib_resource_t *new_resource) {
+    return snmp_mib_add(new_resource);
 }

@@ -41,6 +41,7 @@
 /*---------------------------------------------------------------------------*/
 
 #include "sys/log.h"
+
 #define LOG_MODULE  "IP64"
 #define LOG_LEVEL   LOG_LEVEL_IP64
 
@@ -61,198 +62,197 @@ static uint16_t mapped_port = FIRST_MAPPED_PORT;
 
 /*---------------------------------------------------------------------------*/
 struct ip64_addrmap_entry *
-ip64_addrmap_list(void)
-{
-  return list_head(entrylist);
+ip64_addrmap_list(void) {
+    return list_head(entrylist);
 }
+
 /*---------------------------------------------------------------------------*/
 void
-ip64_addrmap_init(void)
-{
-  memb_init(&entrymemb);
-  list_init(entrylist);
-  mapped_port = FIRST_MAPPED_PORT;
+ip64_addrmap_init(void) {
+    memb_init(&entrymemb);
+    list_init(entrylist);
+    mapped_port = FIRST_MAPPED_PORT;
 }
+
 /*---------------------------------------------------------------------------*/
 static void
-check_age(void)
-{
-  struct ip64_addrmap_entry *m;
+check_age(void) {
+    struct ip64_addrmap_entry *m;
 
-  /* Walk through the list of address mappings, throw away the ones
-     that are too old. */
-  m = list_head(entrylist);
-  while(m != NULL) {
-    if(timer_expired(&m->timer)) {
-      list_remove(entrylist, m);
-      memb_free(&entrymemb, m);
-      m = list_head(entrylist);
-    } else {
-      m = list_item_next(m);
+    /* Walk through the list of address mappings, throw away the ones
+       that are too old. */
+    m = list_head(entrylist);
+    while (m != NULL) {
+        if (timer_expired(&m->timer)) {
+            list_remove(entrylist, m);
+            memb_free(&entrymemb, m);
+            m = list_head(entrylist);
+        } else {
+            m = list_item_next(m);
+        }
     }
-  }
 }
+
 /*---------------------------------------------------------------------------*/
 static int
-recycle(void)
-{
-  /* Find the oldest recyclable mapping and remove it. */
-  struct ip64_addrmap_entry *m, *oldest;
+recycle(void) {
+    /* Find the oldest recyclable mapping and remove it. */
+    struct ip64_addrmap_entry *m, *oldest;
 
-  /* Walk through the list of address mappings, throw away the ones
-     that are too old. */
+    /* Walk through the list of address mappings, throw away the ones
+       that are too old. */
 
-  oldest = NULL;
-  for(m = list_head(entrylist);
-      m != NULL;
-      m = list_item_next(m)) {
-    if(m->flags & FLAGS_RECYCLABLE) {
-      if(oldest == NULL) {
-        oldest = m;
-      } else {
-        if(timer_remaining(&m->timer) <
-           timer_remaining(&oldest->timer)) {
-          oldest = m;
+    oldest = NULL;
+    for (m = list_head(entrylist);
+         m != NULL;
+         m = list_item_next(m)) {
+        if (m->flags & FLAGS_RECYCLABLE) {
+            if (oldest == NULL) {
+                oldest = m;
+            } else {
+                if (timer_remaining(&m->timer) <
+                    timer_remaining(&oldest->timer)) {
+                    oldest = m;
+                }
+            }
         }
-      }
     }
-  }
 
-  /* If we found an oldest recyclable entry, remove it and return
-     non-zero. */
-  if(oldest != NULL) {
-    list_remove(entrylist, oldest);
-    memb_free(&entrymemb, oldest);
-    return 1;
-  }
+    /* If we found an oldest recyclable entry, remove it and return
+       non-zero. */
+    if (oldest != NULL) {
+        list_remove(entrylist, oldest);
+        memb_free(&entrymemb, oldest);
+        return 1;
+    }
 
-  return 0;
+    return 0;
 }
+
 /*---------------------------------------------------------------------------*/
 struct ip64_addrmap_entry *
 ip64_addrmap_lookup(const uip_ip6addr_t *ip6addr,
-		    uint16_t ip6port,
-		    const uip_ip4addr_t *ip4addr,
-		    uint16_t ip4port,
-		    uint8_t protocol)
-{
-  struct ip64_addrmap_entry *m;
+                    uint16_t ip6port,
+                    const uip_ip4addr_t *ip4addr,
+                    uint16_t ip4port,
+                    uint8_t protocol) {
+    struct ip64_addrmap_entry *m;
 
-  LOG_DBG("lookup ip4port %d ip6port %d\n", uip_htons(ip4port),
-	 uip_htons(ip6port));
-  check_age();
-  for(m = list_head(entrylist); m != NULL; m = list_item_next(m)) {
-    LOG_DBG("protocol %d %d, ip4port %d %d, ip6port %d %d, ip4 %d ip6 %d\n",
-	   m->protocol, protocol,
-	   m->ip4port, ip4port,
-	   m->ip6port, ip6port,
-	   uip_ip4addr_cmp(&m->ip4addr, ip4addr),
-	   uip_ip6addr_cmp(&m->ip6addr, ip6addr));
-    if(m->protocol == protocol &&
-       m->ip4port == ip4port &&
-       m->ip6port == ip6port &&
-       uip_ip4addr_cmp(&m->ip4addr, ip4addr) &&
-       uip_ip6addr_cmp(&m->ip6addr, ip6addr)) {
-      m->ip6to4++;
-      return m;
+    LOG_DBG("lookup ip4port %d ip6port %d\n", uip_htons(ip4port),
+            uip_htons(ip6port));
+    check_age();
+    for (m = list_head(entrylist); m != NULL; m = list_item_next(m)) {
+        LOG_DBG("protocol %d %d, ip4port %d %d, ip6port %d %d, ip4 %d ip6 %d\n",
+                m->protocol, protocol,
+                m->ip4port, ip4port,
+                m->ip6port, ip6port,
+                uip_ip4addr_cmp(&m->ip4addr, ip4addr),
+                uip_ip6addr_cmp(&m->ip6addr, ip6addr));
+        if (m->protocol == protocol &&
+            m->ip4port == ip4port &&
+            m->ip6port == ip6port &&
+            uip_ip4addr_cmp(&m->ip4addr, ip4addr) &&
+            uip_ip6addr_cmp(&m->ip6addr, ip6addr)) {
+            m->ip6to4++;
+            return m;
+        }
     }
-  }
-  return NULL;
+    return NULL;
 }
+
 /*---------------------------------------------------------------------------*/
 struct ip64_addrmap_entry *
-ip64_addrmap_lookup_port(uint16_t mapped_port, uint8_t protocol)
-{
-  struct ip64_addrmap_entry *m;
+ip64_addrmap_lookup_port(uint16_t mapped_port, uint8_t protocol) {
+    struct ip64_addrmap_entry *m;
 
-  check_age();
-  for(m = list_head(entrylist); m != NULL; m = list_item_next(m)) {
-    LOG_DBG("mapped port %d %d, protocol %d %d\n",
-	   m->mapped_port, mapped_port,
-	   m->protocol, protocol);
-    if(m->mapped_port == mapped_port &&
-       m->protocol == protocol) {
-      m->ip4to6++;
-      return m;
+    check_age();
+    for (m = list_head(entrylist); m != NULL; m = list_item_next(m)) {
+        LOG_DBG("mapped port %d %d, protocol %d %d\n",
+                m->mapped_port, mapped_port,
+                m->protocol, protocol);
+        if (m->mapped_port == mapped_port &&
+            m->protocol == protocol) {
+            m->ip4to6++;
+            return m;
+        }
     }
-  }
-  return NULL;
+    return NULL;
 }
+
 /*---------------------------------------------------------------------------*/
 static void
-increase_mapped_port(void)
-{
-  mapped_port = (random_rand() % (LAST_MAPPED_PORT - FIRST_MAPPED_PORT)) +
-    FIRST_MAPPED_PORT;
+increase_mapped_port(void) {
+    mapped_port = (random_rand() % (LAST_MAPPED_PORT - FIRST_MAPPED_PORT)) +
+                  FIRST_MAPPED_PORT;
 }
+
 /*---------------------------------------------------------------------------*/
 struct ip64_addrmap_entry *
 ip64_addrmap_create(const uip_ip6addr_t *ip6addr,
-		    uint16_t ip6port,
-		    const uip_ip4addr_t *ip4addr,
-		    uint16_t ip4port,
-		    uint8_t protocol)
-{
-  struct ip64_addrmap_entry *m;
+                    uint16_t ip6port,
+                    const uip_ip4addr_t *ip4addr,
+                    uint16_t ip4port,
+                    uint8_t protocol) {
+    struct ip64_addrmap_entry *m;
 
-  check_age();
-  m = memb_alloc(&entrymemb);
-  if(m == NULL) {
-    /* We could not allocate an entry, try to recycle one and try to
-       allocate again. */
-    if(recycle()) {
-      m = memb_alloc(&entrymemb);
+    check_age();
+    m = memb_alloc(&entrymemb);
+    if (m == NULL) {
+        /* We could not allocate an entry, try to recycle one and try to
+           allocate again. */
+        if (recycle()) {
+            m = memb_alloc(&entrymemb);
+        }
     }
-  }
-  if(m != NULL) {
-    uip_ip4addr_copy(&m->ip4addr, ip4addr);
-    m->ip4port = ip4port;
-    uip_ip6addr_copy(&m->ip6addr, ip6addr);
-    m->ip6port = ip6port;
-    m->protocol = protocol;
-    m->flags = FLAGS_NONE;
-    m->ip6to4 = 1;
-    m->ip4to6 = 0;
-    timer_set(&m->timer, 0);
+    if (m != NULL) {
+        uip_ip4addr_copy(&m->ip4addr, ip4addr);
+        m->ip4port = ip4port;
+        uip_ip6addr_copy(&m->ip6addr, ip6addr);
+        m->ip6port = ip6port;
+        m->protocol = protocol;
+        m->flags = FLAGS_NONE;
+        m->ip6to4 = 1;
+        m->ip4to6 = 0;
+        timer_set(&m->timer, 0);
 
-    /* Pick a new, unused local port. First make sure that the
-       mapped_port number does not belong to any active connection. If
-       so, we keep increasing the mapped_port until we're free. */
-    {
-      struct ip64_addrmap_entry *n;
-      n = list_head(entrylist);
-      while(n != NULL) {
-	if(n->mapped_port == mapped_port) {
-	  increase_mapped_port();
-	  n = list_head(entrylist);
-	} else {
-	  n = list_item_next(m);
-	}
-      }
+        /* Pick a new, unused local port. First make sure that the
+           mapped_port number does not belong to any active connection. If
+           so, we keep increasing the mapped_port until we're free. */
+        {
+            struct ip64_addrmap_entry *n;
+            n = list_head(entrylist);
+            while (n != NULL) {
+                if (n->mapped_port == mapped_port) {
+                    increase_mapped_port();
+                    n = list_head(entrylist);
+                } else {
+                    n = list_item_next(m);
+                }
+            }
+        }
+        m->mapped_port = mapped_port;
+        increase_mapped_port();
+
+        list_add(entrylist, m);
+        return m;
     }
-    m->mapped_port = mapped_port;
-    increase_mapped_port();
-
-    list_add(entrylist, m);
-    return m;
-  }
-  return NULL;
+    return NULL;
 }
+
 /*---------------------------------------------------------------------------*/
 void
 ip64_addrmap_set_lifetime(struct ip64_addrmap_entry *e,
-                          clock_time_t time)
-{
-  if(e != NULL) {
-    timer_set(&e->timer, time);
-  }
+                          clock_time_t time) {
+    if (e != NULL) {
+        timer_set(&e->timer, time);
+    }
 }
+
 /*---------------------------------------------------------------------------*/
 void
-ip64_addrmap_set_recycleble(struct ip64_addrmap_entry *e)
-{
-  if(e != NULL) {
-    e->flags |= FLAGS_RECYCLABLE;
-  }
+ip64_addrmap_set_recycleble(struct ip64_addrmap_entry *e) {
+    if (e != NULL) {
+        e->flags |= FLAGS_RECYCLABLE;
+    }
 }
 /*---------------------------------------------------------------------------*/

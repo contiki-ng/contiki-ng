@@ -45,70 +45,70 @@
 #include <strings.h>
 
 struct keyword {
-  char *string;
-  token_t token;
+    char *string;
+    token_t token;
 };
 
 /* The keywords are arranged primarily by length and
    secondarily by expected lookup frequency. */
 static const struct keyword keywords[] = {
-  {";", END},
-  {"(", LEFT_PAREN},
-  {")", RIGHT_PAREN},
-  {",", COMMA},
-  {"=", EQUAL},
-  {">", GT},
-  {"<", LT},
-  {".", DOT},
-  {"+", ADD},
-  {"-", SUB},
-  {"*", MUL},
-  {"/", DIV},
-  {"#", COMMENT},
+        {";",         END},
+        {"(",         LEFT_PAREN},
+        {")",         RIGHT_PAREN},
+        {",",         COMMA},
+        {"=",         EQUAL},
+        {">",         GT},
+        {"<",         LT},
+        {".",         DOT},
+        {"+",         ADD},
+        {"-",         SUB},
+        {"*",         MUL},
+        {"/",         DIV},
+        {"#",         COMMENT},
 
-  {">=", GEQ},
-  {"<=", LEQ},
-  {"<>", NOT_EQUAL},
-  {"<-", ASSIGN},
-  {"OR", OR},
-  {"IS", IS},
-  {"ON", ON},
-  {"IN", IN},
+        {">=",        GEQ},
+        {"<=",        LEQ},
+        {"<>",        NOT_EQUAL},
+        {"<-",        ASSIGN},
+        {"OR",        OR},
+        {"IS",        IS},
+        {"ON",        ON},
+        {"IN",        IN},
 
-  {"AND", AND},
-  {"NOT", NOT},
-  {"SUM", SUM},
-  {"MAX", MAX},
-  {"MIN", MIN},
-  {"INT", INT},
+        {"AND",       AND},
+        {"NOT",       NOT},
+        {"SUM",       SUM},
+        {"MAX",       MAX},
+        {"MIN",       MIN},
+        {"INT",       INT},
 
-  {"INTO", INTO},
-  {"FROM", FROM},
-  {"MEAN", MEAN},
-  {"JOIN", JOIN},
-  {"LONG", LONG},
-  {"TYPE", TYPE},
+        {"INTO",      INTO},
+        {"FROM",      FROM},
+        {"MEAN",      MEAN},
+        {"JOIN",      JOIN},
+        {"LONG",      LONG},
+        {"TYPE",      TYPE},
 
-  {"WHERE", WHERE},
-  {"COUNT", COUNT},
-  {"INDEX", INDEX},
+        {"WHERE",     WHERE},
+        {"COUNT",     COUNT},
+        {"INDEX",     INDEX},
 
-  {"INSERT", INSERT},
-  {"SELECT", SELECT},
-  {"REMOVE", REMOVE},
-  {"CREATE", CREATE},
-  {"MEDIAN", MEDIAN},
-  {"DOMAIN", DOMAIN},
-  {"STRING", STRING},
-  {"INLINE", INLINE},
+        {"INSERT",    INSERT},
+        {"SELECT",    SELECT},
+        {"REMOVE",    REMOVE},
+        {"CREATE",    CREATE},
+        {"MEDIAN",    MEDIAN},
+        {"DOMAIN",    DOMAIN},
+        {"STRING",    STRING},
+        {"INLINE",    INLINE},
 
-  {"PROJECT", PROJECT},
-  {"MAXHEAP", MAXHEAP},
-  {"MEMHASH", MEMHASH},
+        {"PROJECT",   PROJECT},
+        {"MAXHEAP",   MAXHEAP},
+        {"MEMHASH",   MEMHASH},
 
-  {"RELATION", RELATION},
+        {"RELATION",  RELATION},
 
-  {"ATTRIBUTE", ATTRIBUTE}
+        {"ATTRIBUTE", ATTRIBUTE}
 };
 
 /* Provides a pointer to the first keyword of a specific length. */
@@ -117,167 +117,160 @@ static const int8_t skip_hint[] = {0, 13, 21, 27, 33, 36, 44, 47, 48};
 static char separators[] = "#.;,() \t\n";
 
 int
-lexer_start(lexer_t *lexer, char *input, token_t *token, value_t *value)
-{
-  lexer->input = input;
-  lexer->prev_pos = input;
-  lexer->token = token;
-  lexer->value = value;
+lexer_start(lexer_t *lexer, char *input, token_t *token, value_t *value) {
+    lexer->input = input;
+    lexer->prev_pos = input;
+    lexer->token = token;
+    lexer->value = value;
 
-  return 0;
+    return 0;
 }
 
 static token_t
-get_token_id(const char *string, const size_t length)
-{
-  int start, end;
-  int i;
+get_token_id(const char *string, const size_t length) {
+    int start, end;
+    int i;
 
-  if(sizeof(skip_hint) < length || length < 1) {
-    return NONE;
-  }
-
-
-  start = skip_hint[length - 1];
-  if(sizeof(skip_hint) == length) {
-    end = sizeof(keywords) / sizeof(keywords[0]);
-  } else {
-    end = skip_hint[length];
-  }
-
-  for(i = start; i < end; i++) {
-    if(strncasecmp(keywords[i].string, string, length) == 0) {
-      return keywords[i].token;
+    if (sizeof(skip_hint) < length || length < 1) {
+        return NONE;
     }
-  }
 
-  return NONE;
+
+    start = skip_hint[length - 1];
+    if (sizeof(skip_hint) == length) {
+        end = sizeof(keywords) / sizeof(keywords[0]);
+    } else {
+        end = skip_hint[length];
+    }
+
+    for (i = start; i < end; i++) {
+        if (strncasecmp(keywords[i].string, string, length) == 0) {
+            return keywords[i].token;
+        }
+    }
+
+    return NONE;
 }
 
 static int
-next_real(lexer_t *lexer, const char *s)
-{
-  char *end;
-  long long_value;
+next_real(lexer_t *lexer, const char *s) {
+    char *end;
+    long long_value;
 #if DB_FEATURE_FLOATS
-  float float_value;
+    float float_value;
 #endif /* DB_FEATURE_FLOATS */
 
-  errno = 0;
-  long_value = strtol(s, &end, 10);
+    errno = 0;
+    long_value = strtol(s, &end, 10);
 
 #if DB_FEATURE_FLOATS
-  if(*end == '.') {
-    /* Process a float value. */
-    float_value = strtof(s, &end);
-    if(float_value == 0 && s == end) {
-      return -1;
+    if(*end == '.') {
+      /* Process a float value. */
+      float_value = strtof(s, &end);
+      if(float_value == 0 && s == end) {
+        return -1;
+      }
+      memcpy(lexer->value, &float_value, sizeof(float_value));
+      *lexer->token = FLOAT_VALUE;
+      lexer->input = end;
+
+      return 1;
     }
-    memcpy(lexer->value, &float_value, sizeof(float_value));
-    *lexer->token = FLOAT_VALUE;
+#endif /* DB_FEATURE_FLOATS */
+
+    /* Process an integer value. */
+    if (long_value == 0 && errno != 0) {
+        return -1;
+    }
+    memcpy(lexer->value, &long_value, sizeof(long_value));
+    *lexer->token = INTEGER_VALUE;
     lexer->input = end;
 
     return 1;
-  }
-#endif /* DB_FEATURE_FLOATS */
-
-  /* Process an integer value. */
-  if(long_value == 0 && errno != 0) {
-      return -1;
-  }
-  memcpy(lexer->value, &long_value, sizeof(long_value));
-  *lexer->token = INTEGER_VALUE;
-  lexer->input = end;
-
-  return 1;
 }
 
 static int
-next_string(lexer_t *lexer, const char *s)
-{
-  char *end;
-  size_t length;
+next_string(lexer_t *lexer, const char *s) {
+    char *end;
+    size_t length;
 
-  end = strchr(s, '\'');
-  if(end == NULL) {
-    return -1;
-  }
+    end = strchr(s, '\'');
+    if (end == NULL) {
+        return -1;
+    }
 
-  length = end - s;
-  *lexer->token = STRING_VALUE;
-  lexer->input = end + 1; /* Skip the closing delimiter. */
+    length = end - s;
+    *lexer->token = STRING_VALUE;
+    lexer->input = end + 1; /* Skip the closing delimiter. */
 
-  if(length > DB_MAX_ELEMENT_SIZE - 1) {
-    length = DB_MAX_ELEMENT_SIZE - 1;
-  }
+    if (length > DB_MAX_ELEMENT_SIZE - 1) {
+        length = DB_MAX_ELEMENT_SIZE - 1;
+    }
 
-  memcpy(lexer->value, s, length);
-  (*lexer->value)[length] = '\0';
+    memcpy(lexer->value, s, length);
+    (*lexer->value)[length] = '\0';
 
-  return 1;
-}
-
-static int
-next_token(lexer_t *lexer, const char *s)
-{
-  size_t length;
-
-  length = strcspn(s, separators);
-  if(length == 0) {
-    /* We encountered a separator, so we try to get a token of 
-       precisely 1 byte. */
-    length = 1;
-  }
-
-  *lexer->token = get_token_id(s, length);
-  lexer->input = s + length;
-  if(*lexer->token != NONE) {
     return 1;
-  }
+}
 
-  /* The input did not constitute a valid token,
-     so we regard it as an identifier. */
+static int
+next_token(lexer_t *lexer, const char *s) {
+    size_t length;
 
-  *lexer->token = IDENTIFIER;
+    length = strcspn(s, separators);
+    if (length == 0) {
+        /* We encountered a separator, so we try to get a token of
+           precisely 1 byte. */
+        length = 1;
+    }
 
-  if(length > DB_MAX_ELEMENT_SIZE - 1) {
-    length = DB_MAX_ELEMENT_SIZE - 1;
-  }
+    *lexer->token = get_token_id(s, length);
+    lexer->input = s + length;
+    if (*lexer->token != NONE) {
+        return 1;
+    }
 
-  memcpy(lexer->value, s, length);
-  (*lexer->value)[length] = '\0';
+    /* The input did not constitute a valid token,
+       so we regard it as an identifier. */
 
-  return 1;
+    *lexer->token = IDENTIFIER;
+
+    if (length > DB_MAX_ELEMENT_SIZE - 1) {
+        length = DB_MAX_ELEMENT_SIZE - 1;
+    }
+
+    memcpy(lexer->value, s, length);
+    (*lexer->value)[length] = '\0';
+
+    return 1;
 }
 
 int
-lexer_next(lexer_t *lexer)
-{
-  const char *s;
+lexer_next(lexer_t *lexer) {
+    const char *s;
 
-  *lexer->token = NONE;
-  s = lexer->input;
-  s += strspn(s, " \t\n");
-  lexer->prev_pos = s;
+    *lexer->token = NONE;
+    s = lexer->input;
+    s += strspn(s, " \t\n");
+    lexer->prev_pos = s;
 
-  switch(*s) {
-  case '\'':
-    /* Process the string that follows the delimiter. */
-    return next_string(lexer, s + 1);
-  case '\0':
-    return 0;
-  default:
-    if(isdigit((int)*s) || (*s == '-' && isdigit((int)s[1]))) {
-      return next_real(lexer, s);
+    switch (*s) {
+        case '\'':
+            /* Process the string that follows the delimiter. */
+            return next_string(lexer, s + 1);
+        case '\0':
+            return 0;
+        default:
+            if (isdigit((int) *s) || (*s == '-' && isdigit((int) s[1]))) {
+                return next_real(lexer, s);
+            }
+
+            /* Process a token. */
+            return next_token(lexer, s);
     }
-
-    /* Process a token. */
-    return next_token(lexer, s);
-  }
 }
 
 void
-lexer_rewind(lexer_t *lexer)
-{
-  lexer->input = lexer->prev_pos;
+lexer_rewind(lexer_t *lexer) {
+    lexer->input = lexer->prev_pos;
 }

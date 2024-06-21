@@ -1,5 +1,7 @@
 # -*- makefile -*-
 
+CC="gcc-arm-none-eabi" ./configure
+
 # Set CONTIKI to the directory where Makefile.include resides.
 CONTIKI := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 

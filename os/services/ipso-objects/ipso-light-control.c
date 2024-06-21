@@ -54,36 +54,36 @@ extern const struct ipso_objects_actuator IPSO_LIGHT_CONTROL;
 static lwm2m_status_t set_value(ipso_control_t *control, uint8_t value);
 
 IPSO_CONTROL(light_control, 3311, 0, set_value);
+
 /*---------------------------------------------------------------------------*/
 static lwm2m_status_t
-set_value(ipso_control_t *control, uint8_t value)
-{
+set_value(ipso_control_t *control, uint8_t value) {
 #ifdef IPSO_LIGHT_CONTROL
-  if(IPSO_LIGHT_CONTROL.set_dim_level) {
-    IPSO_LIGHT_CONTROL.set_dim_level(value);
-  } else if(IPSO_LIGHT_CONTROL.set_on) {
-    IPSO_LIGHT_CONTROL.set_on(value);
-  }
+    if(IPSO_LIGHT_CONTROL.set_dim_level) {
+      IPSO_LIGHT_CONTROL.set_dim_level(value);
+    } else if(IPSO_LIGHT_CONTROL.set_on) {
+      IPSO_LIGHT_CONTROL.set_on(value);
+    }
 #endif /* IPSO_LIGHT_CONTROL */
-  return LWM2M_STATUS_OK;
+    return LWM2M_STATUS_OK;
 }
+
 /*---------------------------------------------------------------------------*/
 void
-ipso_light_control_init(void)
-{
+ipso_light_control_init(void) {
 #ifdef IPSO_LIGHT_CONTROL
-  if(IPSO_LIGHT_CONTROL.init) {
-    IPSO_LIGHT_CONTROL.init();
-  }
-  if(IPSO_LIGHT_CONTROL.get_dim_level) {
-    ipso_control_set_value(&light_control,
-                           IPSO_LIGHT_CONTROL.get_dim_level());
-  } else if(IPSO_LIGHT_CONTROL.is_on) {
-    ipso_control_set_on(&light_control, IPSO_LIGHT_CONTROL.is_on());
-  }
+    if(IPSO_LIGHT_CONTROL.init) {
+      IPSO_LIGHT_CONTROL.init();
+    }
+    if(IPSO_LIGHT_CONTROL.get_dim_level) {
+      ipso_control_set_value(&light_control,
+                             IPSO_LIGHT_CONTROL.get_dim_level());
+    } else if(IPSO_LIGHT_CONTROL.is_on) {
+      ipso_control_set_on(&light_control, IPSO_LIGHT_CONTROL.is_on());
+    }
 #endif /* IPSO_LIGHT_CONTROL */
 
-  ipso_control_add(&light_control);
+    ipso_control_add(&light_control);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

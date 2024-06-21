@@ -72,6 +72,7 @@
  */
 int
 snmp_message_encode(snmp_packet_t *snmp_packet, snmp_header_t *header, snmp_varbind_t *varbinds);
+
 /**
  * @brief
  *

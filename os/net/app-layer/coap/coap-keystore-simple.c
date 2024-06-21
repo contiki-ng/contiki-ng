@@ -79,15 +79,15 @@ static const coap_keystore_t simple_key_store = {
 #endif /* COAP_DTLS_PSK_DEFAULT_KEY */
 #endif /* COAP_DTLS_PSK_DEFAULT_IDENTITY */
 #endif /* WITH_DTLS */
+
 /*---------------------------------------------------------------------------*/
 void
-coap_keystore_simple_init(void)
-{
+coap_keystore_simple_init(void) {
 #ifdef WITH_DTLS
 #ifdef COAP_DTLS_PSK_DEFAULT_IDENTITY
 #ifdef COAP_DTLS_PSK_DEFAULT_KEY
 
-  coap_set_keystore(&simple_key_store);
+    coap_set_keystore(&simple_key_store);
 
 #endif /* COAP_DTLS_PSK_DEFAULT_KEY */
 #endif /* COAP_DTLS_PSK_DEFAULT_IDENTITY */

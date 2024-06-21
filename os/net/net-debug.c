@@ -42,19 +42,18 @@
 
 /*---------------------------------------------------------------------------*/
 void
-net_debug_lladdr_print(const uip_lladdr_t *addr)
-{
-  if(addr == NULL) {
-    PRINTA("(NULL LL addr)");
-    return;
-  } else {
-    unsigned int i;
-    for(i = 0; i < LINKADDR_SIZE; i++) {
-      if(i > 0 && i % 2 == 0) {
-        PRINTA(".");
-      }
-      PRINTA("%02x", addr->addr[i]);
+net_debug_lladdr_print(const uip_lladdr_t *addr) {
+    if (addr == NULL) {
+        PRINTA("(NULL LL addr)");
+        return;
+    } else {
+        unsigned int i;
+        for (i = 0; i < LINKADDR_SIZE; i++) {
+            if (i > 0 && i % 2 == 0) {
+                PRINTA(".");
+            }
+            PRINTA("%02x", addr->addr[i]);
+        }
     }
-  }
 }
 /*---------------------------------------------------------------------------*/

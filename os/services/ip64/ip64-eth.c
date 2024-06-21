@@ -37,8 +37,7 @@ struct ip64_eth_addr ip64_eth_addr;
 
 /*---------------------------------------------------------------------------*/
 void
-ip64_eth_addr_set(struct ip64_eth_addr *addr)
-{
-  memcpy(&ip64_eth_addr, addr, sizeof(struct ip64_eth_addr));
+ip64_eth_addr_set(struct ip64_eth_addr *addr) {
+    memcpy(&ip64_eth_addr, addr, sizeof(struct ip64_eth_addr));
 }
 /*---------------------------------------------------------------------------*/

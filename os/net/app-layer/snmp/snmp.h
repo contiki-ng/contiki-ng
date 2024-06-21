@@ -91,112 +91,112 @@
  * @brief The SNMP header struct
  */
 typedef struct snmp_header_s {
-  /**
-   * @brief SNMP Version
-   */
-  uint32_t version;
-  /**
-   * @brief Struct to wrap the community
-   */
-  struct snmp_msg_community {
     /**
-     * @brief A pointer to the community
-     *
-     * @remarks This pointer refers to the beginning of the string in the packet
+     * @brief SNMP Version
      */
-    const char *community;
+    uint32_t version;
     /**
-     * @brief The string length
-     *
-     * @remarks Do not use strlen on the community pointer since it is not null terminated
+     * @brief Struct to wrap the community
      */
-    uint32_t length;
-  } community;
-  /**
-   * @brief The PDU type
-   */
-  uint8_t pdu_type;
-  /**
-   * @brief The request ID
-   */
-  uint32_t request_id;
-  /**
-   * @brief The error status
-   */
-  uint32_t error_status;
-  /**
-   * @brief The non repeaters
-   */
-  uint32_t non_repeaters;
-  /**
-   * @brief The error index
-   */
-  uint32_t error_index;
-  /**
-   * @brief The max repetitions
-   */
-  uint32_t max_repetitions;
+    struct snmp_msg_community {
+        /**
+         * @brief A pointer to the community
+         *
+         * @remarks This pointer refers to the beginning of the string in the packet
+         */
+        const char *community;
+        /**
+         * @brief The string length
+         *
+         * @remarks Do not use strlen on the community pointer since it is not null terminated
+         */
+        uint32_t length;
+    } community;
+    /**
+     * @brief The PDU type
+     */
+    uint8_t pdu_type;
+    /**
+     * @brief The request ID
+     */
+    uint32_t request_id;
+    /**
+     * @brief The error status
+     */
+    uint32_t error_status;
+    /**
+     * @brief The non repeaters
+     */
+    uint32_t non_repeaters;
+    /**
+     * @brief The error index
+     */
+    uint32_t error_index;
+    /**
+     * @brief The max repetitions
+     */
+    uint32_t max_repetitions;
 } snmp_header_t;
 
 /**
  * @brief The OID struct
  */
 typedef struct snmp_oid_s {
-  /**
-   * @brief The OID
-   */
-  uint32_t data[SNMP_MSG_OID_MAX_LEN];
-  /**
-   * @brief The OID length
-   *
-   */
-  uint8_t length;
+    /**
+     * @brief The OID
+     */
+    uint32_t data[SNMP_MSG_OID_MAX_LEN];
+    /**
+     * @brief The OID length
+     *
+     */
+    uint8_t length;
 } snmp_oid_t;
 
 /**
  * @brief The varbind struct
  */
 typedef struct snmp_varbind_s {
-  /**
-   * @brief The OID
-   */
-  snmp_oid_t oid;
-  /**
-   * @brief The type in this varbind
-   */
-  uint8_t value_type;
-  /**
-   * @brief A union to represent the value in this varbind
-   *
-   * @remarks A union is used since the varbind can only have one value of one type
-   */
-  union {
     /**
-     * @brief The integer value
-     */
-    uint32_t integer;
-    /**
-     * @brief A struct that contains the string
-     */
-    struct {
-      /**
-       * @brief A pointer to the string value from this varbind
-       *
-       * @remarks This pointer points to a string that cannot be changed
-       */
-      const char *string;
-      /**
-       * @brief The string length
-       *
-       * @remarks Do not use strlen on the string since it might not be null terminated
-       */
-      uint32_t length;
-    } string;
-    /**
-     * @brief The OID value
+     * @brief The OID
      */
     snmp_oid_t oid;
-  } value;
+    /**
+     * @brief The type in this varbind
+     */
+    uint8_t value_type;
+    /**
+     * @brief A union to represent the value in this varbind
+     *
+     * @remarks A union is used since the varbind can only have one value of one type
+     */
+    union {
+        /**
+         * @brief The integer value
+         */
+        uint32_t integer;
+        /**
+         * @brief A struct that contains the string
+         */
+        struct {
+            /**
+             * @brief A pointer to the string value from this varbind
+             *
+             * @remarks This pointer points to a string that cannot be changed
+             */
+            const char *string;
+            /**
+             * @brief The string length
+             *
+             * @remarks Do not use strlen on the string since it might not be null terminated
+             */
+            uint32_t length;
+        } string;
+        /**
+         * @brief The OID value
+         */
+        snmp_oid_t oid;
+    } value;
 } snmp_varbind_t;
 
 /**
@@ -204,26 +204,26 @@ typedef struct snmp_varbind_s {
  *
  */
 typedef struct {
-  /**
-   * @brief The number of bytes used
-   *
-   */
-  uint16_t used;
-  /**
-   * @brief The maximum number of bytes
-   *
-   */
-  uint16_t max;
-  /**
-   * @brief The pointer used for the incoming packet
-   *
-   */
-  uint8_t *in;
-  /**
-   * @brief The pointer used for the outgoing packet
-   *
-   */
-  uint8_t *out;
+    /**
+     * @brief The number of bytes used
+     *
+     */
+    uint16_t used;
+    /**
+     * @brief The maximum number of bytes
+     *
+     */
+    uint16_t max;
+    /**
+     * @brief The pointer used for the incoming packet
+     *
+     */
+    uint8_t *in;
+    /**
+     * @brief The pointer used for the outgoing packet
+     *
+     */
+    uint8_t *out;
 } snmp_packet_t;
 
 /**

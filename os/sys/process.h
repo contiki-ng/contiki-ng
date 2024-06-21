@@ -58,9 +58,9 @@
 #include "sys/pt.h"
 #include "sys/cc.h"
 
-typedef uint8_t       process_event_t;
-typedef void *        process_data_t;
-typedef uint8_t       process_num_events_t;
+typedef uint8_t process_event_t;
+typedef void *process_data_t;
+typedef uint8_t process_num_events_t;
 
 /**
  * \name Return values
@@ -219,8 +219,8 @@ typedef uint8_t       process_num_events_t;
  *
  * \hideinitializer
  */
-#define PROCESS_PAUSE()             do {				\
-  process_post(PROCESS_CURRENT(), PROCESS_EVENT_CONTINUE, NULL);	\
+#define PROCESS_PAUSE()             do {                \
+  process_post(PROCESS_CURRENT(), PROCESS_EVENT_CONTINUE, NULL);    \
   PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_CONTINUE);               \
 } while(0)
 
@@ -271,10 +271,10 @@ typedef uint8_t       process_num_events_t;
  *
  * \hideinitializer
  */
-#define PROCESS_THREAD(name, ev, data) 				\
-static PT_THREAD(process_thread_##name(struct pt *process_pt,	\
-				       process_event_t ev,	\
-				       process_data_t data))
+#define PROCESS_THREAD(name, ev, data)                \
+static PT_THREAD(process_thread_##name(struct pt *process_pt,    \
+                       process_event_t ev,    \
+                       process_data_t data))
 
 /**
  * Declare the name of a process.
@@ -305,26 +305,28 @@ static PT_THREAD(process_thread_##name(struct pt *process_pt,	\
   struct process name = { NULL,		        \
                           process_thread_##name, {0}, 0, 0 }
 #else
-#define PROCESS(name, strname)				\
-  PROCESS_THREAD(name, ev, data);			\
-  struct process name = { NULL, strname,		\
+#define PROCESS(name, strname)                \
+  PROCESS_THREAD(name, ev, data);            \
+  struct process name = { NULL, strname,        \
                           process_thread_##name, {0}, 0, 0 }
 #endif
 
 /** @} */
 
 struct process {
-  struct process *next;
+    struct process *next;
 #if PROCESS_CONF_NO_PROCESS_NAMES
 #define PROCESS_NAME_STRING(process) ""
 #else
-  const char *name;
+    const char *name;
 #define PROCESS_NAME_STRING(process) ((process) != NULL ? (process)->name : "")
 #endif
-  PT_THREAD((* thread)(struct pt *, process_event_t, process_data_t));
-  struct pt pt;
-  uint8_t state;
-  bool needspoll;
+
+    PT_THREAD((*thread)(struct pt *, process_event_t, process_data_t));
+
+    struct pt pt;
+    uint8_t state;
+    bool needspoll;
 };
 
 /**

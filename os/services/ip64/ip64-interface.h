@@ -33,9 +33,11 @@
 #define IP64_INTERFACE_H
 
 struct ip64_interface {
-  void (* init)(void);
-  int (* input)(uint8_t *packet, uint16_t packet_len);
-  int (* output)(uint8_t *packet, uint16_t packet_len);
+    void (*init)(void);
+
+    int (*input)(uint8_t *packet, uint16_t packet_len);
+
+    int (*output)(uint8_t *packet, uint16_t packet_len);
 };
 
 

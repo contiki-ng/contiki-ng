@@ -217,11 +217,11 @@ void leds_arch_set(leds_mask_t leds);
  * LED_PORT() macro instead.
  */
 typedef struct leds_s {
-  gpio_hal_pin_t pin;
+    gpio_hal_pin_t pin;
 #if GPIO_HAL_PORT_PIN_NUMBERING
-  gpio_hal_port_t port;
+    gpio_hal_port_t port;
 #endif
-  bool negative_logic;
+    bool negative_logic;
 } leds_t;
 /*---------------------------------------------------------------------------*/
 /**

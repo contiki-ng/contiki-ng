@@ -48,8 +48,8 @@
 #include "contiki.h"
 
 struct anti_replay_info {
-  uint32_t last_broadcast_counter;
-  uint32_t last_unicast_counter;
+    uint32_t last_broadcast_counter;
+    uint32_t last_unicast_counter;
 };
 
 /**

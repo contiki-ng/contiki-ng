@@ -67,66 +67,66 @@
 #endif /* LEDS_LEGACY_API */
 
 typedef struct led_state {
-  ipso_control_t control;
-  uint8_t led_value;
+    ipso_control_t control;
+    uint8_t led_value;
 } led_state_t;
 
 static led_state_t leds_controls[LEDS_CONTROL_NUMBER];
+
 /*---------------------------------------------------------------------------*/
 static lwm2m_status_t
-set_value(ipso_control_t *control, uint8_t value)
-{
+set_value(ipso_control_t *control, uint8_t value) {
 #if PLATFORM_HAS_LEDS || LEDS_COUNT
-  led_state_t *state;
+    led_state_t *state;
 
-  state = (led_state_t *)control;
+    state = (led_state_t *)control;
 
-  if(value) {
-    leds_on(state->led_value);
-  } else {
-    leds_off(state->led_value);
-  }
+    if(value) {
+      leds_on(state->led_value);
+    } else {
+      leds_off(state->led_value);
+    }
 #endif /* PLATFORM_HAS_LEDS */
 
-  return LWM2M_STATUS_OK;
+    return LWM2M_STATUS_OK;
 }
+
 /*---------------------------------------------------------------------------*/
 static int
-bit_no(int bit)
-{
-  int i;
-  for(i = 0; i < 8; i++) {
-    if(LEDS_ALL & (1 << i)) {
-      if(bit == 0) {
-        /* matching bit */
-        return 1 << i;
-      } else {
-        /* matching but used */
-        bit--;
-      }
+bit_no(int bit) {
+    int i;
+    for (i = 0; i < 8; i++) {
+        if (LEDS_ALL & (1 << i)) {
+            if (bit == 0) {
+                /* matching bit */
+                return 1 << i;
+            } else {
+                /* matching but used */
+                bit--;
+            }
+        }
     }
-  }
-  return 0;
+    return 0;
 }
+
 /*---------------------------------------------------------------------------*/
 void
-ipso_leds_control_init(void)
-{
-  ipso_control_t *c;
-  int i;
+ipso_leds_control_init(void) {
+    ipso_control_t *c;
+    int i;
 
-  /* Initialize the instances */
-  for(i = 0; i < LEDS_CONTROL_NUMBER; i++) {
-    c = &leds_controls[i].control;
-    c->reg_object.object_id = 3311;
-    c->reg_object.instance_id = i;
-    c->set_value = set_value;
-    leds_controls[i].led_value = bit_no(i);
-    ipso_control_add(c);
-  }
+    /* Initialize the instances */
+    for (i = 0; i < LEDS_CONTROL_NUMBER; i++) {
+        c = &leds_controls[i].control;
+        c->reg_object.object_id = 3311;
+        c->reg_object.instance_id = i;
+        c->set_value = set_value;
+        leds_controls[i].led_value = bit_no(i);
+        ipso_control_add(c);
+    }
 
-  PRINTF("IPSO leds control initialized with %u instances\n",
-         LEDS_CONTROL_NUMBER);
+    PRINTF("IPSO leds control initialized with %u instances\n",
+           LEDS_CONTROL_NUMBER);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

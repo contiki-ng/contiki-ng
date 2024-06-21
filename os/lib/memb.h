@@ -96,10 +96,10 @@ MEMB(connections, struct connection, 16);
                                           (void *)CC_CONCAT(name,_memb_mem)}
 
 struct memb {
-  unsigned short size;
-  unsigned short num;
-  bool *used;
-  void *mem;
+    unsigned short size;
+    unsigned short num;
+    bool *used;
+    void *mem;
 };
 
 /**
@@ -107,7 +107,7 @@ struct memb {
  *
  * \param m A set of memory blocks previously declared with MEMB().
  */
-void  memb_init(struct memb *m);
+void memb_init(struct memb *m);
 
 /**
  * Allocate a memory block from a block of memory declared with MEMB().
@@ -127,7 +127,7 @@ void *memb_alloc(struct memb *m);
  * \return error code, should be 0 if successfully deallocated or -1 if the
  * pointer "ptr" did not point to a legal memory block.
  */
-int  memb_free(struct memb *m, void *ptr);
+int memb_free(struct memb *m, void *ptr);
 
 /**
  * Check if a given address is within a memory area previously

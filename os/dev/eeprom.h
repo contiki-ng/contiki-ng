@@ -61,7 +61,7 @@ typedef unsigned short eeprom_addr_t;
 #ifdef EEPROM_CONF_SIZE
 #define EEPROM_SIZE			(EEPROM_CONF_SIZE)
 #else
-#define EEPROM_SIZE			0 /* Default to no EEPROM */
+#define EEPROM_SIZE            0 /* Default to no EEPROM */
 #endif
 
 #if EEPROM_SIZE > USHRT_MAX
@@ -71,7 +71,7 @@ typedef unsigned short eeprom_addr_t;
 #ifdef EEPROM_CONF_END_ADDR
 #define EEPROM_END_ADDR		(EEPROM_CONF_END_ADDR)
 #else
-#define EEPROM_END_ADDR		(EEPROM_SIZE - 1)
+#define EEPROM_END_ADDR        (EEPROM_SIZE - 1)
 #endif
 
 /**

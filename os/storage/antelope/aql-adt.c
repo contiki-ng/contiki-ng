@@ -42,123 +42,118 @@
 #include "aql.h"
 
 #define DEBUG   DEBUG_NONE
+
 #include "net/ipv6/uip-debug.h"
 
 static unsigned char char_buf[DB_MAX_CHAR_SIZE_PER_ROW];
 static uint8_t next_free_offset;
 
 static aql_attribute_t *
-get_attribute(aql_adt_t *adt, char *name)
-{
-  int i;
+get_attribute(aql_adt_t *adt, char *name) {
+    int i;
 
-  for(i = 0; i < AQL_ATTRIBUTE_COUNT(adt); i++) {
-    if(strcmp(adt->attributes[i].name, name) == 0) {
-      return &adt->attributes[i];
+    for (i = 0; i < AQL_ATTRIBUTE_COUNT(adt); i++) {
+        if (strcmp(adt->attributes[i].name, name) == 0) {
+            return &adt->attributes[i];
+        }
     }
-  }
-  return NULL;
+    return NULL;
 }
 
 static unsigned char *
-save_char(unsigned char *ptr, size_t length)
-{
-  unsigned char *start_ptr;
+save_char(unsigned char *ptr, size_t length) {
+    unsigned char *start_ptr;
 
-  if(length + next_free_offset > DB_MAX_CHAR_SIZE_PER_ROW) {
-    return NULL;
-  }
+    if (length + next_free_offset > DB_MAX_CHAR_SIZE_PER_ROW) {
+        return NULL;
+    }
 
-  start_ptr = char_buf + next_free_offset;
-  memcpy(start_ptr, ptr, length);
-  next_free_offset += length;
+    start_ptr = char_buf + next_free_offset;
+    memcpy(start_ptr, ptr, length);
+    next_free_offset += length;
 
-  return start_ptr;
+    return start_ptr;
 }
 
 void
-aql_clear(aql_adt_t *adt)
-{
-  char_buf[0] = 0;
-  next_free_offset = 0;
+aql_clear(aql_adt_t *adt) {
+    char_buf[0] = 0;
+    next_free_offset = 0;
 
-  adt->optype = AQL_TYPE_NONE;
-  adt->relation_count = 0;
-  adt->attribute_count = 0;
-  adt->value_count = 0;
-  adt->flags = 0;
-  memset(adt->aggregators, 0, sizeof(adt->aggregators));
+    adt->optype = AQL_TYPE_NONE;
+    adt->relation_count = 0;
+    adt->attribute_count = 0;
+    adt->value_count = 0;
+    adt->flags = 0;
+    memset(adt->aggregators, 0, sizeof(adt->aggregators));
 }
 
 db_result_t
-aql_add_relation(aql_adt_t *adt, const char *name)
-{
-  if(adt->relation_count >= AQL_RELATION_LIMIT) {
-    return DB_LIMIT_ERROR;
-  }
+aql_add_relation(aql_adt_t *adt, const char *name) {
+    if (adt->relation_count >= AQL_RELATION_LIMIT) {
+        return DB_LIMIT_ERROR;
+    }
 
-  strncpy(adt->relations[adt->relation_count], name,
-	  sizeof(adt->relations[0]) - 1);
-  adt->relations[adt->relation_count][sizeof(adt->relations[0]) - 1] = '\0';
-  adt->relation_count++;
+    strncpy(adt->relations[adt->relation_count], name,
+            sizeof(adt->relations[0]) - 1);
+    adt->relations[adt->relation_count][sizeof(adt->relations[0]) - 1] = '\0';
+    adt->relation_count++;
 
-  return DB_OK;
+    return DB_OK;
 }
 
 db_result_t
 aql_add_attribute(aql_adt_t *adt, char *name, domain_t domain,
-                   unsigned element_size, int processed_only)
-{
-  aql_attribute_t *attr;
+                  unsigned element_size, int processed_only) {
+    aql_attribute_t *attr;
 
-  if(adt->attribute_count == AQL_ATTRIBUTE_LIMIT) {
-    return DB_LIMIT_ERROR;
-  }
+    if (adt->attribute_count == AQL_ATTRIBUTE_LIMIT) {
+        return DB_LIMIT_ERROR;
+    }
 
-  if(processed_only && get_attribute(adt, name)) {
-    /* No need to have multiple instances of attributes that are only 
-       used for processing in the PLE. */
+    if (processed_only && get_attribute(adt, name)) {
+        /* No need to have multiple instances of attributes that are only
+           used for processing in the PLE. */
+        return DB_OK;
+    }
+
+    attr = &adt->attributes[adt->attribute_count++];
+
+    if (strlen(name) + 1 > sizeof(attr->name)) {
+        return DB_LIMIT_ERROR;
+    }
+
+    strcpy(attr->name, name);
+    attr->domain = domain;
+    attr->element_size = element_size;
+    attr->flags = processed_only ? ATTRIBUTE_FLAG_NO_STORE : 0;
+
     return DB_OK;
-  }
-
-  attr = &adt->attributes[adt->attribute_count++];
-
-  if(strlen(name) + 1 > sizeof(attr->name)) {
-    return DB_LIMIT_ERROR;
-  }
-
-  strcpy(attr->name, name);
-  attr->domain = domain;
-  attr->element_size = element_size;
-  attr->flags = processed_only ? ATTRIBUTE_FLAG_NO_STORE : 0;
-
-  return DB_OK;
 }
 
 db_result_t
-aql_add_value(aql_adt_t *adt, domain_t domain, void *value_ptr)
-{
-  attribute_value_t *value;
+aql_add_value(aql_adt_t *adt, domain_t domain, void *value_ptr) {
+    attribute_value_t *value;
 
-  if(adt->value_count == AQL_ATTRIBUTE_LIMIT) {
-    return DB_LIMIT_ERROR;
-  }
-
-  value = &adt->values[adt->value_count++];
-  value->domain = domain;
-
-  switch(domain) {
-  case DOMAIN_INT:
-    VALUE_LONG(value) = *(long *)value_ptr;
-    break;
-  case DOMAIN_STRING:
-    VALUE_STRING(value) = save_char(value_ptr, strlen(value_ptr) + 1);
-    if(VALUE_STRING(value) != NULL) {
-      break;
+    if (adt->value_count == AQL_ATTRIBUTE_LIMIT) {
+        return DB_LIMIT_ERROR;
     }
-  default:
-    return DB_TYPE_ERROR;
-  }
 
-  return DB_OK;
+    value = &adt->values[adt->value_count++];
+    value->domain = domain;
+
+    switch (domain) {
+        case DOMAIN_INT:
+            VALUE_LONG(value) = *(long *) value_ptr;
+            break;
+        case DOMAIN_STRING:
+            VALUE_STRING(value) = save_char(value_ptr, strlen(value_ptr) + 1);
+            if (VALUE_STRING(value) != NULL) {
+                break;
+            }
+        default:
+            return DB_TYPE_ERROR;
+    }
+
+    return DB_OK;
 }

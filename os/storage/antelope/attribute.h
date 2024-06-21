@@ -45,39 +45,39 @@
 #include "db-options.h"
 
 typedef enum {
-  DOMAIN_UNSPECIFIED = 0,
-  DOMAIN_INT = 1,
-  DOMAIN_LONG = 2,
-  DOMAIN_STRING = 3,
-  DOMAIN_FLOAT = 4
+    DOMAIN_UNSPECIFIED = 0,
+    DOMAIN_INT = 1,
+    DOMAIN_LONG = 2,
+    DOMAIN_STRING = 3,
+    DOMAIN_FLOAT = 4
 } domain_t;
 
-#define ATTRIBUTE_FLAG_NO_STORE		0x1
-#define ATTRIBUTE_FLAG_INVALID		0x2
-#define ATTRIBUTE_FLAG_PRIMARY_KEY	0x4
-#define ATTRIBUTE_FLAG_UNIQUE		0x8
+#define ATTRIBUTE_FLAG_NO_STORE        0x1
+#define ATTRIBUTE_FLAG_INVALID        0x2
+#define ATTRIBUTE_FLAG_PRIMARY_KEY    0x4
+#define ATTRIBUTE_FLAG_UNIQUE        0x8
 
 struct attribute {
-  struct attribute *next;
-  void *index;
-  long aggregation_value;
-  uint8_t aggregator;
-  uint8_t domain;
-  uint8_t element_size;
-  uint8_t flags;
-  char name[ATTRIBUTE_NAME_LENGTH + 1];
+    struct attribute *next;
+    void *index;
+    long aggregation_value;
+    uint8_t aggregator;
+    uint8_t domain;
+    uint8_t element_size;
+    uint8_t flags;
+    char name[ATTRIBUTE_NAME_LENGTH + 1];
 };
 
 typedef struct attribute attribute_t;
 typedef uint8_t attribute_id_t;
 
 struct attribute_value {
-  union {
-    int int_value;
-    long long_value;
-    unsigned char *string_value;
-  } u;
-  domain_t domain;
+    union {
+        int int_value;
+        long long_value;
+        unsigned char *string_value;
+    } u;
+    domain_t domain;
 };
 
 typedef struct attribute_value attribute_value_t;

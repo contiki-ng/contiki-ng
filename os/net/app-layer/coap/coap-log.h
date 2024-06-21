@@ -47,7 +47,9 @@
 #include "contiki.h"
 
 #ifdef COAP_LOG_CONF_PATH
+
 #include COAP_LOG_CONF_PATH
+
 #else /* COAP_LOG_CONF_PATH */
 #include "sys/log.h"
 #endif /* COAP_LOG_CONF_PATH */

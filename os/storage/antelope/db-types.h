@@ -37,27 +37,27 @@
 #define DB_TYPES_H
 
 enum db_result {
-  DB_FINISHED = 3,
-  DB_GOT_ROW = 2,
-  DB_OK = 1,
-  DB_LIMIT_ERROR = -1,
-  DB_ALLOCATION_ERROR = -2,
-  DB_STORAGE_ERROR = -3,
-  DB_PARSING_ERROR = -4,
-  DB_NAME_ERROR = -5,
-  DB_RELATIONAL_ERROR = -6,
-  DB_TYPE_ERROR = -7,
-  DB_IMPLEMENTATION_ERROR = -8,
-  DB_INDEX_ERROR = -9,
-  DB_BUSY_ERROR = -10,
-  DB_INCONSISTENCY_ERROR = -11,
-  DB_ARGUMENT_ERROR = -12
+    DB_FINISHED = 3,
+    DB_GOT_ROW = 2,
+    DB_OK = 1,
+    DB_LIMIT_ERROR = -1,
+    DB_ALLOCATION_ERROR = -2,
+    DB_STORAGE_ERROR = -3,
+    DB_PARSING_ERROR = -4,
+    DB_NAME_ERROR = -5,
+    DB_RELATIONAL_ERROR = -6,
+    DB_TYPE_ERROR = -7,
+    DB_IMPLEMENTATION_ERROR = -8,
+    DB_INDEX_ERROR = -9,
+    DB_BUSY_ERROR = -10,
+    DB_INCONSISTENCY_ERROR = -11,
+    DB_ARGUMENT_ERROR = -12
 };
 
 typedef enum db_result db_result_t;
 typedef int db_storage_id_t;
 
-#define DB_ERROR(result_code)	((result_code) < DB_OK)
+#define DB_ERROR(result_code)    ((result_code) < DB_OK)
 #define DB_SUCCESS(result_code) !DB_ERROR(result_code)
 
 #endif /* !DB_TYPES_H */

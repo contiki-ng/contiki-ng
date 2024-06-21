@@ -197,53 +197,53 @@ int packetbuf_hdrreduce(int size);
 typedef uint16_t packetbuf_attr_t;
 
 struct packetbuf_attr {
-  packetbuf_attr_t val;
+    packetbuf_attr_t val;
 };
 struct packetbuf_addr {
-  linkaddr_t addr;
+    linkaddr_t addr;
 };
 
 enum {
-  PACKETBUF_ATTR_NONE,
+    PACKETBUF_ATTR_NONE,
 
-  /* Scope 0 attributes: used only on the local node. */
-  PACKETBUF_ATTR_CHANNEL,
-  PACKETBUF_ATTR_NETWORK_ID,
-  PACKETBUF_ATTR_LINK_QUALITY,
-  PACKETBUF_ATTR_RSSI,
-  PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS,
-  PACKETBUF_ATTR_MAC_SEQNO,
-  PACKETBUF_ATTR_MAC_ACK,
-  PACKETBUF_ATTR_MAC_METADATA,
-  PACKETBUF_ATTR_MAC_NO_SRC_ADDR,
-  PACKETBUF_ATTR_MAC_NO_DEST_ADDR,
+    /* Scope 0 attributes: used only on the local node. */
+    PACKETBUF_ATTR_CHANNEL,
+    PACKETBUF_ATTR_NETWORK_ID,
+    PACKETBUF_ATTR_LINK_QUALITY,
+    PACKETBUF_ATTR_RSSI,
+    PACKETBUF_ATTR_MAX_MAC_TRANSMISSIONS,
+    PACKETBUF_ATTR_MAC_SEQNO,
+    PACKETBUF_ATTR_MAC_ACK,
+    PACKETBUF_ATTR_MAC_METADATA,
+    PACKETBUF_ATTR_MAC_NO_SRC_ADDR,
+    PACKETBUF_ATTR_MAC_NO_DEST_ADDR,
 #if TSCH_WITH_LINK_SELECTOR
-  PACKETBUF_ATTR_TSCH_SLOTFRAME,
-  PACKETBUF_ATTR_TSCH_TIMESLOT,
-  PACKETBUF_ATTR_TSCH_CHANNEL_OFFSET,
+    PACKETBUF_ATTR_TSCH_SLOTFRAME,
+    PACKETBUF_ATTR_TSCH_TIMESLOT,
+    PACKETBUF_ATTR_TSCH_CHANNEL_OFFSET,
 #endif /* TSCH_WITH_LINK_SELECTOR */
 
-  /* Scope 1 attributes: used between two neighbors only. */
-  PACKETBUF_ATTR_FRAME_TYPE,
+    /* Scope 1 attributes: used between two neighbors only. */
+    PACKETBUF_ATTR_FRAME_TYPE,
 #if LLSEC802154_USES_AUX_HEADER
-  PACKETBUF_ATTR_SECURITY_LEVEL,
+    PACKETBUF_ATTR_SECURITY_LEVEL,
 #endif /* LLSEC802154_USES_AUX_HEADER */
 #if LLSEC802154_USES_EXPLICIT_KEYS
-  PACKETBUF_ATTR_KEY_ID_MODE,
-  PACKETBUF_ATTR_KEY_INDEX,
+    PACKETBUF_ATTR_KEY_ID_MODE,
+    PACKETBUF_ATTR_KEY_INDEX,
 #endif /* LLSEC802154_USES_EXPLICIT_KEYS */
 
 #if LLSEC802154_USES_FRAME_COUNTER
-  PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1,
-  PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3,
+    PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1,
+    PACKETBUF_ATTR_FRAME_COUNTER_BYTES_2_3,
 #endif /* LLSEC802154_USES_FRAME_COUNTER */
 
-  /* Scope 2 attributes: used between end-to-end nodes. */
-  /* These must be last */
-  PACKETBUF_ADDR_SENDER,
-  PACKETBUF_ADDR_RECEIVER,
+    /* Scope 2 attributes: used between end-to-end nodes. */
+    /* These must be last */
+    PACKETBUF_ADDR_SENDER,
+    PACKETBUF_ADDR_RECEIVER,
 
-  PACKETBUF_ATTR_MAX
+    PACKETBUF_ATTR_MAX
 };
 
 #define PACKETBUF_NUM_ADDRS 2
@@ -252,23 +252,27 @@ enum {
 
 #define PACKETBUF_IS_ADDR(type) ((type) >= PACKETBUF_ADDR_FIRST)
 
-void              packetbuf_set_attr(uint8_t type, const packetbuf_attr_t val);
+void packetbuf_set_attr(uint8_t type, const packetbuf_attr_t val);
+
 packetbuf_attr_t packetbuf_attr(uint8_t type);
-void              packetbuf_set_addr(uint8_t type, const linkaddr_t *addr);
+
+void packetbuf_set_addr(uint8_t type, const linkaddr_t *addr);
+
 const linkaddr_t *packetbuf_addr(uint8_t type);
 
 /**
  * \brief       Checks whether the current packet is a broadcast.
  * \retval true iff the current packet is a broadcast
  */
-bool              packetbuf_holds_broadcast(void);
+bool packetbuf_holds_broadcast(void);
 
-void              packetbuf_attr_clear(void);
+void packetbuf_attr_clear(void);
 
-void              packetbuf_attr_copyto(struct packetbuf_attr *attrs,
-                                        struct packetbuf_addr *addrs);
-void              packetbuf_attr_copyfrom(struct packetbuf_attr *attrs,
-                                          struct packetbuf_addr *addrs);
+void packetbuf_attr_copyto(struct packetbuf_attr *attrs,
+                           struct packetbuf_addr *addrs);
+
+void packetbuf_attr_copyfrom(struct packetbuf_attr *attrs,
+                             struct packetbuf_addr *addrs);
 
 #define PACKETBUF_ATTRIBUTES(...) { __VA_ARGS__ PACKETBUF_ATTR_LAST }
 #define PACKETBUF_ATTR_LAST { PACKETBUF_ATTR_NONE, 0 }
@@ -280,8 +284,8 @@ void              packetbuf_attr_copyfrom(struct packetbuf_attr *attrs,
 #define PACKETBUF_ATTR_SECURITY_LEVEL_DEFAULT 0xffff
 
 struct packetbuf_attrlist {
-  uint8_t type;
-  uint8_t len;
+    uint8_t type;
+    uint8_t len;
 };
 
 #endif /* PACKETBUF_H_ */

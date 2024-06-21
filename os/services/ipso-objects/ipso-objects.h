@@ -54,64 +54,67 @@
 #include "contiki.h"
 
 void ipso_temperature_init(void);
+
 void ipso_button_init(void);
+
 void ipso_light_control_init(void);
+
 void ipso_leds_control_init(void);
 
 /* the init function to register the IPSO objects */
 void ipso_objects_init(void);
 
 struct ipso_objects_actuator {
-  /**
-   * \brief       Initialize the driver.
-   */
-  void (* init)(void);
+    /**
+     * \brief       Initialize the driver.
+     */
+    void (*init)(void);
 
-  /**
-   * \brief       Check if the actuator is on or off.
-   *
-   * \return      Zero if the actuator is off and non-zero otherwise.
-   */
-  int  (* is_on)(void);
+    /**
+     * \brief       Check if the actuator is on or off.
+     *
+     * \return      Zero if the actuator is off and non-zero otherwise.
+     */
+    int (*is_on)(void);
 
-  /**
-   * \brief       Set the actuator to on or off.
-   *
-   * \param onoroff Zero to set the actuator to off and non-zero otherwise.
-   * \return      Zero if ok and a non-zero error code otherwise.
-   */
-  int  (* set_on)(int onoroff);
+    /**
+     * \brief       Set the actuator to on or off.
+     *
+     * \param onoroff Zero to set the actuator to off and non-zero otherwise.
+     * \return      Zero if ok and a non-zero error code otherwise.
+     */
+    int (*set_on)(int onoroff);
 
-  /**
-   * \brief       Set the actuator to on or off.
-   *
-   * \param onoroff Zero to set the actuator to off and non-zero otherwise.
-   * \return      Zero if ok and a non-zero error code otherwise.
-   */
-  int  (* get_dim_level)(void);
+    /**
+     * \brief       Set the actuator to on or off.
+     *
+     * \param onoroff Zero to set the actuator to off and non-zero otherwise.
+     * \return      Zero if ok and a non-zero error code otherwise.
+     */
+    int (*get_dim_level)(void);
 
-  /**
-   * \brief       Set the dim level of the actuator.
-   *
-   * \param level The dim level between 0% and 100%.
-   * \return      Zero if ok and a non-zero error code otherwise.
-   */
-  int  (* set_dim_level)(int level);
+    /**
+     * \brief       Set the dim level of the actuator.
+     *
+     * \param level The dim level between 0% and 100%.
+     * \return      Zero if ok and a non-zero error code otherwise.
+     */
+    int (*set_dim_level)(int level);
 };
 
 struct ipso_objects_sensor {
-  /**
-   * \brief       Initialize the driver.
-   */
-  void     (* init)(void);
+    /**
+     * \brief       Initialize the driver.
+     */
+    void (*init)(void);
 
-  /**
-   * \brief       Read the sensor value in 1/1000 units.
-   *
-   * \param value A pointer to the variable to hold the sensor value.
-   * \return      Zero if ok and a non-zero error code otherwise.
-   */
-  int (* read_value)(int32_t *value);
+    /**
+     * \brief       Read the sensor value in 1/1000 units.
+     *
+     * \param value A pointer to the variable to hold the sensor value.
+     * \return      Zero if ok and a non-zero error code otherwise.
+     */
+    int (*read_value)(int32_t *value);
 };
 
 #endif /* IPSO_OBJECTS_H_ */

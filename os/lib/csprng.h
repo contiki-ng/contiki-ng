@@ -70,14 +70,14 @@
 
 /** This is the structure of a seed. */
 struct csprng_seed {
-  union {
-    struct {
-      uint8_t key[CSPRNG_KEY_LEN]; /**< AES-128 key of the CSPRNG */
-      uint8_t state[CSPRNG_STATE_LEN]; /**< internal state of the CSPRNG */
-    };
+    union {
+        struct {
+            uint8_t key[CSPRNG_KEY_LEN]; /**< AES-128 key of the CSPRNG */
+            uint8_t state[CSPRNG_STATE_LEN]; /**< internal state of the CSPRNG */
+        };
 
-    uint8_t u8[CSPRNG_SEED_LEN]; /**< for convenience */
-  };
+        uint8_t u8[CSPRNG_SEED_LEN]; /**< for convenience */
+    };
 };
 
 /**

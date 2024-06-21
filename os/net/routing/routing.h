@@ -58,134 +58,154 @@
  * The structure of a routing protocol driver.
  */
 struct routing_driver {
-  char *name;
-  /** Initialize the routing protocol */
-  void (* init)(void);
-  /**
-   * Set the prefix, for nodes that will operate as root
-   *
-   * \param prefix The prefix. If NULL, uip_ds6_default_prefix() is used instead
-   * \param iid The IID. If NULL, it will be built from uip_ds6_set_addr_iid.
-  */
-  void (* root_set_prefix)(uip_ipaddr_t *prefix, uip_ipaddr_t *iid);
-  /**
-   * Set the node as root and start a network
-   *
-   * \return 0 in case of success, -1 otherwise
-  */
-  int (* root_start)(void);
-  /**
-   * Tells whether the node is a network root or not
-   *
-   * \return 1 if we are root, 0 otherwise
-  */
-  int (* node_is_root)(void);
-  /**
-   * Returns the IPv6 address of the network root, if any
-   *
-   * \param ipaddr A pointer where to copy the IP address of the root
-   * \return 1 if the root address was copied, 0 otherwise
-  */
-  int (* get_root_ipaddr)(uip_ipaddr_t *ipaddr);
-  /**
-   * Returns the global IPv6 address of a source routing node
-   *
-   * \param ipaddr A pointer where to copy the IP address of the node
-   * \param node The source routing node
-   * \return 1 if the global node address was copied, 0 otherwise
-  */
-  int (* get_sr_node_ipaddr)(uip_ipaddr_t *ipaddr, const uip_sr_node_t *node);
-  /**
-   * Leave the network the node is part of
-   *
-  */
-  void (* leave_network)(void);
-  /**
-   * Tells whether the node is currently part of a network
-   *
-   * \return 1 if we have joined a network, 0 otherwise.
-   */
-  int (* node_has_joined)(void);
-  /**
-   * Tells whether the node is currently reachable as part of the network
-   *
-   * \return 1 if we are reachable, 0 otherwise.
-   */
-  int (* node_is_reachable)(void);
-  /**
-   * Triggers a global topology repair
-   *
-   * \param str A textual description of the cause for triggering a repair
-  */
-  void (* global_repair)(const char *str);
-  /**
-   * Triggers a RPL local topology repair
-   *
-   * \param str A textual description of the cause for triggering a repair
-  */
-  void (* local_repair)(const char *str);
-  /**
-   * Removes all extension headers that pertain to the routing protocol.
-   *
-   * \return true in case of success, false otherwise
-  */
-  bool (* ext_header_remove)(void);
-  /**
-   * Adds/updates routing protocol extension headers to current uIP packet.
-   *
-   * \return 1 in case of success, 0 otherwise
-  */
-  int (* ext_header_update)(void);
-  /**
-  * Process and update the routing protocol hob-by-hop
-  * extention headers of the current uIP packet.
-  *
-  * \param ext_buf A pointer to the ext header buffer
-  * \param opt_offset The offset within the extension header where
-  * the option starts
-  * \return 1 in case the packet is valid and to be processed further,
-  * 0 in case the packet must be dropped.
-  */
-  int (* ext_header_hbh_update)(uint8_t *ext_buf, int opt_offset);
-  /**
-  * Process and update SRH in-place,
-  * i.e. internal address swapping as per RFC6554
-  * \return 1 if SRH found, 0 otherwise
-  */
-  int (* ext_header_srh_update)(void);
-  /**
-   * Look for next hop from SRH of current uIP packet.
-   *
-   * \param ipaddr A pointer to the address where to store the next hop.
-   * \return 1 if a next hop was found, 0 otherwise
-  */
-  int (* ext_header_srh_get_next_hop)(uip_ipaddr_t *ipaddr);
-  /**
-   * Called by lower layers after every packet transmission
-   *
-   * \param addr The link-layer addrress of the packet destination
-   * \param status The transmission status (see os/net/mac/mac.h)
-   * \param numtx The total number of transmission attempts
-   */
-  void (* link_callback)(const linkaddr_t *addr, int status, int numtx);
-  /**
-   * Called by uIP to notify addition/removal of IPv6 neighbor entries
-   *
-   * \param nbr The neighbor entry
-   */
-  void (* neighbor_state_changed)(uip_ds6_nbr_t *nbr);
-  /**
-   * Called by uIP if it has decided to drop a route because
-   *
-   * \param route The route that will be dropped after this function returns
-   */
-  void (* drop_route)(uip_ds6_route_t *route);
-  /**
-   * Tells whether the protocol is in leaf mode
-   *
-   * \retval 1 if the protocol is in leaf mode, 0 if not.
-   */
-  uint8_t (* is_in_leaf_mode)(void);
+    char *name;
+
+    /** Initialize the routing protocol */
+    void (*init)(void);
+
+    /**
+     * Set the prefix, for nodes that will operate as root
+     *
+     * \param prefix The prefix. If NULL, uip_ds6_default_prefix() is used instead
+     * \param iid The IID. If NULL, it will be built from uip_ds6_set_addr_iid.
+    */
+    void (*root_set_prefix)(uip_ipaddr_t *prefix, uip_ipaddr_t *iid);
+
+    /**
+     * Set the node as root and start a network
+     *
+     * \return 0 in case of success, -1 otherwise
+    */
+    int (*root_start)(void);
+
+    /**
+     * Tells whether the node is a network root or not
+     *
+     * \return 1 if we are root, 0 otherwise
+    */
+    int (*node_is_root)(void);
+
+    /**
+     * Returns the IPv6 address of the network root, if any
+     *
+     * \param ipaddr A pointer where to copy the IP address of the root
+     * \return 1 if the root address was copied, 0 otherwise
+    */
+    int (*get_root_ipaddr)(uip_ipaddr_t *ipaddr);
+
+    /**
+     * Returns the global IPv6 address of a source routing node
+     *
+     * \param ipaddr A pointer where to copy the IP address of the node
+     * \param node The source routing node
+     * \return 1 if the global node address was copied, 0 otherwise
+    */
+    int (*get_sr_node_ipaddr)(uip_ipaddr_t *ipaddr, const uip_sr_node_t *node);
+
+    /**
+     * Leave the network the node is part of
+     *
+    */
+    void (*leave_network)(void);
+
+    /**
+     * Tells whether the node is currently part of a network
+     *
+     * \return 1 if we have joined a network, 0 otherwise.
+     */
+    int (*node_has_joined)(void);
+
+    /**
+     * Tells whether the node is currently reachable as part of the network
+     *
+     * \return 1 if we are reachable, 0 otherwise.
+     */
+    int (*node_is_reachable)(void);
+
+    /**
+     * Triggers a global topology repair
+     *
+     * \param str A textual description of the cause for triggering a repair
+    */
+    void (*global_repair)(const char *str);
+
+    /**
+     * Triggers a RPL local topology repair
+     *
+     * \param str A textual description of the cause for triggering a repair
+    */
+    void (*local_repair)(const char *str);
+
+    /**
+     * Removes all extension headers that pertain to the routing protocol.
+     *
+     * \return true in case of success, false otherwise
+    */
+    bool (*ext_header_remove)(void);
+
+    /**
+     * Adds/updates routing protocol extension headers to current uIP packet.
+     *
+     * \return 1 in case of success, 0 otherwise
+    */
+    int (*ext_header_update)(void);
+
+    /**
+    * Process and update the routing protocol hob-by-hop
+    * extention headers of the current uIP packet.
+    *
+    * \param ext_buf A pointer to the ext header buffer
+    * \param opt_offset The offset within the extension header where
+    * the option starts
+    * \return 1 in case the packet is valid and to be processed further,
+    * 0 in case the packet must be dropped.
+    */
+    int (*ext_header_hbh_update)(uint8_t *ext_buf, int opt_offset);
+
+    /**
+    * Process and update SRH in-place,
+    * i.e. internal address swapping as per RFC6554
+    * \return 1 if SRH found, 0 otherwise
+    */
+    int (*ext_header_srh_update)(void);
+
+    /**
+     * Look for next hop from SRH of current uIP packet.
+     *
+     * \param ipaddr A pointer to the address where to store the next hop.
+     * \return 1 if a next hop was found, 0 otherwise
+    */
+    int (*ext_header_srh_get_next_hop)(uip_ipaddr_t *ipaddr);
+
+    /**
+     * Called by lower layers after every packet transmission
+     *
+     * \param addr The link-layer addrress of the packet destination
+     * \param status The transmission status (see os/net/mac/mac.h)
+     * \param numtx The total number of transmission attempts
+     */
+    void (*link_callback)(const linkaddr_t *addr, int status, int numtx);
+
+    /**
+     * Called by uIP to notify addition/removal of IPv6 neighbor entries
+     *
+     * \param nbr The neighbor entry
+     */
+    void (*neighbor_state_changed)(uip_ds6_nbr_t *nbr);
+
+    /**
+     * Called by uIP if it has decided to drop a route because
+     *
+     * \param route The route that will be dropped after this function returns
+     */
+    void (*drop_route)(uip_ds6_route_t *route);
+
+    /**
+     * Tells whether the protocol is in leaf mode
+     *
+     * \retval 1 if the protocol is in leaf mode, 0 if not.
+     */
+    uint8_t (*is_in_leaf_mode)(void);
 };
 
 #endif /* ROUTING_H_ */

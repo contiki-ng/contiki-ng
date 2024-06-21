@@ -40,29 +40,29 @@
 #include "sys/autostart.h"
 
 #include "sys/log.h"
+
 #define LOG_MODULE "Autostart"
 #define LOG_LEVEL LOG_LEVEL_SYS
 
 /*---------------------------------------------------------------------------*/
 void
-autostart_start(struct process * const processes[])
-{
-  int i;
+autostart_start(struct process *const processes[]) {
+    int i;
 
-  for(i = 0; processes[i] != NULL; ++i) {
-    process_start(processes[i], NULL);
-    LOG_DBG("starting process '%s'\n", PROCESS_NAME_STRING(processes[i]));
-  }
+    for (i = 0; processes[i] != NULL; ++i) {
+        process_start(processes[i], NULL);
+        LOG_DBG("starting process '%s'\n", PROCESS_NAME_STRING(processes[i]));
+    }
 }
+
 /*---------------------------------------------------------------------------*/
 void
-autostart_exit(struct process * const processes[])
-{
-  int i;
+autostart_exit(struct process *const processes[]) {
+    int i;
 
-  for(i = 0; processes[i] != NULL; ++i) {
-    process_exit(processes[i]);
-    LOG_DBG("stopping process '%s'\n", PROCESS_NAME_STRING(processes[i]));
-  }
+    for (i = 0; processes[i] != NULL; ++i) {
+        process_exit(processes[i]);
+        LOG_DBG("stopping process '%s'\n", PROCESS_NAME_STRING(processes[i]));
+    }
 }
 /*---------------------------------------------------------------------------*/

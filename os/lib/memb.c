@@ -37,11 +37,11 @@
  * @{
  */
 
- /**
- * \file
- * Memory block allocation routines.
- * \author Adam Dunkels <adam@sics.se>
- */
+/**
+* \file
+* Memory block allocation routines.
+* \author Adam Dunkels <adam@sics.se>
+*/
 #include <string.h>
 
 #include "contiki.h"
@@ -49,73 +49,72 @@
 
 /*---------------------------------------------------------------------------*/
 void
-memb_init(struct memb *m)
-{
-  memset(m->used, 0, m->num);
-  memset(m->mem, 0, m->size * m->num);
+memb_init(struct memb *m) {
+    memset(m->used, 0, m->num);
+    memset(m->mem, 0, m->size * m->num);
 }
+
 /*---------------------------------------------------------------------------*/
 void *
-memb_alloc(struct memb *m)
-{
-  int i;
+memb_alloc(struct memb *m) {
+    int i;
 
-  for(i = 0; i < m->num; ++i) {
-    if(m->used[i] == false) {
-      /* If this block was unused, we set the used flag on
-	 and return a pointer to the memory block. */
-      m->used[i] = true;
-      return (void *)((char *)m->mem + (i * m->size));
+    for (i = 0; i < m->num; ++i) {
+        if (m->used[i] == false) {
+            /* If this block was unused, we set the used flag on
+           and return a pointer to the memory block. */
+            m->used[i] = true;
+            return (void *) ((char *) m->mem + (i * m->size));
+        }
     }
-  }
 
-  /* No free block was found, so we return NULL to indicate failure to
-     allocate block. */
-  return NULL;
+    /* No free block was found, so we return NULL to indicate failure to
+       allocate block. */
+    return NULL;
 }
+
 /*---------------------------------------------------------------------------*/
 int
-memb_free(struct memb *m, void *ptr)
-{
-  int i;
-  char *ptr2;
+memb_free(struct memb *m, void *ptr) {
+    int i;
+    char *ptr2;
 
-  /* Walk through the list of blocks and try to find the block to
-     which the pointer "ptr" points to. */
-  ptr2 = (char *)m->mem;
-  for(i = 0; i < m->num; ++i) {
-    if(ptr2 == (char *)ptr) {
-      /* We've found the block to which "ptr" points, so we check the allocation
-         status to detect the double-free error and free the block. */
-      if (m->used[i] == false)
-        return -1;
-      m->used[i] = false;
-      return 0;
+    /* Walk through the list of blocks and try to find the block to
+       which the pointer "ptr" points to. */
+    ptr2 = (char *) m->mem;
+    for (i = 0; i < m->num; ++i) {
+        if (ptr2 == (char *) ptr) {
+            /* We've found the block to which "ptr" points, so we check the allocation
+               status to detect the double-free error and free the block. */
+            if (m->used[i] == false)
+                return -1;
+            m->used[i] = false;
+            return 0;
+        }
+        ptr2 += m->size;
     }
-    ptr2 += m->size;
-  }
-  return -1;
+    return -1;
 }
+
 /*---------------------------------------------------------------------------*/
 int
-memb_inmemb(struct memb *m, void *ptr)
-{
-  return (char *)ptr >= (char *)m->mem &&
-    (char *)ptr < (char *)m->mem + (m->num * m->size);
+memb_inmemb(struct memb *m, void *ptr) {
+    return (char *) ptr >= (char *) m->mem &&
+           (char *) ptr < (char *) m->mem + (m->num * m->size);
 }
+
 /*---------------------------------------------------------------------------*/
 size_t
-memb_numfree(struct memb *m)
-{
-  int i;
-  size_t num_free = 0;
+memb_numfree(struct memb *m) {
+    int i;
+    size_t num_free = 0;
 
-  for(i = 0; i < m->num; ++i) {
-    if(m->used[i] == false) {
-      ++num_free;
+    for (i = 0; i < m->num; ++i) {
+        if (m->used[i] == false) {
+            ++num_free;
+        }
     }
-  }
 
-  return num_free;
+    return num_free;
 }
 /** @} */

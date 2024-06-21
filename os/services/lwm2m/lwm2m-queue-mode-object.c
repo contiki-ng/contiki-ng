@@ -46,6 +46,7 @@
 
 /* Log configuration */
 #include "coap-log.h"
+
 #define LOG_MODULE "lwm2m-qmode-object"
 #define LOG_LEVEL  LOG_LEVEL_LWM2M
 

@@ -77,7 +77,7 @@ typedef list_t queue_t;
 #define QUEUE(name) LIST(name)
 /*---------------------------------------------------------------------------*/
 struct queue {
-  struct queue *next;
+    struct queue *next;
 };
 /*---------------------------------------------------------------------------*/
 /**
@@ -85,9 +85,8 @@ struct queue {
  * \param queue The queue
  */
 static inline void
-queue_init(queue_t queue)
-{
-  list_init(queue);
+queue_init(queue_t queue) {
+    list_init(queue);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -96,9 +95,8 @@ queue_init(queue_t queue)
  * \param element A pointer to the element to be added
  */
 static inline void
-queue_enqueue(queue_t queue, void *element)
-{
-  list_add(queue, element);
+queue_enqueue(queue_t queue, void *element) {
+    list_add(queue, element);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -109,9 +107,8 @@ queue_enqueue(queue_t queue, void *element)
  * If this function returns NULL if the queue was empty (queue underflow)
  */
 static inline void *
-queue_dequeue(queue_t queue)
-{
-  return list_pop(queue);
+queue_dequeue(queue_t queue) {
+    return list_pop(queue);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -120,9 +117,8 @@ queue_dequeue(queue_t queue)
  * \return A pointer to the element at the front of the queue
  */
 static inline void *
-queue_peek(queue_t queue)
-{
-  return list_head(queue);
+queue_peek(queue_t queue) {
+    return list_head(queue);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -132,9 +128,8 @@ queue_peek(queue_t queue)
  * \retval false The queue has at least one element
  */
 static inline bool
-queue_is_empty(queue_t queue)
-{
-  return *queue == NULL ? true : false;
+queue_is_empty(queue_t queue) {
+    return *queue == NULL ? true : false;
 }
 /*---------------------------------------------------------------------------*/
 #endif /* QUEUE_H_ */

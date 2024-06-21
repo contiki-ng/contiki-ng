@@ -33,30 +33,32 @@
 #define IP64_DHCPC_H_
 
 struct ip64_dhcpc_state {
-  struct pt pt;
-  char state;
-  struct uip_udp_conn *conn;
-  struct etimer etimer;
-  uint32_t ticks;
-  const void *mac_addr;
-  int mac_len;
-  
-  uint8_t serverid[4];
+    struct pt pt;
+    char state;
+    struct uip_udp_conn *conn;
+    struct etimer etimer;
+    uint32_t ticks;
+    const void *mac_addr;
+    int mac_len;
 
-  uint16_t lease_time[2];
-  uip_ipaddr_t ipaddr;
-  uip_ipaddr_t netmask;
-  uip_ipaddr_t dnsaddr;
-  uip_ipaddr_t default_router;
+    uint8_t serverid[4];
+
+    uint16_t lease_time[2];
+    uip_ipaddr_t ipaddr;
+    uip_ipaddr_t netmask;
+    uip_ipaddr_t dnsaddr;
+    uip_ipaddr_t default_router;
 };
 
 void ip64_dhcpc_init(const void *mac_addr, int mac_len);
+
 void ip64_dhcpc_request(void);
 
 void ip64_dhcpc_appcall(process_event_t ev, void *data);
 
 /* Mandatory callbacks provided by the user. */
 void ip64_dhcpc_configured(const struct ip64_dhcpc_state *s);
+
 void ip64_dhcpc_unconfigured(const struct ip64_dhcpc_state *s);
 
 #endif /* IP64_DHCPC_H_ */

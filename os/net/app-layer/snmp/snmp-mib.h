@@ -73,20 +73,20 @@ typedef void (*snmp_mib_resource_handler_t)(snmp_varbind_t *varbind, snmp_oid_t 
  * @brief The MIB Resource struct
  */
 typedef struct snmp_mib_resource_s {
-  /**
-   * @brief A pointer to the next element in the linked list
-   *
-   * @remarks This MUST be the first element in the struct
-   */
-  struct snmp_mib_resource_s *next;
-  /**
-   * @brief A OID struct
-   */
-  snmp_oid_t oid;
-  /**
-   * @brief The function handler that is called for this resource
-   */
-  snmp_mib_resource_handler_t handler;
+    /**
+     * @brief A pointer to the next element in the linked list
+     *
+     * @remarks This MUST be the first element in the struct
+     */
+    struct snmp_mib_resource_s *next;
+    /**
+     * @brief A OID struct
+     */
+    snmp_oid_t oid;
+    /**
+     * @brief The function handler that is called for this resource
+     */
+    snmp_mib_resource_handler_t handler;
 } snmp_mib_resource_t;
 
 /**

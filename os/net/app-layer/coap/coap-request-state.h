@@ -43,25 +43,25 @@
 #define COAP_REQUEST_STATE_H_
 
 typedef enum {
-  COAP_REQUEST_STATUS_RESPONSE, /* Response received and no more blocks */
-  COAP_REQUEST_STATUS_MORE, /* Response received and there are more blocks */
-  COAP_REQUEST_STATUS_FINISHED, /* Request finished */
-  COAP_REQUEST_STATUS_TIMEOUT, /* Request Timeout after all retransmissions */
-  COAP_REQUEST_STATUS_BLOCK_ERROR /* Blocks in wrong order */
+    COAP_REQUEST_STATUS_RESPONSE, /* Response received and no more blocks */
+    COAP_REQUEST_STATUS_MORE, /* Response received and there are more blocks */
+    COAP_REQUEST_STATUS_FINISHED, /* Request finished */
+    COAP_REQUEST_STATUS_TIMEOUT, /* Request Timeout after all retransmissions */
+    COAP_REQUEST_STATUS_BLOCK_ERROR /* Blocks in wrong order */
 } coap_request_status_t;
 
 
 typedef struct coap_request_state {
-  coap_transaction_t *transaction;
-  coap_message_t *response;
-  coap_message_t *request;
-  coap_endpoint_t *remote_endpoint;
-  uint32_t block_num;
-  uint32_t res_block;
-  uint8_t more;
-  uint8_t block_error;
-  void *user_data;
-  coap_request_status_t status;
+    coap_transaction_t *transaction;
+    coap_message_t *response;
+    coap_message_t *request;
+    coap_endpoint_t *remote_endpoint;
+    uint32_t block_num;
+    uint32_t res_block;
+    uint8_t more;
+    uint8_t block_error;
+    void *user_data;
+    coap_request_status_t status;
 } coap_request_state_t;
 
 

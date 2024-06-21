@@ -57,26 +57,29 @@
 
 /* container for transactions with message buffer and retransmission info */
 typedef struct coap_transaction {
-  struct coap_transaction *next;        /* for LIST */
+    struct coap_transaction *next;        /* for LIST */
 
-  uint16_t mid;
-  coap_timer_t retrans_timer;
-  uint32_t retrans_interval;
-  uint8_t retrans_counter;
+    uint16_t mid;
+    coap_timer_t retrans_timer;
+    uint32_t retrans_interval;
+    uint8_t retrans_counter;
 
-  coap_endpoint_t endpoint;
+    coap_endpoint_t endpoint;
 
-  coap_resource_response_handler_t callback;
-  void *callback_data;
+    coap_resource_response_handler_t callback;
+    void *callback_data;
 
-  uint16_t message_len;
-  uint8_t message[COAP_MAX_PACKET_SIZE + 1];     /* +1 for the terminating '\0' which will not be sent
+    uint16_t message_len;
+    uint8_t message[COAP_MAX_PACKET_SIZE + 1];     /* +1 for the terminating '\0' which will not be sent
                                                  * Use snprintf(buf, len+1, "", ...) to completely fill payload */
 } coap_transaction_t;
 
 coap_transaction_t *coap_new_transaction(uint16_t mid, const coap_endpoint_t *ep);
+
 void coap_send_transaction(coap_transaction_t *t);
+
 void coap_clear_transaction(coap_transaction_t *t);
+
 coap_transaction_t *coap_get_transaction_by_mid(uint16_t mid);
 
 #endif /* COAP_TRANSACTIONS_H_ */

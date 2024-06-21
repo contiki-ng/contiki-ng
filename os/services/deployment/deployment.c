@@ -59,82 +59,81 @@ static int node_count = 0;
 
 /*---------------------------------------------------------------------------*/
 void
-deployment_init(void)
-{
-  const struct id_mac *curr = DEPLOYMENT_MAPPING;
-  /* Initialize node_id */
-  node_id = deployment_id_from_lladdr((const linkaddr_t *)&linkaddr_node_addr);
-  /* Count nodes */
-  node_count = 0;
-  while(curr->id != 0) {
-    node_count++;
-    curr++;
-  }
+deployment_init(void) {
+    const struct id_mac *curr = DEPLOYMENT_MAPPING;
+    /* Initialize node_id */
+    node_id = deployment_id_from_lladdr((const linkaddr_t *) &linkaddr_node_addr);
+    /* Count nodes */
+    node_count = 0;
+    while (curr->id != 0) {
+        node_count++;
+        curr++;
+    }
 }
+
 /*---------------------------------------------------------------------------*/
 int
-deployment_node_count(void)
-{
-  return node_count;
+deployment_node_count(void) {
+    return node_count;
 }
+
 /*---------------------------------------------------------------------------*/
 uint16_t
-deployment_id_from_lladdr(const linkaddr_t *lladdr)
-{
-  const struct id_mac *curr = DEPLOYMENT_MAPPING;
-  if(lladdr == NULL) {
-    return 0;
-  }
-  while(curr->id != 0) {
-    /* Assume network-wide unique 16-bit MAC addresses */
-    if(linkaddr_cmp(lladdr, &curr->mac)) {
-      return curr->id;
+deployment_id_from_lladdr(const linkaddr_t *lladdr) {
+    const struct id_mac *curr = DEPLOYMENT_MAPPING;
+    if (lladdr == NULL) {
+        return 0;
     }
-    curr++;
-  }
-  return 0;
+    while (curr->id != 0) {
+        /* Assume network-wide unique 16-bit MAC addresses */
+        if (linkaddr_cmp(lladdr, &curr->mac)) {
+            return curr->id;
+        }
+        curr++;
+    }
+    return 0;
 }
+
 /*---------------------------------------------------------------------------*/
 void
-deployment_lladdr_from_id(linkaddr_t *lladdr, uint16_t id)
-{
-  const struct id_mac *curr = DEPLOYMENT_MAPPING;
-  if(id == 0 || lladdr == NULL) {
-    return;
-  }
-  while(curr->id != 0) {
-    if(curr->id == id) {
-      linkaddr_copy(lladdr, &curr->mac);
-      return;
+deployment_lladdr_from_id(linkaddr_t *lladdr, uint16_t id) {
+    const struct id_mac *curr = DEPLOYMENT_MAPPING;
+    if (id == 0 || lladdr == NULL) {
+        return;
     }
-    curr++;
-  }
+    while (curr->id != 0) {
+        if (curr->id == id) {
+            linkaddr_copy(lladdr, &curr->mac);
+            return;
+        }
+        curr++;
+    }
 }
+
 /*---------------------------------------------------------------------------*/
 uint16_t
-deployment_id_from_iid(const uip_ipaddr_t *ipaddr)
-{
-  const linkaddr_t lladdr;
-  uip_ds6_set_lladdr_from_iid((uip_lladdr_t *)&lladdr, ipaddr);
-  return deployment_id_from_lladdr(&lladdr);
+deployment_id_from_iid(const uip_ipaddr_t *ipaddr) {
+    const linkaddr_t lladdr;
+    uip_ds6_set_lladdr_from_iid((uip_lladdr_t *) &lladdr, ipaddr);
+    return deployment_id_from_lladdr(&lladdr);
 }
+
 /*---------------------------------------------------------------------------*/
 void
-deployment_iid_from_id(uip_ipaddr_t *ipaddr, uint16_t id)
-{
-  linkaddr_t lladdr;
-  deployment_lladdr_from_id(&lladdr, id);
-  uip_ds6_set_addr_iid(ipaddr, (uip_lladdr_t *)&lladdr);
+deployment_iid_from_id(uip_ipaddr_t *ipaddr, uint16_t id) {
+    linkaddr_t lladdr;
+    deployment_lladdr_from_id(&lladdr, id);
+    uip_ds6_set_addr_iid(ipaddr, (uip_lladdr_t *) &lladdr);
 }
+
 /*---------------------------------------------------------------------------*/
 uint16_t
-deployment_id_from_index(uint16_t index)
-{
-  if(index < deployment_node_count()) {
-    return DEPLOYMENT_MAPPING[index].id;
-  } else {
-    return 0;
-  }
+deployment_id_from_index(uint16_t index) {
+    if (index < deployment_node_count()) {
+        return DEPLOYMENT_MAPPING[index].id;
+    } else {
+        return 0;
+    }
 }
 /*---------------------------------------------------------------------------*/
 

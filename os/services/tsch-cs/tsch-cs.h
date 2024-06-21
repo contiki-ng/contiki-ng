@@ -54,7 +54,7 @@
  * \brief Initializes the TSCH hopping sequence selection module.
  */
 void tsch_cs_adaptations_init(void);
-    
+
 /**
  * \brief Signal the need to potentially update the TSCH hopping sequence.
  * \param updated_channel     The channel with the updated RSSI measurement

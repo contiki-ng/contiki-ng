@@ -39,6 +39,7 @@
 
 #ifndef IFFT_H
 #define IFFT_H
+
 #include "contiki.h"
 
 /* ifft(xre[], n) - integer (fixpoint) version of Fast Fourier Transform

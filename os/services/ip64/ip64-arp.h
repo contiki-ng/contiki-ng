@@ -73,10 +73,10 @@ void ip64_arp_ip_output(uint8_t *packet, uint16_t packet_len);
 
 
 int ip64_arp_create_ethhdr(uint8_t *link_header,
-			   const uint8_t *network_header);
+                           const uint8_t *network_header);
 
 int ip64_arp_create_arp_request(uint8_t *link_header,
-				const uint8_t *network_header);
+                                const uint8_t *network_header);
 
 int ip64_arp_check_cache(const uint8_t *nlhdr);
 

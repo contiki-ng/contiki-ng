@@ -37,31 +37,31 @@
 struct http_socket;
 
 typedef enum {
-  HTTP_SOCKET_ERR,
-  HTTP_SOCKET_OK,
-  HTTP_SOCKET_HEADER,
-  HTTP_SOCKET_DATA,
-  HTTP_SOCKET_CLOSED,
-  HTTP_SOCKET_TIMEDOUT,
-  HTTP_SOCKET_ABORTED,
-  HTTP_SOCKET_HOSTNAME_NOT_FOUND,
+    HTTP_SOCKET_ERR,
+    HTTP_SOCKET_OK,
+    HTTP_SOCKET_HEADER,
+    HTTP_SOCKET_DATA,
+    HTTP_SOCKET_CLOSED,
+    HTTP_SOCKET_TIMEDOUT,
+    HTTP_SOCKET_ABORTED,
+    HTTP_SOCKET_HOSTNAME_NOT_FOUND,
 } http_socket_event_t;
 
 struct http_socket_header {
-  uint16_t status_code;
-  int64_t content_length;
-  struct {
-    int64_t first_byte_pos;
-    int64_t last_byte_pos;
-    int64_t instance_length;
-  } content_range;
+    uint16_t status_code;
+    int64_t content_length;
+    struct {
+        int64_t first_byte_pos;
+        int64_t last_byte_pos;
+        int64_t instance_length;
+    } content_range;
 };
 
-typedef void (* http_socket_callback_t)(struct http_socket *s,
-                                        void *ptr,
-                                        http_socket_event_t ev,
-                                        const uint8_t *data,
-                                        uint16_t datalen);
+typedef void (*http_socket_callback_t)(struct http_socket *s,
+                                       void *ptr,
+                                       http_socket_event_t ev,
+                                       const uint8_t *data,
+                                       uint16_t datalen);
 
 #define HTTP_SOCKET_INPUTBUFSIZE  UIP_TCP_MSS
 #define HTTP_SOCKET_OUTPUTBUFSIZE MAX(UIP_TCP_MSS, 128)
@@ -71,30 +71,30 @@ typedef void (* http_socket_callback_t)(struct http_socket *s,
 #define HTTP_SOCKET_TIMEOUT       ((2 * 60 + 30) * CLOCK_SECOND)
 
 struct http_socket {
-  struct http_socket *next;
-  struct tcp_socket s;
-  uip_ipaddr_t proxy_addr;
-  uint16_t proxy_port;
-  int64_t pos;
-  uint64_t length;
-  const uint8_t *postdata;
-  uint16_t postdatalen;
-  http_socket_callback_t callback;
-  void *callbackptr;
-  int did_tcp_connect;
-  char url[HTTP_SOCKET_URLLEN];
-  uint8_t inputbuf[HTTP_SOCKET_INPUTBUFSIZE];
-  uint8_t outputbuf[HTTP_SOCKET_OUTPUTBUFSIZE];
+    struct http_socket *next;
+    struct tcp_socket s;
+    uip_ipaddr_t proxy_addr;
+    uint16_t proxy_port;
+    int64_t pos;
+    uint64_t length;
+    const uint8_t *postdata;
+    uint16_t postdatalen;
+    http_socket_callback_t callback;
+    void *callbackptr;
+    int did_tcp_connect;
+    char url[HTTP_SOCKET_URLLEN];
+    uint8_t inputbuf[HTTP_SOCKET_INPUTBUFSIZE];
+    uint8_t outputbuf[HTTP_SOCKET_OUTPUTBUFSIZE];
 
-  struct etimer timeout_timer;
-  uint8_t timeout_timer_started;
-  struct pt pt, headerpt;
-  int header_chars;
-  char header_field[15];
-  struct http_socket_header header;
-  uint8_t header_received;
-  uint64_t bodylen;
-  const char *content_type;
+    struct etimer timeout_timer;
+    uint8_t timeout_timer_started;
+    struct pt pt, headerpt;
+    int header_chars;
+    char header_field[15];
+    struct http_socket_header header;
+    uint8_t header_received;
+    uint64_t bodylen;
+    const char *content_type;
 };
 
 void http_socket_init(struct http_socket *s);

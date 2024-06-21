@@ -36,13 +36,13 @@
  * @{
  */
 
- /**
-  * \file
-  *         A process that periodically prints out the time spent in
-  *         radio tx, radio rx, total time and duty cycle.
-  *
-  * \author Simon Duquennoy <simon.duquennoy@ri.se>
-  */
+/**
+ * \file
+ *         A process that periodically prints out the time spent in
+ *         radio tx, radio rx, total time and duty cycle.
+ *
+ * \author Simon Duquennoy <simon.duquennoy@ri.se>
+ */
 
 #ifndef SIMPLE_ENERGEST_H_
 #define SIMPLE_ENERGEST_H_

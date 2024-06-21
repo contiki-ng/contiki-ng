@@ -91,6 +91,5 @@
 #endif /* LWM2M_QUEUE_MODE_OBJECT_ENABLED */
 
 
-
 #endif /* LWM2M_QUEUE_MODE_CONF_H */
 /** @} */

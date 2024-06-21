@@ -60,30 +60,29 @@
  *         <tt>(caddr_t)-1</tt> with \c errno set to \c ENOMEM on error
  */
 caddr_t
-_sbrk(int incr)
-{
-  /*
-   * Newlib's _sbrk_r() assumes that this global errno variable is used here,
-   * which is different from the errno definition provided by <errno.h>.
-   */
+_sbrk(int incr) {
+    /*
+     * Newlib's _sbrk_r() assumes that this global errno variable is used here,
+     * which is different from the errno definition provided by <errno.h>.
+     */
 #undef errno
-  extern int errno;
+    extern int errno;
 
-  /* Heap boundaries from linker script. */
-  extern uint8_t _heap;
-  extern uint8_t _eheap;
+    /* Heap boundaries from linker script. */
+    extern uint8_t _heap;
+    extern uint8_t _eheap;
 
-  static uint8_t *heap_end = &_heap;
-  uint8_t *prev_heap_end = heap_end;
+    static uint8_t *heap_end = &_heap;
+    uint8_t *prev_heap_end = heap_end;
 
-  if(heap_end + incr > &_eheap) {
-    PRINTF("Out of heap space!\n");
-    errno = ENOMEM;
-    return (caddr_t)-1;
-  }
+    if (heap_end + incr > &_eheap) {
+        PRINTF("Out of heap space!\n");
+        errno = ENOMEM;
+        return (caddr_t) - 1;
+    }
 
-  heap_end += incr;
-  return (caddr_t)prev_heap_end;
+    heap_end += incr;
+    return (caddr_t) prev_heap_end;
 }
 
 /**

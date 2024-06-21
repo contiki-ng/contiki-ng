@@ -145,47 +145,47 @@
 typedef struct button_hal_button_s button_hal_button_t;
 
 struct button_hal_button_s {
-  /** Used by the s/w debounce functionality */
-  struct ctimer debounce_ctimer;
+    /** Used by the s/w debounce functionality */
+    struct ctimer debounce_ctimer;
 
-  /** A callback timer used to count duration of button presses */
-  struct ctimer duration_ctimer;
+    /** A callback timer used to count duration of button presses */
+    struct ctimer duration_ctimer;
 
 #if BUTTON_HAL_WITH_DESCRIPTION
-  /**
-   * \brief A textual description of the button
-   *
-   * This field may only be accessed using the BUTTON_HAL_GET_DESCRIPTION()
-   * macro.
-   */
-  const char *description;
+    /**
+     * \brief A textual description of the button
+     *
+     * This field may only be accessed using the BUTTON_HAL_GET_DESCRIPTION()
+     * macro.
+     */
+    const char *description;
 #endif
-  /** The pin's pull configuration */
-  const gpio_hal_pin_cfg_t pull;
+    /** The pin's pull configuration */
+    const gpio_hal_pin_cfg_t pull;
 
-  /** True if the button uses negative logic (active: low) */
-  const bool negative_logic;
+    /** True if the button uses negative logic (active: low) */
+    const bool negative_logic;
 
 #if GPIO_HAL_PORT_PIN_NUMBERING
-  /** The gpio port connected to the button */
-  gpio_hal_port_t port;
+    /** The gpio port connected to the button */
+    gpio_hal_port_t port;
 #endif
 
-  /** The gpio pin connected to the button */
-  const gpio_hal_pin_t pin;
+    /** The gpio pin connected to the button */
+    const gpio_hal_pin_t pin;
 
-  /** A counter of the duration (in seconds) of a button press */
-  uint8_t press_duration_seconds;
+    /** A counter of the duration (in seconds) of a button press */
+    uint8_t press_duration_seconds;
 
-  /**
-   * \brief A unique identifier for this button.
-   *
-   * The platform code is responsible of setting unique values here. This can
-   * be used later to determine which button generated an event. Many examples
-   * assume the existence of a button with ID == BUTTON_HAL_ID_BUTTON_ZERO,
-   * so it is good idea to use this ID for one of your platform's buttons.
-   */
-  const uint8_t unique_id;
+    /**
+     * \brief A unique identifier for this button.
+     *
+     * The platform code is responsible of setting unique values here. This can
+     * be used later to determine which button generated an event. Many examples
+     * assume the existence of a button with ID == BUTTON_HAL_ID_BUTTON_ZERO,
+     * so it is good idea to use this ID for one of your platform's buttons.
+     */
+    const uint8_t unique_id;
 };
 /*---------------------------------------------------------------------------*/
 #if BUTTON_HAL_WITH_DESCRIPTION

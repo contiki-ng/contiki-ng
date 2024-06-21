@@ -345,7 +345,7 @@
  * The \e suppress argument is used so that the library can signal the protocol
  * whether it should TX or suppress
  */
-typedef void (* trickle_timer_cb_t)(void *ptr, uint8_t suppress);
+typedef void (*trickle_timer_cb_t)(void *ptr, uint8_t suppress);
 
 /**
  * \struct trickle_timer
@@ -362,22 +362,22 @@ typedef void (* trickle_timer_cb_t)(void *ptr, uint8_t suppress);
  * boundaries of clock_time_t
  */
 struct trickle_timer {
-  clock_time_t i_min;     /**< Imin: Clock ticks */
-  clock_time_t i_cur;     /**< I: Current interval in clock_ticks */
-  clock_time_t i_start;   /**< Start of this interval (absolute clock_time) */
-  clock_time_t i_max_abs; /**< Maximum interval size in clock ticks (and not in
+    clock_time_t i_min;     /**< Imin: Clock ticks */
+    clock_time_t i_cur;     /**< I: Current interval in clock_ticks */
+    clock_time_t i_start;   /**< Start of this interval (absolute clock_time) */
+    clock_time_t i_max_abs; /**< Maximum interval size in clock ticks (and not in
                                number of doublings). This is a cached value of
                                Imin << Imax used internally, so that we can
                                have direct access to the maximum interval size
                                without having to calculate it all the time */
-  struct ctimer ct;       /**< A \ref ctimer used internally */
-  trickle_timer_cb_t cb;  /**< Protocol's own callback, invoked at time t
+    struct ctimer ct;       /**< A \ref ctimer used internally */
+    trickle_timer_cb_t cb;  /**< Protocol's own callback, invoked at time t
                                within the current interval */
-  void *cb_arg;           /**< Opaque pointer to be used as the argument of the
+    void *cb_arg;           /**< Opaque pointer to be used as the argument of the
                                protocol's callback */
-  uint8_t i_max;          /**< Imax: Max number of doublings */
-  uint8_t k;              /**< k: Redundancy Constant */
-  uint8_t c;              /**< c: Consistency Counter */
+    uint8_t i_max;          /**< Imax: Max number of doublings */
+    uint8_t k;              /**< k: Redundancy Constant */
+    uint8_t c;              /**< c: Consistency Counter */
 };
 /** @} */
 /*---------------------------------------------------------------------------*/

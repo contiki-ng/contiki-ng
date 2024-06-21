@@ -29,10 +29,10 @@
  *
  */
 
- /**
-  * \addtogroup uip
-  * @{
-  */
+/**
+ * \addtogroup uip
+ * @{
+ */
 
 #include "net/routing/rpl-lite/rpl.h"
 #include "net/nbr-table.h"
@@ -45,20 +45,19 @@
 
 /*---------------------------------------------------------------------------*/
 static rpl_rank_t
-get_rank(const linkaddr_t *lladdr)
-{
-  rpl_parent_t *p = rpl_neighbor_get_from_lladdr((uip_lladdr_t *)lladdr);
-  if(p == NULL) {
-    return RPL_INFINITE_RANK;
-  } else {
-    return curr_instance.of->rank_via_nbr(p);
-  }
+get_rank(const linkaddr_t *lladdr) {
+    rpl_parent_t *p = rpl_neighbor_get_from_lladdr((uip_lladdr_t *) lladdr);
+    if (p == NULL) {
+        return RPL_INFINITE_RANK;
+    } else {
+        return curr_instance.of->rank_via_nbr(p);
+    }
 }
+
 /*---------------------------------------------------------------------------*/
 const linkaddr_t *
-rpl_nbr_gc_get_worst(const linkaddr_t *lladdr1, const linkaddr_t *lladdr2)
-{
-  return get_rank(lladdr2) > get_rank(lladdr1) ? lladdr2 : lladdr1;
+rpl_nbr_gc_get_worst(const linkaddr_t *lladdr1, const linkaddr_t *lladdr2) {
+    return get_rank(lladdr2) > get_rank(lladdr1) ? lladdr2 : lladdr1;
 }
 /*---------------------------------------------------------------------------*/
 /** @}*/

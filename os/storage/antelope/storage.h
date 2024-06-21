@@ -48,29 +48,40 @@
 #define INDEX_NAME_LENGTH       (RELATION_NAME_LENGTH + \
                                  sizeof(INDEX_NAME_SUFFIX) - 1)
 
-typedef unsigned char * storage_row_t;
+typedef unsigned char *storage_row_t;
 
 char *storage_generate_file(char *, unsigned long);
 
 db_result_t storage_load(relation_t *);
+
 void storage_unload(relation_t *);
 
 db_result_t storage_get_relation(relation_t *, char *);
+
 db_result_t storage_put_relation(relation_t *);
+
 db_result_t storage_drop_relation(relation_t *, int);
+
 db_result_t storage_rename_relation(char *, char *);
 
 db_result_t storage_put_attribute(relation_t *, attribute_t *);
+
 db_result_t storage_get_index(index_t *, relation_t *, attribute_t *);
+
 db_result_t storage_put_index(index_t *);
 
 db_result_t storage_get_row(relation_t *, tuple_id_t *, storage_row_t);
+
 db_result_t storage_put_row(relation_t *, storage_row_t);
+
 db_result_t storage_get_row_amount(relation_t *, tuple_id_t *);
 
 db_storage_id_t storage_open(const char *);
+
 void storage_close(db_storage_id_t);
+
 db_result_t storage_read(db_storage_id_t, void *, unsigned long, unsigned);
+
 db_result_t storage_write(db_storage_id_t, void *, unsigned long, unsigned);
 
 #endif /* STORAGE_H */

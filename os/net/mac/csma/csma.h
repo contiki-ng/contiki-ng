@@ -82,6 +82,7 @@ extern const struct mac_driver csma_driver;
 
 /* CSMA security framer functions */
 int csma_security_create_frame(void);
+
 int csma_security_parse_frame(void);
 
 /* key management for CSMA */

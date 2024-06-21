@@ -60,7 +60,7 @@
 #define LC_ADDRLABELS_H_
 
 /** \hideinitializer */
-typedef void * lc_t;
+typedef void *lc_t;
 
 #define LC_INIT(s) s = NULL
 

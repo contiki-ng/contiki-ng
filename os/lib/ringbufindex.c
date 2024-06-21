@@ -47,79 +47,78 @@
 
 /* Initialize a ring buffer. The size must be a power of two */
 void
-ringbufindex_init(struct ringbufindex *r, uint8_t size)
-{
-  r->mask = size - 1;
-  r->put_ptr = 0;
-  r->get_ptr = 0;
+ringbufindex_init(struct ringbufindex *r, uint8_t size) {
+    r->mask = size - 1;
+    r->put_ptr = 0;
+    r->get_ptr = 0;
 }
+
 /* Put one element to the ring buffer */
 int
-ringbufindex_put(struct ringbufindex *r)
-{
-  /* Check if buffer is full. If it is full, return 0 to indicate that
-     the element was not inserted.
+ringbufindex_put(struct ringbufindex *r) {
+    /* Check if buffer is full. If it is full, return 0 to indicate that
+       the element was not inserted.
 
-     XXX: there is a potential risk for a race condition here, because
-     the ->get_ptr field may be written concurrently by the
-     ringbufindex_get() function. To avoid this, access to ->get_ptr must
-     be atomic. We use an uint8_t type, which makes access atomic on
-     most platforms, but C does not guarantee this.
-   */
-  if(((r->put_ptr - r->get_ptr) & r->mask) == r->mask) {
-    return 0;
-  }
-  r->put_ptr = (r->put_ptr + 1) & r->mask;
-  return 1;
+       XXX: there is a potential risk for a race condition here, because
+       the ->get_ptr field may be written concurrently by the
+       ringbufindex_get() function. To avoid this, access to ->get_ptr must
+       be atomic. We use an uint8_t type, which makes access atomic on
+       most platforms, but C does not guarantee this.
+     */
+    if (((r->put_ptr - r->get_ptr) & r->mask) == r->mask) {
+        return 0;
+    }
+    r->put_ptr = (r->put_ptr + 1) & r->mask;
+    return 1;
 }
+
 /* Check if there is space to put an element.
  * Return the index where the next element is to be added */
 int
-ringbufindex_peek_put(const struct ringbufindex *r)
-{
-  /* Check if there are bytes in the buffer. If so, we return the
-     first one. If there are no bytes left, we return -1.
-   */
-  if(((r->put_ptr - r->get_ptr) & r->mask) == r->mask) {
-    return -1;
-  }
-  return r->put_ptr;
+ringbufindex_peek_put(const struct ringbufindex *r) {
+    /* Check if there are bytes in the buffer. If so, we return the
+       first one. If there are no bytes left, we return -1.
+     */
+    if (((r->put_ptr - r->get_ptr) & r->mask) == r->mask) {
+        return -1;
+    }
+    return r->put_ptr;
 }
+
 /* Remove the first element and return its index */
 int
-ringbufindex_get(struct ringbufindex *r)
-{
-  int get_ptr;
+ringbufindex_get(struct ringbufindex *r) {
+    int get_ptr;
 
-  /* Check if there are bytes in the buffer. If so, we return the
-     first one and increase the pointer. If there are no bytes left, we
-     return -1.
+    /* Check if there are bytes in the buffer. If so, we return the
+       first one and increase the pointer. If there are no bytes left, we
+       return -1.
 
-     XXX: there is a potential risk for a race condition here, because
-     the ->put_ptr field may be written concurrently by the
-     ringbufindex_put() function. To avoid this, access to ->get_ptr must
-     be atomic. We use an uint8_t type, which makes access atomic on
-     most platforms, but C does not guarantee this.
-   */
-  if(((r->put_ptr - r->get_ptr) & r->mask) != 0) {
-    get_ptr = r->get_ptr;
-    r->get_ptr = (r->get_ptr + 1) & r->mask;
-    return get_ptr;
-  } else {
-    return -1;
-  }
+       XXX: there is a potential risk for a race condition here, because
+       the ->put_ptr field may be written concurrently by the
+       ringbufindex_put() function. To avoid this, access to ->get_ptr must
+       be atomic. We use an uint8_t type, which makes access atomic on
+       most platforms, but C does not guarantee this.
+     */
+    if (((r->put_ptr - r->get_ptr) & r->mask) != 0) {
+        get_ptr = r->get_ptr;
+        r->get_ptr = (r->get_ptr + 1) & r->mask;
+        return get_ptr;
+    } else {
+        return -1;
+    }
 }
+
 /* Return the index of the first element
  * (which will be removed if calling ringbufindex_get) */
 int
-ringbufindex_peek_get(const struct ringbufindex *r)
-{
-  /* Check if there are bytes in the buffer. If so, we return the
-     first one. If there are no bytes left, we return -1.
-   */
-  if(((r->put_ptr - r->get_ptr) & r->mask) != 0) {
-    return r->get_ptr;
-  } else {
-    return -1;
-  }
+ringbufindex_peek_get(const struct ringbufindex *r) {
+    /* Check if there are bytes in the buffer. If so, we return the
+       first one. If there are no bytes left, we return -1.
+     */
+    if (((r->put_ptr - r->get_ptr) & r->mask) != 0) {
+        return r->get_ptr;
+    } else {
+        return -1;
+    }
 }

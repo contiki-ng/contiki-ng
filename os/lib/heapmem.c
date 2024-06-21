@@ -493,7 +493,7 @@ heapmem_free(void *ptr)
 void *
 #if HEAPMEM_DEBUG
 heapmem_realloc_debug(void *ptr, size_t size,
-		      const char *file, const unsigned line)
+              const char *file, const unsigned line)
 #else
 heapmem_realloc(void *ptr, size_t size)
 #endif
@@ -566,7 +566,7 @@ heapmem_realloc(void *ptr, size_t size)
     coalesce_chunks(chunk);
     if(chunk->size >= size) {
       /* There was enough free adjacent space to extend the chunk in
-	 its current place. */
+     its current place. */
       split_chunk(chunk, size);
       zones[chunk->zone].allocated += size_adj;
       return ptr;
@@ -595,7 +595,7 @@ heapmem_realloc(void *ptr, size_t size)
 void *
 #if HEAPMEM_DEBUG
 heapmem_calloc_debug(size_t nmemb, size_t size,
-		     const char *file, const unsigned line)
+             const char *file, const unsigned line)
 #else
 heapmem_calloc(size_t nmemb, size_t size)
 #endif

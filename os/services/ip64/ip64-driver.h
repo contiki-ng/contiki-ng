@@ -33,8 +33,9 @@
 #define IP64_DRIVER_H
 
 struct ip64_driver {
-  void (* init)(void);
-  int (* output)(uint8_t *packet, uint16_t packet_len);
+    void (*init)(void);
+
+    int (*output)(uint8_t *packet, uint16_t packet_len);
 };
 
 

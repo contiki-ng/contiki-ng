@@ -68,20 +68,20 @@ int curr_log_level_sys = LOG_CONF_LEVEL_SYS;
 int curr_log_level_main = LOG_CONF_LEVEL_MAIN;
 
 struct log_module all_modules[] = {
-  {"rpl", &curr_log_level_rpl, LOG_CONF_LEVEL_RPL},
-  {"tcpip", &curr_log_level_tcpip, LOG_CONF_LEVEL_TCPIP},
-  {"ipv6", &curr_log_level_ipv6, LOG_CONF_LEVEL_IPV6},
-  {"6lowpan", &curr_log_level_6lowpan, LOG_CONF_LEVEL_6LOWPAN},
-  {"nullnet", &curr_log_level_nullnet, LOG_CONF_LEVEL_NULLNET},
-  {"mac", &curr_log_level_mac, LOG_CONF_LEVEL_MAC},
-  {"framer", &curr_log_level_framer, LOG_CONF_LEVEL_FRAMER},
-  {"6top", &curr_log_level_6top, LOG_CONF_LEVEL_6TOP},
-  {"coap", &curr_log_level_coap, LOG_CONF_LEVEL_COAP},
-  {"snmp", &curr_log_level_snmp, LOG_CONF_LEVEL_SNMP},
-  {"lwm2m", &curr_log_level_lwm2m, LOG_CONF_LEVEL_LWM2M},
-  {"sys", &curr_log_level_sys, LOG_CONF_LEVEL_SYS},
-  {"main", &curr_log_level_main, LOG_CONF_LEVEL_MAIN},
-  {NULL, NULL, 0},
+        {"rpl",     &curr_log_level_rpl,     LOG_CONF_LEVEL_RPL},
+        {"tcpip",   &curr_log_level_tcpip,   LOG_CONF_LEVEL_TCPIP},
+        {"ipv6",    &curr_log_level_ipv6,    LOG_CONF_LEVEL_IPV6},
+        {"6lowpan", &curr_log_level_6lowpan, LOG_CONF_LEVEL_6LOWPAN},
+        {"nullnet", &curr_log_level_nullnet, LOG_CONF_LEVEL_NULLNET},
+        {"mac",     &curr_log_level_mac,     LOG_CONF_LEVEL_MAC},
+        {"framer",  &curr_log_level_framer,  LOG_CONF_LEVEL_FRAMER},
+        {"6top",    &curr_log_level_6top,    LOG_CONF_LEVEL_6TOP},
+        {"coap",    &curr_log_level_coap,    LOG_CONF_LEVEL_COAP},
+        {"snmp",    &curr_log_level_snmp,    LOG_CONF_LEVEL_SNMP},
+        {"lwm2m",   &curr_log_level_lwm2m,   LOG_CONF_LEVEL_LWM2M},
+        {"sys",     &curr_log_level_sys,     LOG_CONF_LEVEL_SYS},
+        {"main",    &curr_log_level_main,    LOG_CONF_LEVEL_MAIN},
+        {NULL,      NULL, 0},
 };
 
 #if NETSTACK_CONF_WITH_IPV6
@@ -125,100 +125,100 @@ log_6addr_compact(const uip_ipaddr_t *ipaddr)
   LOG_OUTPUT("%s", buf);
 }
 #endif /* NETSTACK_CONF_WITH_IPV6 */
+
 /*---------------------------------------------------------------------------*/
 void
-log_lladdr(const linkaddr_t *lladdr)
-{
-  if(lladdr == NULL) {
-    LOG_OUTPUT("(NULL LL addr)");
-    return;
-  } else {
-    unsigned int i;
-    for(i = 0; i < LINKADDR_SIZE; i++) {
-      if(i > 0 && i % 2 == 0) {
-        LOG_OUTPUT(".");
-      }
-      LOG_OUTPUT("%02x", lladdr->u8[i]);
+log_lladdr(const linkaddr_t *lladdr) {
+    if (lladdr == NULL) {
+        LOG_OUTPUT("(NULL LL addr)");
+        return;
+    } else {
+        unsigned int i;
+        for (i = 0; i < LINKADDR_SIZE; i++) {
+            if (i > 0 && i % 2 == 0) {
+                LOG_OUTPUT(".");
+            }
+            LOG_OUTPUT("%02x", lladdr->u8[i]);
+        }
     }
-  }
 }
+
 /*---------------------------------------------------------------------------*/
 void
-log_lladdr_compact(const linkaddr_t *lladdr)
-{
-  if(lladdr == NULL || linkaddr_cmp(lladdr, &linkaddr_null)) {
-    LOG_OUTPUT("LL-NULL");
-  } else {
+log_lladdr_compact(const linkaddr_t *lladdr) {
+    if (lladdr == NULL || linkaddr_cmp(lladdr, &linkaddr_null)) {
+        LOG_OUTPUT("LL-NULL");
+    } else {
 #if BUILD_WITH_DEPLOYMENT
-    LOG_OUTPUT("LL-%04u", deployment_id_from_lladdr(lladdr));
+        LOG_OUTPUT("LL-%04u", deployment_id_from_lladdr(lladdr));
 #else /* BUILD_WITH_DEPLOYMENT */
 #if LINKADDR_SIZE == 8
-    LOG_OUTPUT("LL-%04x", UIP_HTONS(lladdr->u16[LINKADDR_SIZE/2-1]));
+        LOG_OUTPUT("LL-%04x", UIP_HTONS(lladdr->u16[LINKADDR_SIZE / 2 - 1]));
 #elif LINKADDR_SIZE == 2
-    LOG_OUTPUT("LL-%04x", UIP_HTONS(lladdr->u16));
+        LOG_OUTPUT("LL-%04x", UIP_HTONS(lladdr->u16));
 #endif
 #endif /* BUILD_WITH_DEPLOYMENT */
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
-log_bytes(const void *data, size_t length)
-{
-  const uint8_t *u8data = (const uint8_t *)data;
-  size_t i;
-  for(i = 0; i != length; ++i) {
-    LOG_OUTPUT("%02x", u8data[i]);
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
-log_set_level(const char *module, int level)
-{
-  if(level >= LOG_LEVEL_NONE && level <= LOG_LEVEL_DBG) {
-    int i = 0;
-    int module_all = !strcmp("all", module);
-    while(all_modules[i].name != NULL) {
-      if(module_all || !strcmp(module, all_modules[i].name)) {
-        *all_modules[i].curr_log_level = MIN(level, all_modules[i].max_log_level);
-      }
-      i++;
     }
-  }
 }
+
+/*---------------------------------------------------------------------------*/
+void
+log_bytes(const void *data, size_t length) {
+    const uint8_t *u8data = (const uint8_t *) data;
+    size_t i;
+    for (i = 0; i != length; ++i) {
+        LOG_OUTPUT("%02x", u8data[i]);
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+void
+log_set_level(const char *module, int level) {
+    if (level >= LOG_LEVEL_NONE && level <= LOG_LEVEL_DBG) {
+        int i = 0;
+        int module_all = !strcmp("all", module);
+        while (all_modules[i].name != NULL) {
+            if (module_all || !strcmp(module, all_modules[i].name)) {
+                *all_modules[i].curr_log_level = MIN(level, all_modules[i].max_log_level);
+            }
+            i++;
+        }
+    }
+}
+
 /*---------------------------------------------------------------------------*/
 int
-log_get_level(const char *module)
-{
-  int i = 0;
-  if(module == NULL) {
-    return -1;
-  }
-  while(all_modules[i].name != NULL) {
-    if(!strcmp(module, all_modules[i].name)) {
-      return *all_modules[i].curr_log_level;
+log_get_level(const char *module) {
+    int i = 0;
+    if (module == NULL) {
+        return -1;
     }
-    i++;
-  }
-  return -1;
+    while (all_modules[i].name != NULL) {
+        if (!strcmp(module, all_modules[i].name)) {
+            return *all_modules[i].curr_log_level;
+        }
+        i++;
+    }
+    return -1;
 }
+
 /*---------------------------------------------------------------------------*/
 const char *
-log_level_to_str(int level)
-{
-  switch(level) {
-    case LOG_LEVEL_NONE:
-      return "None";
-    case LOG_LEVEL_ERR:
-      return "Errors";
-    case LOG_LEVEL_WARN:
-      return "Warnings";
-    case LOG_LEVEL_INFO:
-      return "Info";
-    case LOG_LEVEL_DBG:
-      return "Debug";
-    default:
-      return "N/A";
-  }
+log_level_to_str(int level) {
+    switch (level) {
+        case LOG_LEVEL_NONE:
+            return "None";
+        case LOG_LEVEL_ERR:
+            return "Errors";
+        case LOG_LEVEL_WARN:
+            return "Warnings";
+        case LOG_LEVEL_INFO:
+            return "Info";
+        case LOG_LEVEL_DBG:
+            return "Debug";
+        default:
+            return "N/A";
+    }
 }
 /** @} */
 /** @} */

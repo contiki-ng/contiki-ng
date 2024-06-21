@@ -49,30 +49,35 @@
 #include "coap-engine.h"
 
 typedef struct coap_observer {
-  struct coap_observer *next;   /* for LIST */
+    struct coap_observer *next;   /* for LIST */
 
-  char url[COAP_OBSERVER_URL_LEN];
-  coap_endpoint_t endpoint;
-  uint8_t token_len;
-  uint8_t token[COAP_TOKEN_LEN];
-  uint16_t last_mid;
+    char url[COAP_OBSERVER_URL_LEN];
+    coap_endpoint_t endpoint;
+    uint8_t token_len;
+    uint8_t token[COAP_TOKEN_LEN];
+    uint16_t last_mid;
 
-  int32_t obs_counter;
+    int32_t obs_counter;
 
-  coap_timer_t retrans_timer;
-  uint8_t retrans_counter;
+    coap_timer_t retrans_timer;
+    uint8_t retrans_counter;
 } coap_observer_t;
 
 void coap_remove_observer(coap_observer_t *o);
+
 int coap_remove_observer_by_client(const coap_endpoint_t *ep);
+
 int coap_remove_observer_by_token(const coap_endpoint_t *ep,
                                   uint8_t *token, size_t token_len);
+
 int coap_remove_observer_by_uri(const coap_endpoint_t *ep,
                                 const char *uri);
+
 int coap_remove_observer_by_mid(const coap_endpoint_t *ep,
                                 uint16_t mid);
 
 void coap_notify_observers(coap_resource_t *resource);
+
 void coap_notify_observers_sub(coap_resource_t *resource, const char *subpath);
 
 void coap_observe_handler(const coap_resource_t *resource,

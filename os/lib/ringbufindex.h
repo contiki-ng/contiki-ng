@@ -43,9 +43,9 @@
 #include "contiki.h"
 
 struct ringbufindex {
-  uint8_t mask;
-  /* These must be 8-bit quantities to avoid race conditions. */
-  uint8_t put_ptr, get_ptr;
+    uint8_t mask;
+    /* These must be 8-bit quantities to avoid race conditions. */
+    uint8_t put_ptr, get_ptr;
 };
 
 /**
@@ -94,9 +94,8 @@ int ringbufindex_peek_get(const struct ringbufindex *r);
  * \return The size of the ring buffer
  */
 static inline int
-ringbufindex_size(const struct ringbufindex *r)
-{
-  return r->mask + 1;
+ringbufindex_size(const struct ringbufindex *r) {
+    return r->mask + 1;
 }
 
 /**
@@ -105,9 +104,8 @@ ringbufindex_size(const struct ringbufindex *r)
  * \return The number of elements in the ring buffer
  */
 static inline int
-ringbufindex_elements(const struct ringbufindex *r)
-{
-  return (r->put_ptr - r->get_ptr) & r->mask;
+ringbufindex_elements(const struct ringbufindex *r) {
+    return (r->put_ptr - r->get_ptr) & r->mask;
 }
 
 /**
@@ -116,9 +114,8 @@ ringbufindex_elements(const struct ringbufindex *r)
  * \retval 1 Full
  */
 static inline int
-ringbufindex_full(const struct ringbufindex *r)
-{
-  return ((r->put_ptr - r->get_ptr) & r->mask) == r->mask;
+ringbufindex_full(const struct ringbufindex *r) {
+    return ((r->put_ptr - r->get_ptr) & r->mask) == r->mask;
 }
 
 /**
@@ -127,9 +124,8 @@ ringbufindex_full(const struct ringbufindex *r)
  * \retval 1 Empty
  */
 static inline int
-ringbufindex_empty(const struct ringbufindex *r)
-{
-  return ringbufindex_elements(r) == 0;
+ringbufindex_empty(const struct ringbufindex *r) {
+    return ringbufindex_elements(r) == 0;
 }
 
 #endif /* RINGBUFINDEX_H_ */

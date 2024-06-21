@@ -39,8 +39,8 @@
  * \author Simon Duquennoy <simon.duquennoy@inria.fr>
  */
 
- #ifndef RPL_ICMP6_H_
- #define RPL_ICMP6_H_
+#ifndef RPL_ICMP6_H_
+#define RPL_ICMP6_H_
 
 #include "uip.h"
 #include "uip-ds6.h"
@@ -50,37 +50,37 @@
 
 /* Logical representation of a DAG Information Object (DIO.) */
 struct rpl_dio {
-  uip_ipaddr_t dag_id;
-  rpl_ocp_t ocp;
-  rpl_rank_t rank;
-  uint8_t grounded;
-  uint8_t mop;
-  uint8_t preference;
-  uint8_t version;
-  uint8_t instance_id;
-  uint8_t dtsn;
-  uint8_t dag_intdoubl;
-  uint8_t dag_intmin;
-  uint8_t dag_redund;
-  uint8_t default_lifetime;
-  uint16_t lifetime_unit;
-  rpl_rank_t dag_max_rankinc;
-  rpl_rank_t dag_min_hoprankinc;
-  rpl_prefix_t destination_prefix;
-  rpl_prefix_t prefix_info;
-  struct rpl_metric_container mc;
+    uip_ipaddr_t dag_id;
+    rpl_ocp_t ocp;
+    rpl_rank_t rank;
+    uint8_t grounded;
+    uint8_t mop;
+    uint8_t preference;
+    uint8_t version;
+    uint8_t instance_id;
+    uint8_t dtsn;
+    uint8_t dag_intdoubl;
+    uint8_t dag_intmin;
+    uint8_t dag_redund;
+    uint8_t default_lifetime;
+    uint16_t lifetime_unit;
+    rpl_rank_t dag_max_rankinc;
+    rpl_rank_t dag_min_hoprankinc;
+    rpl_prefix_t destination_prefix;
+    rpl_prefix_t prefix_info;
+    struct rpl_metric_container mc;
 };
 typedef struct rpl_dio rpl_dio_t;
 
 /* Logical representation of a Destination Advertisement Object (DAO.) */
 struct rpl_dao {
-  uip_ipaddr_t parent_addr;
-  uip_ipaddr_t prefix;
-  uint16_t sequence;
-  uint8_t instance_id;
-  uint8_t lifetime;
-  uint8_t prefixlen;
-  uint8_t flags;
+    uip_ipaddr_t parent_addr;
+    uip_ipaddr_t prefix;
+    uint16_t sequence;
+    uint8_t instance_id;
+    uint8_t lifetime;
+    uint8_t prefixlen;
+    uint8_t flags;
 };
 typedef struct rpl_dao rpl_dao_t;
 
@@ -136,6 +136,6 @@ void rpl_icmp6_dao_ack_output(uip_ipaddr_t *dest, uint8_t sequence, uint8_t stat
 */
 void rpl_icmp6_init(void);
 
- /** @} */
+/** @} */
 
 #endif /* RPL_ICMP6_H_ */

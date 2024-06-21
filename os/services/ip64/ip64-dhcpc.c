@@ -42,6 +42,7 @@
 /*---------------------------------------------------------------------------*/
 
 #include "sys/log.h"
+
 #define LOG_MODULE  "IP64"
 #define LOG_LEVEL   LOG_LEVEL_IP64
 
@@ -55,17 +56,17 @@
 static struct ip64_dhcpc_state s;
 
 struct dhcp_msg {
-  uint8_t op, htype, hlen, hops;
-  uint8_t xid[4];
-  uint16_t secs, flags;
-  uint8_t ciaddr[4];
-  uint8_t yiaddr[4];
-  uint8_t siaddr[4];
-  uint8_t giaddr[4];
-  uint8_t chaddr[16];
-  uint8_t sname[64];
-  uint8_t file[128];
-  uint8_t options[312];
+    uint8_t op, htype, hlen, hops;
+    uint8_t xid[4];
+    uint16_t secs, flags;
+    uint8_t ciaddr[4];
+    uint8_t yiaddr[4];
+    uint8_t siaddr[4];
+    uint8_t giaddr[4];
+    uint8_t chaddr[16];
+    uint8_t sname[64];
+    uint8_t file[128];
+    uint8_t options[312];
 };
 
 #if (UIP_BUFSIZE - UIP_UDPIP_HLEN) < 548
@@ -105,348 +106,347 @@ struct dhcp_msg {
 
 static uint32_t xid;
 static const uint8_t magic_cookie[4] = {99, 130, 83, 99};
+
 /*---------------------------------------------------------------------------*/
 static uint8_t *
-add_msg_type(uint8_t *optptr, uint8_t type)
-{
-  *optptr++ = DHCP_OPTION_MSG_TYPE;
-  *optptr++ = 1;
-  *optptr++ = type;
-  return optptr;
+add_msg_type(uint8_t *optptr, uint8_t type) {
+    *optptr++ = DHCP_OPTION_MSG_TYPE;
+    *optptr++ = 1;
+    *optptr++ = type;
+    return optptr;
 }
+
 /*---------------------------------------------------------------------------*/
 static uint8_t *
-add_server_id(uint8_t *optptr)
-{
-  *optptr++ = DHCP_OPTION_SERVER_ID;
-  *optptr++ = 4;
-  memcpy(optptr, s.serverid, 4);
-  return optptr + 4;
+add_server_id(uint8_t *optptr) {
+    *optptr++ = DHCP_OPTION_SERVER_ID;
+    *optptr++ = 4;
+    memcpy(optptr, s.serverid, 4);
+    return optptr + 4;
 }
+
 /*---------------------------------------------------------------------------*/
 static uint8_t *
-add_req_ipaddr(uint8_t *optptr)
-{
-  *optptr++ = DHCP_OPTION_REQ_IPADDR;
-  *optptr++ = 4;
-  memcpy(optptr, s.ipaddr.u16, 4);
-  return optptr + 4;
+add_req_ipaddr(uint8_t *optptr) {
+    *optptr++ = DHCP_OPTION_REQ_IPADDR;
+    *optptr++ = 4;
+    memcpy(optptr, s.ipaddr.u16, 4);
+    return optptr + 4;
 }
+
 /*---------------------------------------------------------------------------*/
 static uint8_t *
-add_req_options(uint8_t *optptr)
-{
-  *optptr++ = DHCP_OPTION_REQ_LIST;
-  *optptr++ = 3;
-  *optptr++ = DHCP_OPTION_SUBNET_MASK;
-  *optptr++ = DHCP_OPTION_ROUTER;
-  *optptr++ = DHCP_OPTION_DNS_SERVER;
-  return optptr;
+add_req_options(uint8_t *optptr) {
+    *optptr++ = DHCP_OPTION_REQ_LIST;
+    *optptr++ = 3;
+    *optptr++ = DHCP_OPTION_SUBNET_MASK;
+    *optptr++ = DHCP_OPTION_ROUTER;
+    *optptr++ = DHCP_OPTION_DNS_SERVER;
+    return optptr;
 }
+
 /*---------------------------------------------------------------------------*/
 static uint8_t *
-add_end(uint8_t *optptr)
-{
-  *optptr++ = DHCP_OPTION_END;
-  return optptr;
+add_end(uint8_t *optptr) {
+    *optptr++ = DHCP_OPTION_END;
+    return optptr;
 }
+
 /*---------------------------------------------------------------------------*/
 static void
-create_msg(struct dhcp_msg *m)
-{
-  m->op = DHCP_REQUEST;
-  m->htype = DHCP_HTYPE_ETHERNET;
-  m->hlen = s.mac_len;
-  m->hops = 0;
-  memcpy(m->xid, &xid, sizeof(m->xid));
-  m->secs = 0;
-  m->flags = UIP_HTONS(BOOTP_BROADCAST); /*  Broadcast bit. */
-  /*  uip_ipaddr_copy(m->ciaddr, uip_hostaddr);*/
-  memcpy(m->ciaddr, uip_hostaddr.u16, sizeof(m->ciaddr));
-  memset(m->yiaddr, 0, sizeof(m->yiaddr));
-  memset(m->siaddr, 0, sizeof(m->siaddr));
-  memset(m->giaddr, 0, sizeof(m->giaddr));
-  memcpy(m->chaddr, s.mac_addr, s.mac_len);
-  memset(&m->chaddr[s.mac_len], 0, sizeof(m->chaddr) - s.mac_len);
+create_msg(struct dhcp_msg *m) {
+    m->op = DHCP_REQUEST;
+    m->htype = DHCP_HTYPE_ETHERNET;
+    m->hlen = s.mac_len;
+    m->hops = 0;
+    memcpy(m->xid, &xid, sizeof(m->xid));
+    m->secs = 0;
+    m->flags = UIP_HTONS(BOOTP_BROADCAST); /*  Broadcast bit. */
+    /*  uip_ipaddr_copy(m->ciaddr, uip_hostaddr);*/
+    memcpy(m->ciaddr, uip_hostaddr.u16, sizeof(m->ciaddr));
+    memset(m->yiaddr, 0, sizeof(m->yiaddr));
+    memset(m->siaddr, 0, sizeof(m->siaddr));
+    memset(m->giaddr, 0, sizeof(m->giaddr));
+    memcpy(m->chaddr, s.mac_addr, s.mac_len);
+    memset(&m->chaddr[s.mac_len], 0, sizeof(m->chaddr) - s.mac_len);
 
-  memset(m->sname, 0, sizeof(m->sname));
-  memset(m->file, 0, sizeof(m->file));
+    memset(m->sname, 0, sizeof(m->sname));
+    memset(m->file, 0, sizeof(m->file));
 
 
-  memcpy(m->options, magic_cookie, sizeof(magic_cookie));
+    memcpy(m->options, magic_cookie, sizeof(magic_cookie));
 }
+
 /*---------------------------------------------------------------------------*/
 static void
-send_discover(void)
-{
-  uint8_t *end;
-  struct dhcp_msg *m = (struct dhcp_msg *)uip_appdata;
+send_discover(void) {
+    uint8_t *end;
+    struct dhcp_msg *m = (struct dhcp_msg *) uip_appdata;
 
-  create_msg(m);
+    create_msg(m);
 
-  end = add_msg_type(&m->options[4], DHCPDISCOVER);
-  end = add_req_options(end);
-  end = add_end(end);
+    end = add_msg_type(&m->options[4], DHCPDISCOVER);
+    end = add_req_options(end);
+    end = add_end(end);
 
-  uip_send(uip_appdata, (int)(end - (uint8_t *)uip_appdata));
+    uip_send(uip_appdata, (int) (end - (uint8_t *) uip_appdata));
 }
+
 /*---------------------------------------------------------------------------*/
 static void
-send_request(void)
-{
-  uint8_t *end;
-  struct dhcp_msg *m = (struct dhcp_msg *)uip_appdata;
+send_request(void) {
+    uint8_t *end;
+    struct dhcp_msg *m = (struct dhcp_msg *) uip_appdata;
 
-  create_msg(m);
+    create_msg(m);
 
-  end = add_msg_type(&m->options[4], DHCPREQUEST);
-  end = add_server_id(end);
-  end = add_req_ipaddr(end);
-  end = add_end(end);
+    end = add_msg_type(&m->options[4], DHCPREQUEST);
+    end = add_server_id(end);
+    end = add_req_ipaddr(end);
+    end = add_end(end);
 
-  uip_send(uip_appdata, (int)(end - (uint8_t *)uip_appdata));
+    uip_send(uip_appdata, (int) (end - (uint8_t *) uip_appdata));
 }
+
 /*---------------------------------------------------------------------------*/
 static uint8_t
-parse_options(uint8_t *optptr, int len)
-{
-  uint8_t *end = optptr + len;
-  uint8_t type = 0;
+parse_options(uint8_t *optptr, int len) {
+    uint8_t *end = optptr + len;
+    uint8_t type = 0;
 
-  while(optptr < end) {
-    switch(*optptr) {
-    case DHCP_OPTION_SUBNET_MASK:
-      memcpy(s.netmask.u16, optptr + 2, 4);
-      break;
-    case DHCP_OPTION_ROUTER:
-      memcpy(s.default_router.u16, optptr + 2, 4);
-      break;
-    case DHCP_OPTION_DNS_SERVER:
-      memcpy(s.dnsaddr.u16, optptr + 2, 4);
-      break;
-    case DHCP_OPTION_MSG_TYPE:
-      type = *(optptr + 2);
-      break;
-    case DHCP_OPTION_SERVER_ID:
-      memcpy(s.serverid, optptr + 2, 4);
-      break;
-    case DHCP_OPTION_LEASE_TIME:
-      memcpy(s.lease_time, optptr + 2, 4);
-      break;
-    case DHCP_OPTION_END:
-      return type;
+    while (optptr < end) {
+        switch (*optptr) {
+            case DHCP_OPTION_SUBNET_MASK:
+                memcpy(s.netmask.u16, optptr + 2, 4);
+                break;
+            case DHCP_OPTION_ROUTER:
+                memcpy(s.default_router.u16, optptr + 2, 4);
+                break;
+            case DHCP_OPTION_DNS_SERVER:
+                memcpy(s.dnsaddr.u16, optptr + 2, 4);
+                break;
+            case DHCP_OPTION_MSG_TYPE:
+                type = *(optptr + 2);
+                break;
+            case DHCP_OPTION_SERVER_ID:
+                memcpy(s.serverid, optptr + 2, 4);
+                break;
+            case DHCP_OPTION_LEASE_TIME:
+                memcpy(s.lease_time, optptr + 2, 4);
+                break;
+            case DHCP_OPTION_END:
+                return type;
+        }
+
+        optptr += optptr[1] + 2;
     }
-
-    optptr += optptr[1] + 2;
-  }
-  return type;
+    return type;
 }
+
 /*---------------------------------------------------------------------------*/
 static uint8_t
-parse_msg(void)
-{
-  struct dhcp_msg *m = (struct dhcp_msg *)uip_appdata;
+parse_msg(void) {
+    struct dhcp_msg *m = (struct dhcp_msg *) uip_appdata;
 
-  if(m->op == DHCP_REPLY &&
-     memcmp(m->xid, &xid, sizeof(xid)) == 0 &&
-     memcmp(m->chaddr, s.mac_addr, s.mac_len) == 0) {
-    memcpy(s.ipaddr.u16, m->yiaddr, 4);
-    return parse_options(&m->options[4], uip_datalen());
-  }
-  return 0;
+    if (m->op == DHCP_REPLY &&
+        memcmp(m->xid, &xid, sizeof(xid)) == 0 &&
+        memcmp(m->chaddr, s.mac_addr, s.mac_len) == 0) {
+        memcpy(s.ipaddr.u16, m->yiaddr, 4);
+        return parse_options(&m->options[4], uip_datalen());
+    }
+    return 0;
 }
 /*---------------------------------------------------------------------------*/
 /*
  * Is this a "fresh" reply for me? If it is, return the type.
  */
 static int
-msg_for_me(void)
-{
-  struct dhcp_msg *m = (struct dhcp_msg *)uip_appdata;
-  uint8_t *optptr = &m->options[4];
-  uint8_t *end = (uint8_t*)uip_appdata + uip_datalen();
+msg_for_me(void) {
+    struct dhcp_msg *m = (struct dhcp_msg *) uip_appdata;
+    uint8_t *optptr = &m->options[4];
+    uint8_t *end = (uint8_t *) uip_appdata + uip_datalen();
 
-  if(m->op == DHCP_REPLY &&
-     memcmp(m->xid, &xid, sizeof(xid)) == 0 &&
-     memcmp(m->chaddr, s.mac_addr, s.mac_len) == 0) {
-    while(optptr < end) {
-      if(*optptr == DHCP_OPTION_MSG_TYPE) {
-	return *(optptr + 2);
-      } else if (*optptr == DHCP_OPTION_END) {
-	return -1;
-      }
-      optptr += optptr[1] + 2;
+    if (m->op == DHCP_REPLY &&
+        memcmp(m->xid, &xid, sizeof(xid)) == 0 &&
+        memcmp(m->chaddr, s.mac_addr, s.mac_len) == 0) {
+        while (optptr < end) {
+            if (*optptr == DHCP_OPTION_MSG_TYPE) {
+                return *(optptr + 2);
+            } else if (*optptr == DHCP_OPTION_END) {
+                return -1;
+            }
+            optptr += optptr[1] + 2;
+        }
     }
-  }
-  return -1;
+    return -1;
 }
+
 /*---------------------------------------------------------------------------*/
 static
-PT_THREAD(handle_dhcp(process_event_t ev, void *data))
-{
-  clock_time_t ticks;
+PT_THREAD (handle_dhcp(process_event_t ev, void *data)) {
+    clock_time_t ticks;
 
-  PT_BEGIN(&s.pt);
+    PT_BEGIN(&s.pt);
 
- init:
-  xid++;
-  s.state = STATE_SENDING;
-  s.ticks = CLOCK_SECOND * 4;
-  while(1) {
-    while(ev != tcpip_event) {
-      tcpip_poll_udp(s.conn);
-      PT_YIELD(&s.pt);
+    init:
+    xid++;
+    s.state = STATE_SENDING;
+    s.ticks = CLOCK_SECOND * 4;
+    while (1) {
+        while (ev != tcpip_event) {
+            tcpip_poll_udp(s.conn);
+            PT_YIELD(&s.pt);
+        }
+        send_discover();
+        etimer_set(&s.etimer, s.ticks);
+        do {
+            PT_YIELD(&s.pt);
+            if (ev == tcpip_event && uip_newdata() && msg_for_me() == DHCPOFFER) {
+                parse_msg();
+                s.state = STATE_OFFER_RECEIVED;
+                goto selecting;
+            }
+        } while (!etimer_expired(&s.etimer));
+
+        if (s.ticks < CLOCK_SECOND * 60) {
+            s.ticks *= 2;
+        }
     }
-    send_discover();
-    etimer_set(&s.etimer, s.ticks);
+
+    selecting:
+    s.ticks = CLOCK_SECOND;
     do {
-      PT_YIELD(&s.pt);
-      if(ev == tcpip_event && uip_newdata() && msg_for_me() == DHCPOFFER) {
-	parse_msg();
-	s.state = STATE_OFFER_RECEIVED;
-	goto selecting;
-      }
-    } while(!etimer_expired(&s.etimer));
+        while (ev != tcpip_event) {
+            tcpip_poll_udp(s.conn);
+            PT_YIELD(&s.pt);
+        }
+        send_request();
+        etimer_set(&s.etimer, s.ticks);
+        do {
+            PT_YIELD(&s.pt);
+            if (ev == tcpip_event && uip_newdata() && msg_for_me() == DHCPACK) {
+                parse_msg();
+                s.state = STATE_CONFIG_RECEIVED;
+                goto bound;
+            }
+        } while (!etimer_expired(&s.etimer));
 
-    if(s.ticks < CLOCK_SECOND * 60) {
-      s.ticks *= 2;
-    }
-  }
+        if (s.ticks <= CLOCK_SECOND * 10) {
+            s.ticks += CLOCK_SECOND;
+        } else {
+            goto init;
+        }
+    } while (s.state != STATE_CONFIG_RECEIVED);
 
- selecting:
-  s.ticks = CLOCK_SECOND;
-  do {
-    while(ev != tcpip_event) {
-      tcpip_poll_udp(s.conn);
-      PT_YIELD(&s.pt);
-    }
-    send_request();
-    etimer_set(&s.etimer, s.ticks);
-    do {
-      PT_YIELD(&s.pt);
-      if(ev == tcpip_event && uip_newdata() && msg_for_me() == DHCPACK) {
-	parse_msg();
-	s.state = STATE_CONFIG_RECEIVED;
-	goto bound;
-      }
-    } while (!etimer_expired(&s.etimer));
+    bound:
+    LOG_DBG("Got IP address %d.%d.%d.%d\n", uip_ipaddr_to_quad(&s.ipaddr));
+    LOG_DBG("Got netmask %d.%d.%d.%d\n", uip_ipaddr_to_quad(&s.netmask));
+    LOG_DBG("Got DNS server %d.%d.%d.%d\n", uip_ipaddr_to_quad(&s.dnsaddr));
+    LOG_DBG("Got default router %d.%d.%d.%d\n",
+            uip_ipaddr_to_quad(&s.default_router));
+    LOG_DBG("Lease expires in %ld seconds\n",
+            uip_ntohs(s.lease_time[0]) * 65536ul + uip_ntohs(s.lease_time[1]));
 
-    if(s.ticks <= CLOCK_SECOND * 10) {
-      s.ticks += CLOCK_SECOND;
-    } else {
-      goto init;
-    }
-  } while(s.state != STATE_CONFIG_RECEIVED);
-
- bound:
-  LOG_DBG("Got IP address %d.%d.%d.%d\n", uip_ipaddr_to_quad(&s.ipaddr));
-  LOG_DBG("Got netmask %d.%d.%d.%d\n",	 uip_ipaddr_to_quad(&s.netmask));
-  LOG_DBG("Got DNS server %d.%d.%d.%d\n", uip_ipaddr_to_quad(&s.dnsaddr));
-  LOG_DBG("Got default router %d.%d.%d.%d\n",
-	 uip_ipaddr_to_quad(&s.default_router));
-  LOG_DBG("Lease expires in %ld seconds\n",
-	 uip_ntohs(s.lease_time[0])*65536ul + uip_ntohs(s.lease_time[1]));
-
-  ip64_dhcpc_configured(&s);
+    ip64_dhcpc_configured(&s);
 
 #define MAX_TICKS (~((clock_time_t)0) / 2)
 #define MAX_TICKS32 (~((uint32_t)0))
 #define IMIN(a, b) ((a) < (b) ? (a) : (b))
 
-  if((uip_ntohs(s.lease_time[0])*65536ul + uip_ntohs(s.lease_time[1]))*CLOCK_SECOND/2
-     <= MAX_TICKS32) {
-    s.ticks = (uip_ntohs(s.lease_time[0])*65536ul + uip_ntohs(s.lease_time[1])
-	       )*CLOCK_SECOND/2;
-  } else {
-    s.ticks = MAX_TICKS32;
-  }
-
-  while(s.ticks > 0) {
-    ticks = IMIN(s.ticks, MAX_TICKS);
-    s.ticks -= ticks;
-    etimer_set(&s.etimer, ticks);
-    PT_YIELD_UNTIL(&s.pt, etimer_expired(&s.etimer));
-  }
-
-  if((uip_ntohs(s.lease_time[0])*65536ul + uip_ntohs(s.lease_time[1]))*CLOCK_SECOND/2
-     <= MAX_TICKS32) {
-    s.ticks = (uip_ntohs(s.lease_time[0])*65536ul + uip_ntohs(s.lease_time[1])
-	       )*CLOCK_SECOND/2;
-  } else {
-    s.ticks = MAX_TICKS32;
-  }
-
-  /* renewing: */
-  do {
-    while(ev != tcpip_event) {
-      tcpip_poll_udp(s.conn);
-      PT_YIELD(&s.pt);
+    if ((uip_ntohs(s.lease_time[0]) * 65536ul + uip_ntohs(s.lease_time[1])) * CLOCK_SECOND / 2
+        <= MAX_TICKS32) {
+        s.ticks = (uip_ntohs(s.lease_time[0]) * 65536ul + uip_ntohs(s.lease_time[1])
+                  ) * CLOCK_SECOND / 2;
+    } else {
+        s.ticks = MAX_TICKS32;
     }
-    send_request();
-    ticks = IMIN(s.ticks / 2, MAX_TICKS);
-    s.ticks -= ticks;
-    etimer_set(&s.etimer, ticks);
+
+    while (s.ticks > 0) {
+        ticks = IMIN(s.ticks, MAX_TICKS);
+        s.ticks -= ticks;
+        etimer_set(&s.etimer, ticks);
+        PT_YIELD_UNTIL(&s.pt, etimer_expired(&s.etimer));
+    }
+
+    if ((uip_ntohs(s.lease_time[0]) * 65536ul + uip_ntohs(s.lease_time[1])) * CLOCK_SECOND / 2
+        <= MAX_TICKS32) {
+        s.ticks = (uip_ntohs(s.lease_time[0]) * 65536ul + uip_ntohs(s.lease_time[1])
+                  ) * CLOCK_SECOND / 2;
+    } else {
+        s.ticks = MAX_TICKS32;
+    }
+
+    /* renewing: */
     do {
-      PT_YIELD(&s.pt);
-      if(ev == tcpip_event && uip_newdata() && msg_for_me() == DHCPACK) {
-	parse_msg();
-	goto bound;
-      }
-    } while(!etimer_expired(&s.etimer));
-  } while(s.ticks >= CLOCK_SECOND*3);
+        while (ev != tcpip_event) {
+            tcpip_poll_udp(s.conn);
+            PT_YIELD(&s.pt);
+        }
+        send_request();
+        ticks = IMIN(s.ticks / 2, MAX_TICKS);
+        s.ticks -= ticks;
+        etimer_set(&s.etimer, ticks);
+        do {
+            PT_YIELD(&s.pt);
+            if (ev == tcpip_event && uip_newdata() && msg_for_me() == DHCPACK) {
+                parse_msg();
+                goto bound;
+            }
+        } while (!etimer_expired(&s.etimer));
+    } while (s.ticks >= CLOCK_SECOND * 3);
 
-  /* rebinding: */
+    /* rebinding: */
 
-  /* lease_expired: */
-  ip64_dhcpc_unconfigured(&s);
-  goto init;
+    /* lease_expired: */
+    ip64_dhcpc_unconfigured(&s);
+    goto init;
 
-  PT_END(&s.pt);
+    PT_END(&s.pt);
 }
+
 /*---------------------------------------------------------------------------*/
 void
-ip64_dhcpc_init(const void *mac_addr, int mac_len)
-{
-  /* Although this is DHCPv4, we explicitly bind the socket to an IPv6
-     address so that it can operate over the ip64 bridge. */
-  uip_ip6addr_t v6addr;
-  uip_ip4addr_t v4addr;
-  struct uip_udp_conn *conn2;
+ip64_dhcpc_init(const void *mac_addr, int mac_len) {
+    /* Although this is DHCPv4, we explicitly bind the socket to an IPv6
+       address so that it can operate over the ip64 bridge. */
+    uip_ip6addr_t v6addr;
+    uip_ip4addr_t v4addr;
+    struct uip_udp_conn *conn2;
 
-  s.mac_addr = mac_addr;
-  s.mac_len  = mac_len;
+    s.mac_addr = mac_addr;
+    s.mac_len = mac_len;
 
-  s.state = STATE_INITIAL;
-  uip_ipaddr(&v4addr, 255,255,255,255);
-  ip64_addr_4to6(&v4addr, &v6addr);
-  s.conn = udp_new(&v6addr, UIP_HTONS(IP64_DHCPC_SERVER_PORT), NULL);
-  conn2 = udp_new(NULL, UIP_HTONS(IP64_DHCPC_SERVER_PORT), NULL);
-  if(s.conn != NULL) {
-    udp_bind(s.conn, UIP_HTONS(IP64_DHCPC_CLIENT_PORT));
-  }
-  if(conn2 != NULL) {
-    udp_bind(conn2, UIP_HTONS(IP64_DHCPC_CLIENT_PORT));
-  }
-  PT_INIT(&s.pt);
+    s.state = STATE_INITIAL;
+    uip_ipaddr(&v4addr, 255, 255, 255, 255);
+    ip64_addr_4to6(&v4addr, &v6addr);
+    s.conn = udp_new(&v6addr, UIP_HTONS(IP64_DHCPC_SERVER_PORT), NULL);
+    conn2 = udp_new(NULL, UIP_HTONS(IP64_DHCPC_SERVER_PORT), NULL);
+    if (s.conn != NULL) {
+        udp_bind(s.conn, UIP_HTONS(IP64_DHCPC_CLIENT_PORT));
+    }
+    if (conn2 != NULL) {
+        udp_bind(conn2, UIP_HTONS(IP64_DHCPC_CLIENT_PORT));
+    }
+    PT_INIT(&s.pt);
 }
+
 /*---------------------------------------------------------------------------*/
 void
-ip64_dhcpc_appcall(process_event_t ev, void *data)
-{
-  if(ev == tcpip_event || ev == PROCESS_EVENT_TIMER) {
-    handle_dhcp(ev, data);
-  }
+ip64_dhcpc_appcall(process_event_t ev, void *data) {
+    if (ev == tcpip_event || ev == PROCESS_EVENT_TIMER) {
+        handle_dhcp(ev, data);
+    }
 }
+
 /*---------------------------------------------------------------------------*/
 void
-ip64_dhcpc_request(void)
-{
-  uip_ipaddr_t ipaddr;
+ip64_dhcpc_request(void) {
+    uip_ipaddr_t ipaddr;
 
-  if(s.state == STATE_INITIAL) {
-    uip_ipaddr(&ipaddr, 0,0,0,0);
-    uip_sethostaddr(&ipaddr);
-    handle_dhcp(PROCESS_EVENT_NONE, NULL);
-  }
+    if (s.state == STATE_INITIAL) {
+        uip_ipaddr(&ipaddr, 0, 0, 0, 0);
+        uip_sethostaddr(&ipaddr);
+        handle_dhcp(PROCESS_EVENT_NONE, NULL);
+    }
 }
 /*---------------------------------------------------------------------------*/

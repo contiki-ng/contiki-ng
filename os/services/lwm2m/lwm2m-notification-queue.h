@@ -50,9 +50,9 @@
 #include <inttypes.h>
 
 typedef struct notification_path {
-  struct notification_path *next;
-  uint16_t reduced_path[3];
-  uint8_t level; /* The depth level of the path: 1. object, 2. object/instance, 3. object/instance/resource */
+    struct notification_path *next;
+    uint16_t reduced_path[3];
+    uint8_t level; /* The depth level of the path: 1. object, 2. object/instance, 3. object/instance/resource */
 } notification_path_t;
 
 void lwm2m_notification_queue_init(void);

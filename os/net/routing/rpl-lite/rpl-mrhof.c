@@ -51,6 +51,7 @@
 
 /* Log configuration */
 #include "sys/log.h"
+
 #define LOG_MODULE "RPL"
 #define LOG_LEVEL LOG_LEVEL_RPL
 
@@ -105,142 +106,142 @@
 
 /*---------------------------------------------------------------------------*/
 static void
-reset(void)
-{
-  LOG_INFO("reset MRHOF\n");
+reset(void) {
+    LOG_INFO("reset MRHOF\n");
 }
+
 /*---------------------------------------------------------------------------*/
 static uint16_t
-nbr_link_metric(rpl_nbr_t *nbr)
-{
-  const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
-  return stats != NULL ? stats->etx : 0xffff;
+nbr_link_metric(rpl_nbr_t *nbr) {
+    const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
+    return stats != NULL ? stats->etx : 0xffff;
 }
+
 /*---------------------------------------------------------------------------*/
 static uint16_t
-link_metric_to_rank(uint16_t etx)
-{
+link_metric_to_rank(uint16_t etx) {
 #if RPL_MRHOF_SQUARED_ETX
-  uint32_t squared_etx = ((uint32_t)etx * etx) / LINK_STATS_ETX_DIVISOR;
-  return (uint16_t)MIN(squared_etx, 0xffff);
+    uint32_t squared_etx = ((uint32_t)etx * etx) / LINK_STATS_ETX_DIVISOR;
+    return (uint16_t)MIN(squared_etx, 0xffff);
 #else /* RPL_MRHOF_SQUARED_ETX */
-  return etx;
+    return etx;
 #endif /* RPL_MRHOF_SQUARED_ETX */
 }
+
 /*---------------------------------------------------------------------------*/
 static uint16_t
-nbr_path_cost(rpl_nbr_t *nbr)
-{
-  uint16_t base;
+nbr_path_cost(rpl_nbr_t *nbr) {
+    uint16_t base;
 
-  if(nbr == NULL) {
-    return 0xffff;
-  }
+    if (nbr == NULL) {
+        return 0xffff;
+    }
 
 #if RPL_WITH_MC
-  /* Handle the different MC types */
-  switch(curr_instance.mc.type) {
-    case RPL_DAG_MC_ETX:
-      base = nbr->mc.obj.etx;
-      break;
-    case RPL_DAG_MC_ENERGY:
-      base = nbr->mc.obj.energy.energy_est << 8;
-      break;
-    default:
-      base = nbr->rank;
-      break;
-  }
+    /* Handle the different MC types */
+    switch(curr_instance.mc.type) {
+      case RPL_DAG_MC_ETX:
+        base = nbr->mc.obj.etx;
+        break;
+      case RPL_DAG_MC_ENERGY:
+        base = nbr->mc.obj.energy.energy_est << 8;
+        break;
+      default:
+        base = nbr->rank;
+        break;
+    }
 #else /* RPL_WITH_MC */
-  base = nbr->rank;
+    base = nbr->rank;
 #endif /* RPL_WITH_MC */
 
-  /* path cost upper bound: 0xffff */
-  return MIN((uint32_t)base + link_metric_to_rank(nbr_link_metric(nbr)), 0xffff);
+    /* path cost upper bound: 0xffff */
+    return MIN((uint32_t) base + link_metric_to_rank(nbr_link_metric(nbr)), 0xffff);
 }
+
 /*---------------------------------------------------------------------------*/
 static rpl_rank_t
-rank_via_nbr(rpl_nbr_t *nbr)
-{
-  uint16_t min_hoprankinc;
-  uint16_t path_cost;
+rank_via_nbr(rpl_nbr_t *nbr) {
+    uint16_t min_hoprankinc;
+    uint16_t path_cost;
 
-  if(nbr == NULL) {
-    return RPL_INFINITE_RANK;
-  }
+    if (nbr == NULL) {
+        return RPL_INFINITE_RANK;
+    }
 
-  min_hoprankinc = curr_instance.min_hoprankinc;
-  path_cost = nbr_path_cost(nbr);
+    min_hoprankinc = curr_instance.min_hoprankinc;
+    path_cost = nbr_path_cost(nbr);
 
-  /* Rank lower-bound: nbr rank + min_hoprankinc */
-  return MAX(MIN((uint32_t)nbr->rank + min_hoprankinc, RPL_INFINITE_RANK), path_cost);
+    /* Rank lower-bound: nbr rank + min_hoprankinc */
+    return MAX(MIN((uint32_t) nbr->rank + min_hoprankinc, RPL_INFINITE_RANK), path_cost);
 }
+
 /*---------------------------------------------------------------------------*/
 static int
-nbr_has_usable_link(rpl_nbr_t *nbr)
-{
-  uint16_t link_metric = nbr_link_metric(nbr);
-  /* Exclude links with too high link metrics  */
-  return link_metric <= MAX_LINK_METRIC;
+nbr_has_usable_link(rpl_nbr_t *nbr) {
+    uint16_t link_metric = nbr_link_metric(nbr);
+    /* Exclude links with too high link metrics  */
+    return link_metric <= MAX_LINK_METRIC;
 }
+
 /*---------------------------------------------------------------------------*/
 static int
-nbr_is_acceptable_parent(rpl_nbr_t *nbr)
-{
-  uint16_t path_cost = nbr_path_cost(nbr);
-  /* Exclude links with too high link metrics or path cost (RFC6719, 3.2.2) */
-  return nbr_has_usable_link(nbr) && path_cost <= MAX_PATH_COST;
+nbr_is_acceptable_parent(rpl_nbr_t *nbr) {
+    uint16_t path_cost = nbr_path_cost(nbr);
+    /* Exclude links with too high link metrics or path cost (RFC6719, 3.2.2) */
+    return nbr_has_usable_link(nbr) && path_cost <= MAX_PATH_COST;
 }
+
 /*---------------------------------------------------------------------------*/
 static int
-within_hysteresis(rpl_nbr_t *nbr)
-{
-  uint16_t path_cost = nbr_path_cost(nbr);
-  uint16_t parent_path_cost = nbr_path_cost(curr_instance.dag.preferred_parent);
+within_hysteresis(rpl_nbr_t *nbr) {
+    uint16_t path_cost = nbr_path_cost(nbr);
+    uint16_t parent_path_cost = nbr_path_cost(curr_instance.dag.preferred_parent);
 
-  int within_rank_hysteresis = path_cost + RANK_THRESHOLD > parent_path_cost;
-  int within_time_hysteresis = nbr->better_parent_since == 0
-    || (clock_time() - nbr->better_parent_since) <= TIME_THRESHOLD;
+    int within_rank_hysteresis = path_cost + RANK_THRESHOLD > parent_path_cost;
+    int within_time_hysteresis = nbr->better_parent_since == 0
+                                 || (clock_time() - nbr->better_parent_since) <= TIME_THRESHOLD;
 
-  /* As we want to consider neighbors that are either beyond the rank or time
-  hystereses, return 1 here iff the neighbor is within both hystereses. */
-  return within_rank_hysteresis && within_time_hysteresis;
+    /* As we want to consider neighbors that are either beyond the rank or time
+    hystereses, return 1 here iff the neighbor is within both hystereses. */
+    return within_rank_hysteresis && within_time_hysteresis;
 }
+
 /*---------------------------------------------------------------------------*/
 static rpl_nbr_t *
-best_parent(rpl_nbr_t *nbr1, rpl_nbr_t *nbr2)
-{
-  int nbr1_is_acceptable;
-  int nbr2_is_acceptable;
+best_parent(rpl_nbr_t *nbr1, rpl_nbr_t *nbr2) {
+    int nbr1_is_acceptable;
+    int nbr2_is_acceptable;
 
-  nbr1_is_acceptable = nbr1 != NULL && nbr_is_acceptable_parent(nbr1);
-  nbr2_is_acceptable = nbr2 != NULL && nbr_is_acceptable_parent(nbr2);
+    nbr1_is_acceptable = nbr1 != NULL && nbr_is_acceptable_parent(nbr1);
+    nbr2_is_acceptable = nbr2 != NULL && nbr_is_acceptable_parent(nbr2);
 
-  if(!nbr1_is_acceptable) {
-    return nbr2_is_acceptable ? nbr2 : NULL;
-  }
-  if(!nbr2_is_acceptable) {
-    return nbr1_is_acceptable ? nbr1 : NULL;
-  }
+    if (!nbr1_is_acceptable) {
+        return nbr2_is_acceptable ? nbr2 : NULL;
+    }
+    if (!nbr2_is_acceptable) {
+        return nbr1_is_acceptable ? nbr1 : NULL;
+    }
 
-  /* Maintain stability of the preferred parent. Switch only if the gain
-  is greater than RANK_THRESHOLD, or if the neighbor has been better than the
-  current parent for at more than TIME_THRESHOLD. */
-  if(nbr1 == curr_instance.dag.preferred_parent && within_hysteresis(nbr2)) {
-    return nbr1;
-  }
-  if(nbr2 == curr_instance.dag.preferred_parent && within_hysteresis(nbr1)) {
-    return nbr2;
-  }
+    /* Maintain stability of the preferred parent. Switch only if the gain
+    is greater than RANK_THRESHOLD, or if the neighbor has been better than the
+    current parent for at more than TIME_THRESHOLD. */
+    if (nbr1 == curr_instance.dag.preferred_parent && within_hysteresis(nbr2)) {
+        return nbr1;
+    }
+    if (nbr2 == curr_instance.dag.preferred_parent && within_hysteresis(nbr1)) {
+        return nbr2;
+    }
 
-  return nbr_path_cost(nbr1) < nbr_path_cost(nbr2) ? nbr1 : nbr2;
+    return nbr_path_cost(nbr1) < nbr_path_cost(nbr2) ? nbr1 : nbr2;
 }
 /*---------------------------------------------------------------------------*/
 #if !RPL_WITH_MC
+
 static void
-update_metric_container(void)
-{
-  curr_instance.mc.type = RPL_DAG_MC_NONE;
+update_metric_container(void) {
+    curr_instance.mc.type = RPL_DAG_MC_NONE;
 }
+
 #else /* RPL_WITH_MC */
 static void
 update_metric_container(void)
@@ -291,15 +292,15 @@ update_metric_container(void)
 #endif /* RPL_WITH_MC */
 /*---------------------------------------------------------------------------*/
 rpl_of_t rpl_mrhof = {
-  reset,
-  nbr_link_metric,
-  nbr_has_usable_link,
-  nbr_is_acceptable_parent,
-  nbr_path_cost,
-  rank_via_nbr,
-  best_parent,
-  update_metric_container,
-  RPL_OCP_MRHOF
+        reset,
+        nbr_link_metric,
+        nbr_has_usable_link,
+        nbr_is_acceptable_parent,
+        nbr_path_cost,
+        rank_via_nbr,
+        best_parent,
+        update_metric_container,
+        RPL_OCP_MRHOF
 };
 
 /** @}*/

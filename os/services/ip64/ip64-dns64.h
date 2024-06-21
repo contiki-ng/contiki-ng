@@ -34,6 +34,7 @@
 
 void ip64_dns64_6to4(const uint8_t *ipv6data, int ipv6datalen,
                      uint8_t *ipv4data, int ipv4datalen);
+
 int ip64_dns64_4to6(const uint8_t *ipv4data, int ipv4datalen,
                     uint8_t *ipv6data, int ipv6datalen);
 

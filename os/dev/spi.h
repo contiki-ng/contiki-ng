@@ -78,12 +78,12 @@
  * @{
  */
 typedef enum {
-  SPI_DEV_STATUS_OK,              /* Everything OK */
-  SPI_DEV_STATUS_EINVAL,          /* Erroneous input value */
-  SPI_DEV_STATUS_TRANSFER_ERR,    /* Error during SPI transfer */
-  SPI_DEV_STATUS_BUS_LOCKED,      /* SPI bus is already locked */
-  SPI_DEV_STATUS_BUS_NOT_OWNED,   /* SPI bus is locked by someone else */
-  SPI_DEV_STATUS_CLOSED           /* SPI bus has not opened properly */
+    SPI_DEV_STATUS_OK,              /* Everything OK */
+    SPI_DEV_STATUS_EINVAL,          /* Erroneous input value */
+    SPI_DEV_STATUS_TRANSFER_ERR,    /* Error during SPI transfer */
+    SPI_DEV_STATUS_BUS_LOCKED,      /* SPI bus is already locked */
+    SPI_DEV_STATUS_BUS_NOT_OWNED,   /* SPI bus is locked by someone else */
+    SPI_DEV_STATUS_CLOSED           /* SPI bus has not opened properly */
 } spi_status_t;
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -99,19 +99,19 @@ typedef enum {
 
 typedef struct spi_device {
 #if GPIO_HAL_PORT_PIN_NUMBERING
-  gpio_hal_port_t port_spi_sck;       /* SPI SCK port */
-  gpio_hal_port_t port_spi_miso;      /* SPI MISO port */
-  gpio_hal_port_t port_spi_mosi;      /* SPI MOSI port */
-  gpio_hal_port_t port_spi_cs;        /* SPI Chip Select port */
+    gpio_hal_port_t port_spi_sck;       /* SPI SCK port */
+    gpio_hal_port_t port_spi_miso;      /* SPI MISO port */
+    gpio_hal_port_t port_spi_mosi;      /* SPI MOSI port */
+    gpio_hal_port_t port_spi_cs;        /* SPI Chip Select port */
 #endif
-  gpio_hal_pin_t pin_spi_sck;       /* SPI SCK pin */
-  gpio_hal_pin_t pin_spi_miso;      /* SPI MISO  pin */
-  gpio_hal_pin_t pin_spi_mosi;      /* SPI MOSI pin */
-  gpio_hal_pin_t pin_spi_cs;        /* SPI Chip Select pin */
-  uint32_t spi_bit_rate;            /* SPI bit rate */
-  uint8_t spi_pha;                  /* SPI mode phase */
-  uint8_t spi_pol;                  /* SPI mode polarity */
-  uint8_t spi_controller;           /* ID of SPI controller to use */
+    gpio_hal_pin_t pin_spi_sck;       /* SPI SCK pin */
+    gpio_hal_pin_t pin_spi_miso;      /* SPI MISO  pin */
+    gpio_hal_pin_t pin_spi_mosi;      /* SPI MOSI pin */
+    gpio_hal_pin_t pin_spi_cs;        /* SPI Chip Select pin */
+    uint32_t spi_bit_rate;            /* SPI bit rate */
+    uint8_t spi_pha;                  /* SPI mode phase */
+    uint8_t spi_pol;                  /* SPI mode polarity */
+    uint8_t spi_controller;           /* ID of SPI controller to use */
 } spi_device_t;
 /** @} */
 /*---------------------------------------------------------------------------*/

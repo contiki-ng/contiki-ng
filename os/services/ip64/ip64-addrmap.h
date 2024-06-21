@@ -37,16 +37,16 @@
 #include "net/ipv6/uip.h"
 
 struct ip64_addrmap_entry {
-  struct ip64_addrmap_entry *next;
-  struct timer timer;
-  uip_ip6addr_t ip6addr;
-  uip_ip4addr_t ip4addr;
-  uint32_t ip6to4, ip4to6;
-  uint16_t mapped_port;
-  uint16_t ip6port;
-  uint16_t ip4port;
-  uint8_t protocol;
-  uint8_t flags;
+    struct ip64_addrmap_entry *next;
+    struct timer timer;
+    uip_ip6addr_t ip6addr;
+    uip_ip4addr_t ip4addr;
+    uint32_t ip6to4, ip4to6;
+    uint16_t mapped_port;
+    uint16_t ip6port;
+    uint16_t ip4port;
+    uint8_t protocol;
+    uint8_t flags;
 };
 
 #define FLAGS_NONE       0
@@ -63,27 +63,27 @@ void ip64_addrmap_init(void);
  * IPv6 address/port, the IPv4 address/port, and the protocol.
  */
 struct ip64_addrmap_entry *ip64_addrmap_lookup(const uip_ip6addr_t *ip6addr,
-					       uint16_t ip6port,
-					       const uip_ip4addr_t *ip4addr,
-					       uint16_t ip4port,
-					       uint8_t protocol);
+                                               uint16_t ip6port,
+                                               const uip_ip4addr_t *ip4addr,
+                                               uint16_t ip4port,
+                                               uint8_t protocol);
 
 /**
  * Look up an address mapping from the outside IPv4 network, given the
  * mapped port number and protocol.
  */
 struct ip64_addrmap_entry *ip64_addrmap_lookup_port(uint16_t mappedport,
-						    uint8_t protocol);
+                                                    uint8_t protocol);
 
 /**
  * Create a new address mapping from an IPv6 address/port, an IPv4
  * address/port, and a protocol number.
  */
 struct ip64_addrmap_entry *ip64_addrmap_create(const uip_ip6addr_t *ip6addr,
-					       uint16_t ip6port,
-					       const uip_ip4addr_t *ip4addr,
-					       uint16_t ip4port,
-					       uint8_t protocol);
+                                               uint16_t ip6port,
+                                               const uip_ip4addr_t *ip4addr,
+                                               uint16_t ip4port,
+                                               uint8_t protocol);
 
 /**
  * Set the lifetime of an address mapping.
@@ -100,4 +100,5 @@ void ip64_addrmap_set_recycleble(struct ip64_addrmap_entry *e);
  * Obtain the list of all address mappings.
  */
 struct ip64_addrmap_entry *ip64_addrmap_list(void);
+
 #endif /* IP64_ADDRMAP_H */

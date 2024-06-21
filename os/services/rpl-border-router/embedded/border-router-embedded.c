@@ -37,71 +37,88 @@
 
 #include "contiki.h"
 #include "net/routing/routing.h"
+
 #if PLATFORM_SUPPORTS_BUTTON_HAL
 #include "dev/button-hal.h"
 #else
+
 #include "dev/button-sensor.h"
+
 #endif
+
 #include "dev/slip.h"
 #include "rpl-border-router.h"
 
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
+
 #define LOG_MODULE "BR"
 #define LOG_LEVEL LOG_LEVEL_INFO
 
 void request_prefix(void);
 
 /*---------------------------------------------------------------------------*/
-PROCESS(border_router_process, "Border router process");
+PROCESS(border_router_process,
+"Border router process");
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(border_router_process, ev, data)
+PROCESS_THREAD(border_router_process, ev, data
+)
 {
-  static struct etimer et;
+static struct etimer et;
 
-  PROCESS_BEGIN();
+PROCESS_BEGIN();
 
 /* While waiting for the prefix to be sent through the SLIP connection, the future
  * border router can join an existing DAG as a parent or child, or acquire a default
  * router that will later take precedence over the SLIP fallback interface.
  * Prevent that by turning the radio off until we are initialized as a DAG root.
  */
-  prefix_set = 0;
-  NETSTACK_MAC.off();
+prefix_set = 0;
+NETSTACK_MAC.
 
-  PROCESS_PAUSE();
+off();
+
+PROCESS_PAUSE();
 
 #if !PLATFORM_SUPPORTS_BUTTON_HAL
-  SENSORS_ACTIVATE(button_sensor);
+SENSORS_ACTIVATE(button_sensor);
 #endif
 
-  LOG_INFO("RPL-Border router started\n");
+LOG_INFO("RPL-Border router started\n");
 
-  /* Request prefix until it has been received */
-  while(!prefix_set) {
-    etimer_set(&et, CLOCK_SECOND);
-    request_prefix();
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    LOG_INFO("Waiting for prefix\n");
-  }
+/* Request prefix until it has been received */
+while(!prefix_set) {
+etimer_set(&et, CLOCK_SECOND);
 
-  NETSTACK_MAC.on();
+request_prefix();
 
-  print_local_addresses();
+PROCESS_WAIT_EVENT_UNTIL (etimer_expired(
 
-  while(1) {
-    PROCESS_YIELD();
+&et));
+LOG_INFO("Waiting for prefix\n");
+}
+
+NETSTACK_MAC.
+
+on();
+
+print_local_addresses();
+
+while(1) {
+PROCESS_YIELD();
+
 #if PLATFORM_SUPPORTS_BUTTON_HAL
-    if(ev == button_hal_release_event) {
+if(ev == button_hal_release_event) {
 #else
-    if(ev == sensors_event && data == &button_sensor) {
+if(ev == sensors_event && data == &button_sensor) {
 #endif
-      LOG_INFO("Initiating global repair\n");
-      NETSTACK_ROUTING.global_repair("Button press");
-    }
-  }
+LOG_INFO("Initiating global repair\n");
+NETSTACK_ROUTING.global_repair("Button press");
+}
+}
 
-  PROCESS_END();
+PROCESS_END();
+
 }
 /*---------------------------------------------------------------------------*/

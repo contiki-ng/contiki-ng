@@ -44,114 +44,115 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+
 /*---------------------------------------------------------------------------*/
 struct cl {
-  struct cl *next;
+    struct cl *next;
 };
+
 /*---------------------------------------------------------------------------*/
 void
-circular_list_init(circular_list_t cl)
-{
-  *cl = NULL;
+circular_list_init(circular_list_t cl) {
+    *cl = NULL;
 }
+
 /*---------------------------------------------------------------------------*/
 void *
-circular_list_head(const_circular_list_t cl)
-{
-  return *cl;
+circular_list_head(const_circular_list_t cl) {
+    return *cl;
 }
+
 /*---------------------------------------------------------------------------*/
 void *
-circular_list_tail(const_circular_list_t cl)
-{
-  struct cl *this;
+circular_list_tail(const_circular_list_t cl) {
+    struct cl *this;
 
-  if(*cl == NULL) {
-    return NULL;
-  }
-
-  for(this = *cl; this->next != *cl; this = this->next);
-
-  return this;
-}
-/*---------------------------------------------------------------------------*/
-void
-circular_list_remove(circular_list_t cl, const void *element)
-{
-  struct cl *this, *previous;
-
-  if(*cl == NULL) {
-    return;
-  }
-
-  /*
-   * We start traversing from the second element.
-   * The head will be visited last. We always update the list's head after
-   * removal, just in case we have just removed the head.
-   */
-  previous = *cl;
-  this = previous->next;
-
-  do {
-    if(this == element) {
-      previous->next = this->next;
-      *cl = this->next == this ? NULL : previous;
-      return;
+    if (*cl == NULL) {
+        return NULL;
     }
-    previous = this;
-    this = this->next;
-  } while(this != ((struct cl *)*cl)->next);
+
+    for (this = *cl; this->next != *cl; this = this->next);
+
+    return this;
 }
+
 /*---------------------------------------------------------------------------*/
 void
-circular_list_add(circular_list_t cl, void *element)
-{
-  struct cl *head;
+circular_list_remove(circular_list_t cl, const void *element) {
+    struct cl *this, *previous;
 
-  if(element == NULL) {
-    return;
-  }
+    if (*cl == NULL) {
+        return;
+    }
 
-  /* Don't add twice */
-  circular_list_remove(cl, element);
+    /*
+     * We start traversing from the second element.
+     * The head will be visited last. We always update the list's head after
+     * removal, just in case we have just removed the head.
+     */
+    previous = *cl;
+    this = previous->next;
 
-  head = *cl;
-
-  if(head == NULL) {
-    /* If the list was empty, we update the new element to point to itself */
-    ((struct cl *)element)->next = element;
-  } else {
-    /* If the list exists, we add the new element between the current head and
-     * the previously second element. */
-    ((struct cl *)element)->next = head->next;
-    head->next = element;
-  }
-
-  /* In all cases, the new element becomes the list's new head */
-  *cl = element;
+    do {
+        if (this == element) {
+            previous->next = this->next;
+            *cl = this->next == this ? NULL : previous;
+            return;
+        }
+        previous = this;
+        this = this->next;
+    } while (this != ((struct cl *) *cl)->next);
 }
+
+/*---------------------------------------------------------------------------*/
+void
+circular_list_add(circular_list_t cl, void *element) {
+    struct cl *head;
+
+    if (element == NULL) {
+        return;
+    }
+
+    /* Don't add twice */
+    circular_list_remove(cl, element);
+
+    head = *cl;
+
+    if (head == NULL) {
+        /* If the list was empty, we update the new element to point to itself */
+        ((struct cl *) element)->next = element;
+    } else {
+        /* If the list exists, we add the new element between the current head and
+         * the previously second element. */
+        ((struct cl *) element)->next = head->next;
+        head->next = element;
+    }
+
+    /* In all cases, the new element becomes the list's new head */
+    *cl = element;
+}
+
 /*---------------------------------------------------------------------------*/
 unsigned long
-circular_list_length(const_circular_list_t cl)
-{
-  unsigned long len = 1;
-  struct cl *this;
+circular_list_length(const_circular_list_t cl) {
+    unsigned long len = 1;
+    struct cl *this;
 
-  if(circular_list_is_empty(cl)) {
-    return 0;
-  }
+    if (circular_list_is_empty(cl)) {
+        return 0;
+    }
 
-  for(this = *cl; this->next != *cl; this = this->next) {
-    len++;
-  }
+    for (this = *cl; this->next != *cl; this = this->next) {
+        len++;
+    }
 
-  return len;
+    return len;
 }
+
 /*---------------------------------------------------------------------------*/
 bool
-circular_list_is_empty(const_circular_list_t cl)
-{
-  return *cl == NULL ? true : false;
+circular_list_is_empty(const_circular_list_t cl) {
+    return *cl == NULL ? true : false;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

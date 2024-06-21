@@ -56,8 +56,9 @@
 typedef struct coap_callback_request_state coap_callback_request_state_t;
 
 struct coap_callback_request_state {
-  coap_request_state_t state;
-  void (*callback)(coap_callback_request_state_t *state);
+    coap_request_state_t state;
+
+    void (*callback)(coap_callback_request_state_t *state);
 };
 
 /**
@@ -69,8 +70,8 @@ struct coap_callback_request_state {
  * \return 1 if there is a transaction available to send, 0 otherwise.
  */
 int coap_send_request(coap_callback_request_state_t *callback_state, coap_endpoint_t *endpoint,
-                       coap_message_t *request,
-                       void (*callback)(coap_callback_request_state_t *callback_state));
+                      coap_message_t *request,
+                      void (*callback)(coap_callback_request_state_t *callback_state));
 
 #endif /* COAP_CALLBACK_API_H_ */
 /** @} */

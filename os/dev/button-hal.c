@@ -73,232 +73,231 @@ static gpio_hal_event_handler_t button_event_handlers[BUTTON_HAL_PORT_COUNT];
 #else
 #define BTN_PORT(b) GPIO_HAL_NULL_PORT
 #endif
+
 /*---------------------------------------------------------------------------*/
 static void
-duration_exceeded_callback(void *btn)
-{
-  button_hal_button_t *button = (button_hal_button_t *)btn;
+duration_exceeded_callback(void *btn) {
+    button_hal_button_t *button = (button_hal_button_t *) btn;
 
-  button->press_duration_seconds++;
-  ctimer_set(&button->duration_ctimer, CLOCK_SECOND,
-             duration_exceeded_callback, button);
-  process_post(PROCESS_BROADCAST, button_hal_periodic_event, button);
-}
-/*---------------------------------------------------------------------------*/
-static void
-debounce_handler(void *btn)
-{
-  button_hal_button_t *button;
-  int expired;
-  uint8_t button_state;
-
-  button = (button_hal_button_t *)btn;
-
-  /*
-   * A new debounce may have been triggered after expiration of the previous
-   * one but before we got called.
-   */
-  if(!ctimer_expired(&button->debounce_ctimer)) {
-    return;
-  }
-
-  expired = ctimer_expired(&button->duration_ctimer);
-
-  button_state = button_hal_get_state(button);
-
-  /*
-   * A debounce timer expired. Inspect the button's state. If the button's
-   * state is the same as it was before, then we ignore this as noise.
-   */
-  if(button_state == BUTTON_HAL_STATE_PRESSED && expired) {
-    /*
-     * Button is pressed and no tick counter running. Treat as new press.
-     * Include the debounce duration in the first periodic, so that the
-     * callback will happen 1 second after the button press, not 1 second
-     * after the end of the debounce. Notify process about the press event.
-     */
-    button->press_duration_seconds = 0;
-    ctimer_set(&button->duration_ctimer,
-               CLOCK_SECOND - BUTTON_HAL_DEBOUNCE_DURATION,
+    button->press_duration_seconds++;
+    ctimer_set(&button->duration_ctimer, CLOCK_SECOND,
                duration_exceeded_callback, button);
-    process_post(PROCESS_BROADCAST, button_hal_press_event, button);
-  } else if(button_state == BUTTON_HAL_STATE_RELEASED && expired == 0) {
-    /*
-     * Button is released and there is a duration_ctimer running. Treat this
-     * as a new release and notify processes.
-     */
-    ctimer_stop(&button->duration_ctimer);
-    process_post(PROCESS_BROADCAST, button_hal_release_event, button);
-  }
+    process_post(PROCESS_BROADCAST, button_hal_periodic_event, button);
 }
+
+/*---------------------------------------------------------------------------*/
+static void
+debounce_handler(void *btn) {
+    button_hal_button_t *button;
+    int expired;
+    uint8_t button_state;
+
+    button = (button_hal_button_t *) btn;
+
+    /*
+     * A new debounce may have been triggered after expiration of the previous
+     * one but before we got called.
+     */
+    if (!ctimer_expired(&button->debounce_ctimer)) {
+        return;
+    }
+
+    expired = ctimer_expired(&button->duration_ctimer);
+
+    button_state = button_hal_get_state(button);
+
+    /*
+     * A debounce timer expired. Inspect the button's state. If the button's
+     * state is the same as it was before, then we ignore this as noise.
+     */
+    if (button_state == BUTTON_HAL_STATE_PRESSED && expired) {
+        /*
+         * Button is pressed and no tick counter running. Treat as new press.
+         * Include the debounce duration in the first periodic, so that the
+         * callback will happen 1 second after the button press, not 1 second
+         * after the end of the debounce. Notify process about the press event.
+         */
+        button->press_duration_seconds = 0;
+        ctimer_set(&button->duration_ctimer,
+                   CLOCK_SECOND - BUTTON_HAL_DEBOUNCE_DURATION,
+                   duration_exceeded_callback, button);
+        process_post(PROCESS_BROADCAST, button_hal_press_event, button);
+    } else if (button_state == BUTTON_HAL_STATE_RELEASED && expired == 0) {
+        /*
+         * Button is released and there is a duration_ctimer running. Treat this
+         * as a new release and notify processes.
+         */
+        ctimer_stop(&button->duration_ctimer);
+        process_post(PROCESS_BROADCAST, button_hal_release_event, button);
+    }
+}
+
 /*---------------------------------------------------------------------------*/
 static void
 press_release_handler(
 #if GPIO_HAL_PORT_PIN_NUMBERING
-                      gpio_hal_port_t port,
+        gpio_hal_port_t port,
 #endif
-                      gpio_hal_pin_mask_t pin_mask)
-{
-  pmask |= pin_mask;
+        gpio_hal_pin_mask_t pin_mask) {
+    pmask |= pin_mask;
 #if GPIO_HAL_PORT_PIN_NUMBERING
-  port_mask |= (1 << port);
+    port_mask |= (1 << port);
 #endif
-  process_poll(&button_hal_process);
+    process_poll(&button_hal_process);
 }
+
 /*---------------------------------------------------------------------------*/
 static gpio_hal_event_handler_t *
-get_handler_by_port(uint8_t port)
-{
+get_handler_by_port(uint8_t port) {
 #if GPIO_HAL_PORT_PIN_NUMBERING
-  uint8_t i;
+    uint8_t i;
 
-  /* First, search in case a handler has already been dedicated to this port */
-  for(i = 0; i < BUTTON_HAL_PORT_COUNT; i++) {
-    if(button_event_handlers[i].port == port) {
-      return &button_event_handlers[i];
+    /* First, search in case a handler has already been dedicated to this port */
+    for (i = 0; i < BUTTON_HAL_PORT_COUNT; i++) {
+        if (button_event_handlers[i].port == port) {
+            return &button_event_handlers[i];
+        }
     }
-  }
 
-  /* If not, allocate. The caller will set the port */
-  for(i = 0; i < BUTTON_HAL_PORT_COUNT; i++) {
-    if(button_event_handlers[i].port == PORT_UNUSED) {
-      return &button_event_handlers[i];
+    /* If not, allocate. The caller will set the port */
+    for (i = 0; i < BUTTON_HAL_PORT_COUNT; i++) {
+        if (button_event_handlers[i].port == PORT_UNUSED) {
+            return &button_event_handlers[i];
+        }
     }
-  }
 
-  return NULL;
+    return NULL;
 #else
-  return &button_event_handlers[0];
+    return &button_event_handlers[0];
 #endif
 }
+
 /*---------------------------------------------------------------------------*/
 button_hal_button_t *
-button_hal_get_by_id(uint8_t unique_id)
-{
-  button_hal_button_t **button;
+button_hal_get_by_id(uint8_t unique_id) {
+    button_hal_button_t **button;
 
-  for(button = button_hal_buttons; *button != NULL; button++) {
-    if((*button)->unique_id == unique_id) {
-      return *button;
+    for (button = button_hal_buttons; *button != NULL; button++) {
+        if ((*button)->unique_id == unique_id) {
+            return *button;
+        }
     }
-  }
 
-  return NULL;
+    return NULL;
 }
+
 /*---------------------------------------------------------------------------*/
 button_hal_button_t *
-button_hal_get_by_index(uint8_t index)
-{
-  if(index >= button_hal_button_count) {
-    return NULL;
-  }
+button_hal_get_by_index(uint8_t index) {
+    if (index >= button_hal_button_count) {
+        return NULL;
+    }
 
-  return button_hal_buttons[index];
+    return button_hal_buttons[index];
 }
+
 /*---------------------------------------------------------------------------*/
 uint8_t
-button_hal_get_state(button_hal_button_t *button)
-{
-  uint8_t pin_state = gpio_hal_arch_read_pin(BTN_PORT(button), button->pin);
+button_hal_get_state(button_hal_button_t *button) {
+    uint8_t pin_state = gpio_hal_arch_read_pin(BTN_PORT(button), button->pin);
 
-  if((pin_state == 0 && button->negative_logic == true) ||
-     (pin_state == 1 && button->negative_logic == false)) {
-    return BUTTON_HAL_STATE_PRESSED;
-  }
+    if ((pin_state == 0 && button->negative_logic == true) ||
+        (pin_state == 1 && button->negative_logic == false)) {
+        return BUTTON_HAL_STATE_PRESSED;
+    }
 
-  return BUTTON_HAL_STATE_RELEASED;
+    return BUTTON_HAL_STATE_RELEASED;
 }
+
 /*---------------------------------------------------------------------------*/
 void
-button_hal_init()
-{
-  button_hal_button_t **button;
-  gpio_hal_pin_cfg_t cfg;
-  gpio_hal_event_handler_t *handler;
-  int i;
+button_hal_init() {
+    button_hal_button_t **button;
+    gpio_hal_pin_cfg_t cfg;
+    gpio_hal_event_handler_t *handler;
+    int i;
 
-  button_hal_press_event = process_alloc_event();
-  button_hal_release_event = process_alloc_event();
-  button_hal_periodic_event = process_alloc_event();
+    button_hal_press_event = process_alloc_event();
+    button_hal_release_event = process_alloc_event();
+    button_hal_periodic_event = process_alloc_event();
 
-  for(i = 0; i < BUTTON_HAL_PORT_COUNT; i++) {
+    for (i = 0; i < BUTTON_HAL_PORT_COUNT; i++) {
 #if GPIO_HAL_PORT_PIN_NUMBERING
-    button_event_handlers[i].port = PORT_UNUSED;
+        button_event_handlers[i].port = PORT_UNUSED;
 #endif
-    button_event_handlers[i].pin_mask = 0;
-    button_event_handlers[i].handler = press_release_handler;
-  }
-
-  for(button = button_hal_buttons; *button != NULL; button++) {
-    cfg = GPIO_HAL_PIN_CFG_EDGE_BOTH | GPIO_HAL_PIN_CFG_INT_ENABLE |
-      (*button)->pull;
-    gpio_hal_arch_pin_set_input(BTN_PORT(*button), (*button)->pin);
-    gpio_hal_arch_pin_cfg_set(BTN_PORT(*button), (*button)->pin, cfg);
-    gpio_hal_arch_interrupt_enable(BTN_PORT(*button), (*button)->pin);
-
-    handler = get_handler_by_port(BTN_PORT(*button));
-
-    if(handler) {
-#if GPIO_HAL_PORT_PIN_NUMBERING
-      handler->port = BTN_PORT(*button);
-#endif
-      handler->pin_mask |= gpio_hal_pin_to_mask((*button)->pin);
+        button_event_handlers[i].pin_mask = 0;
+        button_event_handlers[i].handler = press_release_handler;
     }
-  }
 
-  process_start(&button_hal_process, NULL);
+    for (button = button_hal_buttons; *button != NULL; button++) {
+        cfg = GPIO_HAL_PIN_CFG_EDGE_BOTH | GPIO_HAL_PIN_CFG_INT_ENABLE |
+              (*button)->pull;
+        gpio_hal_arch_pin_set_input(BTN_PORT(*button), (*button)->pin);
+        gpio_hal_arch_pin_cfg_set(BTN_PORT(*button), (*button)->pin, cfg);
+        gpio_hal_arch_interrupt_enable(BTN_PORT(*button), (*button)->pin);
 
-  for(i = 0; i < BUTTON_HAL_PORT_COUNT; i++) {
-    gpio_hal_register_handler(&button_event_handlers[i]);
-  }
+        handler = get_handler_by_port(BTN_PORT(*button));
+
+        if (handler) {
+#if GPIO_HAL_PORT_PIN_NUMBERING
+            handler->port = BTN_PORT(*button);
+#endif
+            handler->pin_mask |= gpio_hal_pin_to_mask((*button)->pin);
+        }
+    }
+
+    process_start(&button_hal_process, NULL);
+
+    for (i = 0; i < BUTTON_HAL_PORT_COUNT; i++) {
+        gpio_hal_register_handler(&button_event_handlers[i]);
+    }
 }
 /*---------------------------------------------------------------------------*/
-PROCESS_THREAD(button_hal_process, ev, data)
-{
-  int_master_status_t status;
-  gpio_hal_pin_mask_t pins;
-  button_hal_button_t **button;
+PROCESS_THREAD(button_hal_process, ev, data) {
+    int_master_status_t status;
+    gpio_hal_pin_mask_t pins;
+    button_hal_button_t **button;
 #if GPIO_HAL_PORT_PIN_NUMBERING
-  uint8_t ports;
+    uint8_t ports;
 #endif
 
-  PROCESS_BEGIN();
+    PROCESS_BEGIN();
 
-  while(1) {
-    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
+                while (1) {
+                    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
 
-    status = critical_enter();
-    pins = pmask;
-    pmask = 0;
+                    status = critical_enter();
+                    pins = pmask;
+                    pmask = 0;
 #if GPIO_HAL_PORT_PIN_NUMBERING
-    ports = port_mask;
-    port_mask = 0;
+                    ports = port_mask;
+                    port_mask = 0;
 #endif
-    critical_exit(status);
+                    critical_exit(status);
 
-    for(button = button_hal_buttons; *button != NULL; button++) {
-      if((gpio_hal_pin_to_mask((*button)->pin) & pins)
-#if GPIO_HAL_PORT_PIN_NUMBERING
-         && ((1 << (*button)->port) & ports)
+                    for (button = button_hal_buttons; *button != NULL; button++) {
+                        if ((gpio_hal_pin_to_mask((*button)->pin) & pins)
+                            #if GPIO_HAL_PORT_PIN_NUMBERING
+                            && ((1 << (*button)->port) & ports)
 #endif
-         ) {
-        /* Ignore all button presses/releases during its debounce */
-        if(ctimer_expired(&(*button)->debounce_ctimer)) {
-          /*
-           * Here we merely set a debounce timer. At the end of the debounce we
-           * will inspect the button's state and we will take action only if it
-           * has changed.
-           *
-           * This is to prevent erroneous edge detections due to interference.
-           */
-          ctimer_set(&(*button)->debounce_ctimer, BUTTON_HAL_DEBOUNCE_DURATION,
-                     debounce_handler, *button);
-        }
-      }
-    }
-  }
+                                ) {
+                            /* Ignore all button presses/releases during its debounce */
+                            if (ctimer_expired(&(*button)->debounce_ctimer)) {
+                                /*
+                                 * Here we merely set a debounce timer. At the end of the debounce we
+                                 * will inspect the button's state and we will take action only if it
+                                 * has changed.
+                                 *
+                                 * This is to prevent erroneous edge detections due to interference.
+                                 */
+                                ctimer_set(&(*button)->debounce_ctimer, BUTTON_HAL_DEBOUNCE_DURATION,
+                                           debounce_handler, *button);
+                            }
+                        }
+                    }
+                }
 
-  PROCESS_END();
+    PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

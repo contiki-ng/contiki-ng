@@ -47,16 +47,17 @@ typedef strformat_result (*strformat_write)(void *user_data,
                                             unsigned int len);
 
 typedef struct strformat_context_s {
-  strformat_write write_str;
-  void *user_data;
+    strformat_write write_str;
+    void *user_data;
 } strformat_context_t;
+
 /*---------------------------------------------------------------------------*/
 int format_str(const strformat_context_t *ctxt, const char *format, ...)
-     __attribute__ ((__format__ (__printf__, 2,3)));
+__attribute__ ((__format__ (__printf__, 2, 3)));
 
 int
 format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
-     __attribute__ ((__format__ (__printf__, 2, 0)));
+__attribute__ ((__format__ (__printf__, 2, 0)));
 /*---------------------------------------------------------------------------*/
 #endif /* STRFORMAT_H_ */
 /*---------------------------------------------------------------------------*/

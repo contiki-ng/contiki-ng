@@ -41,40 +41,44 @@
 #include "relation.h"
 #include "storage.h"
 
-#define RESULT_TUPLE_INVALID(tuple)	((tuple) == NULL)
-#define RESULT_TUPLE_SIZE(handle)	(handle).rel->row_length
+#define RESULT_TUPLE_INVALID(tuple)    ((tuple) == NULL)
+#define RESULT_TUPLE_SIZE(handle)    (handle).rel->row_length
 
 typedef unsigned char *tuple_t;
 
-#define DB_HANDLE_FLAG_INDEX_STEP	0x01
-#define DB_HANDLE_FLAG_SEARCH_INDEX	0x02
-#define DB_HANDLE_FLAG_PROCESSING	0x04
+#define DB_HANDLE_FLAG_INDEX_STEP    0x01
+#define DB_HANDLE_FLAG_SEARCH_INDEX    0x02
+#define DB_HANDLE_FLAG_PROCESSING    0x04
 
 struct db_handle {
-  index_iterator_t index_iterator;
-  tuple_id_t tuple_id;
-  tuple_id_t current_row;
-  relation_t *rel;
-  relation_t *left_rel;
-  relation_t *join_rel;
-  relation_t *right_rel;
-  relation_t *result_rel;
-  attribute_t *left_join_attr;
-  attribute_t *right_join_attr;
-  tuple_t tuple;
-  uint8_t flags;
-  uint8_t ncolumns;
-  void *adt;
+    index_iterator_t index_iterator;
+    tuple_id_t tuple_id;
+    tuple_id_t current_row;
+    relation_t *rel;
+    relation_t *left_rel;
+    relation_t *join_rel;
+    relation_t *right_rel;
+    relation_t *result_rel;
+    attribute_t *left_join_attr;
+    attribute_t *right_join_attr;
+    tuple_t tuple;
+    uint8_t flags;
+    uint8_t ncolumns;
+    void *adt;
 };
 typedef struct db_handle db_handle_t;
 
 db_result_t db_get_value(attribute_value_t *value,
                          db_handle_t *handle, unsigned col);
+
 db_result_t db_phy_to_value(attribute_value_t *value,
                             attribute_t *attr, unsigned char *ptr);
+
 db_result_t db_value_to_phy(unsigned char *ptr,
                             attribute_t *attr, attribute_value_t *value);
+
 long db_value_to_long(attribute_value_t *value);
+
 db_result_t db_free(db_handle_t *handle);
 
 #endif /* !RESULT_H */

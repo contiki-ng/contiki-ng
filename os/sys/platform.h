@@ -202,7 +202,7 @@ void platform_main_loop(void);
  *
  * It is the port developer's responsibility to implement this function.
  */
-void platform_process_args(int argc, char**argv);
+void platform_process_args(int argc, char **argv);
 /*---------------------------------------------------------------------------*/
 #endif /* PLATFORM_H_ */
 /*---------------------------------------------------------------------------*/

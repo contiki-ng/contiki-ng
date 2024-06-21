@@ -143,8 +143,10 @@ typedef uint32_t gpio_hal_pin_mask_t;
 #endif
 /*---------------------------------------------------------------------------*/
 #if GPIO_HAL_PORT_PIN_NUMBERING
+
 typedef void (*gpio_hal_callback_t)(gpio_hal_port_t port,
                                     gpio_hal_pin_mask_t pin_mask);
+
 #else
 typedef void (*gpio_hal_callback_t)(gpio_hal_pin_mask_t pin_mask);
 #endif
@@ -178,12 +180,12 @@ typedef void (*gpio_hal_callback_t)(gpio_hal_pin_mask_t pin_mask);
  * per port.
  */
 typedef struct gpio_hal_event_handler_s {
-  struct gpio_hal_event_handler_s *next;
-  gpio_hal_callback_t handler;
+    struct gpio_hal_event_handler_s *next;
+    gpio_hal_callback_t handler;
 #if GPIO_HAL_PORT_PIN_NUMBERING
-  gpio_hal_port_t port;
+    gpio_hal_port_t port;
 #endif
-  gpio_hal_pin_mask_t pin_mask;
+    gpio_hal_pin_mask_t pin_mask;
 } gpio_hal_event_handler_t;
 /*---------------------------------------------------------------------------*/
 /**
@@ -218,6 +220,7 @@ void gpio_hal_init(void);
 void gpio_hal_register_handler(gpio_hal_event_handler_t *handler);
 
 #if GPIO_HAL_PORT_PIN_NUMBERING
+
 /**
  * \brief The platform-independent GPIO event handler
  * \param port The GPIO port, if applicable
@@ -243,6 +246,7 @@ void gpio_hal_register_handler(gpio_hal_event_handler_t *handler);
  * \sa gpio_hal_register_handler
  */
 void gpio_hal_event_handler(gpio_hal_port_t port, gpio_hal_pin_mask_t pins);
+
 #else
 void gpio_hal_event_handler(gpio_hal_pin_mask_t pins);
 #endif
@@ -314,6 +318,7 @@ void gpio_hal_event_handler(gpio_hal_pin_mask_t pins);
 #endif /* GPIO_HAL_CONF_ARCH_HDR_PATH */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_init
+
 /**
  * \brief Perform architecture specific gpio initaliaztion
  *
@@ -323,9 +328,11 @@ void gpio_hal_event_handler(gpio_hal_pin_mask_t pins);
  * or a function-like macro, as described above.
  */
 void gpio_hal_arch_init(void);
+
 #endif
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_interrupt_enable
+
 /**
  * \brief Enable interrupts for a gpio pin
  * \param port The GPIO port
@@ -366,6 +373,7 @@ void gpio_hal_arch_no_port_interrupt_enable(gpio_hal_pin_t pin);
 #endif /* gpio_hal_arch_interrupt_enable */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_interrupt_disable
+
 /**
  * \brief Disable interrupts for a gpio pin
  * \param port The GPIO port
@@ -406,6 +414,7 @@ void gpio_hal_arch_no_port_interrupt_disable(gpio_hal_pin_t pin);
 #endif /* gpio_hal_arch_interrupt_disable */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_pin_cfg_set
+
 /**
  * \brief Configure a gpio pin
  * \param port The GPIO port
@@ -460,6 +469,7 @@ void gpio_hal_arch_no_port_pin_cfg_set(gpio_hal_pin_t pin,
 #endif /* gpio_hal_arch_pin_cfg_set */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_pin_cfg_get
+
 /**
  * \brief Read the configuration of a GPIO pin
  * \param port The GPIO port
@@ -502,6 +512,7 @@ gpio_hal_pin_cfg_t gpio_hal_arch_no_port_pin_cfg_get(gpio_hal_pin_t pin);
 #endif /* gpio_hal_arch_pin_cfg_get */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_pin_set_input
+
 /**
  * \brief Configure a pin as GPIO input
  * \param port The GPIO port
@@ -548,6 +559,7 @@ void gpio_hal_arch_no_port_pin_set_input(gpio_hal_pin_t pin);
 #endif /* gpio_hal_arch_pin_set_input */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_pin_set_output
+
 /**
  * \brief Configure a pin as GPIO output
  * \param port The GPIO port
@@ -594,6 +606,7 @@ void gpio_hal_arch_no_port_pin_set_output(gpio_hal_pin_t pin);
 #endif /* gpio_hal_arch_pin_set_output */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_set_pin
+
 /**
  * \brief Set a GPIO pin to logical high
  * \param port The GPIO port
@@ -633,6 +646,7 @@ void gpio_hal_arch_no_port_set_pin(gpio_hal_pin_t pin);
 #endif /* gpio_hal_arch_set_pin */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_clear_pin
+
 /**
  * \brief Clear a GPIO pin (logical low)
  * \param port The GPIO port
@@ -672,6 +686,7 @@ void gpio_hal_arch_no_port_clear_pin(gpio_hal_pin_t pin);
 #endif /* gpio_hal_arch_clear_pin */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_toggle_pin
+
 /**
  * \brief Toggle a GPIO pin
  * \param port The GPIO port
@@ -721,6 +736,7 @@ void gpio_hal_arch_no_port_toggle_pin(gpio_hal_pin_t pin);
 #endif /* gpio_hal_arch_toggle_pin */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_read_pin
+
 /**
  * \brief Read a GPIO pin
  * \param port The GPIO port
@@ -764,6 +780,7 @@ uint8_t gpio_hal_arch_no_port_read_pin(gpio_hal_pin_t pin);
 #endif /* gpio_hal_arch_read_pin */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_write_pin
+
 /**
  * \brief Write a GPIO pin
  * \param port The GPIO port
@@ -807,6 +824,7 @@ void gpio_hal_arch_no_port_write_pin(gpio_hal_pin_t pin, uint8_t value);
 #endif /* gpio_hal_arch_write_pin */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_set_pins
+
 /**
  * \brief Set multiple pins to logical high
  * \param port The GPIO port
@@ -853,6 +871,7 @@ void gpio_hal_arch_no_port_set_pins(gpio_hal_pin_mask_t pins);
 #endif /* gpio_hal_arch_set_pins */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_clear_pins
+
 /**
  * \brief Clear multiple pins to logical low
  * \param port The GPIO port
@@ -899,6 +918,7 @@ void gpio_hal_arch_no_port_clear_pins(gpio_hal_pin_mask_t pins);
 #endif /* gpio_hal_arch_clear_pins */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_toggle_pins
+
 /**
  * \brief Toggle multiple pins
  * \param port The GPIO port
@@ -955,6 +975,7 @@ void gpio_hal_arch_no_port_toggle_pins(gpio_hal_pin_mask_t pins);
 #endif /* gpio_hal_arch_toggle_pins */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_read_pins
+
 /**
  * \brief Read multiple pins
  * \param port The GPIO port
@@ -1007,6 +1028,7 @@ gpio_hal_pin_mask_t gpio_hal_arch_no_port_read_pins(gpio_hal_pin_mask_t pins);
 #endif /* gpio_hal_arch_read_pins */
 /*---------------------------------------------------------------------------*/
 #ifndef gpio_hal_arch_write_pins
+
 /**
  * \brief Write multiple pins
  * \param port The GPIO port
