@@ -366,6 +366,14 @@ best_parent(int fresh_only) {
         }
 #endif /* UIP_ND6_SEND_NS */
 
+#if RPL_LIMIT_CONN_TO_NODE
+        /* Do not choose the root as the best parent when we want to limit
+         * the connection to a node. */
+        if (nbr->rank == ROOT_RANK) {
+            continue;
+        }
+#endif /* RPL_LIMIT_CONN_TO_NODE */
+
         /* Now we have an acceptable parent, check if it is the new best */
         best = curr_instance.of->best_parent(best, nbr);
     }

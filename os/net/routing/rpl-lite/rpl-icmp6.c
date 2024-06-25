@@ -114,6 +114,20 @@ set16(uint8_t *buffer, int pos, uint16_t value) {
 }
 
 /*---------------------------------------------------------------------------*/
+int
+rpl_is_root(uip_ipaddr_t *ipaddr) {
+    uip_ipaddr_t root;
+    rpl_dag_get_root_ipaddr(&root);
+    for (int i=4; i<8; i++) {
+        if (ipaddr->u16[i] != root.u16[i]) {
+            // ip addr is different : it's not the root
+            return 0;
+        }
+    }
+    return 1;
+}
+
+/*---------------------------------------------------------------------------*/
 uip_ds6_nbr_t *
 rpl_icmp6_update_nbr_table(uip_ipaddr_t *from, nbr_table_reason_t reason, void *data) {
     uip_ds6_nbr_t *nbr;
@@ -464,6 +478,13 @@ rpl_icmp6_dio_output(uip_ipaddr_t *uc_addr) {
     if (!rpl_get_leaf_only()) {
         addr = addr != NULL ? addr : &rpl_multicast_addr;
     }
+
+/*#if RPL_LIMIT_CONN_TO_NODE
+    if (uc_addr != NULL && rpl_is_root(addr)) {
+        LOG_WARN("Abort connection with root\n");
+        return;
+    }
+#endif*/
 
     LOG_INFO("sending a %s-DIO with rank %u to ",
              uc_addr != NULL ? "unicast" : "multicast",

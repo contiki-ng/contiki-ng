@@ -199,7 +199,8 @@
 #endif
 
 /*
- *
+ * This value decides if we have to limit the connection to
+ * the root and other node
  */
 #ifdef RPL_CONF_LIMIT_CONN_TO_NODE
 #define RPL_LIMIT_CONN_TO_NODE RPL_CONF_LIMIT_CONN_TO_NODE
