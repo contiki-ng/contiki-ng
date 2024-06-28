@@ -188,7 +188,9 @@ coap_is_option(const coap_message_t *message, unsigned int opt)
 
 /* to store error code and human-readable payload */
 extern coap_status_t coap_status_code;
+#if COAP_MESSAGE_ON_ERROR
 extern const char *coap_error_message;
+#endif
 
 void coap_init_connection(void);
 uint16_t coap_get_mid(void);

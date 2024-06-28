@@ -65,7 +65,9 @@
 static uint16_t current_mid = 0;
 
 coap_status_t coap_status_code = NO_ERROR;
+#if COAP_MESSAGE_ON_ERROR
 const char *coap_error_message = "";
+#endif
 /*---------------------------------------------------------------------------*/
 /*- Local helper functions --------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -396,7 +398,9 @@ coap_serialize_message(coap_message_t *coap_pkt, uint8_t *buffer)
   } else {
     /* an error occurred: caller must check for !=0 */
     coap_pkt->buffer = NULL;
+#if COAP_MESSAGE_ON_ERROR
     coap_error_message = "Serialized header exceeds COAP_MAX_HEADER_SIZE";
+#endif
     return 0;
   }
 
@@ -439,12 +443,16 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
   coap_pkt->mid = coap_pkt->buffer[2] << 8 | coap_pkt->buffer[3];
 
   if(coap_pkt->version != 1) {
+#if COAP_MESSAGE_ON_ERROR
     coap_error_message = "CoAP version must be 1";
+#endif
     return BAD_REQUEST_4_00;
   }
 
   if(coap_pkt->token_len > COAP_TOKEN_LEN) {
+#if COAP_MESSAGE_ON_ERROR
     coap_error_message = "Token Length must not be more than 8";
+#endif
     return BAD_REQUEST_4_00;
   }
 
@@ -602,8 +610,9 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
       LOG_DBG_COAP_STRING(coap_pkt->proxy_uri, coap_pkt->proxy_uri_len);
       LOG_DBG_("]\n");
 #endif /* COAP_PROXY_OPTION_PROCESSING */
-
-      coap_error_message = "This is a constrained server (Contiki)";
+#if COAP_MESSAGE_ON_ERROR
+      coap_error_message = "This is a constrained server (Contiki-NG)";
+#endif
       return PROXYING_NOT_SUPPORTED_5_05;
       break;
     case COAP_OPTION_PROXY_SCHEME:
@@ -614,7 +623,9 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
       LOG_DBG_COAP_STRING(coap_pkt->proxy_scheme, coap_pkt->proxy_scheme_len);
       LOG_DBG_("]\n");
 #endif
-      coap_error_message = "This is a constrained server (Contiki)";
+#if COAP_MESSAGE_ON_ERROR
+      coap_error_message = "This is a constrained server (Contiki-NG)";
+#endif
       return PROXYING_NOT_SUPPORTED_5_05;
       break;
 
@@ -710,7 +721,9 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
       LOG_DBG_("unknown (%u)\n", option_number);
       /* check if critical (odd) */
       if(option_number & 1) {
+#if COAP_MESSAGE_ON_ERROR
         coap_error_message = "Unsupported critical option";
+#endif
         return BAD_OPTION_4_02;
       }
     }
