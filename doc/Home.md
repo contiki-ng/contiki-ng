@@ -70,7 +70,7 @@ Also feel free to download our [cheat sheet](https://contiki-ng.github.io/resour
 * [native: Contiki-NG as a native process](/doc/platforms/native.md)
 * [nrf52840: Nordic Semiconductor nRF52840](/doc/platforms/nrf52840.md)
 * [nrf: Nordic Semiconductor nRF5340 and nRF52840 (using nRF MDK)](/doc/platforms/nrf.md)
-* [openmote-cc2538: OpenMote cc2538](/doc/platforms/openmote-cc2538.md)
+* [openmote: OpenMote-CC2538 and OpenMote-B](/doc/platforms/openmote.md)
 * [simplelink: TI SimpleLink MCU Platform](/doc/platforms/simplelink.md)
 * [sky: Tmote Sky / TelosB](/doc/platforms/sky.md)
 * [zoul: Zolertia Zoul platforms: Firefly, RE-mote and Orion](/doc/platforms/zolertia/zoul.md)
