@@ -112,9 +112,6 @@
 #define UART0_RX_PIN             0
 #define UART0_TX_PORT            GPIO_A_NUM
 #define UART0_TX_PIN             1
-
-#define UART_CONF_ENABLE         1
-//#define UART0_CONF_BAUD_RATE     921600
 /** @} */
 /*---------------------------------------------------------------------------*/
 /** \name OpenMote-B Button configuration
