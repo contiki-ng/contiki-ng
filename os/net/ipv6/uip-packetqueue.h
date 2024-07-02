@@ -6,11 +6,9 @@
 struct uip_packetqueue_handle;
 
 struct uip_packetqueue_packet {
-  struct uip_ds6_queued_packet *next;
   uint8_t queue_buf[UIP_BUFSIZE];
   uint16_t queue_buf_len;
   struct ctimer lifetimer;
-  struct uip_packetqueue_handle *handle;
 };
 
 struct uip_packetqueue_handle {
