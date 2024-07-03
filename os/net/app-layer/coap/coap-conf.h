@@ -113,8 +113,17 @@
 #endif
 
 /* Enable the well-known resource (well-known/core) by default */
-#ifndef COAP_WELL_KNOWN_RESOURCE_ENABLED
+#ifdef COAP_CONF_WELL_KNOWN_RESOURCE_ENABLED
+#define COAP_WELL_KNOWN_RESOURCE_ENABLED  COAP_CONF_WELL_KNOWN_RESOURCE_ENABLED
+#else
 #define COAP_WELL_KNOWN_RESOURCE_ENABLED  1
+#endif
+
+/* Add a human readable message to payload if an error occurs */
+#ifdef COAP_CONF_MESSAGE_ON_ERROR
+#define COAP_MESSAGE_ON_ERROR   COAP_CONF_MESSAGE_ON_ERROR
+#else
+#define COAP_MESSAGE_ON_ERROR   1
 #endif
 
 #endif /* COAP_CONF_H_ */

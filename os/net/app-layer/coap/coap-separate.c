@@ -69,7 +69,9 @@ coap_separate_reject()
 {
   /* TODO: Accept string pointer for custom error message */
   coap_status_code = SERVICE_UNAVAILABLE_5_03;
+#if COAP_MESSAGE_ON_ERROR
   coap_error_message = "AlreadyInUse";
+#endif
 }
 /*----------------------------------------------------------------------------*/
 /**

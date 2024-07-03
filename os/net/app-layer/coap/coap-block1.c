@@ -89,13 +89,17 @@ coap_block1_handler(coap_message_t *request, coap_message_t *response,
 
   if(!pay_len || !payload) {
     coap_status_code = BAD_REQUEST_4_00;
+#if COAP_MESSAGE_ON_ERROR
     coap_error_message = "NoPayload";
+#endif
     return -1;
   }
 
   if(request->block1_offset + pay_len > max_len) {
     coap_status_code = REQUEST_ENTITY_TOO_LARGE_4_13;
+#if COAP_MESSAGE_ON_ERROR
     coap_error_message = "Message to big";
+#endif
     return -1;
   }
 
