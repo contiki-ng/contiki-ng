@@ -27,12 +27,12 @@ The OpenMote platform supports two boards:
 ## Port Features
 
 The port is organized as follows:
-* the derivers for CC2538 CPU are located in the `arch/cpu/cc2538` folder,
+* the drivers for CC2538 CPU are located in the `arch/cpu/cc2538` folder,
 * the OpenMote port is located in the `arch/platform/openmote` folder where:
   * `dev` contains drivers for various sensors,
   * `openmote-cc2538` includes configuration for the OpenMote-CC2538 board,
   * `openmote-b` includes configuration for the OpenMote-B board.
-* the driver for AT86RF215 radio (available only on OpenMote B) is located in `arch/dev/radio/at86rf215`.
+* the driver for AT86RF215 radio (available only on OpenMote-B) is located in `arch/dev/radio/at86rf215`.
 
 ## Prerequisites and Setup
 
@@ -55,20 +55,20 @@ The OpenMote nodes can be programmed via the jtag interface or via the serial bo
 
 The OpenMote boards have a mini JTAG 10-pin male header, compatible with the `SmartRF06` development board, which can be used to flash and debug the platforms. Alternatively one could use the `JLink` programmer with a 20-to-10 pin converter like the following: <https://www.olimex.com/Products/ARM/JTAG/ARM-JTAG-20-10/>. An experimental example for OpenOCD with `Olimex` programmer can be found [here](https://github.com/9morano/contiki-ng/tree/openmote/arch/platform/openmote/openmote-b)
 
-For the OpenMote-CC2538 boards, the serial boot loader on the chip is exposed to the user via the USB interface of both the OpenUSB and the OpenBase carrier boards. The OpenUSB carrier board is capable to automatically detect the boot loader sequence and flash the CC2538 without user intervention. The OpenBase carrier board does not have such feature, so to activate the bootloader the user needs to short the ON/SLEEP pin to GND and then press the reset button. To activate the serial boot loader on OpenMote-B board, the user needs to short the PA7 pin to GND and then press the reset button.
+For the OpenMote-CC2538 boards, the serial boot loader on the chip is exposed to the user via the USB interface of both the OpenUSB and the OpenBase carrier boards. The OpenUSB carrier board is capable to automatically detect the boot loader sequence and flash the CC2538 without user intervention. The OpenBase carrier board does not have such feature, so to activate the boot loader the user needs to short the ON/SLEEP pin to GND and then press the reset button. To activate the serial boot loader on OpenMote-B board, the user needs to short the PA7 pin to GND and then press the reset button.
 
 Instructions to flash for different OS are given below.
 
 * On Windows:
-    * Nodes can be programmed with TI's ArmProgConsole or the SmartRF Flash Programmer 2. The README should be self-explanatory. With ArmProgConsole, upload the file with a `.bin` extension.
-    * Nodes can also be programmed via the serial boot loader in the cc2538. In `tools/cc2538-bsl/` you can find `cc2538-bsl.py` python script, which can download firmware to your node via a serial connection. If you use this option you just need to make sure you have a working version of python installed. You can read the README in the same directory for more info.
+    * Nodes can be programmed with TI's ArmProgConsole or the SmartRF Flash Programmer 2. The README should be self-explanatory. With ArmProgConsole, upload the file with a `.bin` extension. (jtag + serial)
+    * Nodes can also be programmed via the serial boot loader in the cc2538. In `tools/cc2538-bsl/` you can find `cc2538-bsl.py` python script, which can download firmware to your node via a serial connection. If you use this option you just need to make sure you have a working version of python installed. You can read the README in the same directory for more info. (serial)
 
 * On Linux:
-    * Nodes can be programmed with TI's UniFlash tool. With UniFlash, use the file with `.elf` extension.
-    * Nodes can also be programmed via the serial boot loader in the cc2538 through the `cc2538-bsl.py` python script. No extra software needs to be installed.
+    * Nodes can be programmed with TI's UniFlash tool. With UniFlash, use the file with `.openmote` extension. (jtag + serial)
+    * Nodes can also be programmed via the serial boot loader in the cc2538 through the `cc2538-bsl.py` python script. No extra software needs to be installed. (serial)
 
 * On OSX:
-    * The `cc2538-bsl.py` script in `tools/cc2538-bsl/` is the only option. No extra software needs to be installed.
+    * The `cc2538-bsl.py` script in `tools/cc2538-bsl/` is the only option. No extra software needs to be installed. (serial)
 
 ## Getting Started
 
@@ -175,11 +175,11 @@ By default, the OpenMote-B uses the CC2538 radio. To use the experimental driver
 
 ### Antenna RF switch
 
-The OpenMote-B board features two SMA connectors for external antennas. One connector, labeled "sub-GHz," is always connected to the 868/915 MHz interface of the AT86RF215 radio. The other SMA connector, labeled "2.4-GHz," is connected to an RF switch that can link it to either the CC2538 radio or the AT86RF215 radio. The proper configuration is automatically managed by the functions located in `arch/platform/openmote-b/antenna.c`.
+The OpenMote-B board has two SMA connectors for external antennas. One connector, labeled "sub-GHz," is always connected to the 868/915 MHz interface of the AT86RF215 radio. The other SMA connector, labeled "2.4-GHz," is connected to an RF switch that can link it to either the CC2538 radio or the AT86RF215 radio. The proper configuration is automatically managed by the functions located in `arch/platform/openmote-b/antenna.c`.
 
 ### AT86RF215 driver
 
-The AT86RF215 radio features two RF cores (2.4 GHz and sub-GHz) and supports the following PHY modes: MR-FSK, MR-O-QPSK, and MR-OFDM. The current driver implementation (Oct 2023) is designed to support only one core at a time (only the 2.4 GHz core has been tested). However, a different driver implementation could enable simultaneous operation of both RF cores. Additionally, the driver has only been tested with the legacy O-QPSK modulation. The driver primarily supports TSCH MAC mode but also works with CSMA.
+The AT86RF215 radio features two RF cores (2.4 GHz and sub-GHz) and supports the following PHY modes: MR-FSK, MR-O-QPSK, and MR-OFDM. The current driver implementation (Oct. 2023) is designed to support only one core at a time (only the 2.4 GHz core has been tested). However, a different driver implementation could enable simultaneous operation of both RF cores. Additionally, the driver was only tested with the legacy O-QPSK modulation. The driver primarily supports the TSCH MAC mode, but also works with CSMA.
 
 For more information, refer to the driver files located in `arc/dev/radio/at86rf215`.
 
