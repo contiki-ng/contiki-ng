@@ -205,7 +205,7 @@
  * @{
  */
 #ifndef OPENMOTEB_CONF_USE_ATMEL_RADIO
-#define OPENMOTEB_USE_ATMEL_RADIO               1
+#define OPENMOTEB_USE_ATMEL_RADIO               0
 #else
 #define OPENMOTEB_USE_ATMEL_RADIO               OPENMOTEB_CONF_USE_ATMEL_RADIO
 #endif
