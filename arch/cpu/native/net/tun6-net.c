@@ -64,7 +64,6 @@
 
 #include <err.h>
 #include "net/netstack.h"
-#include "net/packetbuf.h"
 
 static const char *config_ipaddr = "fd00::1/64";
 /* Allocate some bytes in RAM and copy the string */
@@ -139,7 +138,7 @@ sigcleanup(int signo)
 }
 /*---------------------------------------------------------------------------*/
 int
-devopen(const char *dev, int flags)
+tun6_net_devopen(const char *dev, int flags)
 {
   char t[32];
   strcpy(t, "/dev/");
@@ -166,7 +165,7 @@ ifconf(const char *tundev, const char *ipaddr)
 }
 /*---------------------------------------------------------------------------*/
 #ifdef linux
-static int
+int
 tun_alloc(char *dev, uint16_t devsize)
 {
   struct ifreq ifr;
@@ -199,11 +198,11 @@ tun_alloc(char *dev, uint16_t devsize)
 }
 #else
 /*---------------------------------------------------------------------------*/
-static int
+int
 tun_alloc(char *dev, uint16_t devsize)
 {
   LOG_INFO("Opening: %s\n", dev);
-  return devopen(dev, O_RDWR);
+  return tun6_net_devopen(dev, O_RDWR);
 }
 #endif
 /*---------------------------------------------------------------------------*/
@@ -258,16 +257,6 @@ tun_input(unsigned char *data, int maxlen)
   }
   return size;
 }
-/*---------------------------------------------------------------------------*/
-static uint8_t
-output(const linkaddr_t *localdest)
-{
-  LOG_DBG("SUT: %u\n", uip_len);
-  if(uip_len > 0) {
-    return tun_output(uip_buf, uip_len);
-  }
-  return 0;
-}
 
 /*---------------------------------------------------------------------------*/
 /* tun and slip select callback                                              */
@@ -283,38 +272,48 @@ set_fd(fd_set *rset, fd_set *wset)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
-
 static void
 handle_fd(fd_set *rset, fd_set *wset)
 {
-  int size;
-
   if(tunfd == -1) {
     /* tun is not open */
     return;
   }
 
-  LOG_INFO("Tun6-handle FD\n");
-
   if(FD_ISSET(tunfd, rset)) {
-    size = tun_input(uip_buf, sizeof(uip_buf));
+    int size = tun_input(uip_buf, sizeof(uip_buf));
     LOG_DBG("TUN data incoming read:%d\n", size);
     uip_len = size;
     tcpip_input();
   }
 }
 
-static void input(void)
+/*---------------------------------------------------------------------------*/
+/* network callbacks                                                         */
+/*---------------------------------------------------------------------------*/
+static uint8_t
+network_output(const linkaddr_t *localdest)
+{
+  if(uip_len > 0) {
+    LOG_DBG("output: %u bytes to ", uip_len);
+    LOG_DBG_LLADDR(localdest);
+    LOG_DBG_("\n");
+    return tun_output(uip_buf, uip_len);
+  }
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+static void
+network_input(void)
 {
   /* should not happen */
-  LOG_DBG("Tun6 - input\n");
+  LOG_DBG("unexpected network input\n");
 }
-
-
-const struct network_driver tun6_net_driver ={
+/*---------------------------------------------------------------------------*/
+const struct network_driver tun6_net_driver = {
   "tun6",
   tun_init,
-  input,
-  output
+  network_input,
+  network_output
 };
 /*---------------------------------------------------------------------------*/

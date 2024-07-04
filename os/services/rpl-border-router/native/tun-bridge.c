@@ -35,6 +35,7 @@
 
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
+#include "tun6-net.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -83,10 +84,6 @@ static const struct select_callback tun_select_callback = {
 
 int ssystem(const char *fmt, ...)
      __attribute__((__format__ (__printf__, 1, 2)));
-void ifconf_cleanup(const char *dev);
-void ifconf(const char *tundev, const char *ipaddr);
-int devopen(const char *dev, int flags);
-
 
 /*---------------------------------------------------------------------------*/
 void
@@ -102,51 +99,8 @@ sigcleanup(int signo)
   exit(0);			/* exit(0) will call cleanup() */
 }
 /*---------------------------------------------------------------------------*/
-#ifdef linux
-int
-tun_alloc(char *dev, uint16_t devsize)
-{
-  struct ifreq ifr;
-  int fd, err;
-  LOG_INFO("Opening: %s\n", dev);
-  if((fd = open("/dev/net/tun", O_RDWR)) < 0) {
-    /* Error message handled by caller */
-    return -1;
-  }
-
-  memset(&ifr, 0, sizeof(ifr));
-
-  /* Flags: IFF_TUN   - TUN device (no Ethernet headers)
-   *        IFF_NO_PI - Do not provide packet information
-   */
-  ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-  if(*dev != '\0') {
-    memcpy(ifr.ifr_name, dev, MIN(sizeof(ifr.ifr_name), devsize));
-  }
-  if((err = ioctl(fd, TUNSETIFF, (void *)&ifr)) < 0) {
-    /* Error message handled by caller */
-    close(fd);
-    return err;
-  }
-  LOG_INFO("Using '%s' vs '%s'\n", dev, ifr.ifr_name);
-  strncpy(dev, ifr.ifr_name, MIN(devsize - 1, sizeof(ifr.ifr_name)));
-  dev[devsize - 1] = '\0';
-  LOG_INFO("Using %s\n", dev);
-  return fd;
-}
-#else
-/*---------------------------------------------------------------------------*/
-int
-tun_alloc(char *dev, uint16_t devsize)
-{
-  LOG_INFO("Opening: %s\n", dev);
-  return devopen(dev, O_RDWR);
-}
-#endif
-
 static uint16_t delaymsec = 0;
 static uint32_t delaystartsec, delaystartmsec;
-
 /*---------------------------------------------------------------------------*/
 void
 tun_init()
