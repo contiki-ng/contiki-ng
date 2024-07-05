@@ -1,14 +1,11 @@
-#include <stdio.h>
-
-#include "net/ipv6/uip.h"
-
-#include "lib/memb.h"
-
 #include "net/ipv6/uip-packetqueue.h"
+#include "lib/memb.h"
+#include <stdio.h>
 
 #define MAX_NUM_QUEUED_PACKETS 2
 MEMB(packets_memb, struct uip_packetqueue_packet, MAX_NUM_QUEUED_PACKETS);
 
+/*---------------------------------------------------------------------------*/
 #define DEBUG 0
 #if DEBUG
 #include <stdio.h>
@@ -16,7 +13,6 @@ MEMB(packets_memb, struct uip_packetqueue_packet, MAX_NUM_QUEUED_PACKETS);
 #else
 #define PRINTF(...)
 #endif
-
 /*---------------------------------------------------------------------------*/
 static void
 packet_timedout(void *ptr)
@@ -36,7 +32,8 @@ uip_packetqueue_new(struct uip_packetqueue_handle *handle)
 }
 /*---------------------------------------------------------------------------*/
 struct uip_packetqueue_packet *
-uip_packetqueue_alloc(struct uip_packetqueue_handle *handle, clock_time_t lifetime)
+uip_packetqueue_alloc(struct uip_packetqueue_handle *handle,
+                      clock_time_t lifetime)
 {
   PRINTF("uip_packetqueue_alloc %p\n", handle);
   if(handle->packet != NULL) {
@@ -67,13 +64,13 @@ uip_packetqueue_free(struct uip_packetqueue_handle *handle)
 uint8_t *
 uip_packetqueue_buf(struct uip_packetqueue_handle *h)
 {
-  return h->packet != NULL? h->packet->queue_buf: NULL;
+  return h->packet != NULL ? h->packet->queue_buf: NULL;
 }
 /*---------------------------------------------------------------------------*/
 uint16_t
 uip_packetqueue_buflen(struct uip_packetqueue_handle *h)
 {
-  return h->packet != NULL? h->packet->queue_buf_len: 0;
+  return h->packet != NULL ? h->packet->queue_buf_len: 0;
 }
 /*---------------------------------------------------------------------------*/
 void
