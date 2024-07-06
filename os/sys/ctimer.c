@@ -149,16 +149,10 @@ ctimer_stop(struct ctimer *c)
 bool
 ctimer_expired(struct ctimer *c)
 {
-  struct ctimer *t;
   if(initialized) {
     return etimer_expired(&c->etimer);
   }
-  for(t = list_head(ctimer_list); t != NULL; t = t->next) {
-    if(t == c) {
-      return false;
-    }
-  }
-  return true;
+  return !list_contains(ctimer_list, c);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
