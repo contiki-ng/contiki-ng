@@ -45,6 +45,7 @@
 
 #include "contiki.h"
 #include <stdlib.h>
+#include <stdbool.h>
 
 #ifndef COAP_ENDPOINT_CUSTOM
 #include "net/ipv6/uip.h"
