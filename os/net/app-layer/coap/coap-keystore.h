@@ -58,23 +58,36 @@
  */
 typedef struct {
   const uint8_t *identity_hint;
-  uint16_t identity_hint_len;
   const uint8_t *identity;
-  uint16_t identity_len;
   const uint8_t *key;
+  uint16_t identity_hint_len;
+  uint16_t identity_len;
   uint16_t key_len;
 } coap_keystore_psk_entry_t;
+
+/**
+ * The structure of a CoAP PKI certificate info.
+ */
+typedef struct {
+  const uint8_t *ca_cert;
+  const uint8_t *own_cert;
+  const uint8_t *priv_key;
+  uint16_t ca_cert_len;
+  uint16_t own_cert_len;
+  uint16_t priv_key_len;
+} coap_keystore_cert_entry_t;
 
 /**
  * The structure of a CoAP keystore.
  *
  * The keystore implementation provides a function callback for each type of
- * authorization supported. The API currently only specifies a function
- * callback for pre-shared keys.
+ * authorization supported.
  */
 typedef struct {
   int (* coap_get_psk_info)(const coap_endpoint_t *address_info,
                             coap_keystore_psk_entry_t *info);
+  int (* coap_get_cert_info)(const coap_endpoint_t *address_info,
+                            coap_keystore_cert_entry_t *info);
 } coap_keystore_t;
 
 /**
