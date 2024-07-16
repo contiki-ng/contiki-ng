@@ -372,19 +372,15 @@ snmp_ber_decode_string_len_buffer(snmp_packet_t *snmp_packet, const char **str, 
     return 0;
   }
 
-  if((*snmp_packet->in & 0x80) == 0) {
+  if (snmp_packet->used == 0) {
+    return 0;
+  }
 
-    if(snmp_packet->used == 0) {
-      return 0;
-    }
+  if((*snmp_packet->in & 0x80) == 0) {
 
     *length = (uint32_t)*snmp_packet->in++;
     snmp_packet->used--;
   } else {
-
-    if(snmp_packet->used == 0) {
-      return 0;
-    }
 
     length_bytes = (uint8_t)(*snmp_packet->in++ & 0x7F);
     snmp_packet->used--;
