@@ -1,0 +1,37 @@
+################################################################################
+# SimpleLink Device makefile
+
+SUBFAMILY     = cc13x4-cc26x4
+DEVICE_FAMILY = CC13X4
+DEVICE_LINE   = CC13XX
+DEVICE        = CC1354P
+
+BOARD_SOURCEFILES += ti_drivers_config.c
+
+SUPPORTS_PROP_MODE  = 0
+SUPPORTS_IEEE_MODE  = 1
+SUPPORTS_BLE_BEACON = 0
+
+SUPPORTS_HIGH_PA = 1
+
+# Include the common board makefile
+include $(FAMILY_PATH)/launchpad/Makefile.launchpad
+
+################################################################################
+### For the login etc targets
+BAUDRATE ?= 115200
+PORT ?= /dev/ttyACM0
+
+################################################################################
+### For the .upload make target
+CCXML ?= $(realpath $(CONTIKI_NG_RELOC_PLATFORM_DIR)/simplelink/cc13xx-cc26xx/launchpad/cc1354p10/cc1354p10.ccxml)
+UFSETTINGS ?= $(realpath $(CONTIKI_NG_RELOC_PLATFORM_DIR)/simplelink/cc13xx-cc26xx/launchpad/cc1354p10/generated.ufsettings)
+UNIFLASH_FLAGS += --config=$(CCXML) --load-settings $(UFSETTINGS) -b Erase -r 0
+
+UNIFLASH = ~/ti/uniflash_9.0.0/dslite.sh
+
+%.upload: $(BUILD_DIR_BOARD)/%.$(TARGET)
+	perl -MPOSIX -e 'tcflush(0, TCIFLUSH)' < $(PORT)
+	$(UNIFLASH) $(UNIFLASH_FLAGS) -f $(realpath $(BUILD_DIR_BOARD)/$*.$(TARGET))
+
+

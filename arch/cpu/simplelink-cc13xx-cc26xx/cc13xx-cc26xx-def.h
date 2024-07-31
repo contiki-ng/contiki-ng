@@ -46,6 +46,8 @@
 #include <cm3/cm3-def.h>
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2)
 #include <cm4/cm4-def.h>
+#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X4_CC26X3_CC26X4)
+#include <cm33/cm33-def.h>
 #endif
 /*---------------------------------------------------------------------------*/
 #include <stddef.h>
@@ -172,6 +174,8 @@
 #define CMSIS_CONF_HEADER_PATH              "cc13x0-cc26x0-cm3.h"
 #elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X2_CC26X2)
 #define CMSIS_CONF_HEADER_PATH              "cc13x2-cc26x2-cm4.h"
+#elif (DeviceFamily_PARENT == DeviceFamily_PARENT_CC13X4_CC26X3_CC26X4)
+#define CMSIS_CONF_HEADER_PATH              "cc13x4-cc26x4-cm33.h"
 #endif
 /*---------------------------------------------------------------------------*/
 /* Path to headers with implementation of mutexes, atomic and memory barriers */

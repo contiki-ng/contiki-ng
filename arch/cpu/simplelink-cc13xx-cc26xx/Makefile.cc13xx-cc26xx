@@ -48,7 +48,12 @@ endif
 
 # Both ccfg-conf.c and startup_cc13xx_cc26xx_gcc.c is located locally in
 # the arch/cpu/cc13xx-cc26xx folder.
-CONTIKI_CPU_SOURCEFILES += ccfg-conf.c startup_cc13xx_cc26xx_gcc.c
+CONTIKI_CPU_SOURCEFILES += ccfg-conf.c
+ifeq ($(SUBFAMILY),cc13x4-cc26x4)
+  CONTIKI_CPU_SOURCEFILES += startup_gcc.c
+else
+  CONTIKI_CPU_SOURCEFILES += startup_cc13xx_cc26xx_gcc.c
+endif
 
 # CPU-dependent source files
 CONTIKI_CPU_SOURCEFILES += rtimer-arch.c    clock-arch.c
@@ -153,26 +158,5 @@ $(OBJECTDIR)/ieee-addr.o: $(GENDIR)/ieee-addr-id.h
 include $(CONTIKI_CPU)/$(SUBFAMILY)/Makefile.$(SUBFAMILY)
 
 ################################################################################
-### For the .upload make target
-BSL_FLAGS += -e -w -v
-
-ifdef PORT
-  BSL_FLAGS += -p $(PORT)
-endif
-
-BSL = $(CONTIKI)/tools/cc2538-bsl/cc2538-bsl.py
-
-ifeq ($(BOARD_SUPPORTS_BSL),1)
-%.upload: $(OUT_BIN)
-ifeq ($(wildcard $(BSL)), )
-	$(error Could not find "$(BSL)". Did you run 'git submodule update --init'?)
-else
-	$(BSL) $(BSL_FLAGS) $<
-endif
-else
-%.upload:
-	@echo "This board cannot be programmed through the ROM bootloader and therefore does not support the .upload target."
-endif
-
 ### For the login etc targets
 BAUDRATE ?= 115200

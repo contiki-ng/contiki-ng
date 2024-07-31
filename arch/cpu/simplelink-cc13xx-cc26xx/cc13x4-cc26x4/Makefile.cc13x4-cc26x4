@@ -1,0 +1,10 @@
+################################################################################
+### CC13x4/CC26x4 CPU makefile
+
+TARGET_LIBFILES += $(SDK_NORTOS)/lib/gcc/m33f/nortos_$(SDK_LIB_NAME).a
+TARGET_LIBFILES += $(SDK_DRIVERS)/rf/lib/gcc/m33f/rf_multiMode_$(SDK_LIB_NAME).a
+TARGET_LIBFILES += $(SDK_DRIVERS)/lib/gcc/m33f/drivers_$(SDK_LIB_NAME).a
+TARGET_LIBFILES += $(SDK_DEVICES)/driverlib/bin/gcc/driverlib.lib
+
+# CC13x4/CC26x4 is a Cortex-M33 architecture
+include $(CONTIKI)/$(CONTIKI_NG_CM33_DIR)/Makefile.cm33
