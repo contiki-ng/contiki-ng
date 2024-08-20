@@ -60,6 +60,7 @@ typedef struct {
   uint32_t state[SHA_256_DIGEST_LENGTH / sizeof(uint32_t)];
   uint8_t buf[SHA_256_BLOCK_SIZE];
   size_t buf_len;
+  uint8_t opad[SHA_256_BLOCK_SIZE]; /* HMAC's outer padding */
 } sha_256_checkpoint_t;
 
 /**
@@ -112,6 +113,26 @@ extern const struct sha_256_driver SHA_256;
  */
 void sha_256_hash(const uint8_t *data, size_t len,
     uint8_t digest[static SHA_256_DIGEST_LENGTH]);
+
+/**
+ * \brief Initiates a stepwise HMAC-SHA-256 computation.
+ * \param key     the key to authenticate with
+ * \param key_len length of key in bytes
+ */
+void sha_256_hmac_init(const uint8_t *key, size_t key_len);
+
+/**
+ * \brief Proceeds with the computation of an HMAC-SHA-256.
+ * \param data     further data to authenticate
+ * \param data_len length of data in bytes
+ */
+void sha_256_hmac_update(const uint8_t *data, size_t data_len);
+
+/**
+ * \brief Finishes the computation of an HMAC-SHA-256.
+ * \param hmac pointer to where the resulting HMAC shall be stored
+ */
+void sha_256_hmac_finish(uint8_t hmac[static SHA_256_DIGEST_LENGTH]);
 
 /**
  * \brief Computes HMAC-SHA-256 as per RFC 2104.
