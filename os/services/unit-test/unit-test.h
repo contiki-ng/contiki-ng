@@ -37,10 +37,11 @@
 #ifndef UNIT_TEST_H
 #define UNIT_TEST_H
 
+#include "sys/clock.h"
+#include "sys/process.h"
+#include "sys/pt.h"
 #include <stdbool.h>
 #include <stdint.h>
-
-#include <sys/clock.h>
 
 /**
  * The unit_test structure describes the results of a unit test. Each
@@ -82,7 +83,7 @@ typedef void (*unit_test_report_function_t)(const unit_test_t *);
 /**
  * Define a unit test.
  *
- * This macro defines the function that will be executed when
+ * This macro defines the protothread that will be executed when
  * conducting a unit test. The name that is passed as a parameter must
  * have been registered with the UNIT_TEST_REGISTER() macro.
  *
@@ -98,23 +99,24 @@ typedef void (*unit_test_report_function_t)(const unit_test_t *);
  *
  * \param name The name of the unit test.
  */
-#define UNIT_TEST(name) static void unit_test_function_##name(unit_test_t *unit_test_ptr)
+#define UNIT_TEST(name) \
+    PT_THREAD(unit_test_function_##name(unit_test_t *unit_test_ptr))
 
 /**
  * Mark the starting point of the unit test function.
  */
-#define UNIT_TEST_BEGIN() do {                                                 \
-                            unit_test_ptr->start = clock_time();               \
-                            unit_test_ptr->assertions = 0;                     \
-                            unit_test_ptr->passed = true;                      \
-                          } while(0)
+#define UNIT_TEST_BEGIN() PT_BEGIN(&unit_test_pt);                            \
+                          unit_test_ptr->start = clock_time();                \
+                          unit_test_ptr->assertions = 0;                      \
+                          unit_test_ptr->passed = true
 
 /**
  * Mark the ending point of the unit test function.
  */
 #define UNIT_TEST_END() UNIT_TEST_SUCCEED();                                  \
                         unit_test_end:                                        \
-                          unit_test_ptr->end = clock_time()
+                          unit_test_ptr->end = clock_time();                  \
+                          PT_END(&unit_test_pt)
 
 /*
  * The test result is printed with a function that is selected by
@@ -139,7 +141,9 @@ typedef void (*unit_test_report_function_t)(const unit_test_t *);
  * \param name The name of the unit test.
  */
 #define UNIT_TEST_RUN(name)  do {                                             \
-                               unit_test_function_##name(&unit_test_##name);  \
+                               PROCESS_PT_SPAWN(&unit_test_pt,                \
+                                   unit_test_function_##name(                 \
+                                       &unit_test_##name));                   \
                                UNIT_TEST_PRINT_REPORT(name);                  \
                              } while(0)
 
@@ -198,5 +202,7 @@ typedef void (*unit_test_report_function_t)(const unit_test_t *);
 
 /* The print function. */
 void UNIT_TEST_PRINT_FUNCTION(const unit_test_t *unit_test_ptr);
+
+extern struct pt unit_test_pt;
 
 #endif /* !UNIT_TEST_H */
