@@ -1027,7 +1027,7 @@ EXCLUDE_PATTERNS       = */cpu/cc26x0-cc13x0/lib/* \
                          */cpu/gecko/config/* \
                          */cpu/gecko/lib/* \
                          */platform/stm32nucleo-spirit1/stm32cube-lib/* \
-                         */os/net/security/tinydtls/* \
+                         */os/net/security/mbedtls/* \
                          */cpu/arm/CMSIS/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
