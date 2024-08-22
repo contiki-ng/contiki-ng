@@ -35,27 +35,21 @@
  * @{
  ******************************************************************************/
 /// Size of the receive operation queue.
-/// @details
 ///   The maximum number of receive operations that can be queued up for one
 ///   driver instance before @ref UARTDRV_Receive() returns
-///   @ref ECODE_EMDRV_UARTDRV_QUEUE_FULL.
-/// @note
 ///   This macro is not used by the UARTDRV itself, but is intended to be used
-///   with the @ref DEFINE_BUF_QUEUE macro by the user of the driver to allocate
-///   instances of the @ref UARTDRV_Buffer_FifoQueue_t struct.
+///   with the DEFINE_BUF_QUEUE macro by the user of the driver to allocate
+///   instances of the UARTDRV_Buffer_FifoQueue_t struct.
 #if !defined(EMDRV_UARTDRV_MAX_CONCURRENT_RX_BUFS)
 #define EMDRV_UARTDRV_MAX_CONCURRENT_RX_BUFS    6
 #endif
 
 /// Size of the transmit operation queue.
-/// @details
 ///   The maximum number of transmit operations that can be queued up for one
-///   driver instance before @ref UARTDRV_Transmit() returns
-///   @ref ECODE_EMDRV_UARTDRV_QUEUE_FULL.
-/// @note
+///   driver instance before UARTDRV_Transmit() returns
 ///   This macro is not used by the UARTDRV itself, but is intended to be used
-///   with the @ref DEFINE_BUF_QUEUE macro by the user of the driver to allocate
-///   instances of the @ref UARTDRV_Buffer_FifoQueue_t struct.
+///   with the DEFINE_BUF_QUEUE macro by the user of the driver to allocate
+///   instances of the UARTDRV_Buffer_FifoQueue_t struct.
 #if !defined(EMDRV_UARTDRV_MAX_CONCURRENT_TX_BUFS)
 #define EMDRV_UARTDRV_MAX_CONCURRENT_TX_BUFS    6
 #endif
