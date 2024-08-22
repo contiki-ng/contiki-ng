@@ -36,7 +36,9 @@
  ******************************************************************************/
 /// Size of the receive operation queue.
 ///   The maximum number of receive operations that can be queued up for one
-///   driver instance before @ref UARTDRV_Receive() returns
+///   driver instance before UARTDRV_Receive() returns
+///   driver instance before UARTDRV_Receive() returns
+///   ECODE_EMDRV_UARTDRV_QUEUE_FULL.
 ///   This macro is not used by the UARTDRV itself, but is intended to be used
 ///   with the DEFINE_BUF_QUEUE macro by the user of the driver to allocate
 ///   instances of the UARTDRV_Buffer_FifoQueue_t struct.
@@ -47,6 +49,7 @@
 /// Size of the transmit operation queue.
 ///   The maximum number of transmit operations that can be queued up for one
 ///   driver instance before UARTDRV_Transmit() returns
+///   ECODE_EMDRV_UARTDRV_QUEUE_FULL.
 ///   This macro is not used by the UARTDRV itself, but is intended to be used
 ///   with the DEFINE_BUF_QUEUE macro by the user of the driver to allocate
 ///   instances of the UARTDRV_Buffer_FifoQueue_t struct.
