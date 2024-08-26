@@ -51,6 +51,7 @@ void border_router_set_sensors(const char *data, int len);
 void border_router_print_stat(void);
 
 void tun_init(void);
+const char *tun_get_prefix(void);
 
 int slip_init(void);
 int slip_set_fd(int maxfd, fd_set *rset, fd_set *wset);

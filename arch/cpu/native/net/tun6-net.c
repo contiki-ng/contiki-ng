@@ -68,6 +68,7 @@
 static const char *config_ipaddr = "fd00::1/64";
 /* Allocate some bytes in RAM and copy the string */
 static char config_tundev[IFNAMSIZ + 1] = "tun0";
+static void (* tun_input_callback)(void);
 
 static int tunfd = -1;
 
@@ -78,10 +79,10 @@ static const struct select_callback tun_select_callback = {
   handle_fd
 };
 
-int ssystem(const char *fmt, ...)
+static int ssystem(const char *fmt, ...)
      __attribute__((__format__ (__printf__, 1, 2)));
 
-int
+static int
 ssystem(const char *fmt, ...)
 {
   char cmd[128];
@@ -95,7 +96,36 @@ ssystem(const char *fmt, ...)
 }
 
 /*---------------------------------------------------------------------------*/
+const char *
+tun6_net_get_prefix(void)
+{
+  return config_ipaddr;
+}
+/*---------------------------------------------------------------------------*/
 void
+tun6_net_set_prefix(const char *ipaddr)
+{
+  config_ipaddr = ipaddr;
+}
+/*---------------------------------------------------------------------------*/
+const char *
+tun6_net_get_tun_name(void)
+{
+  return config_tundev;
+}
+/*---------------------------------------------------------------------------*/
+void
+tun6_net_set_tun_name(const char *tun_name)
+{
+  /* Ignore "/dev/" if present in tun device name */
+  if(strncmp("/dev/", tun_name, 5) == 0) {
+    tun_name += 5;
+  }
+  strncpy(config_tundev, tun_name, sizeof(config_tundev) - 1);
+  config_tundev[sizeof(config_tundev) - 1] = '\0';
+}
+/*---------------------------------------------------------------------------*/
+static void
 ifconf_cleanup(const char *dev)
 {
 #define TMPBUFSIZE 128
@@ -206,17 +236,21 @@ tun_alloc(char *dev, uint16_t devsize)
 }
 #endif
 /*---------------------------------------------------------------------------*/
-static void
-tun_init()
+bool
+tun6_net_init(void (* tun_input)(void))
 {
+  if(!tun_input) {
+    return false;
+  }
+  tun_input_callback = tun_input;
+
   setvbuf(stdout, NULL, _IOLBF, 0); /* Line buffered output. */
 
-  LOG_INFO("Opening tun interface:%s\n", config_tundev);
+  LOG_INFO("Opening tun interface %s\n", config_tundev);
 
   tunfd = tun_alloc(config_tundev, sizeof(config_tundev));
   if(tunfd == -1) {
-    LOG_WARN("Failed to open tun device (you may be lacking permission). Running without network.\n");
-    return;
+    return false;
   }
 
   LOG_INFO("Tun open:%d\n", tunfd);
@@ -231,10 +265,11 @@ tun_init()
   signal(SIGTERM, sigcleanup);
   signal(SIGINT, sigcleanup);
   ifconf(config_tundev, config_ipaddr);
+  return true;
 }
 /*---------------------------------------------------------------------------*/
-static int
-tun_output(uint8_t *data, int len)
+int
+tun6_net_output(const uint8_t *data, int len)
 {
   if(tunfd != -1 && write(tunfd, data, len) != len) {
     err(1, "serial_to_tun: write");
@@ -242,8 +277,8 @@ tun_output(uint8_t *data, int len)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-static int
-tun_input(unsigned char *data, int maxlen)
+int
+tun6_net_input(uint8_t *data, int maxlen)
 {
   int size;
 
@@ -253,13 +288,13 @@ tun_input(unsigned char *data, int maxlen)
   }
 
   if((size = read(tunfd, data, maxlen)) == -1) {
-    err(1, "tun_input: read");
+    err(1, "tun6_net_input: read");
   }
   return size;
 }
 
 /*---------------------------------------------------------------------------*/
-/* tun and slip select callback                                              */
+/* tun select callback                                                       */
 /*---------------------------------------------------------------------------*/
 static int
 set_fd(fd_set *rset, fd_set *wset)
@@ -281,15 +316,29 @@ handle_fd(fd_set *rset, fd_set *wset)
   }
 
   if(FD_ISSET(tunfd, rset)) {
-    int size = tun_input(uip_buf, sizeof(uip_buf));
-    LOG_DBG("TUN data incoming read:%d\n", size);
-    uip_len = size;
-    tcpip_input();
+    tun_input_callback();
   }
 }
 
 /*---------------------------------------------------------------------------*/
 /* network callbacks                                                         */
+/*---------------------------------------------------------------------------*/
+static void
+tun_input(void)
+{
+  int size = tun6_net_input(uip_buf, sizeof(uip_buf));
+  LOG_DBG("TUN data incoming read:%d\n", size);
+  uip_len = size;
+  tcpip_input();
+}
+/*---------------------------------------------------------------------------*/
+static void
+network_init(void)
+{
+  if(!tun6_net_init(tun_input)) {
+    LOG_WARN("Failed to open tun device (you may be lacking permission). Running without network.\n");
+  }
+}
 /*---------------------------------------------------------------------------*/
 static uint8_t
 network_output(const linkaddr_t *localdest)
@@ -298,7 +347,7 @@ network_output(const linkaddr_t *localdest)
     LOG_DBG("output: %u bytes to ", uip_len);
     LOG_DBG_LLADDR(localdest);
     LOG_DBG_("\n");
-    return tun_output(uip_buf, uip_len);
+    return tun6_net_output(uip_buf, uip_len);
   }
   return 0;
 }
@@ -312,7 +361,7 @@ network_input(void)
 /*---------------------------------------------------------------------------*/
 const struct network_driver tun6_net_driver = {
   "tun6",
-  tun_init,
+  network_init,
   network_input,
   network_output
 };

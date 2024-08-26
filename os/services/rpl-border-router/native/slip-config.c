@@ -48,15 +48,14 @@
 #include <err.h>
 #include "contiki.h"
 #include "sys/platform.h"
+#include "tun6-net.h"
 
 int slip_config_verbose = 0;
-const char *slip_config_ipaddr;
 int slip_config_flowcontrol = 0;
 int slip_config_timestamp = 0;
 const char *slip_config_siodev = NULL;
 const char *slip_config_host = NULL;
 const char *slip_config_port = NULL;
-char slip_config_tundev[IFNAMSIZ + 1] = { "" };
 uint16_t slip_config_basedelay = 0;
 
 #ifndef BAUDRATE
@@ -76,12 +75,6 @@ CONTIKI_EXTRA_HELP(300,
                    "  3   Printable strings and SLIP packet notifications\n"
                    "  4   All printable characters as they are received\n"
                    "  5   All SLIP packets in hex\n");
-/*---------------------------------------------------------------------------*/
-CC_CONSTRUCTOR(CONTIKI_MIN_INIT_PRIO - 1) static void
-init_slip_config_data(void)
-{
-  strcpy(slip_config_tundev, "tun0");
-}
 /*---------------------------------------------------------------------------*/
 static int
 baudrate_callback(const char *optarg)
@@ -157,10 +150,7 @@ CONTIKI_OPTION(BAUDRATE_PRIO + 5, { "p", required_argument, NULL, 0 },
 static int
 dev_callback(const char *optarg)
 {
-  strncpy(slip_config_tundev,
-          optarg + (strncmp("/dev/", optarg, 5) == 0 ? 5 : 0),
-          sizeof(slip_config_tundev) - 1);
-  slip_config_tundev[sizeof(slip_config_tundev) - 1] = '\0';
+  tun6_net_set_tun_name(optarg);
   return 0;
 }
 CONTIKI_OPTION(BAUDRATE_PRIO + 6, { "t", required_argument, NULL, 0 },
@@ -189,7 +179,7 @@ slip_config_handle_arguments(int argc, char **argv)
   if(argc != 2 && argc != 3) {
     err(1, "usage: [-B baudrate] [-H] [-L] [-s siodev] [-t tundev] [-T] [-v verbosity] [-d delay] [-a serveraddress] [-p serverport] ipaddress");
   }
-  slip_config_ipaddr = argv[1];
+  tun6_net_set_prefix(argv[1]);
   return 1;
 }
 /*---------------------------------------------------------------------------*/

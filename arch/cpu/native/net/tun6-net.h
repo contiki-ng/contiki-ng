@@ -37,12 +37,22 @@
 #define TUN6_NET_H_
 
 #include <stdint.h>
+#include <stdbool.h>
+
+const char *tun6_net_get_prefix(void);
+void tun6_net_set_prefix(const char *ipaddr);
+
+const char *tun6_net_get_tun_name(void);
+void tun6_net_set_tun_name(const char *tun_name);
+
+bool tun6_net_init(void (* tun_input)(void));
+int tun6_net_output(const uint8_t *data, int len);
+int tun6_net_input(uint8_t *data, int maxlen);
 
 int tun6_net_devopen(const char *device, int flags);
 
 int tun_alloc(char *dev, uint16_t devsize);
 
-void ifconf_cleanup(const char *dev);
 void ifconf(const char *tundev, const char *ipaddr);
 
 #endif /* TUN6_NET_H_ */
