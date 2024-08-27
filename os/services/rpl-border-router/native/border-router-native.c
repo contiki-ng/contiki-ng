@@ -140,7 +140,7 @@ PROCESS_THREAD(border_router_process, ev, data)
       set_prefix_64(&prefix);
     } else {
       LOG_ERR("Parse error: %s\n", config_ipaddr);
-      exit(0);
+      exit(EXIT_FAILURE);
     }
   }
 
