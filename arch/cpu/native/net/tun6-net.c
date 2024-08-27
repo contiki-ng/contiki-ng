@@ -35,6 +35,7 @@
 
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/netstack.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -50,6 +51,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <net/if.h>
+#include <err.h>
 
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
@@ -57,18 +59,20 @@
 #define LOG_MODULE "Tun6"
 #define LOG_LEVEL LOG_LEVEL_WARN
 
-#ifdef linux
-#include <linux/if.h>
-#include <linux/if_tun.h>
-#endif
-
-#include <err.h>
-#include "net/netstack.h"
+#ifdef __APPLE__
+/* utun0-3 are in use on Big Sur, so use utun10 as default */
+#define DEFAULT_TUN "utun10"
+#else /* __APPLE__ */
+#define DEFAULT_TUN "tun0"
+#endif /* __APPLE__ */
 
 static const char *config_ipaddr = "fd00::1/64";
-/* Allocate some bytes in RAM and copy the string */
-static char config_tundev[IFNAMSIZ + 1] = "tun0";
+static char config_tundev[IFNAMSIZ + 1] = DEFAULT_TUN;
 static void (* tun_input_callback)(void);
+
+/* IPv6 required minimum MTU */
+#define MIN_MTU_SIZE 1500
+static int config_mtu = MIN_MTU_SIZE;
 
 static int tunfd = -1;
 
@@ -125,34 +129,59 @@ tun6_net_set_tun_name(const char *tun_name)
   config_tundev[sizeof(config_tundev) - 1] = '\0';
 }
 /*---------------------------------------------------------------------------*/
-static void
-ifconf_cleanup(const char *dev)
+int
+tun6_net_get_mtu(void)
 {
-#define TMPBUFSIZE 128
-  /* Called from signal handler, avoid unsafe functions. */
-  char buf[TMPBUFSIZE];
-  strcpy(buf, "ifconfig ");
-  /* Will not overflow, but null-terminate to avoid spurious warnings. */
-  buf[TMPBUFSIZE - 1] = '\0';
-  strncat(buf, dev, TMPBUFSIZE - strlen(buf) - 1);
-  strncat(buf, " down", TMPBUFSIZE - strlen(buf) - 1);
-  system(buf);
-#ifndef linux
-  system("sysctl -w net.ipv6.conf.all.forwarding=1");
-#endif
-  strcpy(buf, "netstat -nr"
-         " | awk '{ if ($2 == \"");
-  buf[TMPBUFSIZE - 1] = '\0';
-  strncat(buf, dev, TMPBUFSIZE - strlen(buf) - 1);
-  strncat(buf, "\") print \"route delete -net \"$1; }'"
-          " | sh", TMPBUFSIZE - strlen(buf) - 1);
-  system(buf);
+  return config_mtu;
+}
+/*---------------------------------------------------------------------------*/
+void
+tun6_net_set_mtu(int mtu_size)
+{
+  config_mtu = MAX(MIN_MTU_SIZE, mtu_size);
 }
 /*---------------------------------------------------------------------------*/
 static void
 cleanup(void)
 {
-  ifconf_cleanup(config_tundev);
+#define TMPBUFSIZE 128
+  /* Called from signal handler, avoid unsafe functions. */
+  char buf[TMPBUFSIZE];
+#ifndef __APPLE__
+  strcpy(buf, "ifconfig ");
+  /* Will not overflow, but null-terminate to avoid spurious warnings. */
+  buf[TMPBUFSIZE - 1] = '\0';
+  strncat(buf, config_tundev, TMPBUFSIZE - strlen(buf) - 1);
+  strncat(buf, " down", TMPBUFSIZE - strlen(buf) - 1);
+  system(buf);
+
+#ifndef linux
+  system("sysctl -w net.ipv6.conf.all.forwarding=1");
+#endif
+
+  strcpy(buf, "netstat -nr"
+         " | awk '{ if ($2 == \"");
+  buf[TMPBUFSIZE - 1] = '\0';
+  strncat(buf, config_tundev, TMPBUFSIZE - strlen(buf) - 1);
+  strncat(buf, "\") print \"route delete -net \"$1; }'"
+          " | sh", TMPBUFSIZE - strlen(buf) - 1);
+  system(buf);
+#else /* __APPLE__ */
+  strcpy(buf, "ifconfig ");
+  /* Will not overflow, but null-terminate to avoid spurious warnings. */
+  buf[TMPBUFSIZE - 1] = '\0';
+  strncat(buf, config_tundev, TMPBUFSIZE - strlen(buf) - 1);
+  strncat(buf, " inet6 ", TMPBUFSIZE - strlen(buf) - 1);
+  strncat(buf, config_ipaddr, TMPBUFSIZE - strlen(buf) - 1);
+  strncat(buf, " remove", TMPBUFSIZE - strlen(buf) - 1);
+  system(buf);
+
+  strcpy(buf, "ifconfig ");
+  buf[TMPBUFSIZE - 1] = '\0';
+  strncat(buf, config_tundev, TMPBUFSIZE - strlen(buf) - 1);
+  strncat(buf, " down", TMPBUFSIZE - strlen(buf) - 1);
+  system(buf);
+#endif /* __APPLE__ */
 }
 /*---------------------------------------------------------------------------*/
 static void CC_NORETURN
@@ -176,31 +205,37 @@ tun6_net_devopen(const char *dev, int flags)
   return open(t, flags);
 }
 /*---------------------------------------------------------------------------*/
-void
-ifconf(const char *tundev, const char *ipaddr)
+static void
+ifconf_setup(void)
 {
 #ifdef linux
-  ssystem("ifconfig %s inet `hostname` up", tundev);
-  ssystem("ifconfig %s add %s", tundev, ipaddr);
+  ssystem("ifconfig %s inet `hostname` mtu %d up", config_tundev, config_mtu);
+  ssystem("ifconfig %s add %s", config_tundev, config_ipaddr);
 #elif defined(__APPLE__)
-  ssystem("ifconfig %s inet6 %s up", tundev, ipaddr);
-  ssystem("sysctl -w net.inet.ip.forwarding=1");
+  ssystem("ifconfig %s inet6 mtu %d up", config_tundev, config_mtu);
+  ssystem("ifconfig %s inet6 %s add", config_tundev, config_ipaddr );
+  ssystem("sysctl -w net.inet6.ip6.forwarding=1");
 #else
-  ssystem("ifconfig %s inet `hostname` %s up", tundev, ipaddr);
+  ssystem("ifconfig %s inet `hostname` %s mtu %d up", cofnig_tundev, config_ipaddr, config_mtu);
   ssystem("sysctl -w net.inet.ip.forwarding=1");
 #endif /* !linux */
 
   /* Print the configuration to the console. */
-  ssystem("ifconfig %s\n", tundev);
+  ssystem("ifconfig %s\n", config_tundev);
 }
 /*---------------------------------------------------------------------------*/
 #ifdef linux
-int
-tun_alloc(char *dev, uint16_t devsize)
+#include <linux/if.h>
+#include <linux/if_tun.h>
+
+static int
+tun_alloc(void)
 {
   struct ifreq ifr;
   int fd, err;
-  LOG_INFO("Opening: %s\n", dev);
+
+  LOG_INFO("Opening tun interface %s\n", config_tundev);
+
   if((fd = open("/dev/net/tun", O_RDWR)) < 0) {
     /* Error message handled by caller */
     return -1;
@@ -212,27 +247,91 @@ tun_alloc(char *dev, uint16_t devsize)
    *        IFF_NO_PI - Do not provide packet information
    */
   ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-  if(*dev != '\0') {
-    memcpy(ifr.ifr_name, dev, MIN(sizeof(ifr.ifr_name), devsize));
+  if(*config_tundev != '\0') {
+    strncpy(ifr.ifr_name, config_tundev, sizeof(ifr.ifr_name) - 1);
+    ifr.ifr_name[sizeof(ifr.ifr_name) - 1] = '\0';
   }
+
   if((err = ioctl(fd, TUNSETIFF, (void *)&ifr)) < 0) {
     /* Error message handled by caller */
     close(fd);
     return err;
   }
-  LOG_INFO("Using '%s' vs '%s'\n", dev, ifr.ifr_name);
-  strncpy(dev, ifr.ifr_name, MIN(devsize - 1, sizeof(ifr.ifr_name)));
-  dev[devsize - 1] = '\0';
-  LOG_INFO("Using %s\n", dev);
+
+  LOG_INFO("Using '%s' as '%s'\n", config_tundev, ifr.ifr_name);
+  strncpy(config_tundev, ifr.ifr_name, sizeof(config_tundev) - 1);
+  config_tundev[sizeof(config_tundev) - 1] = '\0';
+  return fd;
+}
+#elif defined __APPLE__
+#include <sys/sys_domain.h>
+#include <sys/kern_control.h>
+#include <net/if_utun.h>
+#include <sys/uio.h>
+
+/*
+ * Reference for utun on macOS:
+ * http://newosxbook.com/src.jl?tree=listings&file=17-15-utun.c
+ */
+static int
+tun_alloc(void)
+{
+  struct sockaddr_ctl sc;
+  struct ctl_info ctl_info;
+  int fd;
+  unsigned int tunif;
+
+  if(sscanf(config_tundev, "utun%u", &tunif) != 1 || tunif >= UINT8_MAX) {
+    fprintf(stderr, "tun_alloc: invalid utun interface specified: %s\n", config_tundev);
+    return -1;
+  }
+
+  LOG_INFO("Opening tun interface %s\n", config_tundev);
+
+  memset(&ctl_info, 0, sizeof(ctl_info));
+  if(strlcpy(ctl_info.ctl_name, UTUN_CONTROL_NAME, sizeof(ctl_info.ctl_name)) >=
+      sizeof(ctl_info.ctl_name)) {
+    fprintf(stderr, "UTUN_CONTROL_NAME too long");
+    return -1;
+  }
+
+  fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
+  if(fd == -1) {
+    perror("socket(SYSPROTO_CONTROL)");
+    return -1;
+  }
+
+  if(ioctl(fd, CTLIOCGINFO, &ctl_info) == -1) {
+    perror("ioctl(CTLIOCGINFO)");
+    close(fd);
+    return -1;
+  }
+
+  sc.sc_id = ctl_info.ctl_id;
+  sc.sc_len = sizeof(sc);
+  sc.sc_family = AF_SYSTEM;
+  sc.ss_sysaddr = AF_SYS_CONTROL;
+  sc.sc_unit = tunif + 1;
+
+  /*
+   * If the connect is successful, a utun%d device will be created, where "%d"
+   * is our unit number -1
+   */
+
+  if(connect(fd, (struct sockaddr *)&sc, sizeof(sc)) == -1) {
+    perror("connect(AF_SYS_CONTROL)");
+    close(fd);
+    return -1;
+  }
+
   return fd;
 }
 #else
-/*---------------------------------------------------------------------------*/
-int
-tun_alloc(char *dev, uint16_t devsize)
+static int
+tun_alloc(void)
 {
-  LOG_INFO("Opening: %s\n", dev);
-  return tun6_net_devopen(dev, O_RDWR);
+  LOG_INFO("Opening tun interface %s\n", config_tundev);
+  return tun6_net_devopen(config_tundev, O_RDWR);
 }
 #endif
 /*---------------------------------------------------------------------------*/
@@ -246,9 +345,7 @@ tun6_net_init(void (* tun_input)(void))
 
   setvbuf(stdout, NULL, _IOLBF, 0); /* Line buffered output. */
 
-  LOG_INFO("Opening tun interface %s\n", config_tundev);
-
-  tunfd = tun_alloc(config_tundev, sizeof(config_tundev));
+  tunfd = tun_alloc();
   if(tunfd == -1) {
     return false;
   }
@@ -264,16 +361,36 @@ tun6_net_init(void (* tun_input)(void))
   signal(SIGHUP, sigcleanup);
   signal(SIGTERM, sigcleanup);
   signal(SIGINT, sigcleanup);
-  ifconf(config_tundev, config_ipaddr);
+  ifconf_setup();
   return true;
 }
 /*---------------------------------------------------------------------------*/
 int
-tun6_net_output(const uint8_t *data, int len)
+tun6_net_output(uint8_t *data, int len)
 {
-  if(tunfd != -1 && write(tunfd, data, len) != len) {
-    err(1, "serial_to_tun: write");
+  if(tunfd == -1) {
+    return 0;
   }
+
+#ifdef __APPLE__
+  /* Fake IFF_NO_PI on macOS by sending a 4 byte header containing AF_INET6 */
+  u_int32_t type = htonl(AF_INET6);
+  struct iovec iv[2];
+
+  iv[0].iov_base = &type;
+  iv[0].iov_len = sizeof(type);
+  iv[1].iov_base = data;
+  iv[1].iov_len = len;
+
+  if(writev(tunfd, iv, 2) != (sizeof(type) + len)) {
+    err(1, "tun6_net_output: writev");
+  }
+#else
+  if(write(tunfd, data, len) != len) {
+    err(1, "tun6_net_output: write");
+  }
+#endif
+
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -290,6 +407,19 @@ tun6_net_input(uint8_t *data, int maxlen)
   if((size = read(tunfd, data, maxlen)) == -1) {
     err(1, "tun6_net_input: read");
   }
+
+#ifdef __APPLE__
+#define UTUN_HEADER_LEN 4
+  /* Fake IFF_NO_PI on macOS by ignoring the first 4 bytes containing AF_INET6 */
+  if(size <= UTUN_HEADER_LEN) {
+    err(1, "tun6_net_input: read too small");
+  }
+
+  size -= UTUN_HEADER_LEN;
+  memmove(data, data + UTUN_HEADER_LEN, size);
+#undef UTUN_HEADER_LEN
+#endif /* __APPLE__ */
+
   return size;
 }
 

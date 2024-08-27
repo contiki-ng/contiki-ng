@@ -172,6 +172,14 @@ CONTIKI_OPTION(BAUDRATE_PRIO + 7, { "d", optional_argument, NULL, 0 },
                "minimum delay between outgoing SLIP packets (default 10)\n"
                "\t\tActual delay is basedelay * (#6LowPAN fragments)"
                " milliseconds.\n");
+static int
+mtu_callback(const char *optarg)
+{
+  tun6_net_set_mtu(atoi(optarg));
+  return 0;
+}
+CONTIKI_OPTION(BAUDRATE_PRIO + 8, { "M", required_argument, NULL, 0 },
+               mtu_callback, "interface MTU size\n");
 /*---------------------------------------------------------------------------*/
 int
 slip_config_handle_arguments(int argc, char **argv)
