@@ -52,6 +52,4 @@ bool tun6_net_init(void (* tun_input)(void));
 int tun6_net_output(uint8_t *data, int len);
 int tun6_net_input(uint8_t *data, int maxlen);
 
-int tun6_net_devopen(const char *device, int flags);
-
 #endif /* TUN6_NET_H_ */

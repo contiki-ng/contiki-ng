@@ -196,15 +196,6 @@ sigcleanup(int signo)
   _exit(0);
 }
 /*---------------------------------------------------------------------------*/
-int
-tun6_net_devopen(const char *dev, int flags)
-{
-  char t[32];
-  strcpy(t, "/dev/");
-  strncat(t, dev, sizeof(t) - 5);
-  return open(t, flags);
-}
-/*---------------------------------------------------------------------------*/
 static void
 ifconf_setup(void)
 {
@@ -330,8 +321,11 @@ tun_alloc(void)
 static int
 tun_alloc(void)
 {
-  LOG_INFO("Opening tun interface %s\n", config_tundev);
-  return tun6_net_devopen(config_tundev, O_RDWR);
+  char t[8 + sizeof(config_tundev)] = "/dev/";
+  strncat(t, config_tundev, sizeof(t) - 6);
+  t[sizeof(t) - 1] = '\0';
+  LOG_INFO("Opening tun interface %s\n", t);
+  return open(t, O_RDWR);
 }
 #endif
 /*---------------------------------------------------------------------------*/
