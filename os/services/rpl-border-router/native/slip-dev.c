@@ -55,7 +55,6 @@
 #include "net/packetbuf.h"
 #include "cmd.h"
 #include "border-router-cmds.h"
-#include "tun6-net.h"
 
 extern int slip_config_verbose;
 extern int slip_config_flowcontrol;
@@ -522,18 +521,17 @@ slip_init(void)
       /* Disable slip */
       return;
     }
-    slipfd = tun6_net_devopen(slip_config_siodev, O_RDWR | O_NONBLOCK);
+    slipfd = open(slip_config_siodev, O_RDWR | O_NONBLOCK);
     if(slipfd == -1) {
-      err(1, "can't open siodev ``/dev/%s''", slip_config_siodev);
+      err(1, "can't open siodev ``%s''", slip_config_siodev);
     }
   } else {
     static const char *siodevs[] = {
-      "ttyUSB0", "cuaU0", "ucom0" /* linux, fbsd6, fbsd5 */
+      "/dev/ttyUSB0", "/dev/cuaU0", "/dev/ucom0" /* linux, fbsd6, fbsd5 */
     };
-    int i;
-    for(i = 0; i < 3; i++) {
+    for(int i = 0; i < 3; i++) {
       slip_config_siodev = siodevs[i];
-      slipfd = tun6_net_devopen(slip_config_siodev, O_RDWR | O_NONBLOCK);
+      slipfd = open(slip_config_siodev, O_RDWR | O_NONBLOCK);
       if(slipfd != -1) {
         break;
       }

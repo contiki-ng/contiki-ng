@@ -66,7 +66,7 @@ speed_t slip_config_b_rate = BAUDRATE;
 #define BAUDRATE_PRIO CONTIKI_VERBOSE_PRIO + 20
 
 CONTIKI_USAGE(300, " ipaddress\n"
-                   "example parameters: -L -v=2 -s ttyUSB1 fd00::1/64\n\n");
+                   "example parameters: -L -v=2 -s /dev/ttyUSB1 fd00::1/64\n\n");
 CONTIKI_EXTRA_HELP(300,
                    "\nVerbosity level:\n"
                    "  0   No messages\n"
@@ -126,11 +126,11 @@ CONTIKI_OPTION(BAUDRATE_PRIO + 2,
 static int
 device_callback(const char *optarg)
 {
-  slip_config_siodev = optarg + (strncmp("/dev/", optarg, 5) == 0 ? 5 : 0);
+  slip_config_siodev = optarg;
   return 0;
 }
 CONTIKI_OPTION(BAUDRATE_PRIO + 3, { "s", required_argument, NULL, 0 },
-               device_callback, "serial device (default /dev/ttyUSB0)\n");
+               device_callback, "serial device\n");
 static int
 host_callback(const char *optarg)
 {
