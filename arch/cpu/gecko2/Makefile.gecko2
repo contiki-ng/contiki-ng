@@ -180,7 +180,6 @@ LIBRAIL = $(GSDK_ROOT)/platform/radio/rail_lib/autogen/librail_release/librail_$
 
 CFLAGS += -DSL_COMPONENT_CATALOG_PRESENT=1
 CFLAGS += '-DSL_RAIL_UTIL_PA_CONFIG_HEADER=<sl_rail_util_pa_config.h>'
-CFLAGS += -DSL_CATALOG_RAIL_UTIL_RF_PATH_SWITCH_PRESENT=1
 CFLAGS += -DNDEBUG=1 -DNO_DEBUGPRINT=1
 
 # Contiki

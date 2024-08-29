@@ -310,6 +310,7 @@ init(void)
   sl_rail_util_pa_init();
   sl_rail_util_pti_init();
   sl_rail_util_rf_path_init();
+  sl_rail_util_rf_path_switch_init();
   sl_rail_util_rssi_init();
 
   /* initializes the RAIL core */
