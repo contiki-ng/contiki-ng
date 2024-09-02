@@ -155,8 +155,8 @@ RUN wget -nv https://sourceforge.net/projects/doxygen/files/rel-1.10.0/doxygen-1
     tar zxf doxygen.linux.bin.tar.gz -C ${HOME}/.local && \
     rm -rf ${HOME}/.local/doxygen-1.10.0/html ${HOME}/.local/doxygen-1.10.0/*.pdf doxygen.linux.bin.tar.gz && \
     (cd ${HOME}/.local/bin && ln -s ../doxygen-1.10.0/bin/doxygen .) && \
-    wget -nv https://github.com/ccache/ccache/releases/download/v4.8.2/ccache-4.8.2-linux-x86_64.tar.xz && \
-    tar xf ccache-4.8.2-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.8.2-linux-x86_64/ccache && \
+    wget -nv https://github.com/ccache/ccache/releases/download/v4.10.2/ccache-4.10.2-linux-x86_64.tar.xz && \
+    tar xf ccache-4.10.2-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.10.2-linux-x86_64/ccache && \
     rm ccache-*-linux-x86_64.tar.xz
 
 # Install additional tools for the nRF5 SDK.
