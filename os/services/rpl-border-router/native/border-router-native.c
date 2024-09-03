@@ -79,6 +79,11 @@ request_mac(void)
 void
 border_router_set_mac(const uint8_t *data)
 {
+  if(is_mac_set) {
+    /* only set MAC address once */
+    return;
+  }
+
   memcpy(uip_lladdr.addr, data, sizeof(uip_lladdr.addr));
   linkaddr_set_node_addr((linkaddr_t *)uip_lladdr.addr);
 
