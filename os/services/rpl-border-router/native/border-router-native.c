@@ -54,11 +54,12 @@
 #define LOG_LEVEL LOG_LEVEL_INFO
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 extern long slip_sent;
 extern long slip_received;
 
-static uint8_t mac_set;
+static bool is_mac_set;
 
 extern int contiki_argc;
 extern char **contiki_argv;
@@ -88,7 +89,7 @@ border_router_set_mac(const uint8_t *data)
   NETSTACK_ROUTING.init();
   PROCESS_CONTEXT_END(&tcpip_process);
 
-  mac_set = 1;
+  is_mac_set = true;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -103,6 +104,8 @@ PROCESS_THREAD(border_router_process, ev, data)
   static struct etimer et;
 
   PROCESS_BEGIN();
+
+  is_mac_set = false;
   prefix_set = 0;
 
   PROCESS_PAUSE();
@@ -116,7 +119,7 @@ PROCESS_THREAD(border_router_process, ev, data)
   /* tun init is also responsible for setting up the SLIP connection */
   tun_init();
 
-  while(!mac_set) {
+  while(!is_mac_set) {
     etimer_set(&et, CLOCK_SECOND);
     request_mac();
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
