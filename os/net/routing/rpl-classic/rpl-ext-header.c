@@ -486,8 +486,9 @@ update_hbh_header(void)
           LOG_WARN("RPL generate No-Path DAO\n");
           parent = rpl_get_parent((uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER));
           if(parent != NULL) {
-            dao_output_target(parent, &UIP_IP_BUF->destipaddr,
-                              RPL_ZERO_LIFETIME);
+            rpl_schedule_unicast_dao_immediately(instance, parent,
+                                                 &UIP_IP_BUF->destipaddr,
+                                                 RPL_ZERO_LIFETIME);
           }
           /* Drop packet. */
           return 0;
