@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Tiny Mesh AS
+ * Copyright (c) 2014, Hasso-Plattner-Institut.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,46 +32,54 @@
 
 /**
  * \file
- *         LLSEC802154 Security related configuration
+ *         Interface to anti-replay mechanisms.
  * \author
- *         Olav Frengstad <olav@tiny-mesh.com>
+ *         Konrad Krentz <konrad.krentz@gmail.com>
  */
 
-#ifndef CSMA_SECURITY_H_
-#define CSMA_SECURITY_H_
+/**
+ * \addtogroup llsec802154
+ * @{
+ */
 
-#include "net/mac/framer/framer.h"
+#ifndef ANTI_REPLAY_H
+#define ANTI_REPLAY_H
 
-#ifdef CSMA_CONF_LLSEC_DEFAULT_KEY0
-#define CSMA_LLSEC_DEFAULT_KEY0 CSMA_CONF_LLSEC_DEFAULT_KEY0
-#else
-#define CSMA_LLSEC_DEFAULT_KEY0 {0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x1f}
-#endif
+#include "contiki.h"
+#include <stdbool.h>
 
-#ifdef CSMA_CONF_LLSEC_SECURITY_LEVEL
-#define CSMA_LLSEC_SECURITY_LEVEL   CSMA_CONF_LLSEC_SECURITY_LEVEL
-#else
-#define CSMA_LLSEC_SECURITY_LEVEL   5
-#endif /* CSMA_CONF_LLSEC_SECURITY_LEVEL */
+struct anti_replay_info {
+  uint32_t last_broadcast_counter;
+  uint32_t last_unicast_counter;
+};
 
-#ifdef CSMA_CONF_LLSEC_KEY_ID_MODE
-#define CSMA_LLSEC_KEY_ID_MODE   CSMA_CONF_LLSEC_KEY_ID_MODE
-#else
-#define CSMA_LLSEC_KEY_ID_MODE   FRAME802154_IMPLICIT_KEY
-#endif /* CSMA_CONF_LLSEC_KEY_ID_MODE */
+/**
+ * \brief Sets the frame counter packetbuf attributes.
+ */
+void anti_replay_set_counter(void);
 
-#ifdef CSMA_CONF_LLSEC_KEY_INDEX
-#define CSMA_LLSEC_KEY_INDEX   CSMA_CONF_LLSEC_KEY_INDEX
-#else
-#define CSMA_LLSEC_KEY_INDEX   0
-#endif /* CSMA_CONF_LLSEC_KEY_INDEX */
+/**
+ * \brief Gets the frame counter from packetbuf.
+ */
+uint32_t anti_replay_get_counter(void);
 
-#ifdef CSMA_CONF_LLSEC_MAXKEYS
-#define CSMA_LLSEC_MAXKEYS CSMA_CONF_LLSEC_MAXKEYS
-#else
-#define CSMA_LLSEC_MAXKEYS 1
-#endif
+/**
+ * \brief      Initializes the anti-replay information about the sender
+ * \param info Anti-replay information about the sender
+ */
+void anti_replay_init_info(struct anti_replay_info *info);
 
-extern const struct framer csma_security_framer;
+/**
+ * \brief      Checks if received frame was replayed
+ * \param info Anti-replay information about the sender
+ */
+bool anti_replay_was_replayed(struct anti_replay_info *info);
 
-#endif /* CSMA_SECURITY_H_ */
+/**
+ * \brief Parses the frame counter to packetbuf attributes
+ */
+void anti_replay_parse_counter(const uint8_t *p);
+
+#endif /* ANTI_REPLAY_H */
+
+/** @} */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Hasso-Plattner-Institut.
+ * Copyright (c) 2021, Uppsala universitet.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,10 +30,12 @@
  *
  */
 
-#ifndef CCM_STAR_PACKETBUF_H_
-#define CCM_STAR_PACKETBUF_H_
+#ifndef PROJECT_CONF_H_
+#define PROJECT_CONF_H_
 
-/*---------------------------------------------------------------------------*/
-void ccm_star_packetbuf_set_nonce(uint8_t *nonce, int forward);
+#define LLSEC802154_CONF_USES_FRAME_COUNTER 1
+#define LLSEC802154_CONF_USES_AUX_HEADER 1
+#define AES_128_CONF aes_128_driver
+#define CCM_STAR_CONF ccm_star_driver
 
-#endif /* CCM_STAR_PACKETBUF_H_ */
+#endif /* PROJECT_CONF_H_ */

@@ -44,7 +44,7 @@
 
 #include "contiki.h"
 #include "net/mac/csma/csma.h"
-#include "net/mac/csma/anti-replay.h"
+#include "net/mac/anti-replay.h"
 #include "net/mac/csma/csma-security.h"
 #include "net/mac/framer/frame802154.h"
 #include "net/mac/framer/framer-802154.h"
@@ -55,7 +55,7 @@
 #include "lib/aes-128.h"
 #include <stdio.h>
 #include <string.h>
-#include "ccm-star-packetbuf.h"
+#include "net/mac/ccm-star-packetbuf.h"
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "CSMA"
@@ -161,8 +161,8 @@ aead(uint8_t hdrlen, int forward)
 }
 
 /*---------------------------------------------------------------------------*/
-int
-csma_security_create_frame(void)
+static int
+create(void)
 {
   int hdr_len;
 
@@ -172,7 +172,7 @@ csma_security_create_frame(void)
     anti_replay_set_counter();
   }
 
-  hdr_len = NETSTACK_FRAMER.create();
+  hdr_len = framer_802154.create();
   if(hdr_len < 0) {
     return hdr_len;
   }
@@ -216,23 +216,23 @@ csma_security_create_frame(void)
 }
 
 /*---------------------------------------------------------------------------*/
-int
-csma_security_frame_len(void)
+static int
+length(void)
 {
   if(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) > 0 &&
      LLSEC_KEY_INDEX != 0xffff) {
-    return NETSTACK_FRAMER.length() +
+    return framer_802154.length() +
       MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) & 0x07);
   }
-  return NETSTACK_FRAMER.length();
+  return framer_802154.length();
 }
 /*---------------------------------------------------------------------------*/
-int
-csma_security_parse_frame(void)
+static int
+parse(void)
 {
   int hdr_len;
 
-  hdr_len = NETSTACK_FRAMER.parse();
+  hdr_len = framer_802154.parse();
   if(hdr_len < 0) {
     return hdr_len;
   }
@@ -295,20 +295,11 @@ csma_security_parse_frame(void)
   return hdr_len;
 }
 /*---------------------------------------------------------------------------*/
-#else
-/* The "unsecure" version of the create frame / parse frame */
-int
-csma_security_create_frame(void)
-{
-  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
-  return NETSTACK_FRAMER.create();
-}
-int
-csma_security_parse_frame(void)
-{
-  return NETSTACK_FRAMER.parse();
-}
-
+const struct framer csma_security_framer = {
+  length,
+  create,
+  parse,
+};
 #endif /* LLSEC802154_USES_AUX_HEADER && LLSEC802154_USES_FRAME_COUNTER */
 
 /** @} */
