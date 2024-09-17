@@ -217,6 +217,12 @@ serial_shell_output(const char *str)
   printf("%s", str);
 }
 /*---------------------------------------------------------------------------*/
+void
+serial_shell_init(void)
+{
+  /* avoid starting the normal serial-shell */
+}
+/*---------------------------------------------------------------------------*/
 
 PROCESS_THREAD(border_router_cmd_process, ev, data)
 {

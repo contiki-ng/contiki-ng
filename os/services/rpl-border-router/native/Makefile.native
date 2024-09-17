@@ -1,6 +1,8 @@
 MODULES += os/services/slip-cmd
 MODULES += os/services/shell
 
+MODULES_SOURCES_EXCLUDES += serial-shell.c
+
 MAKE_MAC = MAKE_MAC_OTHER
 MAKE_NET = MAKE_NET_IPV6
 
