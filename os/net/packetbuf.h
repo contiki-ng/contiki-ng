@@ -270,9 +270,6 @@ void              packetbuf_attr_copyto(struct packetbuf_attr *attrs,
 void              packetbuf_attr_copyfrom(struct packetbuf_attr *attrs,
                                           struct packetbuf_addr *addrs);
 
-#define PACKETBUF_ATTRIBUTES(...) { __VA_ARGS__ PACKETBUF_ATTR_LAST }
-#define PACKETBUF_ATTR_LAST { PACKETBUF_ATTR_NONE, 0 }
-
 #define PACKETBUF_ATTR_BIT  1
 #define PACKETBUF_ATTR_BYTE 8
 #define PACKETBUF_ADDRSIZE (LINKADDR_SIZE * PACKETBUF_ATTR_BYTE)
