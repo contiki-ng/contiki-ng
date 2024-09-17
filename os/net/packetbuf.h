@@ -272,11 +272,6 @@ void              packetbuf_attr_copyfrom(struct packetbuf_attr *attrs,
 
 #define PACKETBUF_ATTR_SECURITY_LEVEL_DEFAULT 0xffff
 
-struct packetbuf_attrlist {
-  uint8_t type;
-  uint8_t len;
-};
-
 #endif /* PACKETBUF_H_ */
 /** @} */
 /** @} */
