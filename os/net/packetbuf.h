@@ -270,10 +270,6 @@ void              packetbuf_attr_copyto(struct packetbuf_attr *attrs,
 void              packetbuf_attr_copyfrom(struct packetbuf_attr *attrs,
                                           struct packetbuf_addr *addrs);
 
-#define PACKETBUF_ATTR_BIT  1
-#define PACKETBUF_ATTR_BYTE 8
-#define PACKETBUF_ADDRSIZE (LINKADDR_SIZE * PACKETBUF_ATTR_BYTE)
-
 #define PACKETBUF_ATTR_SECURITY_LEVEL_DEFAULT 0xffff
 
 struct packetbuf_attrlist {
