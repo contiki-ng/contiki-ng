@@ -243,14 +243,13 @@ double_interval(void *ptr)
    * after 'now', ignoring potential offsets */
   ctimer_set(&loctt->ct, loc_clock, fire, loctt);
   /* Store the actual interval start (absolute time), we need it later */
-  loctt->i_start = loctt->ct.etimer.timer.start;
+  loctt->i_start = ctimer_start_time(&loctt->ct);
 #endif
 
   PRINTF("trickle_timer doubling: Last end %lu, new end %lu, for %lu, I=%lu\n",
          (unsigned long)last_end,
          (unsigned long)TRICKLE_TIMER_INTERVAL_END(loctt),
-         (unsigned long)(loctt->ct.etimer.timer.start +
-                         loctt->ct.etimer.timer.interval),
+         (unsigned long)ctimer_expiration_time(&loctt->ct),
          (unsigned long)(loctt->i_cur));
 }
 /*---------------------------------------------------------------------------*/
@@ -264,8 +263,7 @@ fire(void *ptr)
 
   PRINTF("trickle_timer fire: at %lu (was for %lu)\n",
          (unsigned long)clock_time(),
-         (unsigned long)(loctt->ct.etimer.timer.start +
-                         loctt->ct.etimer.timer.interval));
+         (unsigned long)ctimer_expiration_time(&loctt->ct));
 
   if(loctt->cb) {
     /*
@@ -295,7 +293,7 @@ new_interval(struct trickle_timer *tt)
   ctimer_set(&tt->ct, loc_clock, fire, tt);
 
   /* Store the actual interval start (absolute time), we need it later */
-  tt->i_start = tt->ct.etimer.timer.start;
+  tt->i_start = ctimer_start_time(&tt->ct);
   PRINTF("trickle_timer new interval: at %lu, ends %lu, ",
          (unsigned long)clock_time(),
          (unsigned long)TRICKLE_TIMER_INTERVAL_END(tt));

@@ -87,6 +87,19 @@ struct ctimer {
 void ctimer_reset(struct ctimer *c);
 
 /**
+ * \brief      Reset a callback timer with a new interval.
+ * \param c    A pointer to the callback timer.
+ * \param interval The interval before the timer expires.
+ *
+ *             This function very similar to ctimer_reset(). Opposed to
+ *             ctimer_reset() it is possible to change the timout.
+ *             This allows accurate, non-periodic timers without drift.
+ *
+ * \sa ctimer_reset()
+ */
+void ctimer_reset_with_new_interval(struct ctimer *c, clock_time_t interval);
+
+/**
  * \brief      Restart a callback timer from the current point in time
  * \param c    A pointer to the callback timer.
  *
@@ -150,6 +163,33 @@ ctimer_set(struct ctimer *c, clock_time_t t, void (*f)(void *), void *ptr)
  *
  */
 void ctimer_stop(struct ctimer *c);
+
+/**
+ * \brief      Get the expiration time for the callback timer.
+ * \param c    A pointer to the callback timer
+ * \return     The expiration time for the callback timer.
+ *
+ *             This function returns the expiration time for a callback timer.
+ */
+static inline clock_time_t
+ctimer_expiration_time(struct ctimer *c)
+{
+  return etimer_expiration_time(&c->etimer);
+}
+
+/**
+ * \brief      Get the start time for the callback timer.
+ * \param c    A pointer to the callback timer
+ * \return     The start time for the callback timer.
+ *
+ *             This function returns the start time (when the timer
+ *             was last set) for a callback timer.
+ */
+static inline clock_time_t
+ctimer_start_time(struct ctimer *c)
+{
+  return etimer_start_time(&c->etimer);
+}
 
 /**
  * \brief      Check if a callback timer has expired.
