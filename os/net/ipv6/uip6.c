@@ -841,11 +841,6 @@ ext_hdr_options_process(uint8_t *ext_buf)
     }
 
     switch(opt_hdr->type) {
-    /*
-     * for now we do not support any options except padding ones
-     * PAD1 does not make sense as the header must be 8bytes aligned,
-     * hence we can only have
-     */
     case UIP_EXT_HDR_OPT_PAD1:
       LOG_DBG("Processing PAD1 option\n");
       opt_offset += 1;
