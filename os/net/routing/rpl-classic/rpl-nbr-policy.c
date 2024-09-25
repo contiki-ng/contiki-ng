@@ -129,8 +129,7 @@ rpl_nbr_can_accept_new(const linkaddr_t *new,
        until table is full. */
     accept = (candidate_for_removal == NULL);
     #if MAC_CONF_WITH_TSCH
-    if(!tsch_is_associated)
-    {
+    if(!tsch_is_associated) {
       accept = true;
     }
     #endif
