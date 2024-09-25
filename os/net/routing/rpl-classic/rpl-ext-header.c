@@ -216,6 +216,72 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
 #endif /* RPL_WITH_NON_STORING */
 }
 /*---------------------------------------------------------------------------*/
+#if RPL_WITH_NON_STORING
+static bool
+srh_is_valid(struct uip_routing_hdr *rh_header,
+             struct uip_rpl_srh_hdr *srh_header)
+{
+  uip_ipaddr_t hop_addr;
+  uip_ipaddr_copy(&hop_addr, &UIP_IP_BUF->destipaddr);
+
+  uint8_t segments_left = rh_header->seg_left;
+  uint8_t ext_len = rh_header->len * 8 + 8;
+  uint8_t cmpri = srh_header->cmpr >> 4;
+  uint8_t cmpre = srh_header->cmpr & 0x0f;
+  uint8_t padding = srh_header->pad >> 4;
+  uint8_t path_len = ((ext_len - padding - RPL_RH_LEN - RPL_SRH_LEN - (16 - cmpre)) / (16 - cmpri)) + 1;
+
+  bool prev_hop_is_my_addr = false;
+  uint8_t my_addr_count = 0;
+  for(uint8_t i = path_len - segments_left; i < path_len; i++) {
+    uint8_t cmpr = segments_left == 1 ? cmpre : cmpri;
+    ptrdiff_t rh_offset = (uint8_t *)rh_header - uip_buf;
+    size_t addr_offset = RPL_RH_LEN + RPL_SRH_LEN + (i * (16 - cmpri));
+
+    if(rh_offset + addr_offset + 16 - cmpr > UIP_BUFSIZE) {
+      return false;
+    }
+
+    uint8_t *addr_ptr = (uint8_t *)rh_header + addr_offset;
+    memcpy((uint8_t *)&hop_addr + cmpr, addr_ptr, 16 - cmpr);
+
+    LOG_DBG("Processing SRH hop %u, IP addr ", i);
+    LOG_DBG_6ADDR(&hop_addr);
+    LOG_DBG_("\n");
+
+    /*
+     * RFC 6554 states that "To detect loops in the SRH, a router MUST
+     * determine if the SRH includes multiple addresses assigned to
+     * any interface on that router. If such addresses appear more
+     * than once and are separated by at least one address not
+     * assigned to that router, the router MUST drop the packet."
+     *
+     * We add further checks of unacceptable next hop addresses.
+     */
+    if(uip_ds6_is_my_addr(&hop_addr) ||
+       uip_ds6_is_my_maddr(&hop_addr)) {
+      my_addr_count++;
+      if(!prev_hop_is_my_addr && my_addr_count > 1) {
+        LOG_WARN("SRH contains a loop\n");
+        return false;
+      }
+      prev_hop_is_my_addr = true;
+    } else {
+      prev_hop_is_my_addr = false;
+    }
+
+    if(uip_is_addr_mcast(&hop_addr) ||
+       uip_is_addr_unspecified(&hop_addr) ||
+       uip_is_addr_loopback(&hop_addr)) {
+      LOG_WARN("SRH contains an invalid next hop address\n");
+      return false;
+    }
+  }
+
+  return true;
+}
+#endif /* RPL_WITH_NON_STORING */
+/*---------------------------------------------------------------------------*/
 int
 rpl_ext_header_srh_update(void)
 {
@@ -256,6 +322,11 @@ rpl_ext_header_srh_update(void)
               segments_left, path_len);
       return 0;
     } else {
+      if(!srh_is_valid(rh_header, srh_header)) {
+        LOG_ERR("Invalid SRH hop sequence\n");
+        return 0;
+      }
+
       /* The index of the next address to be visited. */
       uint8_t i = path_len - segments_left;
       uint8_t cmpr = segments_left == 1 ? cmpre : cmpri;
