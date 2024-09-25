@@ -76,13 +76,6 @@ simlog(const char *message)
   simLoggedFlag = 1;
 }
 /*-----------------------------------------------------------------------------------*/
-void
-log_message(const char *part1, const char *part2)
-{
-  simlog(part1);
-  simlog(part2);
-}
-/*-----------------------------------------------------------------------------------*/
 static int log_putchar_with_slip = COOJA_LOG_WITH_SLIP != 0;
 void
 log_set_putchar_with_slip(int with)
