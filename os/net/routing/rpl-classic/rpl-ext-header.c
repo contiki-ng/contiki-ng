@@ -68,6 +68,13 @@ rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
   uint8_t sender_closer;
   uip_ds6_route_t *route;
   rpl_parent_t *sender;
+
+  /* RFC 6553: "This option has an alignment requirement of 2n." */
+  if(opt_offset < 0 || opt_offset & 1) {
+    LOG_ERR("Invalid RPL option offset: %d\n", opt_offset);
+    return 0;
+  }
+
   struct uip_hbho_hdr *hbh_hdr = (struct uip_hbho_hdr *)ext_buf;
   struct uip_ext_hdr_opt_rpl *rpl_opt = (struct uip_ext_hdr_opt_rpl *)(ext_buf + opt_offset);
 
