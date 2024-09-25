@@ -36,10 +36,12 @@
  * Configuration options for uIP.
  * \author Adam Dunkels <adam@dunkels.com>
  *
- * This file is used for tweaking various configuration options for
- * uIP. You should make a copy of this file into one of your project's
- * directories instead of editing this example "uipopt.h" file that
- * comes with the uIP distribution.
+ * This file contains various compile-time configuration options for
+ * uIP along with definitions of their default values.
+ *
+ * When an option starts with "UIP_CONF", it can be changed to fit the
+ * requirements of a specific system configuration, typically through
+ * a "project-conf.h" file.
  */
 
 /**
@@ -50,15 +52,6 @@
 /**
  * \defgroup uipopt Configuration options for uIP
  * @{
- *
- * uIP is configured using the per-project configuration file
- * "uipopt.h". This file contains all compile-time options for uIP and
- * should be tweaked to match each specific project. The uIP
- * distribution contains a documented example "uipopt.h" that can be
- * copied and modified for each project.
- *
- * \note Contiki does not use the uipopt.h file to configure uIP, but
- * uses a per-port uip-conf.h file that should be edited instead.
  */
 
 #ifndef UIPOPT_H_
@@ -84,8 +77,14 @@
  * The size of the uIP packet buffer.
  *
  * The uIP packet buffer should not be smaller than 60 bytes, and does
- * not need to be larger than 1514 bytes. Lower size results in lower
- * TCP throughput, larger size results in higher TCP throughput.
+ * not need to be larger than 1514 bytes, which is the Ethernet frame
+ * size limit. A lower size typically results in lower throughput for
+ * various protocols, whereas a larger size can result in higher
+ * throughput.
+
+ * \note 6LoWPAN fragmentation may be used if the link layer has a
+ * smaller maximum transmission unit (MTU) that cannot fit the uIP
+ * packet buffer contents. See the SICSLOWPAN_CONF_FRAG option.
  *
  * \hideinitializer
  */
@@ -108,14 +107,6 @@
 #define UIP_STATISTICS (UIP_CONF_STATISTICS)
 #endif /* UIP_CONF_STATISTICS */
 
-/**
- * Print out a uIP log message.
- *
- * This function must be implemented by the module that uses uIP, and
- * is called by uIP whenever a log message is generated.
- */
-void uip_log(char *msg);
-
 /** @} */
 /*------------------------------------------------------------------------------*/
 /**
@@ -135,11 +126,11 @@ void uip_log(char *msg);
 #endif /* UIP_CONF_TTL */
 
 /**
- * The maximum time an IP fragment should wait in the reassembly
- * buffer before it is dropped.
+ * The maximum time in seconds that an IP fragment should wait in the
+ * reassembly buffer before it is dropped.
  *
  */
-#define UIP_REASS_MAXAGE 60 /*60s*/
+#define UIP_REASS_MAXAGE 60
 
 /** @} */
 
@@ -150,11 +141,11 @@ void uip_log(char *msg);
  *
  */
 
-/** The maximum transmission unit at the IP Layer*/
+/** The maximum transmission unit at the IP layer. */
 #define UIP_LINK_MTU 1280
 
 #ifndef UIP_CONF_IPV6_QUEUE_PKT
-/** Do we do per %neighbor queuing during address resolution (default: no) */
+/** Do we do per-neighbor queuing during address resolution (default: no) */
 #define UIP_CONF_IPV6_QUEUE_PKT       0
 #endif
 
@@ -189,10 +180,6 @@ void uip_log(char *msg);
  * \defgroup uipoptudp UDP configuration options
  * @{
  *
- * \note The UDP support in uIP is still not entirely complete; there
- * is no support for sending or receiving broadcast or multicast
- * packets, but it works well enough to support a number of vital
- * applications such as DNS queries, though
  */
 
 /**
@@ -208,9 +195,6 @@ void uip_log(char *msg);
 
 /**
  * Toggles if UDP checksums should be used or not.
- *
- * \note Support for UDP checksums is currently not included in uIP,
- * so this option has no function.
  *
  * \hideinitializer
  */
@@ -230,13 +214,6 @@ void uip_log(char *msg);
 #else /* UIP_CONF_UDP_CONNS */
 #define UIP_UDP_CONNS    10
 #endif /* UIP_CONF_UDP_CONNS */
-
-/**
- * The name of the function that should be called when UDP datagrams arrive.
- *
- * \hideinitializer
- */
-
 
 /** @} */
 /*------------------------------------------------------------------------------*/
@@ -260,9 +237,9 @@ void uip_log(char *msg);
  * Determines if support for opening connections from uIP should be
  * compiled in.
  *
- * If the applications that are running on top of uIP for this project
- * do not need to open outgoing TCP connections, this configuration
- * option can be turned off to reduce the code size of uIP.
+ * If the applications that are running on top of uIP do not need to
+ * open outgoing TCP connections, this configuration option can be
+ * turned off to reduce the code size of uIP.
  *
  * \hideinitializer
  */
@@ -306,7 +283,7 @@ void uip_log(char *msg);
  * compiled in.
  *
  * Urgent data (out-of-band data) is a rarely used TCP feature that
- * very seldom would be required.
+ * seldomly would be required.
  *
  * \hideinitializer
  */
@@ -406,9 +383,7 @@ void uip_log(char *msg);
  */
 #define UIP_ARP_MAXAGE 120
 
-
 /** @} */
-
 /*------------------------------------------------------------------------------*/
 
 /**
@@ -419,15 +394,17 @@ void uip_log(char *msg);
 #define UIP_DEFAULT_PREFIX_LEN 64
 
 /**
- * The MAC-layer transmissons limit is encapslated in "Traffic Class" field
+ * The MAC-layer transmissons limit is encapslated in "Traffic Class" field.
  *
- * In Contiki, if the Traffic Class field in the IPv6 header has this bit set,
- * the low-order bits are used as the MAC-layer transmissons limit.
+ * In Contiki-NG, if the Traffic Class field in the IPv6 header has
+ * this bit set, the low-order bits are used as the MAC-layer
+ * transmissons limit.
  */
 #define UIP_TC_MAC_TRANSMISSION_COUNTER_BIT  0x40
 
 /**
- * The bits in the "Traffic Class" field that describe the MAC transmission limit
+ * The bits in the "Traffic Class" field that describe the MAC
+ * transmission limit.
  */
 #define UIP_TC_MAC_TRANSMISSION_COUNTER_MASK 0x3F
 
@@ -453,7 +430,7 @@ void uip_log(char *msg);
  * @{
  */
 /**
- * Timeout for packet reassembly at the 6lowpan layer
+ * Timeout for packet reassembly at the 6LoWPAN layer
  * (should be < 60s)
  */
 #ifdef SICSLOWPAN_CONF_MAXAGE
@@ -463,7 +440,7 @@ void uip_log(char *msg);
 #endif
 
 /**
- * Do we compress the IP header or not
+ * Determines whether the 6LoWPAN layer uses IP header compression.
  */
 #ifndef SICSLOWPAN_CONF_COMPRESSION
 #define SICSLOWPAN_COMPRESSION SICSLOWPAN_COMPRESSION_IPHC
@@ -472,14 +449,14 @@ void uip_log(char *msg);
 #endif /* SICSLOWPAN_CONF_COMPRESSION */
 
 /**
- * If we use IPHC compression, how many address contexts do we support
+ * If we use IPHC compression, how many address contexts do we support.
  */
 #ifndef SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS
 #define SICSLOWPAN_CONF_MAX_ADDR_CONTEXTS 1
 #endif
 
 /**
- * Do we support 6lowpan fragmentation
+ * Determines whether 6LoWPAN fragmentation is enabled.
  */
 #ifndef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG  1
@@ -492,7 +469,7 @@ void uip_log(char *msg);
  * \defgroup uipoptcpu CPU architecture configuration
  * @{
  *
- * The CPU architecture configuration is where the endianess of the
+ * The CPU architecture configuration is where the endianness of the
  * CPU on which uIP is to be run is specified. Most CPUs today are
  * little endian, and the most notable exception are the Motorolas
  * which are big endian. The BYTE_ORDER macro should be changed to
@@ -513,64 +490,6 @@ void uip_log(char *msg);
 #define UIP_BYTE_ORDER     (UIP_LITTLE_ENDIAN)
 #endif /* UIP_CONF_BYTE_ORDER */
 
-/** @} */
-/*------------------------------------------------------------------------------*/
-
-/**
- * \defgroup uipoptapp Application specific configurations
- * @{
- *
- * An uIP application is implemented using a single application
- * function that is called by uIP whenever a TCP/IP event occurs. The
- * name of this function must be registered with uIP at compile time
- * using the UIP_APPCALL definition.
- *
- * uIP applications can store the application state within the
- * uip_conn structure by specifying the type of the application
- * structure by typedef:ing the type uip_tcp_appstate_t and uip_udp_appstate_t.
- *
- * The file containing the definitions must be included in the
- * uipopt.h file.
- *
- * The following example illustrates how this can look.
- \code
-
- void httpd_appcall(void);
- #define UIP_APPCALL     httpd_appcall
-
- struct httpd_state {
- uint8_t state;
- uint16_t count;
- char *dataptr;
- char *script;
- };
- typedef struct httpd_state uip_tcp_appstate_t
- \endcode
-*/
-
-/**
- * \var #define UIP_APPCALL
- *
- * The name of the application function that uIP should call in
- * response to TCP/IP events.
- *
- */
-
-/**
- * \var typedef uip_tcp_appstate_t
- *
- * The type of the application state that is to be stored in the
- * uip_conn structure. This usually is typedef:ed to a struct holding
- * application state information.
- */
-
-/**
- * \var typedef uip_udp_appstate_t
- *
- * The type of the application state that is to be stored in the
- * uip_conn structure. This usually is typedef:ed to a struct holding
- * application state information.
- */
 /** @} */
 
 #endif /* UIPOPT_H_ */
