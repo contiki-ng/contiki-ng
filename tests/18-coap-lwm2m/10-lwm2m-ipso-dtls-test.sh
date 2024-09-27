@@ -4,7 +4,7 @@ source ../utils.sh
 # Contiki directory
 CONTIKI=../..
 # Test basename
-BASENAME=10-lwm2m-ipso-dtls-psk-test.sh
+BASENAME=10-lwm2m-ipso-dtls-test.sh
 
 IPADDR=fd00::302:304:506:708
 
