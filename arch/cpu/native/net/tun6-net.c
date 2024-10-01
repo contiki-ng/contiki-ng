@@ -33,6 +33,8 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 
+#include "contiki.h"
+#include "sys/platform.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/netstack.h"
@@ -53,6 +55,7 @@
 #include <net/if.h>
 #include <err.h>
 
+#define TUN_PRIO CONTIKI_VERBOSE_PRIO + 30
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
 #include "sys/log.h"
@@ -66,7 +69,8 @@
 #define DEFAULT_TUN "tun0"
 #endif /* __APPLE__ */
 
-static const char *config_ipaddr = "fd00::1/64";
+#define DEFAULT_PREFIX "fd00::1/64"
+static const char *config_ipaddr = DEFAULT_PREFIX;
 static char config_tundev[IFNAMSIZ + 1] = DEFAULT_TUN;
 static void (* tun_input_callback)(void);
 
@@ -140,6 +144,36 @@ tun6_net_set_mtu(int mtu_size)
 {
   config_mtu = MAX(MIN_MTU_SIZE, mtu_size);
 }
+/*---------------------------------------------------------------------------*/
+static int
+tun_dev_callback(const char *optarg)
+{
+  tun6_net_set_tun_name(optarg);
+  return 0;
+}
+CONTIKI_OPTION(TUN_PRIO, { "t", required_argument, NULL, 0 },
+               tun_dev_callback,
+               "name of tun interface (default: " DEFAULT_TUN ")\n");
+
+/*---------------------------------------------------------------------------*/
+static int
+prefix_callback(const char *optarg)
+{
+  tun6_net_set_prefix(optarg);
+  return 0;
+}
+CONTIKI_OPTION(TUN_PRIO + 1, { "prefix", required_argument, NULL, 0 },
+               prefix_callback,
+               "Subnet prefix (default: " DEFAULT_PREFIX ")\n");
+/*---------------------------------------------------------------------------*/
+static int
+mtu_callback(const char *optarg)
+{
+  tun6_net_set_mtu(atoi(optarg));
+  return 0;
+}
+CONTIKI_OPTION(TUN_PRIO + 2, { "mtu", required_argument, NULL, 0 },
+               mtu_callback, "interface MTU size\n");
 /*---------------------------------------------------------------------------*/
 static void
 cleanup(void)

@@ -65,7 +65,7 @@ speed_t slip_config_b_rate = BAUDRATE;
 
 #define BAUDRATE_PRIO CONTIKI_VERBOSE_PRIO + 20
 
-CONTIKI_USAGE(300, " ipaddress\n"
+CONTIKI_USAGE(300, " [ipaddress]\n"
                    "example parameters: -L -v=2 -s /dev/ttyUSB1 fd00::1/64\n\n");
 CONTIKI_EXTRA_HELP(300,
                    "\nVerbosity level:\n"
@@ -148,14 +148,6 @@ port_callback(const char *optarg)
 CONTIKI_OPTION(BAUDRATE_PRIO + 5, { "p", required_argument, NULL, 0 },
                port_callback, "connect via TCP to server on port <value>\n");
 static int
-dev_callback(const char *optarg)
-{
-  tun6_net_set_tun_name(optarg);
-  return 0;
-}
-CONTIKI_OPTION(BAUDRATE_PRIO + 6, { "t", required_argument, NULL, 0 },
-               dev_callback, "name of interface (default tun0)\n");
-static int
 delay_callback(const char *optarg)
 {
   slip_config_basedelay = optarg ? atoi(optarg) : 10;
@@ -167,27 +159,20 @@ delay_callback(const char *optarg)
 
   return 0;
 }
-CONTIKI_OPTION(BAUDRATE_PRIO + 7, { "d", optional_argument, NULL, 0 },
+CONTIKI_OPTION(BAUDRATE_PRIO + 6, { "d", optional_argument, NULL, 0 },
                delay_callback,
                "minimum delay between outgoing SLIP packets (default 10)\n"
                "\t\tActual delay is basedelay * (#6LowPAN fragments)"
                " milliseconds.\n");
-static int
-mtu_callback(const char *optarg)
-{
-  tun6_net_set_mtu(atoi(optarg));
-  return 0;
-}
-CONTIKI_OPTION(BAUDRATE_PRIO + 8, { "M", required_argument, NULL, 0 },
-               mtu_callback, "interface MTU size\n");
 /*---------------------------------------------------------------------------*/
 int
 slip_config_handle_arguments(int argc, char **argv)
 {
-  if(argc != 2 && argc != 3) {
-    err(1, "usage: [-B baudrate] [-H] [-L] [-s siodev] [-t tundev] [-T] [-v verbosity] [-d delay] [-a serveraddress] [-p serverport] ipaddress");
+  /* For backward compatiblity: assume subnet prefix if exactly one argument
+     been specified. */
+  if(argc == 2) {
+    tun6_net_set_prefix(argv[1]);
   }
-  tun6_net_set_prefix(argv[1]);
   return 1;
 }
 /*---------------------------------------------------------------------------*/
