@@ -38,6 +38,7 @@
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "net/netstack.h"
+#include "net/ipv6/uiplib.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -104,6 +105,28 @@ ssystem(const char *fmt, ...)
 }
 
 /*---------------------------------------------------------------------------*/
+static bool
+set_default_prefix(const char *prefix)
+{
+  char *ipaddr = strdup(prefix);
+  if(!ipaddr) {
+    return false;
+  }
+
+  uip_ip6addr_t prefix_addr;
+  bool success = false;
+  char *s = strchr(ipaddr, '/');
+  if(s) {
+    *s = '\0';
+    if(uiplib_ipaddrconv(ipaddr, &prefix_addr)) {
+      uip_ds6_set_default_prefix(&prefix_addr);
+      success = true;
+    }
+  }
+  free(ipaddr);
+  return success;
+}
+/*---------------------------------------------------------------------------*/
 const char *
 tun6_net_get_prefix(void)
 {
@@ -111,9 +134,12 @@ tun6_net_get_prefix(void)
 }
 /*---------------------------------------------------------------------------*/
 void
-tun6_net_set_prefix(const char *ipaddr)
+tun6_net_set_prefix(const char *prefix)
 {
-  config_ipaddr = ipaddr;
+  if(!set_default_prefix(prefix)) {
+    LOG_WARN("Failed to set default prefix %s\n", prefix);
+  }
+  config_ipaddr = prefix;
 }
 /*---------------------------------------------------------------------------*/
 const char *
