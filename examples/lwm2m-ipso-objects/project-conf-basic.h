@@ -34,6 +34,6 @@
 
 #include "project-conf-common.h"
 
-#define LWM2M_ENGINE_CLIENT_ENDPOINT_NAME "Contiki-NG-IPSO"
+#define LWM2M_ENGINE_CLIENT_ENDPOINT_NAME "Contiki-NG-Test"
 
 #endif /* PROJECT_CONF_BASIC_H */
