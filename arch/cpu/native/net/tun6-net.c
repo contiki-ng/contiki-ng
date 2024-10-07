@@ -113,10 +113,10 @@ set_default_prefix(const char *prefix)
     return false;
   }
 
-  uip_ip6addr_t prefix_addr;
   bool success = false;
   char *s = strchr(ipaddr, '/');
   if(s) {
+    uip_ip6addr_t prefix_addr;
     *s = '\0';
     if(uiplib_ipaddrconv(ipaddr, &prefix_addr)) {
       uip_ds6_set_default_prefix(&prefix_addr);
@@ -207,7 +207,17 @@ cleanup(void)
 #define TMPBUFSIZE 128
   /* Called from signal handler, avoid unsafe functions. */
   char buf[TMPBUFSIZE];
-#ifndef __APPLE__
+#ifdef __APPLE__
+  strcpy(buf, "ifconfig ");
+  /* Will not overflow, but null-terminate to avoid spurious warnings. */
+  buf[TMPBUFSIZE - 1] = '\0';
+  strncat(buf, config_tundev, TMPBUFSIZE - strlen(buf) - 1);
+  strncat(buf, " inet6 ", TMPBUFSIZE - strlen(buf) - 1);
+  strncat(buf, config_ipaddr, TMPBUFSIZE - strlen(buf) - 1);
+  strncat(buf, " remove", TMPBUFSIZE - strlen(buf) - 1);
+  system(buf);
+#endif /* __APPLE__ */
+
   strcpy(buf, "ifconfig ");
   /* Will not overflow, but null-terminate to avoid spurious warnings. */
   buf[TMPBUFSIZE - 1] = '\0';
@@ -215,6 +225,7 @@ cleanup(void)
   strncat(buf, " down", TMPBUFSIZE - strlen(buf) - 1);
   system(buf);
 
+#ifndef __APPLE__
 #ifndef linux
   system("sysctl -w net.ipv6.conf.all.forwarding=1");
 #endif
@@ -226,22 +237,7 @@ cleanup(void)
   strncat(buf, "\") print \"route delete -net \"$1; }'"
           " | sh", TMPBUFSIZE - strlen(buf) - 1);
   system(buf);
-#else /* __APPLE__ */
-  strcpy(buf, "ifconfig ");
-  /* Will not overflow, but null-terminate to avoid spurious warnings. */
-  buf[TMPBUFSIZE - 1] = '\0';
-  strncat(buf, config_tundev, TMPBUFSIZE - strlen(buf) - 1);
-  strncat(buf, " inet6 ", TMPBUFSIZE - strlen(buf) - 1);
-  strncat(buf, config_ipaddr, TMPBUFSIZE - strlen(buf) - 1);
-  strncat(buf, " remove", TMPBUFSIZE - strlen(buf) - 1);
-  system(buf);
-
-  strcpy(buf, "ifconfig ");
-  buf[TMPBUFSIZE - 1] = '\0';
-  strncat(buf, config_tundev, TMPBUFSIZE - strlen(buf) - 1);
-  strncat(buf, " down", TMPBUFSIZE - strlen(buf) - 1);
-  system(buf);
-#endif /* __APPLE__ */
+#endif /* !__APPLE__ */
 }
 /*---------------------------------------------------------------------------*/
 static void CC_NORETURN
@@ -327,9 +323,6 @@ tun_alloc(void)
 static int
 tun_alloc(void)
 {
-  struct sockaddr_ctl sc;
-  struct ctl_info ctl_info;
-  int fd;
   unsigned int tunif;
 
   if(sscanf(config_tundev, "utun%u", &tunif) != 1 || tunif >= UINT8_MAX) {
@@ -339,14 +332,14 @@ tun_alloc(void)
 
   LOG_INFO("Opening tun interface %s\n", config_tundev);
 
-  memset(&ctl_info, 0, sizeof(ctl_info));
+  struct ctl_info ctl_info = { 0 };
   if(strlcpy(ctl_info.ctl_name, UTUN_CONTROL_NAME, sizeof(ctl_info.ctl_name)) >=
       sizeof(ctl_info.ctl_name)) {
     fprintf(stderr, "UTUN_CONTROL_NAME too long");
     return -1;
   }
 
-  fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
+  int fd = socket(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL);
   if(fd == -1) {
     perror("socket(SYSPROTO_CONTROL)");
     return -1;
@@ -358,6 +351,7 @@ tun_alloc(void)
     return -1;
   }
 
+  struct sockaddr_ctl sc;
   sc.sc_id = ctl_info.ctl_id;
   sc.sc_len = sizeof(sc);
   sc.sc_family = AF_SYSTEM;
