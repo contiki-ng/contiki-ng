@@ -58,9 +58,9 @@ tun_input_callback(void)
   /* delaymsec = 10; */
   if(delaymsec) {
     struct timeval tv;
-    int dmsec;
     gettimeofday(&tv, NULL);
-    dmsec = (tv.tv_sec - delaystartsec) * 1000 + tv.tv_usec / 1000 - delaystartmsec;
+    int dmsec = (tv.tv_sec - delaystartsec) * 1000
+      + tv.tv_usec / 1000 - delaystartmsec;
     if(dmsec < 0) {
       delaymsec = 0;
     }
@@ -70,8 +70,7 @@ tun_input_callback(void)
   }
 
   if(delaymsec == 0) {
-    int size = tun6_net_input(uip_buf, sizeof(uip_buf));
-    uip_len = size;
+    uip_len = tun6_net_input(uip_buf, sizeof(uip_buf));
     tcpip_input();
 
     if(slip_config_basedelay) {
