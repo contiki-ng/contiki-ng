@@ -46,6 +46,7 @@
 #include "cmd.h"
 #include "border-router.h"
 #include "border-router-cmds.h"
+#include "tun6-net.h"
 
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
@@ -129,7 +130,7 @@ PROCESS_THREAD(border_router_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
   }
 
-  const char *config_ipaddr = tun_get_prefix();
+  const char *config_ipaddr = tun6_net_get_prefix();
   if(config_ipaddr != NULL) {
     uip_ipaddr_t prefix;
 
