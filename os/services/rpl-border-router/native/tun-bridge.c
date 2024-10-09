@@ -47,38 +47,22 @@
 
 extern uint16_t slip_config_basedelay;
 /*---------------------------------------------------------------------------*/
-static uint16_t delaymsec = 0;
-static uint32_t delaystartsec, delaystartmsec;
+#if CLOCK_SECOND != 1000
+#error The system clock must be ticking in milliseconds
+#endif
+static struct timer delay_timer;
 /*---------------------------------------------------------------------------*/
 static void
 tun_input_callback(void)
 {
   /* Optional delay between outgoing packets */
   /* Base delay times number of 6lowpan fragments to be sent */
-  /* delaymsec = 10; */
-  if(delaymsec) {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    int dmsec = (tv.tv_sec - delaystartsec) * 1000
-      + tv.tv_usec / 1000 - delaystartmsec;
-    if(dmsec < 0) {
-      delaymsec = 0;
-    }
-    if(dmsec > delaymsec) {
-      delaymsec = 0;
-    }
-  }
-
-  if(delaymsec == 0) {
+  if(!slip_config_basedelay || timer_expired(&delay_timer)) {
     uip_len = tun6_net_input(uip_buf, sizeof(uip_buf));
     tcpip_input();
 
     if(slip_config_basedelay) {
-      struct timeval tv;
-      gettimeofday(&tv, NULL);
-      delaymsec = slip_config_basedelay;
-      delaystartsec = tv.tv_sec;
-      delaystartmsec = tv.tv_usec / 1000;
+      timer_set(&delay_timer, slip_config_basedelay);
     }
   }
 }
@@ -92,6 +76,8 @@ tun_get_prefix(void)
 void
 tun_init(void)
 {
+  timer_set(&delay_timer, 0);
+
   slip_init();
 
   if(!tun6_net_init(tun_input_callback)) {
