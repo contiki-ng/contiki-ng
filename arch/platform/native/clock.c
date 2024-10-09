@@ -40,6 +40,8 @@
 #include "sys/clock.h"
 #include <time.h>
 #include <sys/time.h>
+#include <stdlib.h>
+#include <err.h>
 
 /*---------------------------------------------------------------------------*/
 typedef struct clock_timespec_s {
@@ -53,14 +55,18 @@ get_time(clock_timespec_t *spec)
 #if defined(__linux__) || (defined(__MACH__) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101200)
   struct timespec ts;
 
-  clock_gettime(CLOCK_MONOTONIC, &ts);
+  if(clock_gettime(CLOCK_MONOTONIC, &ts) == -1) {
+    err(EXIT_FAILURE, "clock_gettime");
+  }
 
   spec->tv_sec = ts.tv_sec;
   spec->tv_nsec = ts.tv_nsec;
 #else
   struct timeval tv;
 
-  gettimeofday(&tv, NULL);
+  if(gettimeofday(&tv, NULL) == -1) {
+    err(EXIT_FAILURE, "gettimeofday");
+  }
 
   spec->tv_sec = tv.tv_sec;
   spec->tv_nsec = tv.tv_usec * 1000;
