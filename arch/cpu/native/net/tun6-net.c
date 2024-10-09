@@ -249,7 +249,7 @@ sigcleanup(int signo)
   write(fileno(stderr), prefix, strlen(prefix));
   write(fileno(stderr), sig, strlen(sig));
   cleanup();
-  _exit(0);
+  _exit(EXIT_SUCCESS);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -431,11 +431,11 @@ tun6_net_output(uint8_t *data, int len)
   iv[1].iov_len = len;
 
   if(writev(tunfd, iv, 2) != (sizeof(type) + len)) {
-    err(1, "tun6_net_output: writev");
+    err(EXIT_FAILURE, "tun6_net_output: writev");
   }
 #else
   if(write(tunfd, data, len) != len) {
-    err(1, "tun6_net_output: write");
+    err(EXIT_FAILURE, "tun6_net_output: write");
   }
 #endif
 
@@ -453,14 +453,14 @@ tun6_net_input(uint8_t *data, int maxlen)
   }
 
   if((size = read(tunfd, data, maxlen)) == -1) {
-    err(1, "tun6_net_input: read");
+    err(EXIT_FAILURE, "tun6_net_input: read");
   }
 
 #ifdef __APPLE__
 #define UTUN_HEADER_LEN 4
   /* Fake IFF_NO_PI on macOS by ignoring the first 4 bytes containing AF_INET6 */
   if(size <= UTUN_HEADER_LEN) {
-    err(1, "tun6_net_input: read too small");
+    err(EXIT_FAILURE, "tun6_net_input: read too small");
   }
 
   size -= UTUN_HEADER_LEN;
