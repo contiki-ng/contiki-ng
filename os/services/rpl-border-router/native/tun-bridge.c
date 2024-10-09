@@ -34,6 +34,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 #include <err.h>
 #include "border-router.h"
@@ -81,7 +82,7 @@ tun_init(void)
   slip_init();
 
   if(!tun6_net_init(tun_input_callback)) {
-    err(1, "failed to open tun device %s", tun6_net_get_tun_name());
+    err(EXIT_FAILURE, "failed to open tun device %s", tun6_net_get_tun_name());
   }
 }
 /*---------------------------------------------------------------------------*/
