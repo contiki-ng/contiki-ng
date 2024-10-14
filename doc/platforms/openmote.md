@@ -1,17 +1,11 @@
-# openmote-cc2538: OpenMote cc2538
+# openmote: OpenMote-CC2538 and OpenMote-B
 
-The OpenMote platform is based on TI's CC2538 SoC (System on Chip), featuring an ARM Cortex-M3 running at 16/32 MHz and with 32 kbytes of RAM and 256/512 kbytes of FLASH.
-
-The OpenMote platform supports two boards:
-* The original OpenMote (`openmote-cc2538`)
-* The new OpenMote revision B (`openmote-b`). This board also features a sub-ghz radio, which is currently not supported. Support for this board was added in release 4.4 and is considered experimental.
-
-It has the following key features:
+The OpenMote platform is based on TI's CC2538 SoC (System on Chip), featuring an ARM Cortex-M3 running at 16/32 MHz and with 32 kbytes of RAM and 256/512 kbytes of FLASH. It has the following key features:
 
   * Standard Cortex M3 peripherals (NVIC, SCB, SysTick)
   * Sleep Timer (underpins rtimers)
   * SysTick (underpins the platform clock and Contiki-NG's timers infrastructure)
-  * RF (2.4 GHz)
+  * 2.4 GHz radio interface
   * UART
   * Watchdog (in watchdog mode)
   * USB (in CDC-ACM)
@@ -26,63 +20,85 @@ It has the following key features:
   * PWM
   * Built-in core temperature and battery sensor
 
-## Requirements
+The OpenMote platform supports two boards:
+* The original OpenMote (`openmote-cc2538`),
+* The new OpenMote revision B (`openmote-b`). This board features two radios: TI's CC2538 and Atmel's AT86RF215.
 
-To start using Contiki-NG with the OpenMote-CC2538, the following is required:
+## Port Features
 
- * An OpenMote-CC2538 board with a OpenUSB, OpenBase or OpenBattery carrier boards.
+The port is organized as follows:
+* the drivers for CC2538 CPU are located in the `arch/cpu/cc2538` folder,
+* the OpenMote port is located in the `arch/platform/openmote` folder where:
+  * `dev` contains drivers for various sensors,
+  * `openmote-cc2538` includes configuration for the OpenMote-CC2538 board,
+  * `openmote-b` includes configuration for the OpenMote-B board.
+* the driver for AT86RF215 radio (available only on OpenMote-B) is located in `arch/dev/radio/at86rf215`.
+
+## Prerequisites and Setup
+
+To start using Contiki-NG with the OpenMote, the following is required:
+
+ * An OpenMote board: OpenMote-B or OpenMote-CC2538 with a OpenUSB, OpenBase or OpenBattery carrier boards.
  * A toolchain to compile Contiki-NG for the CC2538.
  * Drivers so that your OS can communicate with your hardware.
  * Software to upload images to the CC2538.
 
-## Toolchain Installation
+### Toolchain Installation
 
 The toolchain used to build Contiki-NG is arm-gcc, also used by other arm-based Contiki-NG ports.
 
 If you use the docker image or the vagrant image, this will be pre-installed for you. Otherwise, depending on your system, please follow the respective installation instructions ([native Linux](/doc/getting-started/Toolchain-installation-on-Linux) / [native mac OS](/doc/getting-started/Toolchain-installation-on-macOS)).
 
-## Software to Program the Nodes
+### Software to Program the Nodes
 
-The OpenMote-CC2538 can be programmed via the jtag interface or via the serial boot loader on the chip.
+The OpenMote nodes can be programmed via the jtag interface or via the serial boot loader on the chip.
 
-The OpenMote-CC2538 has a mini JTAG 10-pin male header, compatible with the `SmartRF06` development board, which can be used to flash and debug the platforms. Alternatively one could use the `JLink` programmer with a 20-to-10 pin converter like the following: <https://www.olimex.com/Products/ARM/JTAG/ARM-JTAG-20-10/>.
+The OpenMote boards have a mini JTAG 10-pin male header, compatible with the `SmartRF06` development board, which can be used to flash and debug the platforms. Alternatively one could use the `JLink` programmer with a 20-to-10 pin converter like the following: <https://www.olimex.com/Products/ARM/JTAG/ARM-JTAG-20-10/>. An experimental example for OpenOCD with `Olimex` programmer can be found [here](https://github.com/9morano/contiki-ng/tree/openmote/arch/platform/openmote/openmote-b)
 
-The serial boot loader on the chip is exposed to the user via the USB interface of both the OpenUSB and the OpenBase carrier boards. The OpenUSB carrier board is capable to automatically detect the boot loader sequence and flash the CC2538 without user intervention. The OpenBase carrier board does not have such feature, so to activate the bootloader the user needs to short the ON/SLEEP pin to GND and then press the reset button. 
+For the OpenMote-CC2538 boards, the serial boot loader on the chip is exposed to the user via the USB interface of both the OpenUSB and the OpenBase carrier boards. The OpenUSB carrier board is capable to automatically detect the boot loader sequence and flash the CC2538 without user intervention. The OpenBase carrier board does not have such feature, so to activate the boot loader the user needs to short the ON/SLEEP pin to GND and then press the reset button. To activate the serial boot loader on OpenMote-B board, the user needs to short the PA7 pin to GND and then press the reset button.
 
 Instructions to flash for different OS are given below.
 
 * On Windows:
-    * Nodes can be programmed with TI's ArmProgConsole or the SmartRF Flash Programmer 2. The README should be self-explanatory. With ArmProgConsole, upload the file with a `.bin` extension.
-    * Nodes can also be programmed via the serial boot loader in the cc2538. In `tools/cc2538-bsl/` you can find `cc2538-bsl.py` python script, which can download firmware to your node via a serial connection. If you use this option you just need to make sure you have a working version of python installed. You can read the README in the same directory for more info.
+    * Nodes can be programmed with TI's ArmProgConsole or the SmartRF Flash Programmer 2. The README should be self-explanatory. With ArmProgConsole, upload the file with a `.bin` extension. (jtag + serial)
+    * Nodes can also be programmed via the serial boot loader in the cc2538. In `tools/cc2538-bsl/` you can find `cc2538-bsl.py` python script, which can download firmware to your node via a serial connection. If you use this option you just need to make sure you have a working version of python installed. You can read the README in the same directory for more info. (serial)
 
 * On Linux:
-    * Nodes can be programmed with TI's [UniFlash] tool. With UniFlash, use the file with `.elf` extension.
-    * Nodes can also be programmed via the serial boot loader in the cc2538. No extra software needs to be installed.
+    * Nodes can be programmed with TI's UniFlash tool. With UniFlash, use the file with `.openmote` extension. (jtag + serial)
+    * Nodes can also be programmed via the serial boot loader in the cc2538 through the `cc2538-bsl.py` python script. No extra software needs to be installed. (serial)
 
 * On OSX:
-    * The `cc2538-bsl.py` script in `tools/cc2538-bsl/` is the only option. No extra software needs to be installed.
+    * The `cc2538-bsl.py` script in `tools/cc2538-bsl/` is the only option. No extra software needs to be installed. (serial)
 
-## Build your First Examples
+## Getting Started
 
-One can start with the platform-independent `examples/hello-world`.
-For a review of `make` targets see [doc:build-system].
+Once the tools are installed, you can start with the platform-independent `examples/hello-world` example. For a review of `make` targets see [doc:build-system].
 
-To build the example, run `make TARGET=openmote`. This will build for the default board `openmote-cc2538`. To switch between boards, use the `BOARD` variable. For example:
+To build the example, go to the `examples/hello-world` and execute:
 
-`make TARGET=openmote BOARD=openmote-cc2538` or `make TARGET=openmote BOARD=openmote-b`
+    make TARGET=openmote
 
-If you want to upload the compiled firmware to a node via the serial boot loader you need first to either manually enable the boot loader.
+This will build for the default board `openmote-cc2538`. To switch between boards, use the `BOARD` variable. For example:
 
-Then use `make hello-world.upload`. 
+    make TARGET=openmote BOARD=openmote-cc2538
+
+or:
+    
+    make TARGET=openmote BOARD=openmote-b
+
+If you want to upload the compiled firmware to a node via the serial boot loader you need first to manually enable the boot loader. Then use:
+
+    make TARGET=openmote BOARD=openmote-cc2538 hello-world.upload
+    
+To disable the boot loader and start the Contiki-NG, remove the shorting connection and restart the node.
 
 If you are compiling for the OpenMote-CC2538 Rev.A1 board (CC2538SF53, 256 KB Flash) you have to pass `BOARD_REVISION=REV_A1` in all your `make` commands to ensure that the linking stage configures the linker script with the appropriate parameters. If you are compiling for older OpenMote-CC2538 revisions (CC2538SF53, 512 KB Flash) you can skip this parameter since the default values are already correct.
 
-The `PORT` argument could be used to specify in which port the device is connected, in case we have multiple devices connected at the same time.
+The `PORT` argument could be used for `make` command to specify on which port the device is connected, in case you have multiple devices connected at the same time.
 
 To enable printing debug output to your console, use the `make login` to get the information over the USB programming/debugging port, or alternatively use `make serialview` to also add a timestamp in each print.
 
 ## Node IEEE and IPv6 Addresses
-
 
 Nodes will generally autoconfigure their IPv6 address based on their IEEE address. The IEEE address can be read directly from the CC2538 Info Page, or it can be hard-coded. Additionally, the user may specify a 2-byte value at build time, which will be used as the IEEE address' 2 LSBs.
 
@@ -147,10 +163,30 @@ The build system currently uses optimization level `-Os`, which is controlled in
 
 Historically, the `-Os` flag has caused problems with some toolchains. If you are using one of the toolchains documented in this README, you should be able to use it without issues. If for whatever reason you do come across problems, try setting `SMALL=0` or replacing `-Os` with `-O2` in `cpu/cc2538/Makefile.cc2538`.
 
+## OpenMote-B transceivers
+
+The OpenMote-B board includes two transceivers:
+* TI's CC2538, which supports IEEE 802.15.4-2006 and operates in 2.4 GHz ISM band.
+* Atmel's AT86RF215, which supports the IEEE 802.15.4-2012 and operates in both the 868/915 MHz and 2.4 GHz ISM bands.
+
+By default, the OpenMote-B uses the CC2538 radio. To use the experimental driver for the AT86RF215 radio, you can define:
+
+    #define OPENMOTEB_CONF_USE_ATMEL_RADIO   1
+
+### Antenna RF switch
+
+The OpenMote-B board has two SMA connectors for external antennas. One connector, labeled "sub-GHz," is always connected to the 868/915 MHz interface of the AT86RF215 radio. The other SMA connector, labeled "2.4-GHz," is connected to an RF switch that can link it to either the CC2538 radio or the AT86RF215 radio. The proper configuration is automatically managed by the functions located in `arch/platform/openmote-b/antenna.c`.
+
+### AT86RF215 driver
+
+The AT86RF215 radio features two RF cores (2.4 GHz and sub-GHz) and supports the following PHY modes: MR-FSK, MR-O-QPSK, and MR-OFDM. The current driver implementation (Oct. 2023) is designed to support only one core at a time (only the 2.4 GHz core has been tested). However, a different driver implementation could enable simultaneous operation of both RF cores. Additionally, the driver was only tested with the legacy O-QPSK modulation. The driver primarily supports the TSCH MAC mode, but also works with CSMA.
+
+For more information, refer to the driver files located in `arc/dev/radio/at86rf215`.
+
 ## Maintainers
 
 The original OpenMote-CC2538 was developed by OpenMote Technologies. Main contributor: Pere Tuset <peretuset@openmote.com>
 
-Suipport for OpenMote B was developed by Anders Wallberg (@wallb)
+Support for OpenMote-B was developed by Anders Wallberg (@wallb) and updated by @kkrentz and @9morano.
 
 [doc:build-system]: /doc/getting-started/The-Contiki-NG-build-system

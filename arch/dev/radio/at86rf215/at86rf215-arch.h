@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (c) 2023, ComLab, Jozef Stefan Institute - https://e6.ijs.si/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,62 +26,76 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
- *
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup openmote-b
- * @{
- *
  * \file
- *  Board-initialisation for the OpenMote-B platform
+ *        Header file for the at86rf215-arch.c - architecture dependent code.
+ * \author
+ *        Grega Morano <grega.morano@ijs.si>
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "antenna.h"
-#include "dev/gpio.h"
-#include "dev/ioc.h"
+#ifndef AT86RF215_ARCH_H_
+#define AT86RF215_ARCH_H_
+
 #include <stdint.h>
-#include <string.h>
-/*---------------------------------------------------------------------------*/
-/* Log configuration */
-#include "sys/log.h"
-#define LOG_MODULE "OpenMote-B"
-#define LOG_LEVEL LOG_LEVEL_MAIN
-/*---------------------------------------------------------------------------*/
-static void
-configure_unused_pins(void)
-{
-  /* FIXME */
-}
-/*---------------------------------------------------------------------------*/
-void
-board_init()
-{
-  antenna_init();
 
-#if OPENMOTEB_USE_ATMEL_RADIO
-  LOG_INFO("Atmel radio connected to the 2.4 GHz antenna connector\n");
-  antenna_select_at86rf215();
-#else
-  LOG_INFO("TI radio connected to the 2.4 GHz antenna connector\n");
-  antenna_select_cc2538();
-#endif
-
-  configure_unused_pins();
-
-  /* configure bootloader pin as input */
-  GPIO_SOFTWARE_CONTROL(GPIO_PORT_TO_BASE(GPIO_A_NUM),
-      GPIO_PIN_MASK(FLASH_CCA_CONF_BOOTLDR_BACKDOOR_PORT_A_PIN));
-  GPIO_SET_INPUT(GPIO_PORT_TO_BASE(GPIO_A_NUM),
-      GPIO_PIN_MASK(FLASH_CCA_CONF_BOOTLDR_BACKDOOR_PORT_A_PIN));
-  ioc_set_over(GPIO_A_NUM,
-      FLASH_CCA_CONF_BOOTLDR_BACKDOOR_PORT_A_PIN,
-      IOC_OVERRIDE_ANA);
-}
-/*---------------------------------------------------------------------------*/
 /**
- * @}
+ * \brief Initialize the radio's I/O periphery
+ *
+ * The function has to accomplish the following tasks:
+ * - Configure RST pin
+ * - Configure IRQ pin and setup the interrupt
+ * - Configure CSn pin
+ * - Enable and configure SPI
  */
+void at86rf215_arch_init(void);
+
+/**
+ * \brief Reset the radio
+ *
+ * The radio Reset is triggered by pulling the pin RSTN to low, keeping it
+ * low for 625ns and than release it to high.
+ */
+void at86rf215_arch_set_RSTN(void);
+
+/**
+ * \brief Release the radio from the reset mode
+ */
+void at86rf215_arch_clear_RSTN(void);
+
+/**
+ * \brief Enable the radio's IRQ line
+ */
+void at86rf215_arch_enable_EXTI(void);
+
+/**
+ * \brief Disable the radio's IRQ line
+ */
+void at86rf215_arch_disable_EXTI(void);
+
+/**
+ * \brief Select the radio's SPI chip select
+ */
+void at86rf215_arch_spi_select(void);
+
+/**
+ * \brief Deselect the radio's SPI chip select
+ */
+void at86rf215_arch_spi_deselect(void);
+
+/**
+ * \brief   Transfer and receive a single byte over SPI
+ * \param b Byte to be sent
+ * \return  Byte received
+ */
+uint8_t at86rf215_arch_spi_txrx(uint8_t b);
+
+/**
+ * \brief Interrupt routine
+ *
+ * To be called by the hardware interrupt handler - part of at86rf215-arch.c
+ */
+void at86rf215_isr(void);
+
+#endif /* AT86RF215_ARCH_H */
