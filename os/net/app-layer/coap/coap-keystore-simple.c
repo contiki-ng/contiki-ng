@@ -53,44 +53,87 @@ static int
 get_default_psk_info(const coap_endpoint_t *address_info,
                      coap_keystore_psk_entry_t *info)
 {
-  if(info != NULL) {
-    if(info->identity == NULL || info->identity_len == 0) {
-      /* Identity requested */
-      info->identity = (uint8_t *)COAP_DTLS_PSK_DEFAULT_IDENTITY;
-      info->identity_len = strlen(COAP_DTLS_PSK_DEFAULT_IDENTITY);
-      return 1;
-    }
-    if(info->identity_len != strlen(COAP_DTLS_PSK_DEFAULT_IDENTITY) ||
-       memcmp(info->identity, COAP_DTLS_PSK_DEFAULT_IDENTITY,
-              info->identity_len) != 0) {
-      /* Identity not matching */
-      return 0;
-    }
-    info->key = (uint8_t *)COAP_DTLS_PSK_DEFAULT_KEY;
-    info->key_len = strlen(COAP_DTLS_PSK_DEFAULT_KEY);
+  if(info == NULL) {
+    return 0;
+  }
+
+  /* Return the default identify if no identity is provided. */
+  if(info->identity == NULL || info->identity_len == 0) {
+    /* Identity requested */
+    info->identity = (uint8_t *)COAP_DTLS_PSK_DEFAULT_IDENTITY;
+    info->identity_len = strlen(COAP_DTLS_PSK_DEFAULT_IDENTITY);
     return 1;
   }
-  return 0;
+
+  /* We support only the default identity when querying for a key. */
+  if(info->identity_len != strlen(COAP_DTLS_PSK_DEFAULT_IDENTITY) ||
+     memcmp(info->identity, COAP_DTLS_PSK_DEFAULT_IDENTITY,
+            info->identity_len) != 0) {
+    /* Identity not matching */
+    return 0;
+  }
+
+  /* The identity matches the default identity -- fill in the key. */
+  info->key = (uint8_t *)COAP_DTLS_PSK_DEFAULT_KEY;
+  info->key_len = strlen(COAP_DTLS_PSK_DEFAULT_KEY);
+  return 1;
 }
+/*---------------------------------------------------------------------------*/
 static const coap_keystore_t simple_key_store = {
   .coap_get_psk_info = get_default_psk_info
 };
 /*---------------------------------------------------------------------------*/
 #endif /* COAP_DTLS_PSK_DEFAULT_KEY */
 #endif /* COAP_DTLS_PSK_DEFAULT_IDENTITY */
+
+#ifdef COAP_DTLS_TEST_CA_CERT
+#ifdef COAP_DTLS_TEST_OWN_CERT
+#ifdef COAP_DTLS_TEST_PRIV_KEY
+/*---------------------------------------------------------------------------*/
+static int
+get_default_cert_info(const coap_endpoint_t *address_info,
+                     coap_keystore_cert_entry_t *info)
+{
+  if(info == NULL) {
+    return 0;
+  }
+
+  info->ca_cert = (uint8_t *)COAP_DTLS_TEST_CA_CERT;
+  info->ca_cert_len = sizeof(COAP_DTLS_TEST_CA_CERT);
+
+  info->own_cert = (uint8_t *)COAP_DTLS_TEST_OWN_CERT;
+  info->own_cert_len = sizeof(COAP_DTLS_TEST_OWN_CERT);
+
+  info->priv_key = (uint8_t *)COAP_DTLS_TEST_PRIV_KEY;
+  info->priv_key_len = sizeof(COAP_DTLS_TEST_PRIV_KEY);
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+static const coap_keystore_t simple_key_store = {
+  .coap_get_cert_info = get_default_cert_info
+};
+/*---------------------------------------------------------------------------*/
+#endif /* COAP_DTLS_TEST_CA_CERT */
+#endif /* COAP_DTLS_TEST_OWN_CERT */
+#endif /* COAP_DTLS_TEST_PRIV_KEY */
 #endif /* WITH_DTLS */
 /*---------------------------------------------------------------------------*/
 void
 coap_keystore_simple_init(void)
 {
 #ifdef WITH_DTLS
-#ifdef COAP_DTLS_PSK_DEFAULT_IDENTITY
-#ifdef COAP_DTLS_PSK_DEFAULT_KEY
+#if (defined(COAP_DTLS_PSK_DEFAULT_IDENTITY) \
+    && defined(COAP_DTLS_PSK_DEFAULT_KEY)) \
+  || (defined(COAP_DTLS_TEST_CA_CERT) \
+  && defined(COAP_DTLS_TEST_OWN_CERT) \
+  && defined(COAP_DTLS_TEST_PRIV_KEY))
 
   coap_set_keystore(&simple_key_store);
-
-#endif /* COAP_DTLS_PSK_DEFAULT_KEY */
-#endif /* COAP_DTLS_PSK_DEFAULT_IDENTITY */
+#endif /* (defined(COAP_DTLS_PSK_DEFAULT_IDENTITY) \
+    && defined(COAP_DTLS_PSK_DEFAULT_KEY)) \
+  || (defined(COAP_DTLS_TEST_CA_CERT) \
+  && defined(COAP_DTLS_TEST_OWN_CERT) \
+  && defined(COAP_DTLS_TEST_PRIV_KEY)) */
 #endif /* WITH_DTLS */
 }
 /*---------------------------------------------------------------------------*/

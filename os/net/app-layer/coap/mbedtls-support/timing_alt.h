@@ -1,23 +1,26 @@
 /*
- * Copyright (c) 2017, RISE SICS AB.
+ * Copyright (c) 2022, RISE Research Institutes of Sweden AB
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
  * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -28,39 +31,33 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * \file
- *         DTLS support for CoAP
- * \author
- *         Niclas Finne <nfi@sics.se>
- *         Joakim Eriksson <joakime@sics.se>
- */
+#ifndef TIMING_ALT_H
+#define TIMING_ALT_H
 
-#ifndef DTLS_SUPPORT_CONF_H_
-#define DTLS_SUPPORT_CONF_H_
-
-/* Use same log level as CoAP as default */
-#define LOG_LEVEL_DTLS LOG_LEVEL_COAP
-
-#define DTLS_LOG_CONF_PATH "coap-log.h"
-
-#include "coap-endpoint.h"
-
-typedef coap_endpoint_t session_t;
-
-#include "sys/ctimer.h"
 #include <stdint.h>
 
-typedef struct {
-  struct ctimer retransmit_timer;
-} dtls_support_context_state_t;
+#include "contiki.h"
 
-#define DTLS_SUPPORT_CONF_CONTEXT_STATE dtls_support_context_state_t
+extern volatile int mbedtls_timing_alarmed;
 
-#define DTLS_TICKS_PER_SECOND CLOCK_SECOND
+struct mbedtls_timing_hr_time {
+  struct timer timer;
+};
 
-typedef clock_time_t dtls_tick_t;
+typedef struct mbedtls_timing_delay_context {
+  struct mbedtls_timing_hr_time private_timer;
+  uint32_t private_int_ms;
+  uint32_t private_fin_ms;
+} mbedtls_timing_delay_context;
 
-#define HAVE_ASSERT_H 1
+void mbedtls_set_alarm(int seconds);
 
-#endif /* DTLS_SUPPORT_CONF_H_ */
+int mbedtls_timing_get_delay(void *data);
+
+unsigned long mbedtls_timing_get_timer(struct mbedtls_timing_hr_time *val, int reset);
+
+unsigned long mbedtls_timing_hardclock(void);
+
+void mbedtls_timing_set_delay(void *data, uint32_t int_ms, uint32_t fin_ms);
+
+#endif /* !TIMING_ALT_H */

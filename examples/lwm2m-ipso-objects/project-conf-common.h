@@ -27,18 +27,17 @@
  * SUCH DAMAGE.
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+#ifndef PROJECT_CONF_COMMON_H
+#define PROJECT_CONF_COMMON_H
+
+#define LOG_CONF_LEVEL_LWM2M LOG_LEVEL_INFO
+#define LOG_CONF_LEVEL_COAP LOG_LEVEL_INFO
 
 #ifdef BOARD_STRING
 #define LWM2M_DEVICE_MODEL_NUMBER BOARD_STRING
-#elif defined(CONTIKI_TARGET_WISMOTE)
-#include "dev/watchdog.h"
-#define LWM2M_DEVICE_MODEL_NUMBER "LWM2M_DEVICE_MODEL_NUMBER"
-#define LWM2M_DEVICE_MANUFACTURER "LWM2M_DEVICE_MANUFACTURER"
-#define LWM2M_DEVICE_SERIAL_NO    "LWM2M_DEVICE_SERIAL_NO"
-#define PLATFORM_REBOOT watchdog_reboot
 #endif
+
+#define LWM2M_DEFAULT_CLIENT_LIFETIME 30
 
 #if BOARD_SENSORTAG
 /* Real sensor is present... */
@@ -47,7 +46,7 @@
 #endif /* BOARD_SENSORTAG */
 
 /* Increase rpl-border-router IP-buffer when using more than 64. */
-#define COAP_MAX_CHUNK_SIZE            64
+#define COAP_MAX_CHUNK_SIZE           500
 
 /* Multiplies with chunk size, be aware of memory constraints. */
 #define COAP_MAX_OPEN_TRANSACTIONS     4
@@ -59,12 +58,15 @@
 /* Enable client-side support for COAP observe */
 #define COAP_OBSERVE_CLIENT 1
 
-/* Definitions to enable Queue Mode, include the dynamic adaptation and change the default parameters  */
-/* #define LWM2M_QUEUE_MODE_CONF_ENABLED 1
-   #define LWM2M_QUEUE_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION 1
-   #define LWM2M_QUEUE_MODE_CONF_DEFAULT_CLIENT_AWAKE_TIME 2000
-   #define LWM2M_QUEUE_MODE_CONF_DEFAULT_CLIENT_SLEEP_TIME 10000
-   #define LWM2M_QUEUE_MODE_CONF_DEFAULT_DYNAMIC_ADAPTATION_FLAG 0
-   #define LWM2M_QUEUE_MODE_OBJECT_CONF_ENABLED 1 */
+/* Definitions to enable Queue Mode, include the dynamic adaptation,
+   and change the default parameters. */
+#if USE_QUEUE_MODE
+#define LWM2M_QUEUE_MODE_CONF_ENABLED 1
+#define LWM2M_QUEUE_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION 1
+#define LWM2M_QUEUE_MODE_CONF_DEFAULT_CLIENT_AWAKE_TIME 2000
+#define LWM2M_QUEUE_MODE_CONF_DEFAULT_CLIENT_SLEEP_TIME 10000
+#define LWM2M_QUEUE_MODE_CONF_DEFAULT_DYNAMIC_ADAPTATION_FLAG 0
+#define LWM2M_QUEUE_MODE_OBJECT_CONF_ENABLED 1
+#endif /* USE_QUEUE_MODE */
 
-#endif /* PROJECT_CONF_H_ */
+#endif /* PROJECT_CONF_COMMON_H */

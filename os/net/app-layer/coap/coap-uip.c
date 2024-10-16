@@ -65,8 +65,7 @@
 #define LOG_LEVEL  LOG_LEVEL_COAP
 
 #ifdef WITH_DTLS
-#include "tinydtls.h"
-#include "dtls.h"
+#include "mbedtls-support/mbedtls-support.h"
 #endif /* WITH_DTLS */
 
 /* sanity check for configured values */
@@ -78,12 +77,18 @@
 #define SERVER_LISTEN_SECURE_PORT UIP_HTONS(COAP_DEFAULT_SECURE_PORT)
 
 #ifdef WITH_DTLS
-static dtls_handler_t cb;
-static dtls_context_t *dtls_context = NULL;
-
-static const coap_keystore_t *dtls_keystore = NULL;
 static struct uip_udp_conn *dtls_conn = NULL;
+static const coap_keystore_t *dtls_keystore = NULL;
+#ifdef COAP_DTLS_CONF_WITH_PSK
+static int coap_ep_get_dtls_psk_info(const coap_endpoint_t *ep,
+    coap_keystore_psk_entry_t *info);
+#endif /* COAP_DTLS_CONF_WITH_PSK */
+#ifdef COAP_DTLS_CONF_WITH_CERT
+static int coap_ep_get_dtls_cert_info(const coap_endpoint_t *ep,
+    coap_keystore_cert_entry_t *info);
+#endif /* COAP_DTLS_CONF_WITH_CERT */
 #endif /* WITH_DTLS */
+
 
 PROCESS(coap_engine, "CoAP Engine");
 
@@ -251,42 +256,45 @@ coap_endpoint_is_connected(const coap_endpoint_t *ep)
 {
 #ifndef CONTIKI_TARGET_NATIVE
   if(!uip_is_addr_linklocal(&ep->ipaddr)
-    && NETSTACK_ROUTING.node_is_reachable() == 0) {
-    return 0;
+     && NETSTACK_ROUTING.node_is_reachable() == 0) {
+    return false;
   }
 #endif
 
 #ifdef WITH_DTLS
-  if(ep != NULL && ep->secure != 0) {
-    dtls_peer_t *peer;
-    if(dtls_context == NULL) {
-      return 0;
-    }
-    peer = dtls_get_peer(dtls_context, ep);
-    if(peer != NULL) {
-      /* only if handshake is done! */
-      LOG_DBG("DTLS peer state for ");
-      LOG_DBG_COAP_EP(ep);
-      LOG_DBG_(" is %d (%sconnected)\n", peer->state,
-               dtls_peer_is_connected(peer) ? "" : "not ");
-      return dtls_peer_is_connected(peer);
-    } else {
-      LOG_DBG("DTLS did not find peer ");
-      LOG_DBG_COAP_EP(ep);
-      LOG_DBG_("\n");
-      return 0;
-    }
+  if(coap_ep_is_dtls_peer(ep)) {
+    /* only if handshake is done! */
+    LOG_DBG("DTLS peer state for ");
+    LOG_DBG_COAP_EP(ep);
+    LOG_DBG_(" is %sconnected\n", coap_ep_is_dtls_connected(ep) ? "" : "not ");
+    return coap_ep_is_dtls_connected(ep);
+  } else {
+    LOG_DBG("DTLS did not find peer ");
+    LOG_DBG_COAP_EP(ep);
+    LOG_DBG_("\n");
+    return false;
   }
 #endif /* WITH_DTLS */
 
   /* Assume connected */
-  return 1;
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 int
 coap_endpoint_connect(coap_endpoint_t *ep)
 {
-  if(ep->secure == 0) {
+#ifdef WITH_DTLS
+#ifdef COAP_DTLS_CONF_WITH_CLIENT
+#ifdef COAP_DTLS_CONF_WITH_PSK
+  static coap_keystore_psk_entry_t psk_info;
+#endif /* COAP_DTLS_CONF_WITH_PSK */
+#ifdef COAP_DTLS_CONF_WITH_CERT
+  static coap_keystore_cert_entry_t cert_info;
+#endif /* COAP_DTLS_CONF_WITH_CERT */
+#endif /* COAP_DTLS_CONF_WITH_CLIENT */
+#endif /* WITH_DTLS */
+
+  if(!ep->secure) {
     LOG_DBG("connect to ");
     LOG_DBG_COAP_EP(ep);
     LOG_DBG_("\n");
@@ -298,23 +306,60 @@ coap_endpoint_connect(coap_endpoint_t *ep)
   LOG_DBG_COAP_EP(ep);
   LOG_DBG_("\n");
 
-  /* setup all address info here... should be done to connect */
-  if(dtls_context) {
-    dtls_connect(dtls_context, ep);
-    return 1;
+#ifdef COAP_DTLS_CONF_WITH_CLIENT
+#ifdef COAP_DTLS_CONF_WITH_PSK
+  if(coap_ep_get_dtls_psk_info(ep, &psk_info) == 1) {
+    return coap_ep_dtls_connect(ep, COAP_DTLS_SEC_MODE_PSK, &psk_info);
   }
+#endif /* COAP_DTLS_CONF_WITH_PSK */
+#ifdef COAP_DTLS_CONF_WITH_CERT
+  if(coap_ep_get_dtls_cert_info(ep, &cert_info) == 1) {
+    return coap_ep_dtls_connect(ep, COAP_DTLS_SEC_MODE_CERT, &cert_info);
+  }
+#endif /* COAP_DTLS_CONF_WITH_CERT */
+  LOG_ERR("Unable to retrieve DTLS authorization info for \n");
+  LOG_ERR_COAP_EP(ep);
+  LOG_ERR_("\n");
+#endif /* COAP_DTLS_CONF_WITH_CLIENT */
 #endif /* WITH_DTLS */
 
   return 0;
 }
 /*---------------------------------------------------------------------------*/
+#ifdef WITH_DTLS
+#ifdef COAP_DTLS_CONF_WITH_SERVER
+int
+coap_secure_server_setup(void)
+{
+  coap_endpoint_t ep;
+#ifdef COAP_DTLS_CONF_WITH_CERT
+  static coap_keystore_cert_entry_t cert_info;
+#endif /* COAP_DTLS_CONF_WITH_CERT */
+#ifdef COAP_DTLS_CONF_WITH_PSK
+  static coap_keystore_psk_entry_t psk_info;
+#endif /* COAP_DTLS_CONF_WITH_PSK */
+
+#ifdef COAP_DTLS_CONF_WITH_PSK
+  if(coap_ep_get_dtls_psk_info(&ep, &psk_info) == 1) {
+    return coap_dtls_server_setup(COAP_DTLS_SEC_MODE_PSK, &psk_info);
+  }
+#endif /* COAP_DTLS_CONF_WITH_PSK */
+
+#ifdef COAP_DTLS_CONF_WITH_CERT
+  if(coap_ep_get_dtls_cert_info(&ep, &cert_info) == 1) {
+    return coap_dtls_server_setup(COAP_DTLS_SEC_MODE_CERT, &cert_info);
+  }
+#endif /* COAP_DTLS_CONF_WITH_CERT */
+  return 0;
+}
+#endif /* COAP_DTLS_CONF_WITH_SERVER */
+#endif /* WITH_DTLS */
+/*---------------------------------------------------------------------------*/
 void
 coap_endpoint_disconnect(coap_endpoint_t *ep)
 {
 #ifdef WITH_DTLS
-  if(ep && ep->secure && dtls_context) {
-    dtls_close(dtls_context, ep);
-  }
+  coap_ep_dtls_disconnect(ep);
 #endif /* WITH_DTLS */
 }
 /*---------------------------------------------------------------------------*/
@@ -329,7 +374,7 @@ coap_transport_init(void)
 {
   process_start(&coap_engine, NULL);
 #ifdef WITH_DTLS
-  dtls_init();
+  coap_dtls_init();
 
 #if COAP_DTLS_KEYSTORE_CONF_WITH_SIMPLE
   coap_keystore_simple_init();
@@ -347,9 +392,11 @@ process_secure_data(void)
   LOG_INFO_("]:%u\n", uip_ntohs(UIP_UDP_BUF->srcport));
   LOG_INFO("  Length: %u\n", uip_datalen());
 
-  if(dtls_context) {
-    dtls_handle_message(dtls_context, (coap_endpoint_t *)get_src_endpoint(1),
-                        uip_appdata, uip_datalen());
+  int ret;
+
+  if((ret = coap_ep_dtls_handle_message(
+        (const coap_endpoint_t *) get_src_endpoint(1))) > 0) {
+    coap_receive(get_src_endpoint(1), uip_appdata, ret);
   }
 }
 #endif /* WITH_DTLS */
@@ -382,22 +429,16 @@ coap_sendto(const coap_endpoint_t *ep, const uint8_t *data, uint16_t length)
 
 #ifdef WITH_DTLS
   if(coap_endpoint_is_secure(ep)) {
-    if(dtls_context) {
-      int ret;
-
-      ret = dtls_write(dtls_context, (session_t *)ep, (uint8_t *)data, length);
-      LOG_INFO("sent DTLS to ");
-      LOG_INFO_COAP_EP(ep);
-      if(ret < 0) {
-        LOG_INFO_(" - error %d\n", ret);
-      } else {
-        LOG_INFO_(" %d/%u bytes\n", ret, length);
-      }
-      return ret;
+    int ret;
+    ret = coap_ep_dtls_write(ep, (unsigned char *) data, length);
+    LOG_INFO("sent DTLS to ");
+    LOG_INFO_COAP_EP(ep);
+    if(ret < 0) {
+      LOG_INFO_(" - error %d\n", ret);
     } else {
-      LOG_WARN("no DTLS context\n");
-      return -1;
+      LOG_INFO_(" %d/%u bytes\n", ret, length);
     }
+    return ret;
   }
 #endif /* WITH_DTLS */
 
@@ -428,18 +469,18 @@ PROCESS_THREAD(coap_engine, ev, data)
   if(dtls_conn != NULL) {
     udp_bind(dtls_conn, SERVER_LISTEN_SECURE_PORT);
     LOG_INFO("DTLS listening on port %u\n", uip_ntohs(dtls_conn->lport));
-    dtls_context = dtls_new_context(dtls_conn);
-  }
-  if(!dtls_context) {
-    LOG_WARN("DTLS: cannot create context\n");
-  } else {
-    dtls_set_handler(dtls_context, &cb);
+    coap_dtls_conn_init(dtls_conn, PROCESS_CURRENT());
   }
 #endif /* WITH_DTLS */
 
   while(1) {
     PROCESS_YIELD();
-
+#ifdef WITH_DTLS
+    if(ev == PROCESS_EVENT_POLL || ev == PROCESS_EVENT_TIMER) {
+      coap_dtls_event_handler();
+      continue;
+    }
+#endif /* WITH_DTLS */
     if(ev == tcpip_event) {
       if(uip_newdata()) {
 #ifdef WITH_DTLS
@@ -459,144 +500,44 @@ PROCESS_THREAD(coap_engine, ev, data)
 
 /* DTLS */
 #ifdef WITH_DTLS
-
-/* This is input coming from the DTLS code - e.g. de-crypted input from
-   the other side - peer */
-static int
-input_from_peer(struct dtls_context_t *ctx,
-                session_t *session, uint8_t *data, size_t len)
-{
-  size_t i;
-
-  if(LOG_DBG_ENABLED) {
-    LOG_DBG("received DTLS data:");
-    for(i = 0; i < len; i++) {
-      LOG_DBG_("%c", data[i]);
-    }
-    LOG_DBG_("\n");
-    LOG_DBG("Hex:");
-    for(i = 0; i < len; i++) {
-      LOG_DBG_("%02x", data[i]);
-    }
-    LOG_DBG_("\n");
-  }
-
-  /* Ensure that the endpoint is tagged as secure */
-  session->secure = 1;
-
-  coap_receive(session, data, len);
-
-  return 0;
-}
-
-/* This is output from the DTLS code to be sent to peer (encrypted) */
-static int
-output_to_peer(struct dtls_context_t *ctx,
-               session_t *session, uint8_t *data, size_t len)
-{
-  struct uip_udp_conn *udp_connection = dtls_get_app_data(ctx);
-  LOG_DBG("output_to DTLS peer [");
-  LOG_DBG_6ADDR(&session->ipaddr);
-  LOG_DBG_("]:%u %ld bytes\n", uip_ntohs(session->port), (long)len);
-  uip_udp_packet_sendto(udp_connection, data, len,
-                        &session->ipaddr, session->port);
-  return len;
-}
-
 /* This defines the key-store set API since we hookup DTLS here */
 void
 coap_set_keystore(const coap_keystore_t *keystore)
 {
   dtls_keystore = keystore;
 }
-
-/* This function is the "key store" for tinyDTLS. It is called to
- * retrieve a key for the given identity within this particular
- * session. */
+/*---------------------------------------------------------------------------*/
+#ifdef COAP_DTLS_CONF_WITH_PSK
 static int
-get_psk_info(struct dtls_context_t *ctx,
-             const session_t *session,
-             dtls_credentials_type_t type,
-             const unsigned char *id, size_t id_len,
-             unsigned char *result, size_t result_length)
+coap_ep_get_dtls_psk_info(const coap_endpoint_t *ep,
+    coap_keystore_psk_entry_t *info)
 {
-  coap_keystore_psk_entry_t ks;
-
-  if(dtls_keystore == NULL) {
-    LOG_DBG("--- No key store available ---\n");
-    return 0;
-  }
-
-  memset(&ks, 0, sizeof(ks));
-  LOG_DBG("---===>>> Getting the Key or ID <<<===---\n");
-  switch(type) {
-  case DTLS_PSK_IDENTITY:
-    if(id && id_len) {
-      ks.identity_hint = id;
-      ks.identity_hint_len = id_len;
-      LOG_DBG("got psk_identity_hint: '");
-      LOG_DBG_COAP_STRING((const char *)id, id_len);
-      LOG_DBG_("'\n");
-    }
-
+  if(NULL != dtls_keystore) {
     if(dtls_keystore->coap_get_psk_info) {
-      /* we know that session is a coap endpoint */
-      dtls_keystore->coap_get_psk_info((coap_endpoint_t *)session, &ks);
+      /* Get identity first */
+      dtls_keystore->coap_get_psk_info(ep, info);
+      /* Get key */
+      dtls_keystore->coap_get_psk_info(ep, info);
+      return 1;
     }
-    if(ks.identity == NULL || ks.identity_len == 0) {
-      LOG_DBG("no psk_identity found\n");
-      return 0;
-    }
-
-    if(result_length < ks.identity_len) {
-      LOG_DBG("cannot return psk_identity -- buffer too small\n");
-      return dtls_alert_fatal_create(DTLS_ALERT_INTERNAL_ERROR);
-    }
-    memcpy(result, ks.identity, ks.identity_len);
-    LOG_DBG("psk_identity with %u bytes found\n", ks.identity_len);
-    return ks.identity_len;
-
-  case DTLS_PSK_KEY:
-    if(dtls_keystore->coap_get_psk_info) {
-      ks.identity = id;
-      ks.identity_len = id_len;
-      /* we know that session is a coap endpoint */
-      dtls_keystore->coap_get_psk_info((coap_endpoint_t *)session, &ks);
-    }
-    if(ks.key == NULL || ks.key_len == 0) {
-      LOG_DBG("PSK for unknown id requested, exiting\n");
-      return dtls_alert_fatal_create(DTLS_ALERT_ILLEGAL_PARAMETER);
-    }
-
-    if(result_length < ks.key_len) {
-      LOG_DBG("cannot return psk -- buffer too small\n");
-      return dtls_alert_fatal_create(DTLS_ALERT_INTERNAL_ERROR);
-    }
-    memcpy(result, ks.key, ks.key_len);
-    LOG_DBG("psk with %u bytes found\n", ks.key_len);
-    return ks.key_len;
-
-  default:
-    LOG_WARN("unsupported key store request type: %d\n", type);
   }
-
-  return dtls_alert_fatal_create(DTLS_ALERT_INTERNAL_ERROR);
+  return 0;
 }
+#endif /* COAP_DTLS_CONF_WITH_PSK */
+/*---------------------------------------------------------------------------*/
+#ifdef COAP_DTLS_CONF_WITH_CERT
+static int
+coap_ep_get_dtls_cert_info(const coap_endpoint_t *ep,
+    coap_keystore_cert_entry_t *info)
+{
+  if(dtls_keystore != NULL && dtls_keystore->coap_get_cert_info != NULL) {
+    return dtls_keystore->coap_get_cert_info(ep, info);
+  }
+  return 0;
+}
+#endif /* COAP_DTLS_CONF_WITH_CERT */
 
-
-static dtls_handler_t cb = {
-  .write = output_to_peer,
-  .read  = input_from_peer,
-  .event = NULL,
-#ifdef DTLS_PSK
-  .get_psk_info = get_psk_info,
-#endif /* DTLS_PSK */
-#ifdef DTLS_ECC
-  /* .get_ecdsa_key = get_ecdsa_key, */
-  /* .verify_ecdsa_key = verify_ecdsa_key */
-#endif /* DTLS_ECC */
-};
-
+/*---------------------------------------------------------------------------*/
 #endif /* WITH_DTLS */
 /*---------------------------------------------------------------------------*/
 /** @} */
