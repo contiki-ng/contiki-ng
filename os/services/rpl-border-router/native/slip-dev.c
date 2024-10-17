@@ -70,8 +70,6 @@ extern speed_t slip_config_b_rate;
 #define SEND_DELAY 0
 #endif
 
-int devopen(const char *dev, int flags);
-
 static FILE *inslip;
 
 /* for statistics */
@@ -110,7 +108,7 @@ connect_to_server(const char *host, const char *port)
   hints.ai_socktype = SOCK_STREAM;
 
   if((rv = getaddrinfo(host, port, &hints, &servinfo)) != 0) {
-    err(1, "getaddrinfo: %s", gai_strerror(rv));
+    err(EXIT_FAILURE, "getaddrinfo: %s", gai_strerror(rv));
     return -1;
   }
 
@@ -130,7 +128,7 @@ connect_to_server(const char *host, const char *port)
   }
 
   if(p == NULL) {
-    err(1, "can't connect to ``%s:%s''", host, port);
+    err(EXIT_FAILURE, "can't connect to ``%s:%s''", host, port);
     return -1;
   }
 
@@ -183,7 +181,7 @@ serial_input(FILE *inslip)
 #ifdef linux
   ret = fread(&c, 1, 1, inslip);
   if(ret == -1 || ret == 0) {
-    err(1, "serial_input: read");
+    err(EXIT_FAILURE, "serial_input: read");
   }
   goto after_fread;
 #endif
@@ -198,7 +196,7 @@ read_more:
 after_fread:
 #endif
   if(ret == -1) {
-    err(1, "serial_input: read");
+    err(EXIT_FAILURE, "serial_input: read");
   }
   if(ret == 0) {
     clearerr(inslip);
@@ -296,7 +294,7 @@ static void
 slip_send(int fd, unsigned char c)
 {
   if(slip_end >= sizeof(slip_buf)) {
-    err(1, "slip_send overflow");
+    err(EXIT_FAILURE, "slip_send overflow");
   }
   slip_buf[slip_end] = c;
   slip_end++;
@@ -328,7 +326,7 @@ slip_flushbuf(int fd)
   n = write(fd, slip_buf + slip_begin, slip_packet_end - slip_begin);
 
   if(n == -1 && errno != EAGAIN) {
-    err(1, "slip_flushbuf write failed");
+    err(EXIT_FAILURE, "slip_flushbuf write failed");
   } else if(n == -1) {
     PROGRESS("Q");		/* Outqueue is full! */
   } else {
@@ -429,7 +427,7 @@ stty_telos(int fd)
   int i;
 
   if(tcflush(fd, TCIOFLUSH) == -1) {
-    err(1, "tcflush");
+    err(EXIT_FAILURE, "tcflush");
   }
 
   if(tcgetattr(fd, &tty) == -1) {
@@ -453,21 +451,21 @@ stty_telos(int fd)
   cfsetospeed(&tty, speed);
 
   if(tcsetattr(fd, TCSAFLUSH, &tty) == -1) {
-    err(1, "tcsetattr");
+    err(EXIT_FAILURE, "tcsetattr");
   }
 
 #if 1
   /* Nonblocking read and write. */
-  /* if(fcntl(fd, F_SETFL, O_NONBLOCK) == -1) err(1, "fcntl"); */
+  /* if(fcntl(fd, F_SETFL, O_NONBLOCK) == -1) err(EXIT_FAILURE, "fcntl"); */
 
   tty.c_cflag |= CLOCAL;
   if(tcsetattr(fd, TCSAFLUSH, &tty) == -1) {
-    err(1, "tcsetattr");
+    err(EXIT_FAILURE, "tcsetattr");
   }
 
   i = TIOCM_DTR;
   if(ioctl(fd, TIOCMBIS, &i) == -1) {
-    err(1, "ioctl");
+    err(EXIT_FAILURE, "ioctl");
   }
 #endif
 
@@ -475,7 +473,7 @@ stty_telos(int fd)
 
   /* Flush input and output buffers. */
   if(tcflush(fd, TCIOFLUSH) == -1) {
-    err(1, "tcflush");
+    err(EXIT_FAILURE, "tcflush");
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -516,31 +514,31 @@ slip_init(void)
     }
     slipfd = connect_to_server(slip_config_host, slip_config_port);
     if(slipfd == -1) {
-      err(1, "can't connect to ``%s:%s''", slip_config_host, slip_config_port);
+      err(EXIT_FAILURE, "can't connect to ``%s:%s''", slip_config_host,
+          slip_config_port);
     }
   } else if(slip_config_siodev != NULL) {
     if(strcmp(slip_config_siodev, "null") == 0) {
       /* Disable slip */
       return;
     }
-    slipfd = devopen(slip_config_siodev, O_RDWR | O_NONBLOCK);
+    slipfd = open(slip_config_siodev, O_RDWR | O_NONBLOCK);
     if(slipfd == -1) {
-      err(1, "can't open siodev ``/dev/%s''", slip_config_siodev);
+      err(EXIT_FAILURE, "can't open siodev ``%s''", slip_config_siodev);
     }
   } else {
     static const char *siodevs[] = {
-      "ttyUSB0", "cuaU0", "ucom0" /* linux, fbsd6, fbsd5 */
+      "/dev/ttyUSB0", "/dev/cuaU0", "/dev/ucom0" /* linux, fbsd6, fbsd5 */
     };
-    int i;
-    for(i = 0; i < 3; i++) {
+    for(int i = 0; i < 3; i++) {
       slip_config_siodev = siodevs[i];
-      slipfd = devopen(slip_config_siodev, O_RDWR | O_NONBLOCK);
+      slipfd = open(slip_config_siodev, O_RDWR | O_NONBLOCK);
       if(slipfd != -1) {
         break;
       }
     }
     if(slipfd == -1) {
-      err(1, "can't open siodev");
+      err(EXIT_FAILURE, "can't open siodev");
     }
   }
 
@@ -558,7 +556,7 @@ slip_init(void)
   slip_send(slipfd, SLIP_END);
   inslip = fdopen(slipfd, "r");
   if(inslip == NULL) {
-    err(1, "slip_init: fdopen");
+    err(EXIT_FAILURE, "slip_init: fdopen");
   }
 }
 /*---------------------------------------------------------------------------*/

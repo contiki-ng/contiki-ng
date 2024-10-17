@@ -46,6 +46,7 @@
 #include "cmd.h"
 #include "border-router.h"
 #include "border-router-cmds.h"
+#include "tun6-net.h"
 
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
@@ -63,7 +64,6 @@ static bool is_mac_set;
 
 extern int contiki_argc;
 extern char **contiki_argv;
-extern const char *slip_config_ipaddr;
 
 CMD_HANDLERS(border_router_cmd_handler);
 
@@ -130,17 +130,18 @@ PROCESS_THREAD(border_router_process, ev, data)
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
   }
 
-  if(slip_config_ipaddr != NULL) {
+  const char *config_ipaddr = tun6_net_get_prefix();
+  if(config_ipaddr != NULL) {
     uip_ipaddr_t prefix;
 
-    if(uiplib_ipaddrconv((const char *)slip_config_ipaddr, &prefix)) {
+    if(uiplib_ipaddrconv(config_ipaddr, &prefix)) {
       LOG_INFO("Setting prefix ");
       LOG_INFO_6ADDR(&prefix);
       LOG_INFO_("\n");
       set_prefix_64(&prefix);
     } else {
-      LOG_ERR("Parse error: %s\n", slip_config_ipaddr);
-      exit(0);
+      LOG_ERR("Parse error: %s\n", config_ipaddr);
+      exit(EXIT_FAILURE);
     }
   }
 

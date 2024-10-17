@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, Swedish Institute of Computer Science
+ * Copyright (c) 2011, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,39 +25,31 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
- *
  */
 
-#include "dev/watchdog.h"
-#include <stdlib.h>
+/**
+ * \author
+ *         Niclas Finne <nfi@sics.se>
+ *         Joakim Eriksson <joakime@sics.se>
+ */
 
-/*---------------------------------------------------------------------------*/
-void
-watchdog_init(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-void
-watchdog_start(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-void
-watchdog_periodic(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-void
-watchdog_stop(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-void
-watchdog_reboot(void)
-{
-  // Death by watchdog.
-  exit(EXIT_FAILURE);
-}
-/*---------------------------------------------------------------------------*/
+#ifndef TUN6_NET_H_
+#define TUN6_NET_H_
+
+#include <stdint.h>
+#include <stdbool.h>
+
+const char *tun6_net_get_prefix(void);
+void tun6_net_set_prefix(const char *ipaddr);
+
+const char *tun6_net_get_tun_name(void);
+void tun6_net_set_tun_name(const char *tun_name);
+
+int tun6_net_get_mtu(void);
+void tun6_net_set_mtu(int mtu_size);
+
+bool tun6_net_init(void (* tun_input)(void));
+int tun6_net_output(uint8_t *data, int len);
+int tun6_net_input(uint8_t *data, int maxlen);
+
+#endif /* TUN6_NET_H_ */

@@ -48,15 +48,14 @@
 #include <err.h>
 #include "contiki.h"
 #include "sys/platform.h"
+#include "tun6-net.h"
 
 int slip_config_verbose = 0;
-const char *slip_config_ipaddr;
 int slip_config_flowcontrol = 0;
 int slip_config_timestamp = 0;
 const char *slip_config_siodev = NULL;
 const char *slip_config_host = NULL;
 const char *slip_config_port = NULL;
-char slip_config_tundev[IFNAMSIZ + 1] = { "" };
 uint16_t slip_config_basedelay = 0;
 
 #ifndef BAUDRATE
@@ -66,8 +65,8 @@ speed_t slip_config_b_rate = BAUDRATE;
 
 #define BAUDRATE_PRIO CONTIKI_VERBOSE_PRIO + 20
 
-CONTIKI_USAGE(300, " ipaddress\n"
-                   "example parameters: -L -v=2 -s ttyUSB1 fd00::1/64\n\n");
+CONTIKI_USAGE(300, " [ipaddress]\n"
+                   "example parameters: -L -v=2 -s /dev/ttyUSB1 fd00::1/64\n\n");
 CONTIKI_EXTRA_HELP(300,
                    "\nVerbosity level:\n"
                    "  0   No messages\n"
@@ -76,12 +75,6 @@ CONTIKI_EXTRA_HELP(300,
                    "  3   Printable strings and SLIP packet notifications\n"
                    "  4   All printable characters as they are received\n"
                    "  5   All SLIP packets in hex\n");
-/*---------------------------------------------------------------------------*/
-CC_CONSTRUCTOR(CONTIKI_MIN_INIT_PRIO - 1) static void
-init_slip_config_data(void)
-{
-  strcpy(slip_config_tundev, "tun0");
-}
 /*---------------------------------------------------------------------------*/
 static int
 baudrate_callback(const char *optarg)
@@ -133,11 +126,11 @@ CONTIKI_OPTION(BAUDRATE_PRIO + 2,
 static int
 device_callback(const char *optarg)
 {
-  slip_config_siodev = optarg + (strncmp("/dev/", optarg, 5) == 0 ? 5 : 0);
+  slip_config_siodev = optarg;
   return 0;
 }
 CONTIKI_OPTION(BAUDRATE_PRIO + 3, { "s", required_argument, NULL, 0 },
-               device_callback, "serial device (default /dev/ttyUSB0)\n");
+               device_callback, "serial device\n");
 static int
 host_callback(const char *optarg)
 {
@@ -155,17 +148,6 @@ port_callback(const char *optarg)
 CONTIKI_OPTION(BAUDRATE_PRIO + 5, { "p", required_argument, NULL, 0 },
                port_callback, "connect via TCP to server on port <value>\n");
 static int
-dev_callback(const char *optarg)
-{
-  strncpy(slip_config_tundev,
-          optarg + (strncmp("/dev/", optarg, 5) == 0 ? 5 : 0),
-          sizeof(slip_config_tundev) - 1);
-  slip_config_tundev[sizeof(slip_config_tundev) - 1] = '\0';
-  return 0;
-}
-CONTIKI_OPTION(BAUDRATE_PRIO + 6, { "t", required_argument, NULL, 0 },
-               dev_callback, "name of interface (default tun0)\n");
-static int
 delay_callback(const char *optarg)
 {
   slip_config_basedelay = optarg ? atoi(optarg) : 10;
@@ -177,7 +159,7 @@ delay_callback(const char *optarg)
 
   return 0;
 }
-CONTIKI_OPTION(BAUDRATE_PRIO + 7, { "d", optional_argument, NULL, 0 },
+CONTIKI_OPTION(BAUDRATE_PRIO + 6, { "d", optional_argument, NULL, 0 },
                delay_callback,
                "minimum delay between outgoing SLIP packets (default 10)\n"
                "\t\tActual delay is basedelay * (#6LowPAN fragments)"
@@ -186,10 +168,11 @@ CONTIKI_OPTION(BAUDRATE_PRIO + 7, { "d", optional_argument, NULL, 0 },
 int
 slip_config_handle_arguments(int argc, char **argv)
 {
-  if(argc != 2 && argc != 3) {
-    err(1, "usage: [-B baudrate] [-H] [-L] [-s siodev] [-t tundev] [-T] [-v verbosity] [-d delay] [-a serveraddress] [-p serverport] ipaddress");
+  /* For backward compatiblity: assume subnet prefix if exactly one argument
+     been specified. */
+  if(argc == 2) {
+    tun6_net_set_prefix(argv[1]);
   }
-  slip_config_ipaddr = argv[1];
   return 1;
 }
 /*---------------------------------------------------------------------------*/
