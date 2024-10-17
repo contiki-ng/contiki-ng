@@ -168,7 +168,12 @@ tun6_net_get_mtu(void)
 void
 tun6_net_set_mtu(int mtu_size)
 {
-  config_mtu = MAX(MIN_MTU_SIZE, mtu_size);
+  if(mtu_size < MIN_MTU_SIZE) {
+    LOG_WARN("ignoring too small MTU size %d, using %d\n",
+             mtu_size, config_mtu);
+  } else {
+    config_mtu = mtu_size;
+  }
 }
 /*---------------------------------------------------------------------------*/
 static int
