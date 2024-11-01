@@ -185,7 +185,7 @@ ns_input(void)
 
 #if UIP_CONF_IPV6_CHECKS
 
-  if (uip_l3_icmp_hdr_len + sizeof(uip_nd6_ns) > uip_len) {
+  if(uip_l3_icmp_hdr_len + sizeof(uip_nd6_ns) > uip_len) {
     LOG_ERR("Insufficient data for reading ND6 NS header fields");
     goto discard;
   }
