@@ -47,9 +47,6 @@
 
 #define LWM2M_SERVER_ADDRESS "coaps://[fd00::1]"
 
-/* Use more queuebufs for DTLS. */
-#define QUEUEBUF_CONF_NUM 16
-
 #define COAP_DTLS_CONF_MAX_PEERS 1
 //#define COAP_MBEDTLS_CONF_MTU 200
 //#define COAP_MBEDTLS_CONF_MAX_FRAG_LEN 1
@@ -67,11 +64,21 @@
 #define CSPRNG_CONF_ENABLED 1
 #endif
 
-/* Dynamic memory needed for Mbed TLS library operation */
+#ifdef COAP_DTLS_CONF_WITH_CERT
+/* Dynamic memory needed for Mbed TLS library operation with certificates. */
 #define HEAPMEM_CONF_ARENA_SIZE (1024 * 16)
 #define HEAPMEM_CONF_ALIGNMENT sizeof(uint64_t)
 
-#ifdef COAP_DTLS_CONF_WITH_CERT
+/* Use more queuebufs when using certificates. */
+#ifndef QUEUEBUF_CONF_NUM
+#define QUEUEBUF_CONF_NUM 8
+#endif
+
+/* Enable fragmentation to support larger datagrams. */
+#ifndef SICSLOWPAN_CONF_FRAG
+#define SICSLOWPAN_CONF_FRAG 1
+#endif
+
 /* Use Leshan test certificates. */
 #define CHECKED_IN_COAP_DTLS_TEST_CA_CERT       \
 "-----BEGIN CERTIFICATE-----\r\n" \
@@ -153,6 +160,10 @@
 
 #endif /* COAP_DTLS_CONF_WITH_SERVER */
 #else /* COAP_DTLS_CONF_WITH_CERT */
+/* Dynamic memory needed for Mbed TLS library operation with PSK. */
+#define HEAPMEM_CONF_ARENA_SIZE (1024 * 8)
+#define HEAPMEM_CONF_ALIGNMENT sizeof(uint64_t)
+
 /*
  * Private Shared Key (PSK) information.
  *
