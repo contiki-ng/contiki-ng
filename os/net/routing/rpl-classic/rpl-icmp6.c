@@ -283,7 +283,7 @@ static void
 dio_input(void)
 {
   unsigned char *buffer;
-  uint8_t buffer_length;
+  uint16_t buffer_length;
   rpl_dio_t dio;
   uint8_t subopt_type;
   int i;
@@ -310,6 +310,12 @@ dio_input(void)
   LOG_INFO_("\n");
 
   buffer_length = uip_len - uip_l3_icmp_hdr_len;
+
+  if(buffer_length < 8 + sizeof(dio.dag_id)) {
+    LOG_WARN("dio_input: invalid DIO header, len %" PRIu16 ", discard\n",
+             buffer_length);
+    goto discard;
+  }
 
   /* Process the DIO base option. */
   i = 0;
@@ -347,6 +353,10 @@ dio_input(void)
       len = 1;
     } else {
       /* Suboption with a two-byte header + payload. */
+      if(i + 1 >= buffer_length) {
+        LOG_ERR("dio_input: malformed packet, discard\n");
+        goto discard;
+      }
       len = 2 + buffer[i + 1];
     }
 
@@ -380,6 +390,10 @@ dio_input(void)
       if(dio.mc.type == RPL_DAG_MC_NONE) {
         /* No metric container: do nothing. */
       } else if(dio.mc.type == RPL_DAG_MC_ETX) {
+        if(len < 8) {
+          LOG_WARN("dio_input: invalid DAG MC, len %u, discard\n", len);
+          goto discard;
+        }
         dio.mc.obj.etx = get16(buffer, i + 6);
 
         LOG_DBG("DAG MC: type %u, flags %u, aggr %u, prec %u, length %u, ETX %u\n",
@@ -390,6 +404,10 @@ dio_input(void)
                 (unsigned)dio.mc.length,
                 (unsigned)dio.mc.obj.etx);
       } else if(dio.mc.type == RPL_DAG_MC_ENERGY) {
+        if(len < 8) {
+          LOG_WARN("dio_input: invalid DAG MC, len %u, discard\n", len);
+          goto discard;
+        }
         dio.mc.obj.energy.flags = buffer[i + 6];
         dio.mc.obj.energy.energy_est = buffer[i + 7];
       } else {
@@ -398,8 +416,9 @@ dio_input(void)
       }
       break;
     case RPL_OPTION_ROUTE_INFO:
-      if(len < 9) {
-        LOG_WARN("Invalid destination prefix option, len = %d\n", len);
+      if(len < 8) {
+        LOG_WARN("dio_input: invalid route info option, len %u, discard\n",
+                 len);
         RPL_STAT(rpl_stats.malformed_msgs++);
         goto discard;
       }
@@ -673,8 +692,8 @@ dao_input_storing(void)
   buffer = UIP_ICMP_PAYLOAD;
   uint16_t buffer_length = uip_len - uip_l3_icmp_hdr_len;
   if(buffer_length < 4) {
-    LOG_WARN("Dropping incomplete DAO (%"PRIu16" < %d)\n",
-	     buffer_length, 4);
+    LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
+             buffer_length, 4);
     return;
   }
 
@@ -700,11 +719,11 @@ dao_input_storing(void)
 
   /* Is the DAG ID present? */
   if(flags & RPL_DAO_D_FLAG) {
-      if(last_valid_pos < pos + 16) {
-	LOG_WARN("Dropping incomplete DAO (%"PRIu16" < %d)\n",
-		 last_valid_pos, pos + 16);
-	return;
-      }
+    if(last_valid_pos < pos + 16) {
+      LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
+               last_valid_pos, pos + 16);
+      return;
+    }
 
     if(memcmp(&dag->dag_id, &buffer[pos], sizeof(dag->dag_id))) {
       LOG_INFO("Ignoring a DAO for a DAG different from ours\n");
@@ -754,9 +773,9 @@ dao_input_storing(void)
     } else {
       /* The option consists of a two-byte header and a payload. */
       if(last_valid_pos < i + 1) {
-	LOG_WARN("Dropping incomplete DAO (%"PRIu16" < %d)\n",
-		 last_valid_pos, i + 1);
-	return;
+        LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
+                 last_valid_pos, i + 1);
+        return;
       }
       len = 2 + buffer[i + 1];
     }
@@ -765,9 +784,9 @@ dao_input_storing(void)
     case RPL_OPTION_TARGET:
       /* Handle the target option. */
       if(last_valid_pos < i + 3) {
-	LOG_WARN("Dropping incomplete DAO (%"PRIu16" < %d)\n",
-		 last_valid_pos, i + 3);
-	return;
+        LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
+                 last_valid_pos, i + 3);
+        return;
       }
       prefixlen = buffer[i + 3];
       if(prefixlen == 0) {
@@ -789,9 +808,9 @@ dao_input_storing(void)
     case RPL_OPTION_TRANSIT:
       /* The path sequence and control are ignored. */
       if(last_valid_pos < i + 5) {
-	LOG_WARN("Dropping incomplete DAO (%"PRIu16" < %d)\n",
-		 last_valid_pos, i + 5);
-	return;
+        LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
+                 last_valid_pos, i + 5);
+        return;
       }
       lifetime = buffer[i + 5];
       /* The parent address is also ignored. */
@@ -991,8 +1010,8 @@ dao_input_nonstoring(void)
   buffer = UIP_ICMP_PAYLOAD;
   uint16_t buffer_length = uip_len - uip_l3_icmp_hdr_len;
   if(buffer_length < 4) {
-    LOG_WARN("Dropping incomplete DAO (%"PRIu16" < %d)\n",
-	     buffer_length, 4);
+    LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
+             buffer_length, 4);
     return;
   }
 
@@ -1030,9 +1049,9 @@ dao_input_nonstoring(void)
     } else {
       /* The option consists of a two-byte header and a payload. */
       if(last_valid_pos < i + 1) {
-	LOG_WARN("Dropping incomplete DAO (%"PRIu16" < %d)\n",
-		 last_valid_pos, i + 1);
-	return;
+        LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
+                 last_valid_pos, i + 1);
+        return;
       }
       len = 2 + buffer[i + 1];
     }
@@ -1041,9 +1060,9 @@ dao_input_nonstoring(void)
     case RPL_OPTION_TARGET:
       /* Handle the target option. */
       if(last_valid_pos < i + 3) {
-	LOG_WARN("Dropping incomplete DAO (%"PRIu16" < %d)\n",
-		 last_valid_pos, i + 3);
-	return;
+        LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
+                 last_valid_pos, i + 3);
+        return;
       }
       prefixlen = buffer[i + 3];
       if(prefixlen == 0) {
@@ -1066,9 +1085,9 @@ dao_input_nonstoring(void)
     case RPL_OPTION_TRANSIT:
       /* The path sequence and control are ignored. */
       if(i + 6 + 16 > buffer_length) {
-	LOG_WARN("Incomplete DAO transit option (%d > %"PRIu16")\n",
-		 i + 6 + 16, buffer_length);
-	return;
+        LOG_WARN("Incomplete DAO transit option (%d > %" PRIu16 ")\n",
+                 i + 6 + 16, buffer_length);
+        return;
       }
       lifetime = buffer[i + 5];
       if(len >= 20) {
