@@ -39,7 +39,8 @@ storage/eeprom-test/native \
 libs/logging/native \
 libs/data-structures/native \
 libs/stack-check/sky \
-lwm2m-ipso-objects/native:MAKE_WITH_DTLS=1 \
+lwm2m-ipso-objects/native:MAKE_WITH_DTLS=1:MAKE_WITH_DTLS=1:MAKE_COAP_DTLS_WITH_PSK=1:MAKE_COAP_DTLS_WITH_CLIENT=1:MAKE_COAP_DTLS_KEYSTORE=MAKE_COAP_DTLS_KEYSTORE_SIMPLE \
+lwm2m-ipso-objects/native:MAKE_WITH_DTLS=1:MAKE_WITH_DTLS=1:MAKE_COAP_DTLS_WITH_CERT=1:MAKE_COAP_DTLS_WITH_CLIENT=1:MAKE_COAP_DTLS_KEYSTORE=MAKE_COAP_DTLS_KEYSTORE_SIMPLE \
 lwm2m-ipso-objects/native:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1,LWM2M_Q_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1 \
 rpl-border-router/native \
 rpl-border-router/native:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \

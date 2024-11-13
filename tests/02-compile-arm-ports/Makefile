@@ -144,7 +144,7 @@ libs/timers/zoul \
 libs/trickle-library/zoul \
 libs/csprng/openmote \
 lwm2m-ipso-objects/zoul:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1,LWM2M_Q_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1\
-lwm2m-ipso-objects/zoul:MAKE_WITH_DTLS=1 \
+lwm2m-ipso-objects/nrf:BOARD=nrf52840/dongle:MAKE_WITH_DTLS=1:MAKE_COAP_DTLS_WITH_PSK=1:MAKE_COAP_DTLS_WITH_CLIENT=1:MAKE_COAP_DTLS_KEYSTORE=MAKE_COAP_DTLS_KEYSTORE_SIMPLE \
 mqtt-client/simplelink:BOARD=sensortag/cc2650:DEFINES=BOARD_CONF_SENSORS_DISABLE=1,TI_SPI_CONF_ENABLE=0 \
 mqtt-client/zoul:BOARD=firefly:DEFINES=MQTT_CONF_VERSION=5 \
 multicast/zoul \

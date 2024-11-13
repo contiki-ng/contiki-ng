@@ -45,6 +45,7 @@
 
 #include "contiki.h"
 #include <stdlib.h>
+#include <stdbool.h>
 
 #ifndef COAP_ENDPOINT_CUSTOM
 #include "net/ipv6/uip.h"
@@ -52,7 +53,7 @@
 typedef struct {
   uip_ipaddr_t ipaddr;
   uint16_t port;
-  uint8_t secure;
+  bool secure;
 } coap_endpoint_t;
 #endif /* COAP_ENDPOINT_CUSTOM */
 
@@ -116,7 +117,7 @@ int coap_endpoint_parse(const char *text, size_t size, coap_endpoint_t *ep);
  * \brief      Check if a CoAP endpoint is secure (encrypted).
  *
  * \param ep   A pointer to a CoAP endpoint.
- * \return     Returns non-zero if the endpoint is secure and zero otherwise.
+ * \return     Returns true if the endpoint is secure and false otherwise.
  */
 int coap_endpoint_is_secure(const coap_endpoint_t *ep);
 
@@ -124,7 +125,7 @@ int coap_endpoint_is_secure(const coap_endpoint_t *ep);
  * \brief      Check if a CoAP endpoint is connected.
  *
  * \param ep   A pointer to a CoAP endpoint.
- * \return     Returns non-zero if the endpoint is connected and zero otherwise.
+ * \return     Returns true if the endpoint is connected and false otherwise.
  */
 int coap_endpoint_is_connected(const coap_endpoint_t *ep);
 
@@ -142,6 +143,13 @@ int coap_endpoint_connect(coap_endpoint_t *ep);
  * \param ep   A pointer to a CoAP endpoint.
  */
 void coap_endpoint_disconnect(coap_endpoint_t *ep);
+
+/**
+ * \brief      Setup a DTLS server session. This step is mandatory before
+ *             a client can connect.
+ *
+ */
+int coap_secure_server_setup(void);
 
 #endif /* COAP_ENDPOINT_H_ */
 /** @} */
