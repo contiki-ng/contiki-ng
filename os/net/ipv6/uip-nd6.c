@@ -184,6 +184,12 @@ ns_input(void)
   UIP_STAT(++uip_stat.nd6.recv);
 
 #if UIP_CONF_IPV6_CHECKS
+
+  if(uip_l3_icmp_hdr_len + sizeof(uip_nd6_ns) > uip_len) {
+    LOG_ERR("Insufficient data for reading ND6 NS header fields");
+    goto discard;
+  }
+
   if((UIP_IP_BUF->ttl != UIP_ND6_HOP_LIMIT) ||
      (uip_is_addr_mcast(&UIP_ND6_NS_BUF->tgtipaddr)) ||
      (UIP_ICMP_BUF->icode != 0)) {
