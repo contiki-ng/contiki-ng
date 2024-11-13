@@ -191,7 +191,7 @@ ns_input(void)
   if((UIP_IP_BUF->ttl != UIP_ND6_HOP_LIMIT) ||
      (uip_is_addr_mcast(&UIP_ND6_NS_BUF->tgtipaddr)) ||
      (UIP_ICMP_BUF->icode != 0)) {
-    LOG_ERR("NS received is bad\n");
+    LOG_ERR("Discarding invalid NS\n");
     goto discard;
   }
 
@@ -200,7 +200,7 @@ ns_input(void)
   nd6_opt_offset = UIP_ND6_NS_LEN;
   while(uip_l3_icmp_hdr_len + nd6_opt_offset + UIP_ND6_OPT_HDR_LEN < uip_len) {
     if(ND6_OPT_HDR_BUF(nd6_opt_offset)->len == 0) {
-      LOG_ERR("NS received is bad\n");
+      LOG_ERR("Discarding invalid NS\n");
       goto discard;
     }
 
@@ -215,7 +215,7 @@ ns_input(void)
 
       /* There must be NO option in a DAD NS */
       if(uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr)) {
-        LOG_ERR("NS received is bad\n");
+        LOG_ERR("Discarding invalid NS\n");
         goto discard;
       } else {
         uip_lladdr_t lladdr_aligned;
@@ -259,7 +259,7 @@ ns_input(void)
       /* DAD CASE */
 #if UIP_ND6_DEF_MAXDADNS > 0
       if(!uip_is_addr_solicited_node(&UIP_IP_BUF->destipaddr)) {
-        LOG_ERR("NS received is bad\n");
+        LOG_ERR("Discarding invalid NS\n");
         goto discard;
       }
 
@@ -285,7 +285,7 @@ ns_input(void)
        * NA in response of DAD NS we sent, hence DAD will fail anyway. If we
        * were not doing DAD, it means there is a duplicate in the network!
        */
-      LOG_ERR("NS received is bad\n");
+      LOG_ERR("Discarding invalid NS\n");
       goto discard;
     }
 
@@ -304,7 +304,7 @@ ns_input(void)
       flags = UIP_ND6_NA_FLAG_SOLICITED | UIP_ND6_NA_FLAG_OVERRIDE;
       goto create_na;
     } else {
-      LOG_ERR("NS received is bad\n");
+      LOG_ERR("Discarding invalid NS\n");
       goto discard;
     }
   } else {
@@ -471,7 +471,7 @@ na_input(void)
      (UIP_ICMP_BUF->icode != 0) ||
      (uip_is_addr_mcast(&UIP_ND6_NA_BUF->tgtipaddr)) ||
      (is_solicited && uip_is_addr_mcast(&UIP_IP_BUF->destipaddr))) {
-    LOG_ERR("NA received is bad\n");
+    LOG_ERR("Discarding invalid NA\n");
     goto discard;
   }
 
@@ -480,7 +480,7 @@ na_input(void)
   nd6_opt_llao = NULL;
   while(uip_l3_icmp_hdr_len + nd6_opt_offset < uip_len) {
     if(ND6_OPT_HDR_BUF(nd6_opt_offset)->len == 0) {
-      LOG_ERR("NA received is bad\n");
+      LOG_ERR("Discarding invalid NA\n");
       goto discard;
     }
 
@@ -502,7 +502,7 @@ na_input(void)
       uip_ds6_dad_failed(addr);
     }
 #endif /*UIP_ND6_DEF_MAXDADNS > 0 */
-    LOG_ERR("NA received is bad\n");
+    LOG_ERR("Discarding invalid NA\n");
     goto discard;
   } else {
     const uip_lladdr_t *lladdr;
@@ -610,7 +610,7 @@ rs_input(void)
    * if the NA is solicited, dest must not be multicast
    */
   if((UIP_IP_BUF->ttl != UIP_ND6_HOP_LIMIT) || (UIP_ICMP_BUF->icode != 0)) {
-    LOG_ERR("RS received is bad\n");
+    LOG_ERR("Discarding invalid RS\n");
     goto discard;
   }
 
@@ -621,7 +621,7 @@ rs_input(void)
 
   while(uip_l3_icmp_hdr_len + nd6_opt_offset < uip_len) {
     if(ND6_OPT_HDR_BUF(nd6_opt_offset)->len == 0) {
-      LOG_ERR("RS received is bad\n");
+      LOG_ERR("Discarding invalid RS\n");
       goto discard;
     }
 
@@ -638,7 +638,7 @@ rs_input(void)
   /* Options processing: only SLLAO */
   if(nd6_opt_llao != NULL) {
     if(uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr)) {
-      LOG_ERR("RS received is bad\n");
+      LOG_ERR("Discarding invalid RS\n");
       goto discard;
     } else {
       uip_lladdr_t lladdr_aligned;
@@ -846,7 +846,7 @@ ra_input(void)
   if((UIP_IP_BUF->ttl != UIP_ND6_HOP_LIMIT) ||
      (!uip_is_addr_linklocal(&UIP_IP_BUF->srcipaddr)) ||
      (UIP_ICMP_BUF->icode != 0)) {
-    LOG_ERR("RA received is bad");
+    LOG_ERR("Discarding invalid RA");
     goto discard;
   }
 
@@ -870,7 +870,7 @@ ra_input(void)
   nd6_opt_offset = UIP_ND6_RA_LEN;
   while(uip_l3_icmp_hdr_len + nd6_opt_offset < uip_len) {
     if(ND6_OPT_HDR_BUF(nd6_opt_offset)->len == 0) {
-      LOG_ERR("RA received is bad");
+      LOG_ERR("Discarding invalid RA");
       goto discard;
     }
     switch(ND6_OPT_HDR_BUF(nd6_opt_offset)->type) {
