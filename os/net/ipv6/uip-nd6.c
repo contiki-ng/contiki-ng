@@ -172,6 +172,11 @@ create_llao(uint8_t *llao, uint8_t type)
 static void
 ns_input(void)
 {
+  if(uip_l3_icmp_hdr_len + sizeof(uip_nd6_ns) > uip_len) {
+    LOG_ERR("Insufficient data for reading ND6 NS header fields");
+    goto discard;
+  }
+
   uint8_t flags = 0;
 
   LOG_INFO("Received NS from ");
@@ -182,11 +187,6 @@ ns_input(void)
   LOG_INFO_6ADDR((uip_ipaddr_t *)(&UIP_ND6_NS_BUF->tgtipaddr));
   LOG_INFO_("\n");
   UIP_STAT(++uip_stat.nd6.recv);
-
-  if(uip_l3_icmp_hdr_len + sizeof(uip_nd6_ns) > uip_len) {
-    LOG_ERR("Insufficient data for reading ND6 NS header fields");
-    goto discard;
-  }
 
   if((UIP_IP_BUF->ttl != UIP_ND6_HOP_LIMIT) ||
      (uip_is_addr_mcast(&UIP_ND6_NS_BUF->tgtipaddr)) ||
