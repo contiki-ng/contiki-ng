@@ -111,7 +111,7 @@ static uip_ds6_addr_t *addr; /**  Pointer to an interface address */
 static uip_ds6_defrt_t *defrt; /**  Pointer to a router list entry */
 #endif /* UIP_ND6_SEND_NS || UIP_ND6_SEND_RA || !UIP_CONF_ROUTER */
 
-#if !UIP_CONF_ROUTER            // TBD see if we move it to ra_input
+#if !UIP_CONF_ROUTER            /* TBD see if we move it to ra_input */
 static uip_nd6_opt_prefix_info *nd6_opt_prefix_info; /**  Pointer to prefix information option in uip_buf */
 static uip_ipaddr_t ipaddr;
 #endif
@@ -147,7 +147,7 @@ create_llao(uint8_t *llao, uint8_t type)
 }
 #endif /* UIP_ND6_SEND_NA */
 /*------------------------------------------------------------------*/
- /**
+/**
  * Neighbor Solicitation Processing
  *
  * The NS can be received in 3 cases (procedures):
@@ -172,6 +172,11 @@ create_llao(uint8_t *llao, uint8_t type)
 static void
 ns_input(void)
 {
+  if(uip_l3_icmp_hdr_len + sizeof(uip_nd6_ns) > uip_len) {
+    LOG_ERR("Insufficient data for reading ND6 NS header fields");
+    goto discard;
+  }
+
   uint8_t flags = 0;
 
   LOG_INFO("Received NS from ");
@@ -179,36 +184,27 @@ ns_input(void)
   LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
   LOG_INFO_(" with target address ");
-  LOG_INFO_6ADDR((uip_ipaddr_t *) (&UIP_ND6_NS_BUF->tgtipaddr));
+  LOG_INFO_6ADDR((uip_ipaddr_t *)(&UIP_ND6_NS_BUF->tgtipaddr));
   LOG_INFO_("\n");
   UIP_STAT(++uip_stat.nd6.recv);
-
-#if UIP_CONF_IPV6_CHECKS
-
-  if(uip_l3_icmp_hdr_len + sizeof(uip_nd6_ns) > uip_len) {
-    LOG_ERR("Insufficient data for reading ND6 NS header fields");
-    goto discard;
-  }
 
   if((UIP_IP_BUF->ttl != UIP_ND6_HOP_LIMIT) ||
      (uip_is_addr_mcast(&UIP_ND6_NS_BUF->tgtipaddr)) ||
      (UIP_ICMP_BUF->icode != 0)) {
-    LOG_ERR("NS received is bad\n");
+    LOG_ERR("Discarding invalid NS\n");
     goto discard;
   }
-#endif /* UIP_CONF_IPV6_CHECKS */
 
   /* Options processing */
   nd6_opt_llao = NULL;
   nd6_opt_offset = UIP_ND6_NS_LEN;
   while(uip_l3_icmp_hdr_len + nd6_opt_offset + UIP_ND6_OPT_HDR_LEN < uip_len) {
-#if UIP_CONF_IPV6_CHECKS
     if(ND6_OPT_HDR_BUF(nd6_opt_offset)->len == 0) {
-      LOG_ERR("NS received is bad\n");
+      LOG_ERR("Discarding invalid NS\n");
       goto discard;
     }
-#endif /* UIP_CONF_IPV6_CHECKS */
-    switch (ND6_OPT_HDR_BUF(nd6_opt_offset)->type) {
+
+    switch(ND6_OPT_HDR_BUF(nd6_opt_offset)->type) {
     case UIP_ND6_OPT_SLLAO:
       if(uip_l3_icmp_hdr_len + nd6_opt_offset +
          UIP_ND6_OPT_DATA_OFFSET + UIP_LLADDR_LEN > uip_len) {
@@ -216,26 +212,25 @@ ns_input(void)
         goto discard;
       }
       nd6_opt_llao = &uip_buf[uip_l3_icmp_hdr_len + nd6_opt_offset];
-#if UIP_CONF_IPV6_CHECKS
+
       /* There must be NO option in a DAD NS */
       if(uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr)) {
-        LOG_ERR("NS received is bad\n");
+        LOG_ERR("Discarding invalid NS\n");
         goto discard;
       } else {
-#endif /*UIP_CONF_IPV6_CHECKS */
         uip_lladdr_t lladdr_aligned;
         extract_lladdr_from_llao_aligned(&lladdr_aligned);
         nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->srcipaddr);
         if(nbr == NULL) {
           uip_ds6_nbr_add(&UIP_IP_BUF->srcipaddr, &lladdr_aligned,
-			  0, NBR_STALE, NBR_TABLE_REASON_IPV6_ND, NULL);
+                          0, NBR_STALE, NBR_TABLE_REASON_IPV6_ND, NULL);
         } else {
           const uip_lladdr_t *lladdr = uip_ds6_nbr_get_ll(nbr);
           if(lladdr == NULL) {
             goto discard;
           }
           if(memcmp(&nd6_opt_llao[UIP_ND6_OPT_DATA_OFFSET],
-              lladdr, UIP_LLADDR_LEN) != 0) {
+                    lladdr, UIP_LLADDR_LEN) != 0) {
             if(uip_ds6_nbr_update_ll(&nbr,
                                      (const uip_lladdr_t *)&lladdr_aligned)
                < 0) {
@@ -249,9 +244,7 @@ ns_input(void)
             }
           }
         }
-#if UIP_CONF_IPV6_CHECKS
       }
-#endif /*UIP_CONF_IPV6_CHECKS */
       break;
     default:
       LOG_WARN("ND option not supported in NS");
@@ -265,19 +258,18 @@ ns_input(void)
     if(uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr)) {
       /* DAD CASE */
 #if UIP_ND6_DEF_MAXDADNS > 0
-#if UIP_CONF_IPV6_CHECKS
       if(!uip_is_addr_solicited_node(&UIP_IP_BUF->destipaddr)) {
-        LOG_ERR("NS received is bad\n");
+        LOG_ERR("Discarding invalid NS\n");
         goto discard;
       }
-#endif /* UIP_CONF_IPV6_CHECKS */
+
       if(addr->state != ADDR_TENTATIVE) {
         uip_create_linklocal_allnodes_mcast(&UIP_IP_BUF->destipaddr);
         uip_ds6_select_src(&UIP_IP_BUF->srcipaddr, &UIP_IP_BUF->destipaddr);
         flags = UIP_ND6_NA_FLAG_OVERRIDE;
         goto create_na;
       } else {
-          /** \todo if I sent a NS before him, I win */
+        /** \todo if I sent a NS before him, I win */
         uip_ds6_dad_failed(addr);
         goto discard;
       }
@@ -285,18 +277,17 @@ ns_input(void)
       goto discard;  /* DAD CASE */
 #endif /* UIP_ND6_DEF_MAXDADNS > 0 */
     }
-#if UIP_CONF_IPV6_CHECKS
+
     if(uip_ds6_is_my_addr(&UIP_IP_BUF->srcipaddr)) {
-        /**
-         * \NOTE do we do something here? we both are using the same address.
-         * If we are doing dad, we could cancel it, though we should receive a
-         * NA in response of DAD NS we sent, hence DAD will fail anyway. If we
-         * were not doing DAD, it means there is a duplicate in the network!
-         */
-      LOG_ERR("NS received is bad\n");
+      /**
+       * \NOTE do we do something here? we both are using the same address.
+       * If we are doing dad, we could cancel it, though we should receive a
+       * NA in response of DAD NS we sent, hence DAD will fail anyway. If we
+       * were not doing DAD, it means there is a duplicate in the network!
+       */
+      LOG_ERR("Discarding invalid NS\n");
       goto discard;
     }
-#endif /*UIP_CONF_IPV6_CHECKS */
 
     /* Address resolution case */
     if(uip_is_addr_solicited_node(&UIP_IP_BUF->destipaddr)) {
@@ -313,20 +304,17 @@ ns_input(void)
       flags = UIP_ND6_NA_FLAG_SOLICITED | UIP_ND6_NA_FLAG_OVERRIDE;
       goto create_na;
     } else {
-#if UIP_CONF_IPV6_CHECKS
-      LOG_ERR("NS received is bad\n");
+      LOG_ERR("Discarding invalid NS\n");
       goto discard;
-#endif /* UIP_CONF_IPV6_CHECKS */
     }
   } else {
     goto discard;
   }
 
-
 create_na:
-    /* If the node is a router it should set R flag in NAs */
+  /* If the node is a router it should set R flag in NAs */
 #if UIP_CONF_ROUTER
-    flags = flags | UIP_ND6_NA_FLAG_ROUTER;
+  flags = flags | UIP_ND6_NA_FLAG_ROUTER;
 #endif
   uipbuf_clear();
   UIP_IP_BUF->vtc = 0x60;
@@ -366,12 +354,11 @@ discard:
 }
 #endif /* UIP_ND6_SEND_NA */
 
-
 /*------------------------------------------------------------------*/
 #if UIP_ND6_SEND_NS
 void
-uip_nd6_ns_output(const uip_ipaddr_t * src, const uip_ipaddr_t * dest,
-                  uip_ipaddr_t * tgt)
+uip_nd6_ns_output(const uip_ipaddr_t *src, const uip_ipaddr_t *dest,
+                  uip_ipaddr_t *tgt)
 {
   uipbuf_clear();
   UIP_IP_BUF->vtc = 0x60;
@@ -388,7 +375,7 @@ uip_nd6_ns_output(const uip_ipaddr_t * src, const uip_ipaddr_t * dest,
   UIP_ICMP_BUF->type = ICMP6_NS;
   UIP_ICMP_BUF->icode = 0;
   UIP_ND6_NS_BUF->reserved = 0;
-  uip_ipaddr_copy((uip_ipaddr_t *) &UIP_ND6_NS_BUF->tgtipaddr, tgt);
+  uip_ipaddr_copy((uip_ipaddr_t *)&UIP_ND6_NS_BUF->tgtipaddr, tgt);
   /*
    * check if we add a SLLAO option: for DAD, MUST NOT, for NUD, MAY
    * (here yes), for Address resolution , MUST
@@ -399,7 +386,7 @@ uip_nd6_ns_output(const uip_ipaddr_t * src, const uip_ipaddr_t * dest,
     } else {
       uip_ds6_select_src(&UIP_IP_BUF->srcipaddr, &UIP_IP_BUF->destipaddr);
     }
-    if (uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr)) {
+    if(uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr)) {
       LOG_ERR("Dropping NS due to no suitable source address\n");
       uipbuf_clear();
       return;
@@ -465,7 +452,7 @@ na_input(void)
   LOG_INFO_(" to ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
   LOG_INFO_(" with target address ");
-  LOG_INFO_6ADDR((uip_ipaddr_t *) (&UIP_ND6_NA_BUF->tgtipaddr));
+  LOG_INFO_6ADDR((uip_ipaddr_t *)(&UIP_ND6_NA_BUF->tgtipaddr));
   LOG_INFO_("\n");
   UIP_STAT(++uip_stat.nd6.recv);
 
@@ -480,27 +467,24 @@ na_input(void)
   is_override =
     ((UIP_ND6_NA_BUF->flagsreserved & UIP_ND6_NA_FLAG_OVERRIDE));
 
-#if UIP_CONF_IPV6_CHECKS
   if((UIP_IP_BUF->ttl != UIP_ND6_HOP_LIMIT) ||
      (UIP_ICMP_BUF->icode != 0) ||
      (uip_is_addr_mcast(&UIP_ND6_NA_BUF->tgtipaddr)) ||
      (is_solicited && uip_is_addr_mcast(&UIP_IP_BUF->destipaddr))) {
-    LOG_ERR("NA received is bad\n");
+    LOG_ERR("Discarding invalid NA\n");
     goto discard;
   }
-#endif /*UIP_CONF_IPV6_CHECKS */
 
   /* Options processing: we handle TLLAO, and must ignore others */
   nd6_opt_offset = UIP_ND6_NA_LEN;
   nd6_opt_llao = NULL;
   while(uip_l3_icmp_hdr_len + nd6_opt_offset < uip_len) {
-#if UIP_CONF_IPV6_CHECKS
     if(ND6_OPT_HDR_BUF(nd6_opt_offset)->len == 0) {
-      LOG_ERR("NA received is bad\n");
+      LOG_ERR("Discarding invalid NA\n");
       goto discard;
     }
-#endif /*UIP_CONF_IPV6_CHECKS */
-    switch (ND6_OPT_HDR_BUF(nd6_opt_offset)->type) {
+
+    switch(ND6_OPT_HDR_BUF(nd6_opt_offset)->type) {
     case UIP_ND6_OPT_TLLAO:
       nd6_opt_llao = (uint8_t *)ND6_OPT_HDR_BUF(nd6_opt_offset);
       break;
@@ -518,7 +502,7 @@ na_input(void)
       uip_ds6_dad_failed(addr);
     }
 #endif /*UIP_ND6_DEF_MAXDADNS > 0 */
-    LOG_ERR("NA received is bad\n");
+    LOG_ERR("Discarding invalid NA\n");
     goto discard;
   } else {
     const uip_lladdr_t *lladdr;
@@ -620,18 +604,15 @@ rs_input(void)
   LOG_INFO_("\n");
   UIP_STAT(++uip_stat.nd6.recv);
 
-
-#if UIP_CONF_IPV6_CHECKS
   /*
    * Check hop limit / icmp code
    * target address must not be multicast
    * if the NA is solicited, dest must not be multicast
    */
   if((UIP_IP_BUF->ttl != UIP_ND6_HOP_LIMIT) || (UIP_ICMP_BUF->icode != 0)) {
-    LOG_ERR("RS received is bad\n");
+    LOG_ERR("Discarding invalid RS\n");
     goto discard;
   }
-#endif /*UIP_CONF_IPV6_CHECKS */
 
   /* Only valid option is Source Link-Layer Address option any thing
      else is discarded */
@@ -639,13 +620,12 @@ rs_input(void)
   nd6_opt_llao = NULL;
 
   while(uip_l3_icmp_hdr_len + nd6_opt_offset < uip_len) {
-#if UIP_CONF_IPV6_CHECKS
     if(ND6_OPT_HDR_BUF(nd6_opt_offset)->len == 0) {
-      LOG_ERR("RS received is bad\n");
+      LOG_ERR("Discarding invalid RS\n");
       goto discard;
     }
-#endif /*UIP_CONF_IPV6_CHECKS */
-    switch (ND6_OPT_HDR_BUF(nd6_opt_offset)->type) {
+
+    switch(ND6_OPT_HDR_BUF(nd6_opt_offset)->type) {
     case UIP_ND6_OPT_SLLAO:
       nd6_opt_llao = (uint8_t *)ND6_OPT_HDR_BUF(nd6_opt_offset);
       break;
@@ -657,12 +637,10 @@ rs_input(void)
   }
   /* Options processing: only SLLAO */
   if(nd6_opt_llao != NULL) {
-#if UIP_CONF_IPV6_CHECKS
     if(uip_is_addr_unspecified(&UIP_IP_BUF->srcipaddr)) {
-      LOG_ERR("RS received is bad\n");
+      LOG_ERR("Discarding invalid RS\n");
       goto discard;
     } else {
-#endif /*UIP_CONF_IPV6_CHECKS */
       uip_lladdr_t lladdr_aligned;
       extract_lladdr_from_llao_aligned(&lladdr_aligned);
       if((nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->srcipaddr)) == NULL) {
@@ -676,7 +654,7 @@ rs_input(void)
           goto discard;
         }
         if(memcmp(&nd6_opt_llao[UIP_ND6_OPT_DATA_OFFSET],
-            lladdr, UIP_LLADDR_LEN) != 0) {
+                  lladdr, UIP_LLADDR_LEN) != 0) {
           uip_ds6_nbr_t nbr_data;
           nbr_data = *nbr;
           uip_ds6_nbr_rm(nbr);
@@ -691,9 +669,7 @@ rs_input(void)
         }
         nbr->isrouter = 0;
       }
-#if UIP_CONF_IPV6_CHECKS
     }
-#endif /*UIP_CONF_IPV6_CHECKS */
   }
 
   /* Schedule a sollicited RA */
@@ -703,10 +679,9 @@ discard:
   uipbuf_clear();
   return;
 }
-
 /*---------------------------------------------------------------------------*/
 void
-uip_nd6_ra_output(const uip_ipaddr_t * dest)
+uip_nd6_ra_output(const uip_ipaddr_t *dest)
 {
 
   UIP_IP_BUF->vtc = 0x60;
@@ -737,7 +712,6 @@ uip_nd6_ra_output(const uip_ipaddr_t * dest)
 
   uip_len = UIP_IPH_LEN + UIP_ICMPH_LEN + UIP_ND6_RA_LEN;
   nd6_opt_offset = UIP_ND6_RA_LEN;
-
 
   /* Prefix list */
   for(prefix = uip_ds6_prefix_list;
@@ -869,14 +843,12 @@ ra_input(void)
   LOG_INFO_("\n");
   UIP_STAT(++uip_stat.nd6.recv);
 
-#if UIP_CONF_IPV6_CHECKS
   if((UIP_IP_BUF->ttl != UIP_ND6_HOP_LIMIT) ||
      (!uip_is_addr_linklocal(&UIP_IP_BUF->srcipaddr)) ||
      (UIP_ICMP_BUF->icode != 0)) {
-    LOG_ERR("RA received is bad");
+    LOG_ERR("Discarding invalid RA");
     goto discard;
   }
-#endif /*UIP_CONF_IPV6_CHECKS */
 
   if(UIP_ND6_RA_BUF->cur_ttl != 0) {
     uip_ds6_if.cur_hop_limit = UIP_ND6_RA_BUF->cur_ttl;
@@ -898,13 +870,13 @@ ra_input(void)
   nd6_opt_offset = UIP_ND6_RA_LEN;
   while(uip_l3_icmp_hdr_len + nd6_opt_offset < uip_len) {
     if(ND6_OPT_HDR_BUF(nd6_opt_offset)->len == 0) {
-      LOG_ERR("RA received is bad");
+      LOG_ERR("Discarding invalid RA");
       goto discard;
     }
-    switch (ND6_OPT_HDR_BUF(nd6_opt_offset)->type) {
+    switch(ND6_OPT_HDR_BUF(nd6_opt_offset)->type) {
     case UIP_ND6_OPT_SLLAO:
       LOG_DBG("Processing SLLAO option in RA\n");
-      nd6_opt_llao = (uint8_t *) ND6_OPT_HDR_BUF(nd6_opt_offset);
+      nd6_opt_llao = (uint8_t *)ND6_OPT_HDR_BUF(nd6_opt_offset);
       nbr = uip_ds6_nbr_lookup(&UIP_IP_BUF->srcipaddr);
       if(!extract_lladdr_from_llao_aligned(&lladdr_aligned)) {
         /* failed to extract llao - discard packet */
@@ -937,11 +909,11 @@ ra_input(void)
     case UIP_ND6_OPT_MTU:
       LOG_DBG("Processing MTU option in RA\n");
       uip_ds6_if.link_mtu =
-        uip_ntohl(((uip_nd6_opt_mtu *) ND6_OPT_HDR_BUF(nd6_opt_offset))->mtu);
+        uip_ntohl(((uip_nd6_opt_mtu *)ND6_OPT_HDR_BUF(nd6_opt_offset))->mtu);
       break;
     case UIP_ND6_OPT_PREFIX_INFO:
       LOG_DBG("Processing PREFIX option in RA\n");
-      nd6_opt_prefix_info = (uip_nd6_opt_prefix_info *) ND6_OPT_HDR_BUF(nd6_opt_offset);
+      nd6_opt_prefix_info = (uip_nd6_opt_prefix_info *)ND6_OPT_HDR_BUF(nd6_opt_offset);
       if((uip_ntohl(nd6_opt_prefix_info->validlt) >=
           uip_ntohl(nd6_opt_prefix_info->preferredlt))
          && (!uip_is_addr_linklocal(&nd6_opt_prefix_info->prefix))) {
@@ -956,14 +928,14 @@ ra_input(void)
                 prefix = uip_ds6_prefix_add(&nd6_opt_prefix_info->prefix,
                                             nd6_opt_prefix_info->preflen,
                                             uip_ntohl(nd6_opt_prefix_info->
-                                                  validlt));
+                                                      validlt));
               } else {
                 prefix = uip_ds6_prefix_add(&nd6_opt_prefix_info->prefix,
                                             nd6_opt_prefix_info->preflen, 0);
               }
             }
           } else {
-            switch (nd6_opt_prefix_info->validlt) {
+            switch(nd6_opt_prefix_info->validlt) {
             case 0:
               uip_ds6_prefix_rm(prefix);
               break;
@@ -973,7 +945,7 @@ ra_input(void)
             default:
               LOG_DBG("Updating timer of prefix ");
               LOG_DBG_6ADDR(&prefix->ipaddr);
-              LOG_DBG_(" new value %"PRIu32"\n", uip_ntohl(nd6_opt_prefix_info->validlt));
+              LOG_DBG_(" new value %" PRIu32 "\n", uip_ntohl(nd6_opt_prefix_info->validlt));
               stimer_set(&prefix->vlifetime,
                          uip_ntohl(nd6_opt_prefix_info->validlt));
               prefix->isinfinite = 0;
@@ -999,7 +971,7 @@ ra_input(void)
                 LOG_DBG("Updating timer of address ");
                 LOG_DBG_6ADDR(&addr->ipaddr);
                 LOG_DBG_(" new value %lu\n",
-                       (unsigned long)uip_ntohl(nd6_opt_prefix_info->validlt));
+                         (unsigned long)uip_ntohl(nd6_opt_prefix_info->validlt));
                 stimer_set(&addr->vlifetime,
                            uip_ntohl(nd6_opt_prefix_info->validlt));
               } else {
@@ -1034,7 +1006,7 @@ ra_input(void)
       while(naddr-- > 0) {
         LOG_DBG("nameserver: ");
         LOG_DBG_6ADDR(ip);
-        LOG_DBG_(" lifetime: %"PRIx32"\n", uip_ntohl(ND6_OPT_RDNSS_BUF(nd6_opt_offset)->lifetime));
+        LOG_DBG_(" lifetime: %" PRIx32 "\n", uip_ntohl(ND6_OPT_RDNSS_BUF(nd6_opt_offset)->lifetime));
         uip_nameserver_update(ip, uip_ntohl(ND6_OPT_RDNSS_BUF(nd6_opt_offset)->lifetime));
         ip++;
       }
@@ -1070,11 +1042,11 @@ ra_input(void)
   /* If the nbr just became reachable (e.g. it was in NBR_INCOMPLETE state
    * and we got a SLLAO), check if we had buffered a pkt for it */
   /*  if((nbr != NULL) && (nbr->queue_buf_len != 0)) {
-    uip_len = nbr->queue_buf_len;
-    memcpy(UIP_IP_BUF, nbr->queue_buf, uip_len);
-    nbr->queue_buf_len = 0;
-    return;
-    }*/
+     uip_len = nbr->queue_buf_len;
+     memcpy(UIP_IP_BUF, nbr->queue_buf, uip_len);
+     nbr->queue_buf_len = 0;
+     return;
+     }*/
   if(nbr != NULL && uip_packetqueue_buflen(&nbr->packethandle) != 0) {
     uip_len = uip_packetqueue_buflen(&nbr->packethandle);
     memcpy(UIP_IP_BUF, uip_packetqueue_buf(&nbr->packethandle), uip_len);
@@ -1135,4 +1107,4 @@ uip_nd6_init()
 #endif
 }
 /*---------------------------------------------------------------------------*/
- /** @} */
+/** @} */
