@@ -4,7 +4,7 @@ endif
 
 ### Board and BSP selection
 BOARD ?= brd4162a
-BOARDS = brd4162a brd4166a
+BOARDS = brd4162a brd4166a brd4184a brd2601b
 
 ### Unless the example dictates otherwise, build with code size optimisations switched off
 SMALL ?= 0
