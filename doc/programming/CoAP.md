@@ -32,10 +32,7 @@ The default implementation of CoAP transport in Contiki-NG use uIP for incoming/
 * Using DTLS for encryption - MAKE_WITH_DTLS=1 when building the code.
 
 ## CoAPs - Secure CoAP
-The default implementation of CoAP transport in Contiki-NG support both secure and non-secure CoAP. If you use Secure CoAP the transport will instead of just putting the packets straight into or receive from uip6 - go via TinyDTLS. For coap_sento it will use `dtls_write` instead of `uip_udp_packet_sendto` and on the receive side it will send in data using `dtls_handle_message` rather than using `coap_receive`. Later TinyDTLS will call `input_from_peer` with unencrypted data which is sent into the CoAP implementation using `coap_receive`.
-
-![coap-transport](images/coap-dtls.png)
-The integration of DTLS in CoAP.
+The default implementation of CoAP transport in Contiki-NG support both secure and non-secure CoAP. If you use Secure CoAP the transport will instead of just putting the packets straight into or receive from uip6 - go via Mbed TLS. For coap_sendto it will use `coap_ep_dtls_write` instead of `uip_udp_packet_sendto` and on the receive side it use the `coap_ep_dtls_handle_message` function to get the decrypted data that is subsequently passed further by calling `coap_receive`.
 
 ### Limitations
 - Dedicated Observe buffers

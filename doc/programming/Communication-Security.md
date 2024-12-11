@@ -4,7 +4,7 @@ Contiki-NG comes with standard communication protocols, that provide both per-ho
 
 ## Application-layer security
 Application-layer security is end-to-end, over IPv6 in the Contiki-NG case.
-We currently support DTLS, thanks to a slightly modified version of TinyDTLS which we host at https://github.com/contiki-ng/tinydtls. On top of TinyDTLS, we support CoAPs [doc:coaps], which is the secure version of CoAP. With CoAPs, the CoAP header and payload is encrypted and authenticated end-to-end, that is, from IP host to IP host. This offers some level of protection against malicious routers (can not read nor tamper the data). Note that the only mode included so far is pre-shared keys.
+We currently support DTLS using the Mbed TLS implementation. On top of DTLS, we support CoAPs [doc:coaps], which is the secure version of CoAP. With CoAPs, the CoAP header and payload is encrypted and authenticated end-to-end, that is, from IP host to IP host. This offers some level of protection against malicious routers (can not read nor tamper the data). Note that the only mode included so far is pre-shared keys.
 
 ## Link-layer security
 
