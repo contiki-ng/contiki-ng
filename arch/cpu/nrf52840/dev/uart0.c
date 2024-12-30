@@ -82,7 +82,7 @@ uart0_writeb(unsigned char c)
 }
 /*---------------------------------------------------------------------------*/
 void
-uart0_init(unsigned long ubr)
+uart0_init(void)
 {
   nrf_uart_disable(UART_INSTANCE);
   nrf_gpio_cfg_output(TX_PIN);

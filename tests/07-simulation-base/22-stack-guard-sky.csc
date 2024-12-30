@@ -18,9 +18,9 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <description>Sky Mote Type #1</description>
       <source>[CONTIKI_DIR]/examples/libs/stack-check/example-stack-check.c</source>
-      <commands>make TARGET=sky clean
-make -j$(CPUS) example-stack-check.sky TARGET=sky</commands>
-      <firmware>[CONTIKI_DIR]/examples/libs/stack-check/example-stack-check.sky</firmware>
+      <commands>$(MAKE) TARGET=sky clean
+$(MAKE) -j$(CPUS) example-stack-check.sky TARGET=sky</commands>
+      <firmware>[CONTIKI_DIR]/examples/libs/stack-check/build/sky/example-stack-check.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Mote2MoteRelations</moteinterface>

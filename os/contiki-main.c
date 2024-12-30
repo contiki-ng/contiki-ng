@@ -64,16 +64,134 @@
 #include "sys/log.h"
 #define LOG_MODULE "Main"
 #define LOG_LEVEL LOG_LEVEL_MAIN
+
+#if PLATFORM_MAIN_ACCEPTS_ARGS
+/*---------------------------------------------------------------------------*/
+int contiki_argc;
+char **contiki_argv;
+/*---------------------------------------------------------------------------*/
+#include "lib/list.h"
+
+LIST(contiki_options);
+static const char *prog;
+static const char *help_usage;
+static const char *help_suffix;
+/*---------------------------------------------------------------------------*/
+void
+contiki_set_usage(const char *msg)
+{
+  help_usage = msg;
+}
+/*---------------------------------------------------------------------------*/
+void
+contiki_set_extra_help(const char *msg)
+{
+  help_suffix = msg;
+}
+/*---------------------------------------------------------------------------*/
+void
+contiki_add_option(struct contiki_callback_option *option)
+{
+  static bool initialized = false;
+  if(!initialized) {
+    list_init(contiki_options);
+    initialized = true;
+  }
+  list_add(contiki_options, option);
+}
+/*---------------------------------------------------------------------------*/
+static void
+print_help(void)
+{
+  printf("usage: %s [options]%s", prog, help_usage ? help_usage : "\n");
+  printf("Options are:\n");
+  for(struct contiki_callback_option *r = list_head(contiki_options);
+      r != NULL; r = r->next) {
+    if(!r->help) {
+      continue;
+    }
+    int short_len = r->opt_struct.flag == NULL && r->opt_struct.val ? 6 : 0;
+    if(short_len) {
+      printf("  -%c, ", (char)r->opt_struct.val);
+    }
+    int has_arg = r->opt_struct.has_arg;
+    const char *arg_desc = has_arg == no_argument ? "" :
+      has_arg == optional_argument ? " [value]" : " value  ";
+    printf(" %c-%s%s%s\t%s", strlen(r->opt_struct.name) == 1 ? ' ' : '-',
+           r->opt_struct.name, arg_desc,
+           /* Insert extra tab for short option names. */
+           short_len + 3 + strlen(r->opt_struct.name) + strlen(arg_desc) < 8
+             ? "\t" : "",
+           r->help);
+  }
+  if(help_suffix) {
+    printf("%s", help_suffix);
+  }
+}
+/*---------------------------------------------------------------------------*/
+CC_NORETURN static int
+help_callback(const char *optarg)
+{
+  print_help();
+  exit(0);
+}
+CONTIKI_OPTION(CONTIKI_MAX_INIT_PRIO + 1, { "help", no_argument, NULL, 'h' },
+               help_callback, "display this help and exit\n");
+/*---------------------------------------------------------------------------*/
+static int
+parse_argv(int *argc, char ***argv)
+{
+  prog = *argv[0];
+  const int num_options = list_length(contiki_options);
+  struct contiki_callback_option options[num_options];
+  struct option long_options[num_options + 1];
+
+  int i = 0;
+  for(struct contiki_callback_option *r = list_head(contiki_options);
+      r != NULL; ++i, r = r->next) {
+    memcpy(&long_options[i], &r->opt_struct, sizeof(struct option));
+    memcpy(&options[i], r, sizeof(struct contiki_callback_option));
+  }
+  /* Null terminate options. */
+  memset(&long_options[i], 0, sizeof(struct option));
+
+  while(1) {
+    int ix = 0;
+    int c = getopt_long_only(*argc, *argv, "", long_options, &ix);
+    if(c == -1) { /* Processed all options. */
+      break;
+    }
+    if(c == '?') { /* Unknown option, print help and return error. */
+      print_help();
+      return 1;
+    }
+    if(options[ix].callback) { /* Option has a callback, call with optarg. */
+      int rv;
+      if((rv = options[ix].callback(optarg)) != 0) {
+        return rv;
+      }
+    }
+  }
+  *argc -= optind - 1;
+  *argv += optind - 1;
+  return 0;
+}
 /*---------------------------------------------------------------------------*/
 int
-#if PLATFORM_MAIN_ACCEPTS_ARGS
 main(int argc, char **argv)
 {
-  platform_process_args(argc, argv);
+  int rv;
+  if((rv = parse_argv(&argc, &argv)) != 0) {
+    return rv;
+  }
+  /* Remember argc/argv after command line options. */
+  contiki_argc = argc;
+  contiki_argv = argv;
 #else
+int
 main(void)
 {
-#endif
+#endif /* PLATFORM_MAIN_ACCEPTS_ARGS */
   platform_init_stage_one();
 
   clock_init();
@@ -151,7 +269,7 @@ main(void)
 #if BUILD_WITH_COAP
   coap_engine_init();
   LOG_DBG("With CoAP\n");
-#endif /* BUILD_WITH_SHELL */
+#endif /* BUILD_WITH_COAP */
 
 #if BUILD_WITH_SNMP
   snmp_init();
@@ -175,7 +293,7 @@ main(void)
   platform_main_loop();
 #else
   while(1) {
-    uint8_t r;
+    process_num_events_t r;
     do {
       r = process_run();
       watchdog_periodic();

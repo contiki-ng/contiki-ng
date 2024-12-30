@@ -728,13 +728,13 @@ mqtt_prop_print_list(struct mqtt_prop_list *prop_list, mqtt_vhdr_prop_t prop_id)
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
-mqtt_prop_register(struct mqtt_prop_list **prop_list,
-                   struct mqtt_prop_out_property **prop_out,
+mqtt_prop_register_internal(struct mqtt_prop_list **prop_list,
 #if !MQTT_PROP_USE_MEMB
-                   struct mqtt_prop_out_property *prop,
+                            struct mqtt_prop_out_property *prop,
 #endif
-                   mqtt_msg_type_t msg,
-                   mqtt_vhdr_prop_t prop_id, ...)
+                            mqtt_msg_type_t msg,
+                            mqtt_vhdr_prop_t prop_id,
+                            struct mqtt_prop_out_property **prop_out, ...)
 {
   /* check that the property is compatible with the message? */
   if(!prop_list) {
@@ -758,9 +758,7 @@ mqtt_prop_register(struct mqtt_prop_list **prop_list,
   DBG("MQTT - Allocated prop %p\n", prop);
 
   va_list args;
-
-  va_start(args, prop_id);
-
+  va_start(args, prop_out);
   uint32_t prop_len = mqtt_prop_encode(&prop, prop_id, args);
 
   if(prop) {

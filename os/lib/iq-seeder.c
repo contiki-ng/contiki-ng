@@ -109,7 +109,7 @@ extract(uint8_t *target, uint8_t *source)
   }
 }
 /*---------------------------------------------------------------------------*/
-static void
+static bool
 seed_16_bytes(uint8_t *result)
 {
   uint8_t bit_pos;
@@ -122,9 +122,14 @@ seed_16_bytes(uint8_t *result)
   byte_pos = 0;
   memset(accumulator, 0, COLUMN_COUNT);
 
-  NETSTACK_RADIO.on();
+  if(!NETSTACK_RADIO.on()) {
+    return false;
+  }
   for(iq_count = 0; iq_count < (COLUMN_COUNT * 8 / 2); iq_count++) {
-    NETSTACK_RADIO.get_value(RADIO_PARAM_IQ_LSBS, &iq);
+    if(NETSTACK_RADIO.get_value(RADIO_PARAM_IQ_LSBS, &iq) != RADIO_RESULT_OK) {
+      NETSTACK_RADIO.off();
+      return false;
+    }
 
     /* append I/Q LSBs to accumulator */
     accumulator[byte_pos] |= iq << bit_pos;
@@ -136,16 +141,19 @@ seed_16_bytes(uint8_t *result)
   }
   NETSTACK_RADIO.off();
   extract(result, accumulator);
+  return true;
 }
 /*---------------------------------------------------------------------------*/
-void
+bool
 iq_seeder_seed(void)
 {
   struct csprng_seed seed;
 
-  seed_16_bytes(seed.key);
-  seed_16_bytes(seed.state);
+  if(!seed_16_bytes(seed.key) || !seed_16_bytes(seed.state)) {
+    return false;
+  }
   csprng_feed(&seed);
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 

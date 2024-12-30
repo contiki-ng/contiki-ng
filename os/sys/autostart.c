@@ -39,13 +39,9 @@
 
 #include "sys/autostart.h"
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+#include "sys/log.h"
+#define LOG_MODULE "Autostart"
+#define LOG_LEVEL LOG_LEVEL_SYS
 
 /*---------------------------------------------------------------------------*/
 void
@@ -55,7 +51,7 @@ autostart_start(struct process * const processes[])
 
   for(i = 0; processes[i] != NULL; ++i) {
     process_start(processes[i], NULL);
-    PRINTF("autostart_start: starting process '%s'\n", processes[i]->name);
+    LOG_DBG("starting process '%s'\n", PROCESS_NAME_STRING(processes[i]));
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -66,7 +62,7 @@ autostart_exit(struct process * const processes[])
 
   for(i = 0; processes[i] != NULL; ++i) {
     process_exit(processes[i]);
-    PRINTF("autostart_exit: stopping process '%s'\n", processes[i]->name);
+    LOG_DBG("stopping process '%s'\n", PROCESS_NAME_STRING(processes[i]));
   }
 }
 /*---------------------------------------------------------------------------*/

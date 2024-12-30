@@ -45,18 +45,21 @@
 
 #include "lib/csprng.h"
 
+#include <stdbool.h>
+
 /**
  * \brief This function will feed the CSPRNG with a new seed.
+ * \return A boolean indicating whether the operation succeeded.
  *
  *        Many manuals of radio chips from Texas Instruments suggest using I/Q
-*         data (Cartesian representations of the received signal) for
-*         generating true random numbers. This function follows this suggestion
-*         and extracts seeds from I/Q data. However, since those manuals state
-*         that I/Q data is not uniformly distributed, this function does not use
-*         I/Q data directly as seeds, but first applies an extractor function.
-*         Note that this function can only be called at start up.
+ *        data (Cartesian representations of the received signal) for
+ *        generating true random numbers. This function follows this suggestion
+ *        and extracts seeds from I/Q data. However, since those manuals state
+ *        that I/Q data is not uniformly distributed, this function does not use
+ *        I/Q data directly as seeds, but first applies an extractor function.
+ *        Note that this function can only be called at start up.
  */
-void iq_seeder_seed(void);
+bool iq_seeder_seed(void);
 
 #endif /* IQ_SEEDER_H_ */
 

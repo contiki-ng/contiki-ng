@@ -31,21 +31,8 @@ class TestDevice(unittest.TestCase):
         r = client.read("3/0/4")
         self.assertEqual(r.getCode().getName(), "METHOD_NOT_ALLOWED")
 
-#    def test_opaque_read(self):
-#        r = client.readTLV("4711/0/11000")
-#        v = r.getContent().getValue();
-        #print "Result:", v
-        #print "Type: ", type(v)
-        #print "Type code: ", v.typecode
-        #print "Data size: ", len(v)
-#        self.assertEqual(len(v), 900)
-
-#    def test_object_with_opaque_read(self):
-#        r = client.readTLV("4711/0/")
-#        self.assertEqual(r.getCode().getName(), "CONTENT")
-
     def test_device_time_write(self):
-        r = client.write(3,0,13,1000)
+        r = client.writeDate(3,0,13,1000)
         self.assertEqual(r.getCode().getName(), "CHANGED")
         time.sleep(4.9)
         r = client.read("3/0/13")

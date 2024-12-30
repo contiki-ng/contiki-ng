@@ -58,7 +58,7 @@ PROCESS_THREAD(db_shell, ev, data)
   for(;;) {
     PROCESS_WAIT_EVENT_UNTIL(ev == serial_line_event_message && data != NULL);
 
-    result = db_query(&handle, data);
+    result = db_query(&handle, "%s", (char *)data);
     if(DB_ERROR(result)) {
       printf("Query \"%s\" failed: %s\n",
              (char *)data, db_get_result_message(result));

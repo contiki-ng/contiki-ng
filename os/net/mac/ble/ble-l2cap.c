@@ -158,7 +158,7 @@ init_scan_resp_data(char *scan_resp_data)
   scan_resp_data[scan_resp_data_len++] = 0x12;
   scan_resp_data[scan_resp_data_len++] = (BLE_SLAVE_CONN_INTERVAL_MIN & 0xFF);
   scan_resp_data[scan_resp_data_len++] = ((BLE_SLAVE_CONN_INTERVAL_MIN >> 8) & 0xFF);
-  scan_resp_data[scan_resp_data_len++] = (BLE_SLAVE_CONN_INTERVAL_MAX & 0xFF);
+  scan_resp_data[scan_resp_data_len++] = (char)(BLE_SLAVE_CONN_INTERVAL_MAX & 0xFF);
   scan_resp_data[scan_resp_data_len++] = ((BLE_SLAVE_CONN_INTERVAL_MAX >> 8) & 0xFF);
 
   return scan_resp_data_len;
@@ -429,7 +429,7 @@ input_l2cap_frame_flow_channel(l2cap_channel_t *channel, uint8_t *data, uint16_t
     memcpy(&frame_len, &data[0], 2);
     payload_len = frame_len - 2;
 
-    if(payload_len > BLE_L2CAP_NODE_MTU) {
+    if(payload_len > BLE_L2CAP_NODE_MTU || payload_len > data_len - 6) {
     	LOG_WARN("l2cap_frame: illegal L2CAP frame payload_len: %d\n", payload_len);
     	/* the payload length may not be larger than the destination buffer */
     	return;
@@ -444,7 +444,7 @@ input_l2cap_frame_flow_channel(l2cap_channel_t *channel, uint8_t *data, uint16_t
     memcpy(&frame_len, &data[0], 2);
     payload_len = frame_len;
     
-    if(payload_len > BLE_L2CAP_NODE_MTU - channel->rx_buffer.current_index) {
+    if(payload_len > BLE_L2CAP_NODE_MTU - channel->rx_buffer.current_index || payload_len > data_len - 4) {
     	LOG_WARN("l2cap_frame: illegal L2CAP frame payload_len: %d\n", payload_len);
     	/* the current index plus the payload length may not be larger than 
 	 * the destination buffer */

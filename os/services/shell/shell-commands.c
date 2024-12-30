@@ -161,7 +161,8 @@ PT_THREAD(cmd_ping(struct pt *pt, shell_output_func output, char *args))
     SHELL_OUTPUT(output, "Received ping reply from ");
     shell_output_6addr(output, &remote_addr);
     SHELL_OUTPUT(output, ", len %u, ttl %u, delay %lu ms\n",
-      curr_ping_datalen, curr_ping_ttl, (1000*(clock_time() - timeout_timer.timer.start))/CLOCK_SECOND);
+                 curr_ping_datalen, curr_ping_ttl,
+                 (unsigned long)((1000 * (clock_time() - timeout_timer.timer.start)) / CLOCK_SECOND));
   }
 
   PT_END(pt);
@@ -620,7 +621,7 @@ PT_THREAD(cmd_tsch_status(struct pt *pt, shell_output_func output, char *args))
       SHELL_OUTPUT(output, "none\n");
     }
     SHELL_OUTPUT(output, "-- Last synchronized: %lu seconds ago\n",
-                 (clock_time() - tsch_last_sync_time) / CLOCK_SECOND);
+                 (unsigned long)((clock_time() - tsch_last_sync_time) / CLOCK_SECOND));
     SHELL_OUTPUT(output, "-- Drift w.r.t. coordinator: %ld ppm\n",
                  tsch_adaptive_timesync_get_drift_ppm());
     SHELL_OUTPUT(output, "-- Network uptime: %lu seconds\n",

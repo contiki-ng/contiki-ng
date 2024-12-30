@@ -58,6 +58,29 @@
 #define flush()
 #endif /* PLATFORM_DBG_CONF_USB */
 /*---------------------------------------------------------------------------*/
+#if TRUSTZONE_NONSECURE
+#include "trustzone/tz-api.h"
+
+#define DBG_BUF_SIZE 256
+static char dbg_buf[DBG_BUF_SIZE];
+static uint16_t dbg_pos;
+/*---------------------------------------------------------------------------*/
+int
+dbg_putchar(int c)
+{
+  if(dbg_pos < DBG_BUF_SIZE) {
+    dbg_buf[dbg_pos++] = c;
+  }
+
+  if(c == '\n' || dbg_pos >= DBG_BUF_SIZE - 1) {
+    dbg_buf[MIN(dbg_pos - 1, DBG_BUF_SIZE - 1)] = '\0';
+    tz_api_println(dbg_buf);
+    dbg_pos = 0;
+  }
+
+  return c;
+}
+#else
 int
 dbg_putchar(int c)
 {
@@ -69,6 +92,7 @@ dbg_putchar(int c)
 
   return c;
 }
+#endif /* TRUSTZONE_NONSECURE */
 /*---------------------------------------------------------------------------*/
 unsigned int
 dbg_send_bytes(const unsigned char *s, unsigned int len)

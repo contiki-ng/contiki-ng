@@ -36,36 +36,95 @@
  * Fredrik Osterlind <fros@sics.se>
  */
 
-#include "contiki.h"
+#ifdef __APPLE__
+#define _DARWIN_C_SOURCE /* For pthread_get_stackaddr_np() */
+#else
+#define _GNU_SOURCE /* For pthread_getattr_np(). */
+#endif
+#include <pthread.h>
+
 #include "sys/cooja_mt.h"
-#include "sys/cc.h"
+
+#include <signal.h>
+#include <stdio.h>
 
 #define MT_STATE_READY   1
 #define MT_STATE_RUNNING 2
 #define MT_STATE_EXITED  5
 
 static struct cooja_mt_thread *current;
+static struct cooja_mt_thread *cooja_running_thread;
+
+#ifdef __APPLE__
+/* Avoid deprecated warnings for ucontext.h functions on OS X. */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 /*--------------------------------------------------------------------------*/
-void
-cooja_mt_start(struct cooja_mt_thread *thread, void (* function)(void *), void *data)
+int
+cooja_mt_init(struct cooja_mt_thread *t)
 {
-  /* Call the architecture dependant function to set up the processor
-     stack with the correct parameters. */
-  cooja_mtarch_start(&thread->thread, function, data);
-
-  thread->state = MT_STATE_READY;
+#ifdef __APPLE__
+  /* Apple's makecontext() fails if size is less than MINSIGSTKSZ. */
+  if(COOJA_MTARCH_STACKSIZE < MINSIGSTKSZ) {
+    return -1;
+  }
+#endif
+  void *stack_addr;
+  size_t stack_size;
+  pthread_t self = pthread_self();
+#ifdef __APPLE__
+  stack_addr = pthread_get_stackaddr_np(self);
+  stack_size = pthread_get_stacksize_np(self);
+#else
+  pthread_attr_t attrs;
+  if(pthread_getattr_np(self, &attrs) != 0) {
+    return -2;
+  }
+  if(pthread_attr_getstack(&attrs, &stack_addr, &stack_size) != 0) {
+    return -3;
+  }
+#endif
+  if(getcontext(&t->ctxt) == -1) {
+    perror("getcontext failed");
+    return -4;
+  }
+  t->ctxt.uc_stack.ss_sp = stack_addr;
+  t->ctxt.uc_stack.ss_flags = 0;
+  t->ctxt.uc_stack.ss_size = stack_size;
+  return 0;
 }
 /*--------------------------------------------------------------------------*/
 void
-cooja_mt_exec(struct cooja_mt_thread *thread)
+cooja_mt_start(struct cooja_mt_thread *caller,
+               struct cooja_mt_thread *t, void (*function)(void))
+{
+  if(getcontext(&t->ctxt) == -1) {
+    perror("getcontext failed");
+    return;
+  }
+  t->ctxt.uc_stack.ss_sp = t->stack;
+  t->ctxt.uc_stack.ss_flags = 0;
+  t->ctxt.uc_stack.ss_size = sizeof(t->stack);
+  t->ctxt.uc_link = &caller->ctxt;
+  makecontext(&t->ctxt, function, 0);
+  t->state = MT_STATE_READY;
+}
+/*--------------------------------------------------------------------------*/
+void
+cooja_mt_exec(struct cooja_mt_thread *caller, struct cooja_mt_thread *thread)
 {
   if(thread->state == MT_STATE_READY) {
     thread->state = MT_STATE_RUNNING;
     current = thread;
     /* Switch context to the thread. The function call will not return
        until the the thread has yielded, or is preempted. */
-    cooja_mtarch_exec(&thread->thread);
+    cooja_running_thread = thread;
+    if(swapcontext(&caller->ctxt, &thread->ctxt) == -1) {
+      perror("swapcontext");
+    }
+    cooja_running_thread = NULL;
   }
 }
 /*--------------------------------------------------------------------------*/
@@ -78,5 +137,15 @@ cooja_mt_yield(void)
      switch function in order to switch the thread to the main Contiki
      program instead. For us, the switch function will not return
      until the next time we are scheduled to run. */
-  cooja_mtarch_yield();
+  if(cooja_running_thread->ctxt.uc_link == NULL) {
+    return;
+  }
+  if(swapcontext(&cooja_running_thread->ctxt,
+                 cooja_running_thread->ctxt.uc_link) == -1) {
+    perror("swapcontext");
+  }
 }
+
+#ifdef __APPLE__
+#pragma GCC diagnostic pop
+#endif

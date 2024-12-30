@@ -2,7 +2,7 @@
 source ../utils.sh
 
 # Contiki directory
-CONTIKI=$1
+CONTIKI=../..
 # Test basename
 BASENAME=$(basename $0 .sh)
 
@@ -13,8 +13,7 @@ declare -i TESTCOUNT=0
 
 # Starting Contiki-NG native node
 echo "Starting native CoAP server"
-make -C $CONTIKI/examples/coap/coap-example-server > make.log 2> make.err
-sudo $CONTIKI/examples/coap/coap-example-server/coap-example-server.native > node.log 2> node.err &
+sudo $CONTIKI/examples/coap/coap-example-server/build/native/coap-example-server.native &
 CPID=$!
 sleep 2
 
@@ -44,20 +43,11 @@ kill_bg $CPID
 if [ $TESTCOUNT -eq $OKCOUNT ] ; then
   printf "%-32s TEST OK    %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" | tee $BASENAME.testlog;
 else
-  echo "==== make.log ====" ; cat make.log;
-  echo "==== make.err ====" ; cat make.err;
-  echo "==== node.log ====" ; cat node.log;
-  echo "==== node.err ====" ; cat node.err;
   echo "==== coap.log ====" ; cat coap.log;
   echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
-
   printf "%-32s TEST FAIL  %3d/%d\n" "$BASENAME" "$OKCOUNT" "$TESTCOUNT" | tee $BASENAME.testlog;
-  rm -f make.log make.err node.log node.err coap.log
+  rm -f coap.log
   exit 1
 fi
 
-rm -f  make.log make.err node.log node.err coap.log
-
-# We do not want Make to stop -> Return 0
-# The Makefile will check if a log contains FAIL at the end
-exit 0
+rm -f coap.log

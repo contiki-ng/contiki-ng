@@ -74,11 +74,15 @@
 #endif /* ENERGEST_SECOND */
 
 #ifndef ENERGEST_GET_TOTAL_TIME
+#if ENERGEST_CONF_ON
 #ifdef ENERGEST_CONF_GET_TOTAL_TIME
 #define ENERGEST_GET_TOTAL_TIME ENERGEST_CONF_GET_TOTAL_TIME
 #else /* ENERGEST_CONF_GET_TOTAL_TIME */
 #define ENERGEST_GET_TOTAL_TIME energest_get_total_time
 #endif /* ENERGEST_CONF_GET_TOTAL_TIME */
+#else /* ENERGEST_CONF_ON */
+#define ENERGEST_GET_TOTAL_TIME()
+#endif /* ENERGEST_CONF_ON */
 #endif /* ENERGEST_GET_TOTAL_TIME */
 
 /*
@@ -106,16 +110,16 @@ typedef enum energest_type {
   ENERGEST_TYPE_MAX
 } energest_type_t;
 
+#if ENERGEST_CONF_ON
+
 void energest_init(void);
 void energest_flush(void);
 
 uint64_t ENERGEST_GET_TOTAL_TIME(void);
 
-#if ENERGEST_CONF_ON
-
 extern uint64_t energest_total_time[ENERGEST_TYPE_MAX];
 extern ENERGEST_TIME_T energest_current_time[ENERGEST_TYPE_MAX];
-extern unsigned char energest_current_mode[ENERGEST_TYPE_MAX];
+extern bool energest_current_mode[ENERGEST_TYPE_MAX];
 
 static inline uint64_t
 energest_type_time(energest_type_t type)
@@ -132,9 +136,9 @@ energest_type_set(energest_type_t type, uint64_t value)
 static inline void
 energest_on(energest_type_t type)
 {
-  if(energest_current_mode[type] == 0) {
+  if(!energest_current_mode[type]) {
     energest_current_time[type] = ENERGEST_CURRENT_TIME();
-    energest_current_mode[type] = 1;
+    energest_current_mode[type] = true;
   }
 }
 #define ENERGEST_ON(type) energest_on(type)
@@ -142,10 +146,10 @@ energest_on(energest_type_t type)
 static inline void
 energest_off(energest_type_t type)
 {
- if(energest_current_mode[type] != 0) {
+ if(energest_current_mode[type]) {
    energest_total_time[type] +=
      (ENERGEST_TIME_T)(ENERGEST_CURRENT_TIME() - energest_current_time[type]);
-   energest_current_mode[type] = 0;
+   energest_current_mode[type] = false;
  }
 }
 #define ENERGEST_OFF(type) energest_off(type)
@@ -154,19 +158,23 @@ static inline void
 energest_switch(energest_type_t type_off, energest_type_t type_on)
 {
   ENERGEST_TIME_T energest_local_variable_now = ENERGEST_CURRENT_TIME();
-  if(energest_current_mode[type_off] != 0) {
+  if(energest_current_mode[type_off]) {
     energest_total_time[type_off] += (ENERGEST_TIME_T)
       (energest_local_variable_now - energest_current_time[type_off]);
-    energest_current_mode[type_off] = 0;
+    energest_current_mode[type_off] = false;
   }
-  if(energest_current_mode[type_on] == 0) {
+  if(!energest_current_mode[type_on]) {
     energest_current_time[type_on] = energest_local_variable_now;
-    energest_current_mode[type_on] = 1;
+    energest_current_mode[type_on] = true;
   }
 }
 #define ENERGEST_SWITCH(type_off, type_on) energest_switch(type_off, type_on)
 
 #else /* ENERGEST_CONF_ON */
+
+static inline void energest_init(void) { }
+
+static inline void energest_flush(void) { }
 
 static inline uint64_t energest_type_time(energest_type_t type) { return 0; }
 

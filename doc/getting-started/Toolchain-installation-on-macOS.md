@@ -20,10 +20,19 @@ $ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/inst
 Using homebrew, install a bunch of helper tools, such as git, srecord, doxygen (to build the API documentation), mosquitto (to test Contiki-NG's MQTT functionality), tuntap (for tunslip and to run native examples with networking), rlwrap (for shell history), python (python 3 for running scripts and pip).
 
 ```bash
-$ brew install git git-lfs srecord doxygen uncrustify ant mosquitto wget libmagic rlwrap python
+$ brew install git git-lfs srecord doxygen uncrustify ant mosquitto wget libmagic rlwrap python make gawk
 $ brew tap caskroom/cask
 $ brew cask install tuntap
 ```
+
+You may also need to update your PATH environment variable to use GNU Make 4 when running the "make" command. This can be set in your shell initialization file (e.g., ~/.zshrc) as follows.
+
+```bash
+$ echo 'PATH="/opt/homebrew/opt/make/libexec/gnubin:$PATH"' >> ~/.zshrc
+```
+
+Note that if Homebrew is installed in a different path, you have to modify the command accordingly.
+
 ### Install some python packages
 Those are used/needed by some Contiki-NG Python scripts.
 

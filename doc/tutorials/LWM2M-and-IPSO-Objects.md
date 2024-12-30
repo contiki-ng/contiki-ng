@@ -15,7 +15,7 @@ In most cases you will not need to change this address (details later on in this
 You can now build this example for the native platform and run it:
 ```bash
 $ make TARGET=native
-$ sudo ./example-ipso-objects.native 
+$ sudo build/native/example-ipso-objects.native
 ```
 
 When this process starts, it will create a virtual tunnel interface `tun0`. It will then register with the default LWM2M server address: `fd00::1`, which is the address of the `tun0` interface.
@@ -86,10 +86,11 @@ Then do a distclean:
 $ make distclean
 ```
 
-Followed by:
+Then you can upload the example, for instance to an nRF52840 Development Kit, using
+the following command.
 
 ```bash
-$ make TARGET=zoul BOARD=firefly-reva MAKE_WITH_DTLS=1 MAKE_COAP_DTLS_KEYSTORE=MAKE_COAP_DTLS_KEYSTORE_SIMPLE example-ipso-objects.upload
+$ make TARGET=nrf BOARD=nrf52840/dk MAKE_WITH_DTLS=1 MAKE_COAP_DTLS_WITH_PSK=1 MAKE_COAP_DTLS_WITH_CLIENT=1 MAKE_COAP_DTLS_KEYSTORE=MAKE_COAP_DTLS_KEYSTORE_SIMPLE example-ipso-objects.upload
 ```
 
 If you did not already setup a Leshan server and a 6LoWPAN border-router, do that (description above) and
@@ -98,6 +99,20 @@ configure the same security Identity and keys in the Leshan server. Remember to 
 ![Security configuration.](images/leshan-security.png)
 
 Note: if you do not know the endpoint name you can run in non-secure mode first to see the name of the endpoint.
+
+## LWM2M with DTLS (certificates)
+
+It is also possible to use certificates instead of pre-shared keys. The example includes a test certificate specified in the project-conf-dtls.h file.
+
+If you have previously built a firmware with a different configuration, ensure that everything will be rebuilt properly by first running the following command.
+```bash
+$ make distclean
+```
+
+Then compile and upload the IPSO objects example as follows:
+```bash
+make TARGET=nrf52840 BOARD=dk MAKE_WITH_DTLS=1 MAKE_COAP_DTLS_WITH_CERT=1 MAKE_COAP_DTLS_WITH_CLIENT=1 MAKE_COAP_DTLS_KEYSTORE=MAKE_COAP_DTLS_KEYSTORE_SIMPLE example-ipso-objects.upload
+```
 
 ### Bootstrapping
 This tutorial describe how to setup a LWM2M client registering to a server with all security keys (or none)

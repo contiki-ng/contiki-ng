@@ -156,14 +156,14 @@ compensate_internal(uint32_t time_delta_usec, int32_t drift_ppm, int32_t *remain
   amount_ticks = US_TO_RTIMERTICKS(amount);
   *tick_conversion_error = amount - RTIMERTICKS_TO_US(amount_ticks);
 
-  if(ABS(amount_ticks) > RTIMER_ARCH_SECOND / 128) {
-    TSCH_LOG_ADD(tsch_log_message,
-        snprintf(log->message, sizeof(log->message),
-            "!too big compensation %ld delta %ld", (long int)amount_ticks, (long int)time_delta_usec));
-    amount_ticks = (amount_ticks > 0 ? RTIMER_ARCH_SECOND : -RTIMER_ARCH_SECOND) / 128;
+  if(ABS(amount_ticks) <= RTIMER_ARCH_SECOND / 128) {
+    return amount_ticks;
   }
-
-  return amount_ticks;
+  TSCH_LOG_ADD(tsch_log_message,
+               snprintf(log->message, sizeof(log->message),
+                        "!too big compensation %" PRId32 " delta %" PRId32,
+                        amount_ticks, time_delta_usec));
+  return (amount_ticks > 0 ? RTIMER_ARCH_SECOND : -RTIMER_ARCH_SECOND) / 128;
 }
 /*---------------------------------------------------------------------------*/
 /* Do the compensation step before scheduling a new timeslot */

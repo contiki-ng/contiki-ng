@@ -168,20 +168,28 @@ UNIT_TEST(max_alloc)
 
   heapmem_stats_t stats_before;
   heapmem_stats(&stats_before);
+  printf("Old max footprint: %zu\n", stats_before.max_footprint);
 
   /* The test uses a much smaller size than the theoretical maximum because
      the heapmem module is not yet supporting such large allocations. */
-  printf("Allocate %zu bytes\n", stats_before.available / 2);
-  char *ptr = heapmem_alloc(stats_before.available / 2);
+  size_t test_alloc_size = stats_before.available / 2;
+  printf("Allocate %zu bytes\n", test_alloc_size);
+  char *ptr = heapmem_alloc(test_alloc_size);
 
   UNIT_TEST_ASSERT(ptr != NULL);
   UNIT_TEST_ASSERT(heapmem_free(ptr) == true);
 
   heapmem_stats_t stats_after;
   heapmem_stats(&stats_after);
+  printf("New max footprint: %zu\n", stats_after.max_footprint);
 
-  UNIT_TEST_ASSERT(memcmp(&stats_before, &stats_after,
-                          sizeof(heapmem_stats_t)) == 0);
+  UNIT_TEST_ASSERT(stats_before.allocated == stats_after.allocated);
+  UNIT_TEST_ASSERT(stats_before.overhead == stats_after.overhead);
+  UNIT_TEST_ASSERT(stats_before.available == stats_after.available);
+  UNIT_TEST_ASSERT(stats_before.footprint == stats_after.footprint);
+  UNIT_TEST_ASSERT(stats_before.max_footprint < stats_after.max_footprint);
+  UNIT_TEST_ASSERT(stats_before.chunks == stats_after.chunks);
+  UNIT_TEST_ASSERT(stats_after.max_footprint >= test_alloc_size);
 
   UNIT_TEST_END();
 }
@@ -229,6 +237,37 @@ UNIT_TEST(reallocations)
 
   UNIT_TEST_END();
 }
+/*****************************************************************************/UNIT_TEST_REGISTER(zero_init_alloc, "Heapmem calloc");
+UNIT_TEST(zero_init_alloc)
+{
+#define MAX_SIZE 500
+#define NUM_ALLOCS 10
+
+  UNIT_TEST_BEGIN();
+
+  void *ptr1 = heapmem_calloc(0, MAX_SIZE);
+  UNIT_TEST_ASSERT(ptr1 == NULL);
+
+  void *ptr2 = heapmem_calloc(1, 0);
+  UNIT_TEST_ASSERT(ptr2 == NULL);
+
+  uint8_t *ptr_array[NUM_ALLOCS];
+  for(size_t i = 1; i <= NUM_ALLOCS; i++) {
+    size_t nmemb = i * 10;
+    size_t size = MAX_SIZE / i;
+    ptr_array[i - 1] = heapmem_calloc(nmemb, size);
+    UNIT_TEST_ASSERT(ptr_array[i - 1] != NULL);
+    for(size_t j = 0; j < nmemb * size; j++) {
+      UNIT_TEST_ASSERT(ptr_array[i - 1][j] == 0);
+    }
+  }
+
+  for(size_t i = 1; i <= NUM_ALLOCS; i++) {
+    UNIT_TEST_ASSERT(heapmem_free(ptr_array[NUM_ALLOCS - i]));
+  }
+
+  UNIT_TEST_END();
+}
 /*****************************************************************************/
 UNIT_TEST_REGISTER(stats_check, "Heapmem statistics validation");
 UNIT_TEST(stats_check)
@@ -239,14 +278,15 @@ UNIT_TEST(stats_check)
   heapmem_stats(&stats);
 
   printf("* allocated %zu\n* overhead %zu\n* available %zu\n"
-	 "* footprint %zu\n* chunks %zu\n",
+	 "* footprint %zu\n* max footprint %zu\n* chunks %zu\n",
          stats.allocated, stats.overhead, stats.available,
-         stats.footprint, stats.chunks);
+         stats.footprint, stats.max_footprint, stats.chunks);
 
   UNIT_TEST_ASSERT(stats.allocated == 0);
   UNIT_TEST_ASSERT(stats.overhead == 0);
   UNIT_TEST_ASSERT(stats.available == HEAPMEM_CONF_ARENA_SIZE);
   UNIT_TEST_ASSERT(stats.footprint == 0);
+  UNIT_TEST_ASSERT(stats.max_footprint > stats.available / 2);
   UNIT_TEST_ASSERT(stats.chunks == 0);
 
   UNIT_TEST_END();
@@ -292,12 +332,15 @@ PROCESS_THREAD(test_heapmem_process, ev, data)
   UNIT_TEST_RUN(max_alloc);
   UNIT_TEST_RUN(invalid_freeing);
   UNIT_TEST_RUN(reallocations);
+  UNIT_TEST_RUN(zero_init_alloc);
   UNIT_TEST_RUN(stats_check);
   UNIT_TEST_RUN(zones);
 
   if(!UNIT_TEST_PASSED(do_many_allocations) ||
      !UNIT_TEST_PASSED(max_alloc) ||
      !UNIT_TEST_PASSED(invalid_freeing) ||
+     !UNIT_TEST_PASSED(reallocations) ||
+     !UNIT_TEST_PASSED(zero_init_alloc) ||
      !UNIT_TEST_PASSED(stats_check) ||
      !UNIT_TEST_PASSED(zones)) {
     printf("=check-me= FAILED\n");

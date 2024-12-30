@@ -91,8 +91,6 @@ coap_request_callback(void *callback_data, coap_message_t *response)
   coap_callback_request_state_t *callback_state = (coap_callback_request_state_t*)callback_data;
   coap_request_state_t *state = &callback_state->state;
 
-  uint32_t res_block1;
-
   state->response = response;
 
   LOG_DBG("request callback\n");
@@ -106,6 +104,7 @@ coap_request_callback(void *callback_data, coap_message_t *response)
 
   /* Got a response */
   coap_get_header_block2(state->response, &state->res_block, &state->more, NULL, NULL);
+  uint32_t res_block1 = 0;
   coap_get_header_block1(state->response, &res_block1, NULL, NULL, NULL);
 
   LOG_DBG("Received #%lu%s B1:%lu (%u bytes)\n",

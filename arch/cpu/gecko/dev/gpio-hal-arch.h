@@ -68,9 +68,9 @@
 #define gpio_hal_arch_read_pin(port, pin) \
   GPIO_PinInGet(port, pin)
 #define gpio_hal_arch_write_pins(port, pins, value) \
-  GPIO_PortOutSetVal(port, v, pins)
+  GPIO_PortOutSetVal(port, value, pins)
 #define gpio_hal_arch_read_pins(port, pins) \
-  (GPIO_PortOutGet(port) & pins)
+  (GPIO_PortOutGet(port) & (pins))
 #define gpio_hal_arch_toggle_pins(port, pins) \
   GPIO_PortOutToggle(port, pins)
 #define gpio_hal_arch_clear_pins(port, pins) \

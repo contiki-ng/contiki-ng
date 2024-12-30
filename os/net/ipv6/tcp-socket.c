@@ -224,7 +224,6 @@ appcall(void *state)
     s->c = NULL;
     tcp_markconn(uip_conn, NULL);
     s->c = NULL;
-    /*call_event(s, TCP_SOCKET_CLOSED);*/
     relisten(s);
   }
 

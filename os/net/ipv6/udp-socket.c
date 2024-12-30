@@ -34,6 +34,7 @@
 
 #include <string.h>
 
+#if UIP_UDP
 PROCESS(udp_socket_process, "UDP socket process");
 
 static uint8_t buf[UIP_BUFSIZE];
@@ -166,7 +167,7 @@ PROCESS_THREAD(udp_socket_process, ev, data)
 
         /* If we were called because of incoming data, we should call
            the reception callback. */
-        if(uip_newdata()) {
+        if(uip_newdata() && c->input_callback != NULL) {
           /* Copy the data from the uIP data buffer into our own
              buffer to avoid the uIP buffer being messed with by the
              callee. */
@@ -175,16 +176,14 @@ PROCESS_THREAD(udp_socket_process, ev, data)
           /* Call the client process. We use the PROCESS_CONTEXT
              mechanism to temporarily switch process context to the
              client process. */
-          if(c->input_callback != NULL) {
-            PROCESS_CONTEXT_BEGIN(c->p);
-            c->input_callback(c, c->ptr,
-                              &(UIP_IP_BUF->srcipaddr),
-                              UIP_HTONS(UIP_UDP_BUF->srcport),
-                              &(UIP_IP_BUF->destipaddr),
-                              UIP_HTONS(UIP_UDP_BUF->destport),
-                              buf, uip_datalen());
-            PROCESS_CONTEXT_END();
-          }
+          PROCESS_CONTEXT_BEGIN(c->p);
+          c->input_callback(c, c->ptr,
+                            &(UIP_IP_BUF->srcipaddr),
+                            UIP_HTONS(UIP_UDP_BUF->srcport),
+                            &(UIP_IP_BUF->destipaddr),
+                            UIP_HTONS(UIP_UDP_BUF->destport),
+                            buf, uip_datalen());
+          PROCESS_CONTEXT_END();
         }
       }
     }
@@ -192,4 +191,5 @@ PROCESS_THREAD(udp_socket_process, ev, data)
 
   PROCESS_END();
 }
+#endif /* UIP_UDP */
 /*---------------------------------------------------------------------------*/

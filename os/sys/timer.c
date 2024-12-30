@@ -116,10 +116,10 @@ timer_restart(struct timer *t)
  *
  * \param t A pointer to the timer
  *
- * \return Non-zero if the timer has expired, zero otherwise.
+ * \return True if the timer has expired.
  *
  */
-int
+bool
 timer_expired(struct timer *t)
 {
   /* Note: Can not return diff >= t->interval so we add 1 to diff and return

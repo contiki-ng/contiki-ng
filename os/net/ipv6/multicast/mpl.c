@@ -921,7 +921,6 @@ data_message_expiration(void *ptr, uint8_t suppress)
     UIP_IP_BUF->tcflow = 0;
     UIP_IP_BUF->flow = 0;
     UIP_IP_BUF->proto = UIP_PROTO_HBHO;
-    /*UIP_IP_BUF->ttl = MPL_IP_HOP_LIMIT; */
     uip_ip6addr_copy(&UIP_IP_BUF->destipaddr, &locmmptr->seed->domain->data_addr);
     uip_len = UIP_IPH_LEN;
     /* Setup the HBHO Header */

@@ -252,9 +252,9 @@ enum {
 
 #define PACKETBUF_IS_ADDR(type) ((type) >= PACKETBUF_ADDR_FIRST)
 
-int               packetbuf_set_attr(uint8_t type, const packetbuf_attr_t val);
+void              packetbuf_set_attr(uint8_t type, const packetbuf_attr_t val);
 packetbuf_attr_t packetbuf_attr(uint8_t type);
-int               packetbuf_set_addr(uint8_t type, const linkaddr_t *addr);
+void              packetbuf_set_addr(uint8_t type, const linkaddr_t *addr);
 const linkaddr_t *packetbuf_addr(uint8_t type);
 
 /**
@@ -270,19 +270,7 @@ void              packetbuf_attr_copyto(struct packetbuf_attr *attrs,
 void              packetbuf_attr_copyfrom(struct packetbuf_attr *attrs,
                                           struct packetbuf_addr *addrs);
 
-#define PACKETBUF_ATTRIBUTES(...) { __VA_ARGS__ PACKETBUF_ATTR_LAST }
-#define PACKETBUF_ATTR_LAST { PACKETBUF_ATTR_NONE, 0 }
-
-#define PACKETBUF_ATTR_BIT  1
-#define PACKETBUF_ATTR_BYTE 8
-#define PACKETBUF_ADDRSIZE (LINKADDR_SIZE * PACKETBUF_ATTR_BYTE)
-
 #define PACKETBUF_ATTR_SECURITY_LEVEL_DEFAULT 0xffff
-
-struct packetbuf_attrlist {
-  uint8_t type;
-  uint8_t len;
-};
 
 #endif /* PACKETBUF_H_ */
 /** @} */

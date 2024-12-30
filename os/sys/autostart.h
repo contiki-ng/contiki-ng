@@ -43,12 +43,8 @@
 #include "contiki.h"
 #include "sys/process.h"
 
-#if ! CC_NO_VA_ARGS
 #define AUTOSTART_PROCESSES(...)					\
 struct process * const autostart_processes[] = {__VA_ARGS__, NULL}
-#else
-#error "C compiler must support __VA_ARGS__ macro"
-#endif
 
 extern struct process * const autostart_processes[];
 

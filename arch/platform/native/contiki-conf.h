@@ -41,9 +41,7 @@
 #include "native-def.h"
 /*---------------------------------------------------------------------------*/
 #include <inttypes.h>
-#ifndef WIN32_LEAN_AND_MEAN
 #include <sys/select.h>
-#endif
 
 struct select_callback {
   int  (* set_fd)(fd_set *fdr, fd_set *fdw);
@@ -52,7 +50,6 @@ struct select_callback {
 int select_set_callback(int fd, const struct select_callback *callback);
 
 #define CC_CONF_VA_ARGS                1
-/*#define CC_CONF_INLINE                 inline*/
 
 #ifndef EEPROM_CONF_SIZE
 #define EEPROM_CONF_SIZE				1024
@@ -96,17 +93,11 @@ typedef unsigned int uip_stats_t;
 
 #include <ctype.h>
 
-typedef unsigned long clock_time_t;
-
 #define CLOCK_CONF_SECOND 1000
 
 #define LOG_CONF_ENABLED 1
 
 #define PLATFORM_SUPPORTS_BUTTON_HAL 1
-
-/* Not part of C99 but actually present */
-int strcasecmp(const char*, const char*);
-
 #define PLATFORM_CONF_PROVIDES_MAIN_LOOP 1
 #define PLATFORM_CONF_MAIN_ACCEPTS_ARGS  1
 #define PLATFORM_CONF_SUPPORTS_STACK_CHECK 0

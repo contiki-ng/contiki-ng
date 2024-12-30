@@ -31,11 +31,13 @@
  */
 
 /**
+ * \addtogroup crypto
+ * @{
  * \file
  *         AES_128-based CCM* implementation.
  * \author
- *         Original: Konrad Krentz <konrad.krentz@gmail.com>
- *         Generified version: Justin King-Lacroix <justin.kinglacroix@gmail.com>
+ *         Konrad Krentz <konrad.krentz@gmail.com>
+ *         Justin King-Lacroix <justin.kinglacroix@gmail.com>
  */
 
 #include "ccm-star.h"
@@ -43,11 +45,10 @@
 #include <string.h>
 
 /* As per RFC 3610. L == 2 (m_len is two bytes long). */
-#define CCM_STAR_AUTH_FLAGS(AUTH, MICLEN) (((AUTH) ? (1u << 6) : 0) | ((((MICLEN) - 2u) >> 1) << 3) | 1u)
-#define CCM_STAR_ENCRYPTION_FLAGS     1
-/* The auth data can have a variable length, but this implementation supports
- * only the case of 0 < l(a) < (2^16 - 2^8) */
-#define MAX_A_LEN 0xfeff
+#define CCM_STAR_AUTH_FLAGS(a_len, mic_len) (((a_len) ? 1u << 6 : 0) \
+    | ((((mic_len) - 2u) >> 1) << 3) \
+    | 1u)
+#define CCM_STAR_ENCRYPTION_FLAGS 1
 /* Valid values are 4, 6, 8, 10, 12, 14, and 16 octets */
 #define MIC_LEN_VALID(x) ((x) >= 4 && (x) <= 16 && (x) % 2 == 0)
 
@@ -68,17 +69,15 @@ set_iv(uint8_t *iv,
 static void
 ctr_step(const uint8_t *nonce,
     uint16_t pos,
-    uint8_t *m_and_result,
-    uint16_t m_len,
+    uint8_t *m_and_result, uint16_t m_len,
     uint16_t counter)
 {
   uint8_t a[AES_128_BLOCK_SIZE];
-  uint8_t i;
 
   set_iv(a, CCM_STAR_ENCRYPTION_FLAGS, nonce, counter);
   AES_128.encrypt(a);
 
-  for(i = 0; (pos + i < m_len) && (i < AES_128_BLOCK_SIZE); i++) {
+  for(uint_fast8_t i = 0; (pos + i < m_len) && (i < AES_128_BLOCK_SIZE); i++) {
     m_and_result[pos + i] ^= a[i];
   }
 }
@@ -87,42 +86,42 @@ static void
 mic(const uint8_t *nonce,
     const uint8_t *m, uint16_t m_len,
     const uint8_t *a, uint16_t a_len,
-    uint8_t *result,
-    uint8_t mic_len)
+    uint8_t *result, uint8_t mic_len)
 {
   uint8_t x[AES_128_BLOCK_SIZE];
-  uint32_t pos; /* 32-bits as can need to exceed m_len to reach end of loop */
-  uint8_t i;
 
-  set_iv(x, CCM_STAR_AUTH_FLAGS(a_len > 0, mic_len), nonce, m_len);
+  set_iv(x, CCM_STAR_AUTH_FLAGS(a_len, mic_len), nonce, m_len);
   AES_128.encrypt(x);
 
   if(a_len) {
-    x[0] = x[0] ^ (a_len >> 8);
-    x[1] = x[1] ^ a_len;
-    for(i = 2; (i - 2 < a_len) && (i < AES_128_BLOCK_SIZE); i++) {
-      x[i] ^= a[i - 2];
+    x[0] ^= (a_len >> 8);
+    x[1] ^= a_len;
+    uint32_t pos;
+    for(pos = 0; (pos < a_len) && (pos < AES_128_BLOCK_SIZE - 2); pos++) {
+      x[2 + pos] ^= a[pos];
     }
 
     AES_128.encrypt(x);
 
-    pos = 14;
-    while(pos < a_len) {
-      for(i = 0; (pos + i < a_len) && (i < AES_128_BLOCK_SIZE); i++) {
+    /* 32-bit pos to reach the end of the loop if a_len is large */
+    for(; pos < a_len; pos += AES_128_BLOCK_SIZE) {
+      for(uint_fast8_t i = 0;
+          (pos + i < a_len) && (i < AES_128_BLOCK_SIZE);
+          i++) {
         x[i] ^= a[pos + i];
       }
-      pos += AES_128_BLOCK_SIZE;
       AES_128.encrypt(x);
     }
   }
 
   if(m_len) {
-    pos = 0;
-    while(pos < m_len) {
-      for(i = 0; (pos + i < m_len) && (i < AES_128_BLOCK_SIZE); i++) {
+    /* 32-bit pos to reach the end of the loop if m_len is large */
+    for(uint32_t pos = 0; pos < m_len; pos += AES_128_BLOCK_SIZE) {
+      for(uint_fast8_t i = 0;
+          (pos + i < m_len) && (i < AES_128_BLOCK_SIZE);
+          i++) {
         x[i] ^= m[pos + i];
       }
-      pos += AES_128_BLOCK_SIZE;
       AES_128.encrypt(x);
     }
   }
@@ -135,14 +134,10 @@ mic(const uint8_t *nonce,
 static void
 ctr(const uint8_t *nonce, uint8_t *m, uint16_t m_len)
 {
-  uint32_t pos; /* 32-bits as can need to exceed m_len to reach end of loop */
-  uint16_t counter;
-
-  pos = 0;
-  counter = 1;
-  while(pos < m_len) {
+  uint16_t counter = 1;
+  /* 32-bit pos to reach the end of the loop if m_len is large */
+  for(uint32_t pos = 0; pos < m_len; pos += AES_128_BLOCK_SIZE) {
     ctr_step(nonce, pos, m, m_len, counter++);
-    pos += AES_128_BLOCK_SIZE;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -159,7 +154,7 @@ aead(const uint8_t* nonce,
     uint8_t *result, uint8_t mic_len,
     int forward)
 {
-  if(a_len > MAX_A_LEN || !MIC_LEN_VALID(mic_len)) {
+  if(!MIC_LEN_VALID(mic_len)) {
     return;
   }
 
@@ -169,10 +164,10 @@ aead(const uint8_t* nonce,
   }
 
   mic(nonce,
-    m, m_len,
-    a, a_len,
-    result,
-    mic_len);
+      m, m_len,
+      a, a_len,
+      result,
+      mic_len);
 
   if(forward) {
     /* encrypt */
@@ -185,3 +180,5 @@ const struct ccm_star_driver ccm_star_driver = {
   aead
 };
 /*---------------------------------------------------------------------------*/
+
+/** @} */

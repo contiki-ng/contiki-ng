@@ -94,12 +94,14 @@ enum {
 };
 
 /*---------------------------------------------------------------------------*/
+#if UIP_TCP || UIP_UDP
 static void
 init_appstate(uip_tcp_appstate_t *as, void *state)
 {
   as->p = PROCESS_CURRENT();
   as->state = state;
 }
+#endif /* UIP_TCP || UIP_UDP */
 /*---------------------------------------------------------------------------*/
 
 uint8_t
@@ -153,7 +155,8 @@ check_for_tcp_syn(void)
      this timer.  This function is called for every incoming IP packet
      to check for such SYNs. */
 #define TCP_SYN 0x02
-  if(UIP_IP_BUF->proto == UIP_PROTO_TCP &&
+  if(uip_len >= UIP_IPTCPH_LEN + uip_ext_len &&
+     UIP_IP_BUF->proto == UIP_PROTO_TCP &&
      (UIP_TCP_BUF->flags & TCP_SYN) == TCP_SYN) {
     start_periodic_tcp_timer();
   }
@@ -169,7 +172,7 @@ packet_input(void)
     check_for_tcp_syn();
 
 #if UIP_TAG_TC_WITH_VARIABLE_RETRANSMISSIONS
-    {
+    if(uip_len >= UIP_IPH_LEN) {
       uint8_t traffic_class = (UIP_IP_BUF->vtc << 4) | (UIP_IP_BUF->tcflow >> 4);
       if(traffic_class & UIP_TC_MAC_TRANSMISSION_COUNTER_BIT) {
         uint8_t max_mac_transmissions = traffic_class & UIP_TC_MAC_TRANSMISSION_COUNTER_MASK;
@@ -312,55 +315,45 @@ tcpip_icmp6_call(uint8_t type)
 static void
 eventhandler(process_event_t ev, process_data_t data)
 {
-#if UIP_TCP
-  unsigned char i;
-  register struct listenport *l;
-#endif /*UIP_TCP*/
-  struct process *p;
-
   switch(ev) {
+#if UIP_TCP || UIP_UDP
   case PROCESS_EVENT_EXITED:
     /* This is the event we get if a process has exited. We go through
          the TCP/IP tables to see if this process had any open
          connections or listening TCP ports. If so, we'll close those
          connections. */
-
-    p = (struct process *)data;
-#if UIP_TCP
-    l = s.listenports;
-    for(i = 0; i < UIP_LISTENPORTS; ++i) {
-      if(l->p == p) {
-        uip_unlisten(l->port);
-        l->port = 0;
-        l->p = PROCESS_NONE;
-      }
-      ++l;
-    }
-
     {
-      struct uip_conn *cptr;
+      struct process *p = (struct process *)data;
+#if UIP_TCP
+      struct listenport *l = s.listenports;
+      for(uint8_t i = 0; i < UIP_LISTENPORTS; ++i) {
+        if(l->p == p) {
+          uip_unlisten(l->port);
+          l->port = 0;
+          l->p = PROCESS_NONE;
+        }
+        ++l;
+      }
 
-      for(cptr = &uip_conns[0]; cptr < &uip_conns[UIP_TCP_CONNS]; ++cptr) {
+      for(struct uip_conn *cptr = &uip_conns[0];
+          cptr < &uip_conns[UIP_TCP_CONNS]; ++cptr) {
         if(cptr->appstate.p == p) {
           cptr->appstate.p = PROCESS_NONE;
           cptr->tcpstateflags = UIP_CLOSED;
         }
       }
-    }
 #endif /* UIP_TCP */
 #if UIP_UDP
-    {
-      struct uip_udp_conn *cptr;
-
-      for(cptr = &uip_udp_conns[0];
+      for(struct uip_udp_conn *cptr = &uip_udp_conns[0];
           cptr < &uip_udp_conns[UIP_UDP_CONNS]; ++cptr) {
         if(cptr->appstate.p == p) {
           cptr->lport = 0;
         }
       }
-    }
 #endif /* UIP_UDP */
+    }
     break;
+#endif /* UIP_TCP || UIP_UDP */
 
   case PROCESS_EVENT_TIMER:
     /* We get this event if one of our timers have expired. */
@@ -370,7 +363,7 @@ eventhandler(process_event_t ev, process_data_t data)
     if(data == &periodic &&
         etimer_expired(&periodic)) {
 #if UIP_TCP
-      for(i = 0; i < UIP_TCP_CONNS; ++i) {
+      for(uint8_t i = 0; i < UIP_TCP_CONNS; ++i) {
         if(uip_conn_active(i)) {
           /* Only restart the timer if there are active
                  connections. */
@@ -396,11 +389,6 @@ eventhandler(process_event_t ev, process_data_t data)
      * check the different timers for neighbor discovery and
      * stateless autoconfiguration
      */
-    /*if(data == &uip_ds6_timer_periodic &&
-           etimer_expired(&uip_ds6_timer_periodic)) {
-          uip_ds6_periodic();
-          tcpip_ipv6_output();
-        }*/
 #if !UIP_CONF_ROUTER
     if(data == &uip_ds6_timer_rs &&
         etimer_expired(&uip_ds6_timer_rs)) {

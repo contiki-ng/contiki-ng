@@ -65,7 +65,7 @@ Open a new terminal window (or use the one where you earlier ran `mosquitto_pub`
 
 Run the example:
 ```
-$ sudo ./mqtt-client.native 
+$ sudo build/native/mqtt-client.native
 [INFO: Main      ] Starting Contiki-NG-develop/v4.1-87-g1ffcaa8
 [INFO: Main      ]  Net: tun6
 [INFO: Main      ]  MAC: nullmac

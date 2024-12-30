@@ -47,7 +47,7 @@
 
 #include <string.h>
 
-
+#if UIP_UDP
 PROCESS(simple_udp_process, "Simple UDP process");
 static uint8_t started = 0;
 static uint8_t databuffer[UIP_BUFSIZE];
@@ -178,5 +178,6 @@ PROCESS_THREAD(simple_udp_process, ev, data)
 
   PROCESS_END();
 }
+#endif /* UIP_UDP */
 /*---------------------------------------------------------------------------*/
 /** @} */

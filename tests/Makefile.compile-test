@@ -47,53 +47,58 @@ ifndef CI
 endif
 ifdef BINARY_SIZE_LOGFILE
   SIZE_LOGFILE ?= BINARY_SIZE_LOGFILE=$(BINARY_SIZE_LOGFILE)
-  PRINT_LOGFILE = cat $(BINARY_SIZE_LOGFILE)
+  PRINT_LOGFILE = sort -k 6 $(BINARY_SIZE_LOGFILE) -o $(BINARY_SIZE_LOGFILE) && cat $(BINARY_SIZE_LOGFILE)
 endif
 PRINT_LOGFILE ?= true
 PRINT_DIR ?= --no-print-directory
-MAKEOPTIONS += $(PRINT_DIR) $(SIZE_LOGFILE) WERROR=1
+MAKEOPTIONS += $(PRINT_DIR) $(SIZE_LOGFILE) WERROR=1 $(MAKE_EXTRA_OPTIONS)
 
-# The stuff below is some GNU make magic to automatically make make
-# give each compile test a number, prefixed with a 0 if the number is
-# < 10, to match the way the simulation tests output works.
-nine := x x x x x x x x x
-max = $(subst xx,x,$(join ${1},${2}))
-gt = $(filter-out $(words ${1}),$(words $(call max,${1},${2})))
-addzero = $(if $(call gt,${nine},$(1)),$(words ${1}),0$(words ${1}))
-get_target = $(firstword $(subst :, ,$1))
-get_target_vars = $(wordlist 2,15,$(subst :, ,$1))
+ifdef RUN_FILE
+  DEFINE_START = 3
+endif
+DEFINE_START ?= 2
 
-define dooneexample
-@echo Building example $(3): $(1) $(4) for target $(2)
-@((cd $(EXAMPLESDIR)/$(1) && \
-   $(MAKE) $(4) TARGET=$(2) $(MAKEOPTIONS) clean && \
-   make -j$(CPUS) $(4) TARGET=$(2) $(MAKEOPTIONS)) || \
-  printf "%-75s %-40s %-20s TEST FAIL\n" "$(1)" "$(4)" "$(2)" >> summary)
-endef
+# Rule for compiling examples.
+# EXAMPLES has the form directory/target:define1=value1:define2=value2:...
+# Mangle :, =, \, and '"' to get valid rule name.
+DELIMIT1 := __@__
+DELIMIT2 := _@-@_
+DELIMIT3 := _@_@_
+DELIMIT4 := _@@@_
+QUOTE := "
+EXAMPLES_TMP := $(subst \,$(DELIMIT4), $(subst $(QUOTE),$(DELIMIT3), $(subst =,$(DELIMIT2), $(subst :,$(DELIMIT1),$(EXAMPLES)))))
 
-define doexample
-$(eval i+=x)
-$(call dooneexample,$(dir $(call get_target,${1})),$(notdir $(call get_target,${1})),$(call addzero,${i}),$(call get_target_vars,${1}))
-endef
-#end of GNU make magic
+$(EXAMPLES_TMP):
+	$(eval _exlist := $(subst $(DELIMIT1), ,$(subst $(DELIMIT2),=,$(subst $(DELIMIT3),$(QUOTE),$(subst $(DELIMIT4),\,$@)))))
+	$(eval _blob := $(firstword $(_exlist)))
+	$(eval _example := $(dir $(_blob)))
+	$(eval _target := $(notdir $(_blob)))
+ifdef RUN_FILE
+	$(eval _runfile := $(wordlist 2,2,$(_exlist)))
+else
+	$(eval _runfile := true)
+endif
+	$(eval _defines := $(wordlist $(DEFINE_START),16,$(_exlist)))
+	@echo Building: $(_example) $(_defines) for target $(_target)
+	$(Q)($(MAKE) -C $(EXAMPLESDIR)/$(_example) $(_defines) TARGET=$(_target) $(MAKEOPTIONS) clean && \
+          make -C $(EXAMPLESDIR)/$(_example) -j$(CPUS) $(_defines) TARGET=$(_target) $(MAKEOPTIONS) && \
+          $(_runfile)) || \
+         printf "%-75s %-40s %-20s TEST FAIL\n" "$(_example)" "$(_defines)" "$(_target)" >> summary
 
-examples: | $(EXAMPLESDIR)
+examples:
 	@rm -f summary $(BINARY_SIZE_LOGFILE)
-	$(foreach ex, $(EXAMPLES), $(call doexample, ${ex}))
-
-$(EXAMPLESDIR):
-	@echo "Could not find examples directory $(EXAMPLESDIR).\n"
-	@echo "If this failure is when running 19-out-of-tree-builds, clone"
-	@echo "https://github.com/contiki-ng/out-of-tree-tests into"
-	@echo "$(EXAMPLESDIR) and run the test again.\n"
-	@false
+ifeq ($(CLANG_WARNINGS),1)
+	@$(MAKE) MAKE_EXTRA_OPTIONS=CLANG=1 $(EXAMPLES_TMP)
+	@rm -f $(BINARY_SIZE_LOGFILE)
+endif
+	@$(MAKE) $(EXAMPLES_TMP)
 
 summary: examples
 	@echo "========== Summary =========="
 	@([ ! -f summary ] && $(PRINT_LOGFILE) && echo "All tests OK" && touch summary) || \
           (echo "Failures:" && cat summary && false)
 
-clean: | $(EXAMPLESDIR)
+clean:
 	@rm -f summary $(BINARY_SIZE_LOGFILE)
 	@$(foreach example, $(EXAMPLES), \
            $(foreach target, $(EXAMPLESTARGETS), \

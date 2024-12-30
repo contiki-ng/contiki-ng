@@ -13,9 +13,6 @@
 [submodule "tools/cooja"]
 	path = tools/cooja
 	url = https://github.com/contiki-ng/cooja.git
-[submodule "os/net/security/tinydtls"]
-	path = os/net/security/tinydtls
-	url = https://github.com/contiki-ng/tinydtls.git
 [submodule "tests/18-coap-lwm2m/example-lwm2m-standalone"]
 	path = tests/18-coap-lwm2m/example-lwm2m-standalone
 	url = https://github.com/contiki-ng/example-lwm2m-standalone.git
@@ -43,3 +40,6 @@
 [submodule "arch/cpu/gecko/lib/gecko_sdk"]
 	path = arch/cpu/gecko/lib/gecko_sdk
 	url = https://github.com/SiliconLabs/gecko_sdk.git
+[submodule "os/net/security/mbedtls"]
+	path = os/net/security/mbedtls
+	url = https://github.com/Mbed-TLS/mbedtls.git

@@ -53,6 +53,9 @@
 #include "net/packetbuf.h"
 #include "net/netstack.h"
 #include "dev/radio.h"
+#include "net/mac/llsec802154.h"
+#include "net/netstack.h"
+#include "net/mac/framer/framer.h"
 
 #ifdef CSMA_CONF_SEND_SOFT_ACK
 #define CSMA_SEND_SOFT_ACK CSMA_CONF_SEND_SOFT_ACK
@@ -77,12 +80,14 @@
 /* just a default - with LLSEC, etc */
 #define CSMA_MAC_MAX_HEADER 21
 
+#if LLSEC802154_ENABLED
+#define CSMA_FRAMER csma_security_framer
+#else /* LLSEC802154_ENABLED */
+#define CSMA_FRAMER NETSTACK_FRAMER
+#endif /* LLSEC802154_ENABLED */
 
+extern const struct framer CSMA_FRAMER;
 extern const struct mac_driver csma_driver;
-
-/* CSMA security framer functions */
-int csma_security_create_frame(void);
-int csma_security_parse_frame(void);
 
 /* key management for CSMA */
 int csma_security_set_key(uint8_t index, const uint8_t *key);

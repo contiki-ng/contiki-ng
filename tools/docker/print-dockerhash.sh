@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+set -o pipefail
+
 # Only hash the directory the script resides in.
 DOCKERDIR=$(dirname "$(readlink -f "$0")")
 

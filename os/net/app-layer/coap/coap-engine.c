@@ -111,7 +111,7 @@ coap_call_handlers(coap_message_t *request, coap_message_t *response,
   return COAP_HANDLER_STATUS_CONTINUE;
 }
 /*---------------------------------------------------------------------------*/
-static CC_INLINE coap_handler_status_t
+static inline coap_handler_status_t
 call_service(coap_message_t *request, coap_message_t *response,
              uint8_t *buffer, uint16_t buffer_size, int32_t *offset)
 {
@@ -134,8 +134,10 @@ call_service(coap_message_t *request, coap_message_t *response,
 /*- Server Part -------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
-/* the discover resource is automatically included for CoAP */
+#if COAP_WELL_KNOWN_RESOURCE_ENABLED
+/* The discover resource is included by default for CoAP */
 extern coap_resource_t res_well_known_core;
+#endif
 
 /*---------------------------------------------------------------------------*/
 /*- Internal API ------------------------------------------------------------*/
@@ -202,7 +204,9 @@ coap_receive(const coap_endpoint_t *src,
         if(new_offset < 0) {
           LOG_DBG("Blockwise: block request offset overflow\n");
           coap_status_code = BAD_OPTION_4_02;
+#if COAP_MESSAGE_ON_ERROR
           coap_error_message = "BlockOutOfScope";
+#endif
           status = COAP_HANDLER_STATUS_CONTINUE;
         } else {
           /* call CoAP framework and check if found and allowed */
@@ -224,7 +228,9 @@ coap_receive(const coap_endpoint_t *src,
                 LOG_DBG("Block1 NOT IMPLEMENTED\n");
 
                 coap_status_code = NOT_IMPLEMENTED_5_01;
+#if COAP_MESSAGE_ON_ERROR
                 coap_error_message = "NoBlock1Support";
+#endif
 
                 /* client requested Block2 transfer */
               } else if(coap_is_option(message, COAP_OPTION_BLOCK2)) {
@@ -289,7 +295,9 @@ coap_receive(const coap_endpoint_t *src,
           }
       } else {
         coap_status_code = SERVICE_UNAVAILABLE_5_03;
+#if COAP_MESSAGE_ON_ERROR
         coap_error_message = "NoFreeTraBuffer";
+#endif
       } /* if(transaction buffer) */
 
       /* handle responses */
@@ -344,7 +352,11 @@ coap_receive(const coap_endpoint_t *src,
   } else {
     coap_message_type_t reply_type = COAP_TYPE_ACK;
 
+#if COAP_MESSAGE_ON_ERROR
     LOG_WARN("ERROR %u: %s\n", coap_status_code, coap_error_message);
+#else
+    LOG_WARN("ERROR %u\n", coap_status_code);
+#endif
     coap_clear_transaction(transaction);
 
     if(coap_status_code == PING_RESPONSE) {
@@ -357,8 +369,10 @@ coap_receive(const coap_endpoint_t *src,
     }
     coap_init_message(message, reply_type, coap_status_code,
                       message->mid);
+#if COAP_MESSAGE_ON_ERROR
     coap_set_payload(message, coap_error_message,
                      strlen(coap_error_message));
+#endif
     coap_sendto(src, payload, coap_serialize_message(message, payload));
   }
 
@@ -380,7 +394,9 @@ coap_engine_init(void)
   list_init(coap_handlers);
   list_init(coap_resource_services);
 
+#if COAP_WELL_KNOWN_RESOURCE_ENABLED
   coap_activate_resource(&res_well_known_core, ".well-known/core");
+#endif
 
   coap_transport_init();
   coap_init_connection();

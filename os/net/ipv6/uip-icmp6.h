@@ -178,9 +178,9 @@ uip_icmp6_echo_reply_callback_rm(struct uip_icmp6_echo_reply_notification *n);
 /* Generic ICMPv6 input handers */
 typedef struct uip_icmp6_input_handler {
   struct uip_icmp6_input_handler *next;
+  void (*handler)(void);
   uint8_t type;
   uint8_t icode;
-  void (*handler)(void);
 } uip_icmp6_input_handler_t;
 
 #define UIP_ICMP6_INPUT_SUCCESS     0
@@ -200,7 +200,7 @@ typedef struct uip_icmp6_input_handler {
  * message's code is "don't care"
  */
 #define UIP_ICMP6_HANDLER(name, type, code, func) \
-  static uip_icmp6_input_handler_t name = { NULL, type, code, func }
+  static uip_icmp6_input_handler_t name = { NULL, func, type, code }
 
 /**
  * \brief Handle an incoming ICMPv6 message

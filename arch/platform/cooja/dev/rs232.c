@@ -35,8 +35,6 @@
 #include <string.h>
 #include <stdio.h>
 
-const struct simInterface rs232_interface;
-
 #define SERIAL_BUF_SIZE 2048
 
 // COOJA variables
@@ -46,7 +44,7 @@ char simSerialReceivingFlag;
 
 static int (* input_handler)(unsigned char) = NULL;
 
-void simlog_char(char c);
+int simlog_char(char c);
 /*-----------------------------------------------------------------------------------*/
 void rs232_init(void) { }
 /*-----------------------------------------------------------------------------------*/
@@ -106,12 +104,4 @@ doInterfaceActionsBeforeTick(void)
   simSerialReceivingFlag = 0;
 }
 /*-----------------------------------------------------------------------------------*/
-static void
-doInterfaceActionsAfterTick(void)
-{
-}
-/*-----------------------------------------------------------------------------------*/
-
-SIM_INTERFACE(rs232_interface,
-	      doInterfaceActionsBeforeTick,
-	      doInterfaceActionsAfterTick);
+COOJA_PRE_TICK_ACTION(COOJA_RS232_INIT_PRIO, doInterfaceActionsBeforeTick);

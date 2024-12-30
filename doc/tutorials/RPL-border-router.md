@@ -92,7 +92,7 @@ To do this, follow these two steps:
 1. Program your node with `slip-radio` instead of `rpl-border-router`.
 1. On the host computer, go to `examples/rpl-border-router`
     * Build the example for the native platform `make TARGET=native`
-    * Run `sudo ./border-router.native fd00::1/64`. If the USB serial port is not found, specify it via option `-s`.
+    * Run `sudo build/native/border-router.native fd00::1/64`. If the USB serial port is not found, specify it via option `-s`.
 
 This approach has the advantage of running the BR on an unconstrained device.
 The main downside, however, is that it separates the low layers (radio and MAC) from the rest of the stack (NET and up).

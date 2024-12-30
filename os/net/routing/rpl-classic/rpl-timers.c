@@ -146,7 +146,8 @@ new_dio_interval(rpl_instance_t *instance)
   instance->dio_counter = 0;
 
   /* Schedule the timer. */
-  LOG_INFO("Scheduling DIO timer %lu ticks in future (Interval)\n", ticks);
+  LOG_INFO("Scheduling DIO timer %lu ticks in future (Interval)\n",
+           (unsigned long)ticks);
   ctimer_set(&instance->dio_timer, ticks, &handle_dio_timer, instance);
 
 #ifdef RPL_CALLBACK_NEW_DIO_INTERVAL
@@ -183,7 +184,7 @@ handle_dio_timer(void *ptr)
     }
     instance->dio_send = 0;
     LOG_DBG("Scheduling DIO timer %lu ticks in future (sent)\n",
-            instance->dio_next_delay);
+            (unsigned long)instance->dio_next_delay);
     ctimer_set(&instance->dio_timer, instance->dio_next_delay,
                handle_dio_timer, instance);
   } else {
@@ -316,7 +317,7 @@ handle_dao_timer(void *ptr)
 
   ctimer_stop(&instance->dao_timer);
 
-  if(etimer_expired(&instance->dao_lifetime_timer.etimer)) {
+  if(ctimer_expired(&instance->dao_lifetime_timer)) {
     set_dao_lifetime_timer(instance);
   }
 }
@@ -330,9 +331,7 @@ schedule_dao(rpl_instance_t *instance, clock_time_t latency)
     return;
   }
 
-  expiration_time = etimer_expiration_time(&instance->dao_timer.etimer);
-
-  if(!etimer_expired(&instance->dao_timer.etimer)) {
+  if(!ctimer_expired(&instance->dao_timer)) {
     LOG_DBG("DAO timer already scheduled\n");
   } else {
     if(latency != 0) {
@@ -360,6 +359,30 @@ void
 rpl_schedule_dao_immediately(rpl_instance_t *instance)
 {
   schedule_dao(instance, 0);
+}
+/*---------------------------------------------------------------------------*/
+static void
+handle_unicast_dao_timer(void *ptr_instance)
+{
+  rpl_instance_t *instance = (rpl_instance_t *)ptr_instance;
+  if(instance->unicast_dao_prefix != NULL && instance->unicast_dao_target) {
+    dao_output_target(instance->unicast_dao_target,
+                      instance->unicast_dao_prefix,
+                      instance->unicast_dao_lifetime);
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+rpl_schedule_unicast_dao_immediately(rpl_instance_t *instance,
+                                     rpl_parent_t *parent,
+                                     uip_ipaddr_t *prefix,
+                                     uint8_t lifetime)
+{
+  instance->unicast_dao_target = parent;
+  instance->unicast_dao_prefix = prefix;
+  instance->unicast_dao_lifetime = lifetime;
+  ctimer_set(&instance->unicast_dao_timer, 0,
+             handle_unicast_dao_timer, instance);
 }
 /*---------------------------------------------------------------------------*/
 void

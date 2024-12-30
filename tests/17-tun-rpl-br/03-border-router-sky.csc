@@ -19,9 +19,9 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <description>Sky Mote Type #sky1</description>
       <source>[CONTIKI_DIR]/examples/rpl-border-router/border-router.c</source>
-      <commands>make clean TARGET=sky
-make -j$(CPUS) border-router.sky TARGET=sky</commands>
-      <firmware>[CONTIKI_DIR]/examples/rpl-border-router/border-router.sky</firmware>
+      <commands>$(MAKE) clean TARGET=sky
+$(MAKE) -j$(CPUS) border-router.sky TARGET=sky</commands>
+      <firmware>[CONTIKI_DIR]/examples/rpl-border-router/build/sky/border-router.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
@@ -52,9 +52,9 @@ make -j$(CPUS) border-router.sky TARGET=sky</commands>
       org.contikios.cooja.mspmote.SkyMoteType
       <description>Sky Mote Type #sky2</description>
       <source>[CONTIKI_DIR]/examples/hello-world/hello-world.c</source>
-      <commands>make clean TARGET=sky
-make -j$(CPUS) hello-world.sky TARGET=sky</commands>
-      <firmware>[CONTIKI_DIR]/examples/hello-world/hello-world.sky</firmware>
+      <commands>$(MAKE) clean TARGET=sky
+$(MAKE) -j$(CPUS) hello-world.sky TARGET=sky</commands>
+      <firmware>[CONTIKI_DIR]/examples/hello-world/build/sky/hello-world.sky</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>

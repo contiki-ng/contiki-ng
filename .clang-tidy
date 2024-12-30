@@ -1,0 +1,44 @@
+# FIXME: disabled checks that should be re-enabled:
+#  * readability-identifier-naming
+#  * misc-redundant-expression
+#  * llvm-include-order
+#  * llvm-else-after-return
+Checks: '-*,clang-diagnostic-*,llvm-*,misc-*,-misc-no-recursion,-misc-unused-parameters,-misc-non-private-member-variables-in-classes,readability-identifier-naming,-llvm-header-guard,-readability-identifier-naming,-misc-redundant-expression,-llvm-include-order,-llvm-else-after-return'
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*'
+# Configure naming to lower_case, but allow UPPER_CASE for certain places.
+CheckOptions:
+  - key:             readability-identifier-naming.ClassCase
+    value:           lower_case
+  - key:             readability-identifier-naming.ConstantCase
+    value:           lower_case
+  - key:             readability-identifier-naming.ConstantIgnoredRegexp
+    value:           "^[A-Z0-9_]*$"
+  - key:             readability-identifier-naming.EnumCase
+    value:           lower_case
+  - key:             readability-identifier-naming.EnumConstantCase
+    value:           lower_case
+  - key:             readability-identifier-naming.EnumConstantIgnoredRegexp
+    value:           "^[A-Z0-9_]*$"
+  - key:             readability-identifier-naming.FunctionCase
+    value:           lower_case
+  - key:             readability-identifier-naming.FunctionIgnoredRegexp
+    value:           "^_.*$"
+  - key:             readability-identifier-naming.MemberCase
+    value:           lower_case
+  - key:             readability-identifier-naming.ParameterCase
+    value:           lower_case
+  - key:             readability-identifier-naming.UnionCase
+    value:           lower_case
+  - key:             readability-identifier-naming.VariableCase
+    value:           lower_case
+  - key:             readability-identifier-naming.StaticConstantCase
+    value:           lower_case
+  - key:             readability-identifier-naming.StaticConstantIgnoredRegexp
+    value:           "^[A-Z0-9_]*$"
+  - key:             readability-identifier-naming.StaticVariableCase
+    value:           lower_case
+  - key:             readability-identifier-naming.StaticVariableIgnoredRegexp
+    value:           "^[A-Z0-9_]*$"
+  - key:             readability-identifier-naming.IgnoreMainLikeFunctions
+    value:           1

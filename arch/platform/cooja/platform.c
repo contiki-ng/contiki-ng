@@ -56,7 +56,6 @@
 
 #include "dev/eeprom.h"
 #include "dev/serial-line.h"
-#include "dev/cooja-radio.h"
 #include "dev/button-sensor.h"
 #include "dev/pir-sensor.h"
 #include "dev/vib-sensor.h"
@@ -64,41 +63,23 @@
 #include "dev/button-hal.h"
 #include "dev/gpio-hal.h"
 
-#include "sys/node-id.h"
-#include "services/rpl-border-router/rpl-border-router.h"
-#if BUILD_WITH_ORCHESTRA
-#include "orchestra.h"
-#endif /* BUILD_WITH_ORCHESTRA */
-#if BUILD_WITH_SHELL
-#include "serial-shell.h"
-#endif /* BUILD_WITH_SHELL */
-
 #if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
-/* Simulation mote interfaces */
-SIM_INTERFACE_NAME(moteid_interface);
-SIM_INTERFACE_NAME(vib_interface);
-SIM_INTERFACE_NAME(rs232_interface);
-SIM_INTERFACE_NAME(simlog_interface);
-SIM_INTERFACE_NAME(beep_interface);
-SIM_INTERFACE_NAME(radio_interface);
-SIM_INTERFACE_NAME(button_interface);
-SIM_INTERFACE_NAME(pir_interface);
-SIM_INTERFACE_NAME(clock_interface);
-SIM_INTERFACE_NAME(leds_interface);
-SIM_INTERFACE_NAME(cfs_interface);
-SIM_INTERFACE_NAME(eeprom_interface);
-SIM_INTERFACES(&vib_interface, &moteid_interface, &rs232_interface, &simlog_interface, &beep_interface, &radio_interface, &button_interface, &pir_interface, &clock_interface, &leds_interface, &cfs_interface, &eeprom_interface);
-
 /* Sensors */
-SENSORS(&button_sensor, &pir_sensor, &vib_sensor);
+SENSORS(&pir_sensor, &vib_sensor);
 
 /*---------------------------------------------------------------------------*/
 /* Needed since the new LEDs API does not provide this prototype */
 void leds_arch_init(void);
+/*---------------------------------------------------------------------------*/
+char simDontFallAsleep = 0;
+
+int simProcessRunValue;
+int simEtimerPending;
+clock_time_t simEtimerNextExpirationTime;
 /*---------------------------------------------------------------------------*/
 static void
 set_lladdr(void)
@@ -123,7 +104,6 @@ platform_init_stage_one()
 {
   gpio_hal_init();
   leds_arch_init();
-  return;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -136,8 +116,6 @@ platform_init_stage_two()
 void
 platform_init_stage_three()
 {
-  /* Initialize eeprom */
-  eeprom_init();
   /* Start serial process */
   serial_line_init();
 }

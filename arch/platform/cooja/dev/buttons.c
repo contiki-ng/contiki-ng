@@ -45,7 +45,6 @@
 char simButtonChanged;
 char simButtonIsDown;
 char simButtonIsActive = 1;
-const struct simInterface button_interface;
 /*---------------------------------------------------------------------------*/
 /* The cooja virtual button on pin COOJA_BTN_PIN, active low */
 BUTTON_HAL_BUTTON(button_user, "User button", COOJA_BTN_PIN,
@@ -85,38 +84,4 @@ doInterfaceActionsBeforeTick(void)
   simButtonChanged = 0;
 }
 /*---------------------------------------------------------------------------*/
-static void
-doInterfaceActionsAfterTick(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-SIM_INTERFACE(button_interface,
-              doInterfaceActionsBeforeTick,
-              doInterfaceActionsAfterTick);
-/*---------------------------------------------------------------------------*/
-/*
- * Everything below needed to satisfy Cooja build dependency, which can be
- * removed when we change Cooja to no longer expect a button_sensor symbol
- */
-#include "lib/sensors.h"
-#include "dev/button-sensor.h"
-/*---------------------------------------------------------------------------*/
-static int
-value(int type)
-{
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
-static int
-configure(int type, int c)
-{
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
-static int
-status(int type)
-{
-  return 0;
-}
-/*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(button_sensor, BUTTON_SENSOR, value, configure, status);
+COOJA_PRE_TICK_ACTION(COOJA_BUTTON_INIT_PRIO, doInterfaceActionsBeforeTick);

@@ -131,13 +131,13 @@ PROCESS_THREAD(test_weather_meter_sensors, ev, data)
 #if WEATHER_METER_RAIN_RETURN_TICKS
     rain *= WEATHER_METER_AUX_RAIN_MM;
     if(rain > (WEATHER_METER_AUX_RAIN_MM * 3)) {
-      printf("Rain: %lu.%lu mm, ", (rain / 10000), (rain % 10000));
+      printf("Rain: %" PRIu32 ".%" PRIu32 " mm, ", (rain / 10000), (rain % 10000));
 #else
     if(rain >= 10) {
-      printf("Rain: %u.%u mm, ", (rain / 10), (rain % 10));
+      printf("Rain: %" PRIu32 ".%" PRIu32 " mm, ", (rain / 10), (rain % 10));
 #endif
     } else {
-      printf("Rain: 0.%lu mm, ", rain);
+      printf("Rain: 0.%" PRIu32 " mm, ", rain);
     }
 
     printf("Wind dir: %u.%01u deg, ", (wind_dir / 10), (wind_dir % 10));

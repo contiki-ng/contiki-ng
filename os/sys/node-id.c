@@ -39,18 +39,6 @@
 
 #include "contiki.h"
 #include "sys/node-id.h"
-#include "net/linkaddr.h"
-#include "services/deployment/deployment.h"
 
 uint16_t node_id = 0;
 
-void
-node_id_init(void) {
-#if BUILD_WITH_DEPLOYMENT
-  deployment_init();
-#else /* BUILD_WITH_DEPLOYMENT */
-  /* Initialize with a default value derived from linkaddr */
-  node_id = linkaddr_node_addr.u8[LINKADDR_SIZE - 1]
-            + (linkaddr_node_addr.u8[LINKADDR_SIZE - 2] << 8);
-#endif /* BUILD_WITH_DEPLOYMENT */
-}

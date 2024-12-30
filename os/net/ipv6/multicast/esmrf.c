@@ -137,7 +137,7 @@ icmp_output()
 
   struct multicast_on_behalf *mob;
   mob = (struct multicast_on_behalf *)UIP_ICMP_PAYLOAD;
-  memcpy(&mob->mcast_payload, &uip_buf[UIP_IPUDPH_LEN], uip_slen);
+  memmove(&mob->mcast_payload, &uip_buf[UIP_IPUDPH_LEN], uip_slen);
 
   UIP_IP_BUF->vtc = 0x60;
   UIP_IP_BUF->tcflow = 0;
@@ -222,9 +222,9 @@ icmp_input()
   c->rport = locmobptr->mcast_port;
   uip_slen = loclen;
   uip_udp_conn=c;
-  memcpy(&uip_buf[UIP_IPUDPH_LEN], locmobptr->mcast_payload,
-         loclen > UIP_BUFSIZE - UIP_IPUDPH_LEN?
-         UIP_BUFSIZE - UIP_IPUDPH_LEN: loclen);
+  memmove(&uip_buf[UIP_IPUDPH_LEN], locmobptr->mcast_payload,
+          loclen > UIP_BUFSIZE - UIP_IPUDPH_LEN ?
+          UIP_BUFSIZE - UIP_IPUDPH_LEN : loclen);
 
   uip_process(UIP_UDP_SEND_CONN);
 

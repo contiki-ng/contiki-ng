@@ -279,9 +279,6 @@ get_iq_lsbs(radio_value_t *value)
   /* Wait on RSSI_VALID */
   while((REG(RFCORE_XREG_RSSISTAT) & RFCORE_XREG_RSSISTAT_RSSI_VALID) == 0);
 
-  /* Wait until the channel seems clear for better randomness */
-  while(!(REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_CCA));
-
   /* Read I/Q LSBs */
   *value = REG(RFCORE_XREG_RFRND)
       & (RFCORE_XREG_RFRND_IRND | RFCORE_XREG_RFRND_QRND);
@@ -1157,8 +1154,7 @@ PROCESS_THREAD(cc2538_rf_process, ev, data)
   PROCESS_BEGIN();
 
   while(1) {
-    /* Only if we are not in poll mode oder we are in poll mode and transceiver has to be reset */
-    PROCESS_YIELD_UNTIL((!poll_mode || (poll_mode && (rf_flags & RF_MUST_RESET))) && (ev == PROCESS_EVENT_POLL));
+    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
 
     if(!poll_mode) {
       packetbuf_clear();

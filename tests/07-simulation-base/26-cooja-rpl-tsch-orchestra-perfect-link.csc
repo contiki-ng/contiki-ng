@@ -18,8 +18,8 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>RPL/TSCH Node</description>
       <source>[CONTIKI_DIR]/examples/6tisch/simple-node/node.c</source>
-      <commands>make TARGET=cooja clean
-make -j$(CPUS) node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=1 MAKE_WITH_STORING_ROUTING=1 MAKE_WITH_LINK_BASED_ORCHESTRA=1 DEFINES=LINK_STATS_CONF_PACKET_COUNTERS=1,TSCH_CONF_KEEPALIVE_TIMEOUT=1024,TSCH_CONF_MAX_KEEPALIVE_TIMEOUT=1024,ORCHESTRA_CONF_UNICAST_MIN_CHANNEL_OFFSET=2,ORCHESTRA_CONF_EB_MIN_CHANNEL_OFFSET=1,ORCHESTRA_CONF_EB_MAX_CHANNEL_OFFSET=1</commands>
+      <commands>$(MAKE) TARGET=cooja clean
+$(MAKE) -j$(CPUS) node.cooja TARGET=cooja MAKE_WITH_ORCHESTRA=1 MAKE_WITH_STORING_ROUTING=1 MAKE_WITH_LINK_BASED_ORCHESTRA=1 DEFINES=LINK_STATS_CONF_PACKET_COUNTERS=1,TSCH_CONF_KEEPALIVE_TIMEOUT=1024,TSCH_CONF_MAX_KEEPALIVE_TIMEOUT=1024,ORCHESTRA_CONF_UNICAST_MIN_CHANNEL_OFFSET=2,ORCHESTRA_CONF_EB_MIN_CHANNEL_OFFSET=1,ORCHESTRA_CONF_EB_MAX_CHANNEL_OFFSET=1</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

@@ -86,7 +86,8 @@ res_any_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
   if(coap_get_header_content_format(request, &content_format)) {
     strpos += snprintf((char *)buffer, REST_MAX_CHUNK_SIZE + 1, "CF %u\n", content_format);
   }
-  if(strpos <= REST_MAX_CHUNK_SIZE && (len = coap_get_header_accept(request, &content_format))) {
+  if(strpos <= REST_MAX_CHUNK_SIZE &&
+     coap_get_header_accept(request, &content_format)) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "Ac %u\n", content_format);
     /* Some getters such as for ETag or Location are omitted, as these options should not appear in a request.
      * Max-Age might appear in HTTP requests or used for special purposes in CoAP. */
@@ -120,10 +121,12 @@ res_any_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
   if(strpos <= REST_MAX_CHUNK_SIZE && coap_pkt->token_len > 0) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "To 0x");
     int index = 0;
-    for(index = 0; index < coap_pkt->token_len; ++index) {
+    for(index = 0; index < coap_pkt->token_len && strpos <= REST_MAX_CHUNK_SIZE; ++index) {
       strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "%02X", coap_pkt->token[index]);
     }
-    strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "\n");
+    if(strpos <= REST_MAX_CHUNK_SIZE) {
+      strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "\n");
+    }
   }
 
   if(strpos <= REST_MAX_CHUNK_SIZE && coap_is_option(coap_pkt, COAP_OPTION_OBSERVE)) {
@@ -132,10 +135,12 @@ res_any_handler(coap_message_t *request, coap_message_t *response, uint8_t *buff
   if(strpos <= REST_MAX_CHUNK_SIZE && coap_is_option(coap_pkt, COAP_OPTION_ETAG)) {
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "ET 0x");
     int index = 0;
-    for(index = 0; index < coap_pkt->etag_len; ++index) {
+    for(index = 0; index < coap_pkt->etag_len && strpos <= REST_MAX_CHUNK_SIZE; ++index) {
       strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "%02X", coap_pkt->etag[index]);
     }
-    strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "\n");
+    if(strpos <= REST_MAX_CHUNK_SIZE) {
+      strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "\n");
+    }
   }
   if(strpos <= REST_MAX_CHUNK_SIZE && coap_get_header_block2(request, &block_num, &block_more, &block_size, NULL)) { /* This getter allows NULL pointers to get only a subset of the block parameters. */
     strpos += snprintf((char *)buffer + strpos, REST_MAX_CHUNK_SIZE - strpos + 1, "B2 %lu%s (%u)\n", (unsigned long) block_num, block_more ? "+" : "", block_size);

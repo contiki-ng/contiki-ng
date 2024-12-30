@@ -33,11 +33,33 @@
 
 #include "contiki.h"
 
-/* Simulation interface structure */
-struct simInterface {
-  void         (* doActionsBeforeTick) (void);
-  void         (* doActionsAfterTick)  (void);
+#define COOJA_VIB_INIT_PRIO 150
+#define COOJA_MOTEID_INIT_PRIO 160
+#define COOJA_RS232_INIT_PRIO 170
+#define COOJA_RADIO_INIT_PRIO 180
+#define COOJA_BUTTON_INIT_PRIO 190
+#define COOJA_PIR_INIT_PRIO 200
+#define COOJA_IP_INIT_PRIO 210
+
+struct cooja_tick_action {
+  struct cooja_tick_action *next;
+  void (*action)(void);
 };
+
+#define COOJA_POST_TICK_ACTION(prio, handler) \
+  COOJA_TICK_ACTION(post, (prio), (handler))
+
+#define COOJA_PRE_TICK_ACTION(prio, handler) \
+  COOJA_TICK_ACTION(pre, (prio), (handler))
+
+#define COOJA_TICK_ACTION(kind, prio, handler) \
+  static struct cooja_tick_action kind##_tick_action = { NULL, (handler) }; \
+  CC_CONSTRUCTOR((prio)) static void \
+  add_##kind##_tick_action(void) \
+  { \
+    void cooja_add_##kind##_tick_action(struct cooja_tick_action *handler); \
+    cooja_add_##kind##_tick_action(&kind##_tick_action); \
+  }
 
 // Variable for keeping the last process_run() return value
 extern int simProcessRunValue;
@@ -47,21 +69,5 @@ extern clock_time_t simCurrentTime;
 
 // Variable that when set to != 0, stops the mote from falling asleep next tick
 extern char simDontFallAsleep;
-
-// Definition for registering an interface
-#define SIM_INTERFACE(name, doActionsBeforeTick, doActionsAfterTick) \
-const struct simInterface name = { doActionsBeforeTick, doActionsAfterTick }
-
-// Definition for getting access to simulation interface
-#define SIM_INTERFACE_NAME(name) \
-extern const struct simInterface name
-
-// Definition for creating all interface (from main file)
-#define SIM_INTERFACES(...) \
-const struct simInterface *simInterfaces[] = {__VA_ARGS__, NULL};
-
-// Functions which polls all interfaces
-void doActionsBeforeTick();
-void doActionsAfterTick();
 
 #endif /* SIMENVCHANGE_H_ */

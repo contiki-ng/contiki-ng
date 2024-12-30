@@ -20,6 +20,13 @@ CONTIKI_CPU_SOURCEFILES += linkaddr-arch.c
 CONTIKI_CPU_SOURCEFILES += reset-arch.c
 CONTIKI_CPU_SOURCEFILES += slip-arch.c
 
+ifeq ($(TRUSTZONE_SECURE_BUILD),1)
+  CFLAGS += -DNRF_TRUSTZONE_SECURE=1
+  CONTIKI_CPU_SOURCEFILES += spu.c
+else ifeq ($(TRUSTZONE_SECURE_BUILD),0)
+  CFLAGS += -DNRF_TRUSTZONE_NONSECURE=1
+endif
+
 # Overrides
 CONTIKI_CPU_SOURCEFILES += random.c
 
@@ -43,7 +50,6 @@ CFLAGS += -DNRFX_UARTE0_ENABLED
 ifeq ($(CLANG),0)
   LDFLAGS += --specs=nano.specs
 endif
-LDFLAGS += -L $(NRFX_ROOT)/mdk
 LDFLAGS += -Wl,--defsym=_stack=end
 LDFLAGS += -Wl,--defsym=_stack_origin=__stack
 LDFLAGS += -Wl,--defsym=_heap=end
@@ -118,7 +124,7 @@ ifeq ($(NRF_NATIVE_USB),1)
   CONTIKI_CPU_SOURCEFILES += usb-arch.c
 
   CFLAGS += -DPLATFORM_DBG_CONF_USB=1
-  CFLAGS += -DPLAFTORM_SLIP_ARCH_CONF_USB=1
+  CFLAGS += -DPLATFORM_SLIP_ARCH_CONF_USB=1
   CFLAGS += -DNRF_NATIVE_USB=1
 endif
 
@@ -141,7 +147,7 @@ endif
 ifeq (, $(shell which $(NRFJPROG)))
 	$(error Could not find nrfjprog "$(NRFJPROG)", please install it)
 else
-	$(NRFJPROG) $(NRFJPROG_OPTIONS) $(NRFJPROG_FLAGS) --sectorerase --program $<
+	$(NRFJPROG) $(NRFJPROG_OPTIONS) $(NRFJPROG_FLAGS) --sectorerase --verify --program $<
 	$(NRFJPROG) $(NRFJPROG_OPTIONS) $(NRFJPROG_FLAGS) --reset
 endif
 
@@ -159,7 +165,7 @@ ifneq ($(filter nrf-upload-sequence,$(MAKECMDGOALS)),)
 endif
 
 nrf-upload-snr.%:
-	$(NRFJPROG) $(NRFJPROG_OPTIONS) --snr $* --sectorerase --program $(HEX_FILE)
+	$(NRFJPROG) $(NRFJPROG_OPTIONS) --snr $* --sectorerase --verify --program $(HEX_FILE)
 	$(NRFJPROG) $(NRFJPROG_OPTIONS) --snr $* --reset
 
 nrf-upload-sequence: $(foreach SNR, $(NRF_SNRS), nrf-upload-snr.$(SNR))

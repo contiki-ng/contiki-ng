@@ -2,16 +2,39 @@ MAKE_WITH_DTLS ?= 0
 
 ifeq ($(MAKE_WITH_DTLS),1)
 
- TINYDTLS_PATH := os/net/security/tinydtls
+ # Use Mbed TLS library as default
+  MBEDTLS_PATH := os/net/security/mbedtls
 
- ifeq (${wildcard $(CONTIKI)/$(TINYDTLS_PATH)/Makefile},)
-  ${error Could not find the tinyDTLS submodule. Please run "git submodule update --init" and try again}
- endif
+  CFLAGS += -DMBEDTLS_CONFIG_FILE=\"os/net/app-layer/coap/mbedtls-support/mbedtls-config.h\"
+
+  ifeq ($(wildcard $(CONTIKI)/$(MBEDTLS_PATH)/Makefile),)
+   ${error Could not find the MbedTLS submodule. Please run "git submodule update --init" and try again}
+  endif
+
+  MODULES += os/net/app-layer/coap/mbedtls-support
+  MODULES += $(MBEDTLS_PATH) $(addprefix $(MBEDTLS_PATH)/,library include)
+
+  MODULES += $(addprefix $(MBEDTLS_PATH)/tf-psa-crypto/,core include)
+  MODULES += $(addprefix $(MBEDTLS_PATH)/tf-psa-crypto/drivers/builtin/,src include)
+
+  ifeq ($(MAKE_COAP_DTLS_WITH_CERT), 1)
+   CFLAGS += -DCOAP_DTLS_CONF_WITH_CERT=1
+  endif
+
+  ifeq ($(MAKE_COAP_DTLS_WITH_PSK), 1)
+   CFLAGS += -DCOAP_DTLS_CONF_WITH_PSK=1
+  endif
+
+  ifeq ($(MAKE_COAP_DTLS_WITH_SERVER), 1)
+   CFLAGS += -DCOAP_DTLS_CONF_WITH_SERVER=1
+  endif
+
+  ifeq ($(MAKE_COAP_DTLS_WITH_CLIENT), 1)
+   CFLAGS += -DCOAP_DTLS_CONF_WITH_CLIENT=1
+  endif
+
 
  CFLAGS += -DWITH_DTLS=1
-
- MODULES += os/net/app-layer/coap/tinydtls-support
- MODULES += $(TINYDTLS_PATH) ${addprefix $(TINYDTLS_PATH)/,aes sha2 ecc}
 
  MAKE_COAP_DTLS_KEYSTORE_NONE   := 0
  MAKE_COAP_DTLS_KEYSTORE_SIMPLE := 1

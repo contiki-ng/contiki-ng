@@ -10,7 +10,7 @@ For a native install, see [doc:install-linux] or [doc:install-osx].
 Let us use the example under `examples/coap/coap-examples-server`.
 We will try it on a native server here, but the same thing can be done on a device, as described in [tutorial:ping].
 ```bash
-$ make && sudo ./coap-example-server.native
+$ make && sudo build/native/coap-example-server.native
 ```
 
 You should get:

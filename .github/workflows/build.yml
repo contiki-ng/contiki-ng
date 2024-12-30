@@ -11,33 +11,65 @@ on:
   pull_request:
     branches: [ master, develop, release-* ]
 
+
+# When a PR is updated, cancel the jobs from the previous version. Merges
+# do not define head_ref, so use run_id to never cancel those jobs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 # We use a single job with a matrix with elements corresponding to our tests
 # The job will be replicated as many times as there are elements in the matrix
 jobs:
   Contiki-NG:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
     # Longest test in July 2022 takes 15 minutes. Building the docker image
     # takes 10 minutes.
     timeout-minutes: 45
     # Common environment variables
     env:
-        OUT_OF_TREE_TEST_PATH: out-of-tree-tests
-        OUT_OF_TREE_TEST_VER: 2869ae7
         DOCKER_BASE_IMG: contiker/contiki-ng
+        HOMEBREW_NO_INSTALL_CLEANUP: 1
+        HOMEBREW_NO_ANALYTICS: 1
 
     strategy:
         # Always run all jobs in the matrix, even if one fails
         fail-fast: false
         matrix:
-            test: [ documentation, compile-base, compile-arm-ports, compile-tools, out-of-tree-build, rpl-lite, rpl-classic, simulation-base, ipv6, ieee802154, tun-rpl-br, script-base, native-runs, ipv6-nbr, coap-lwm2m, packet-parsing ]
+            os: [ ubuntu-latest, macos-13 ]
+            test: [ documentation, compile-base, compile-arm-ports, rpl-lite, rpl-classic, renode-simulation, simulation-base, ipv6, ieee802154, tun-rpl-br, script-base, native-runs, ipv6-nbr, coap-lwm2m, packet-parsing ]
+            exclude:
+              # Renode tests done by Linux (more CI runners available).
+              - os: macos-13
+                test: renode-simulation
+              # Runs on x86, already have intermittent failures there.
+              - os: macos-13
+                test: simulation-base
+              # No arm-none-eabi-gcc installed.
+              - os: macos-13
+                test: compile-arm-ports
+              # Uses zoul as dummy target, fails on missing arm-none-eabi-gcc.
+              # Tests/build system should be fixed.
+              - os: macos-13
+                test: tun-rpl-br
+              # tests/utils.sh: kill_bg contains ps --ppid (not portable).
+              - os: macos-13
+                test: native-runs
+              - os: macos-13
+                test: coap-lwm2m
+              # Failed simulations for no obvious reason, Cooja issue?
+              - os: macos-13
+                test: ieee802154
 
+    # Default job name is too long to be visible in the "Checks" tab.
+    name: ${{ matrix.test }}/${{ matrix.os == 'macos-13' && 'macos-x64' || matrix.os }}
+    # The type of runner that the job will run on
+    runs-on: ${{ matrix.os }}
     # Checks-out the contiki-ng $GITHUB_WORKSPACE, so your job can access it
     steps:
 
     # Checks out the repo with full history
     - name: Checkout github repo (+ download lfs dependencies)
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
           fetch-depth: 2
           submodules: 'recursive'
@@ -46,11 +78,43 @@ jobs:
     - name: Checkout LFS objects
       run: git lfs checkout
 
+    # Install sha256 command on macOS so print-dockerhash.sh can work.
+    - name: install macOS software
+      if: matrix.os == 'macos-13'
+      run: |
+        brew install coreutils make mosquitto mtr rlwrap
+        # Doxygen version needs to be in sync with Doxyfile.
+        wget https://github.com/Homebrew/homebrew-core/raw/f434ee2dce9ae11b27d7450a7cfb7af775a47719/Formula/d/doxygen.rb
+        brew install doxygen.rb
+        rm doxygen.rb
+        python3 -m pip -q install matplotlib
+        python3 -m pip -q install -r tools/docker/files/rtd_requirements.txt
+        wget -nv https://github.com/pjonsson/msp430gcc-binary/releases/download/v1.1/mspgcc-4.7.4-macos-x86_64.tar.bz2
+        sudo tar xf mspgcc*.tar.bz2 -C /usr/local --strip-components=1 --no-same-owner
+        # Homebrew prefix is different for x86-64 and aarch64.
+        export HOMEBREW_PREFIX=/usr/local
+        # Put Homebrew installed make, and tar first in PATH so "make"
+        # is version 4.x and "tar" is GNU tar.
+        echo "export PATH=$HOMEBREW_PREFIX/opt/make/libexec/gnubin:$HOMEBREW_PREFIX/opt/gnu-tar/libexec/gnubin:$PATH" >> ~/.profile
+        echo "export PATH=$HOMEBREW_PREFIX/opt/make/libexec/gnubin:$HOMEBREW_PREFIX/opt/gnu-tar/libexec/gnubin:$PATH" >> ~/.bashrc
+
+    # Valgrind takes a long time to build, so only install when required.
+    - name: install macOS valgrind
+      if: matrix.os == 'macos-13' && matrix.test == 'native-runs'
+      run: |
+        # 3 cores on CI runners, so use make -j6 for homebrew.
+        export HOMEBREW_MAKE_JOBS=6
+        brew tap LouisBrunner/valgrind
+        brew install --HEAD LouisBrunner/valgrind/valgrind
+
     # Construct the correct docker container image tag corresponding to this build
     - name: Figure out correct docker image tag
       run: |
+        # Ensure GNU tar is first in path on macOS.
+        [ "$(uname)" = "Linux" ] || source ~/.bashrc
         tools/docker/print-dockerhash.sh >> $GITHUB_ENV
         echo COOJA_COMMIT=$(git -C tools/cooja log -1 --oneline | cut -d" " -f1) >> $GITHUB_ENV
+        echo SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct) >> $GITHUB_ENV
 
     # Try to download the image from dockerhub. If it works, use it.
     #
@@ -63,6 +127,7 @@ jobs:
     # the new image to dockerhub. This will only happen for builds against
     # contiki-ng/contiki-ng, not for builds on forks.
     - name: Try to download image from dockerhub
+      if: matrix.os == 'ubuntu-latest'
       run: |
         echo "Using $DOCKER_IMG for this run"
         echo "Pulling image $DOCKER_IMG from dockerhub";
@@ -97,41 +162,31 @@ jobs:
           docker push $DOCKER_BASE_IMG:latest
         fi
 
-    # Clone the repo used for out-of-tree builds if required
-    - name: Clone the repo used for out-of-tree builds if required
-      if: matrix.test == 'out-of-tree-build'
-      run: |
-        mkdir -p $OUT_OF_TREE_TEST_PATH
-        git clone --depth 1 https://github.com/contiki-ng/out-of-tree-tests $OUT_OF_TREE_TEST_PATH
-        # Check out desired hash
-        (cd $OUT_OF_TREE_TEST_PATH && git checkout $OUT_OF_TREE_TEST_VER)
-        # Set up docker mount
-        echo DOCKER_ARGS=-v `pwd`/$OUT_OF_TREE_TEST_PATH:/home/user/out-of-tree-tests >> $GITHUB_ENV
-
     # The docker image contains ccache, but the ccache action uses the ccache
     # outside docker for statistics, so install the same ccache version.
     # Install in /usr/bin so the ccache action gets the expected environment.
     - name: install ccache
+      if: matrix.os == 'ubuntu-latest'
       run: |
-        wget -nv https://github.com/ccache/ccache/releases/download/v4.8.2/ccache-4.8.2-linux-x86_64.tar.xz
-        sudo tar xf ccache-4.8.2-linux-x86_64.tar.xz -C /usr/bin --strip-components=1 --no-same-owner ccache-4.8.2-linux-x86_64/ccache
+        wget -nv https://github.com/ccache/ccache/releases/download/v4.10.2/ccache-4.10.2-linux-x86_64.tar.xz
+        sudo tar xf ccache-4.10.2-linux-x86_64.tar.xz -C /usr/bin --strip-components=1 --no-same-owner ccache-4.10.2-linux-x86_64/ccache
         rm -f ccache-*-linux-x86_64.tar.xz
 
     # Set the max-size according to the output from "ccache -v -s" after
     # running the largest test in a newly started docker container.
-    # The largest test is 02-compile-arm-ports in September 2022.
+    # The largest test is 02-compile-arm-ports in July 2023.
     #
     # IMPORTANT: cache size must also be updated in the "Execute tests" section.
     - name: ccache
-      uses: hendrikmuhs/ccache-action@v1.2.9
+      uses: hendrikmuhs/ccache-action@v1.2.14
       with:
         key: compilation-${{ matrix.test }}
-        max-size: 140M
+        max-size: 160M
 
     # Keep a cache of the Cooja build files and gradle files. Keyed on Cooja
     # repo commit to ensure clean rebuild when updating Cooja submodule.
     - name: Cache Cooja Artifacts
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           tools/cooja/build
@@ -141,6 +196,7 @@ jobs:
 
     # Fire up the container and run corresponding tests
     - name: Execute tests
+      if: matrix.os == 'ubuntu-latest'
       run: |
         # Cache restores write-time timestamps, update timestamps to be more
         # recent than the files that were just checked out. Ensure the command
@@ -149,6 +205,31 @@ jobs:
         # Run test
         # FIXME: (2023) Remove "ccache -c", workaround for cache growing
         #        too large from ccache CI/ccache configuration mismatch.
-        docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 -e GITHUB_JOB -e GITHUB_REF -e GITHUB_SHA -e GITHUB_REPOSITORY -e GITHUB_REPOSITORY_OWNER -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e GITHUB_RETENTION_DAYS -e GITHUB_ACTOR -e GITHUB_WORKFLOW -e GITHUB_HEAD_REF -e GITHUB_BASE_REF -e GITHUB_EVENT_NAME -e GITHUB_SERVER_URL -e GITHUB_API_URL -e GITHUB_GRAPHQL_URL -e GITHUB_WORKSPACE -e GITHUB_ACTION -e GITHUB_EVENT_PATH -e GITHUB_ACTION_REPOSITORY -e GITHUB_ACTION_REF -e GITHUB_PATH -e GITHUB_ENV -e RUNNER_OS -e RUNNER_TOOL_CACHE -e RUNNER_TEMP -e RUNNER_WORKSPACE -e ACTIONS_RUNTIME_URL -e ACTIONS_RUNTIME_TOKEN -e ACTIONS_CACHE_URL -e GITHUB_ACTIONS=true -e CI=true -e GRADLE_USER_HOME=/home/user/contiki-ng/tools/cooja/.gradle_home -e LOCAL_UID=$(id -u $USER) -e LOCAL_GID=$(id -g $USER) $DOCKER_ARGS -v `pwd`:/home/user/contiki-ng -v $GITHUB_WORKSPACE/.ccache:/home/user/.ccache $DOCKER_IMG bash --login -c "source ../.bash_aliases && ccache --set-config=max_size='140M' && cimake -C tests/??-${{ matrix.test }}; ccache -c"
+        docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 -e GITHUB_JOB -e GITHUB_REF -e GITHUB_SHA -e GITHUB_REPOSITORY -e GITHUB_REPOSITORY_OWNER -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e GITHUB_RETENTION_DAYS -e GITHUB_ACTOR -e GITHUB_WORKFLOW -e GITHUB_HEAD_REF -e GITHUB_BASE_REF -e GITHUB_EVENT_NAME -e GITHUB_SERVER_URL -e GITHUB_API_URL -e GITHUB_GRAPHQL_URL -e GITHUB_WORKSPACE -e GITHUB_ACTION -e GITHUB_EVENT_PATH -e GITHUB_ACTION_REPOSITORY -e GITHUB_ACTION_REF -e GITHUB_PATH -e GITHUB_ENV -e RUNNER_OS -e RUNNER_TOOL_CACHE -e RUNNER_TEMP -e RUNNER_WORKSPACE -e ACTIONS_RUNTIME_URL -e ACTIONS_RUNTIME_TOKEN -e ACTIONS_CACHE_URL -e GITHUB_ACTIONS=true -e CI=true -e GRADLE_USER_HOME=/home/user/contiki-ng/tools/cooja/.gradle_home -e LOCAL_UID=$(id -u $USER) -e LOCAL_GID=$(id -g $USER) -e SOURCE_DATE_EPOCH $DOCKER_ARGS -v `pwd`:/home/user/contiki-ng -v $GITHUB_WORKSPACE/.ccache:/home/user/.ccache $DOCKER_IMG bash --login -c "source ../.bash_aliases && ccache --set-config=max_size='160M' && cimake -C tests/??-${{ matrix.test }}; ccache -c"
+        # Check outcome of the test
+        ./tests/check-test.sh `pwd`/tests/??-${{ matrix.test }}
+
+    # Pre-install a Java 21 on macOS to avoid 503 responses in Gradle.
+    - name: Setup Java 21
+      if: matrix.os == 'macos-13'
+      uses: actions/setup-java@v4
+      with:
+        java-version: 21
+        distribution: 'zulu'
+
+    - name: Execute tests
+      if: matrix.os == 'macos-13'
+      run: |
+        # Silence Doxygen warnings (not compilied with -Duse_libclang=ON).
+        perl -pi -e 's/^CLANG_ASSISTED_PARSING/# CLANG_ASSISTED_PARSING/g;' \
+                 -e 's/^CLANG_ADD_INC_PATHS/# CLANG_ADD_INC_PATHS/g;' \
+                 -e 's/^CLANG_OPTIONS/# CLANG_OPTIONS/g;' \
+                 -e 's/^CLANG_DATABASE_PATH/# CLANG_DATABASE_PATH/g;' tools/doxygen/Doxyfile
+        # Cache restores write-time timestamps, update timestamps to be more
+        # recent than the files that were just checked out. Ensure the command
+        # is successful with empty cache.
+        find tools/cooja/build tools/cooja/.gradle -exec touch {} \; 2>/dev/null || true
+        source ~/.bashrc
+        make -C tests/??-${{ matrix.test }}
         # Check outcome of the test
         ./tests/check-test.sh `pwd`/tests/??-${{ matrix.test }}

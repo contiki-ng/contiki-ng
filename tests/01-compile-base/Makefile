@@ -1,11 +1,37 @@
 CURDIR := $(abspath $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
-BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
+
+HOST_OS := $(shell uname)
+
+ifeq ($(CI), true)
+  TOOLS_TEST ?= 1
+else
+  Q ?= @
+endif
+
+ifneq ($(TOOLS_TEST),1)
+ifneq ($(HOST_OS),Darwin)
+  CLANG_WARNINGS=1
+  BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
+endif
+endif
+
+TOOLS_EXAMPLESDIR = ../../tools
+
+TOOLS_EXAMPLES = \
+serial-io/native
+
+ifeq ($(TOOLS_TEST), 1)
+preparation:
+	$(Q)$(MAKE) EXAMPLES="$(TOOLS_EXAMPLES)" EXAMPLESDIR=$(TOOLS_EXAMPLESDIR) all
+	$(Q)$(MAKE) TOOLS_TEST=0 all
+endif
 
 EXAMPLESDIR=../../examples
-TOOLSDIR=../../tools
 
 EXAMPLES = \
+6tisch/simple-node/z1:MAKE_WITH_PERIODIC_ROUTES_PRINT=1 \
 hello-world/native \
+hello-world/native:DEFINES=UIP_CONF_UDP=0 \
 hello-world/native:MAKE_NET=MAKE_NET_NULLNET \
 hello-world/native:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 hello-world/z1 \
@@ -13,7 +39,8 @@ storage/eeprom-test/native \
 libs/logging/native \
 libs/data-structures/native \
 libs/stack-check/sky \
-lwm2m-ipso-objects/native:MAKE_WITH_DTLS=1 \
+lwm2m-ipso-objects/native:MAKE_WITH_DTLS=1:MAKE_WITH_DTLS=1:MAKE_COAP_DTLS_WITH_PSK=1:MAKE_COAP_DTLS_WITH_CLIENT=1:MAKE_COAP_DTLS_KEYSTORE=MAKE_COAP_DTLS_KEYSTORE_SIMPLE \
+lwm2m-ipso-objects/native:MAKE_WITH_DTLS=1:MAKE_WITH_DTLS=1:MAKE_COAP_DTLS_WITH_CERT=1:MAKE_COAP_DTLS_WITH_CLIENT=1:MAKE_COAP_DTLS_KEYSTORE=MAKE_COAP_DTLS_KEYSTORE_SIMPLE \
 lwm2m-ipso-objects/native:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1,LWM2M_Q_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1 \
 rpl-border-router/native \
 rpl-border-router/native:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
@@ -31,7 +58,5 @@ dev/dht11/z1 \
 snmp-server/native \
 snmp-server/sky \
 snmp-server/z1 \
-
-TOOLS=
 
 include ../Makefile.compile-test

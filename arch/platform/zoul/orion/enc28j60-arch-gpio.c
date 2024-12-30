@@ -42,7 +42,6 @@
  * eth-gw GPIO arch specifics
  */
 /*---------------------------------------------------------------------------*/
-#include "clock.h"
 #include "dev/gpio.h"
 /*---------------------------------------------------------------------------*/
 #define CLK_PORT    GPIO_PORT_TO_BASE(ETH_SPI_CLK_PORT)

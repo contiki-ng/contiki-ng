@@ -31,27 +31,22 @@
  */
 
 /**
+ * \addtogroup lib
+ * @{
+ *
+ * \defgroup crypto Cryptographic primitives
+ * @{
+ *
+ * \defgroup csprng Cryptographically-secure PRNG
+ * In contrast to a normal PRNG, a CSPRNG generates a stream of pseudo-random
+ * numbers that is indistinguishable from the uniform distribution to a
+ * computationally-bounded adversary who does not know the seed.
+ * @{
+ *
  * \file
  *         An OFB-AES-128-based CSPRNG.
  * \author
  *         Konrad Krentz <konrad.krentz@gmail.com>
- */
-
-/**
- * \addtogroup lib
- * @{
- */
-
-/**
- * \defgroup csprng Cryptographically-secure PRNG
- *
- * \brief Expands a truly random seed into a stream of pseudo-random numbers.
- *
- * In contrast to a normal PRNG, a CSPRNG generates a stream of pseudo-random
- * numbers that is indistinguishable from the uniform distribution to a
- * computationally-bounded adversary who does not know the seed.
- *
- * @{
  */
 
 #ifndef CSPRNG_H_
@@ -59,6 +54,7 @@
 
 #include "contiki.h"
 #include "lib/aes-128.h"
+#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -107,9 +103,10 @@ void csprng_feed(struct csprng_seed *new_seed);
  *               Cycle Size of The Key Stream in Output Feedback Encipherment].
  * \return       Returns true on success and false otherwise.
  */
-bool csprng_rand(uint8_t *result, unsigned len);
+bool csprng_rand(uint8_t *result, size_t len);
 
 #endif /* CSPRNG_H_ */
 
+/** @} */
 /** @} */
 /** @} */

@@ -1,5 +1,24 @@
 # Code style
 
+The code style guidelines in this document apply to Contiki-NG source
+files written in the C programming language. Source files written in
+other programming languages should follow a common style convention if one
+exists; e.g., PEP 8 for Python. Moreover, if a specific code style is already
+commonly used for a given language in the repository, it is encouraged to
+follow this code style.
+
+## Standard compliance
+
+Contiki-NG programmers should adhere to the ISO/IEC 9899:2011 standard
+(also referred to as "C11") as much as possible. Observe that this guideline
+is currently limited to the subset of C11 supported by GCC 4.7 in order to
+ensure that MSP430-based platforms continue to work.
+
+When writing architecture-specific source code for the native platform, one
+should also adhere to IEEE Std 1003.1-2017 (also referred to as "POSIX") when
+possible. For other architecture-specific source code, it is acceptable to
+rely on compiler extensions where this is necessary.
+
 ## Naming
 
 * File names are composed of lower-case characters and dashes. Like
@@ -90,7 +109,7 @@ Below is an example .c files that complies with the Contiki-NG code style:
 /* Single line comments look like this. */
 
 /*
- * Multi-line comments look like this. Comments should prefferably be
+ * Multi-line comments look like this. Comments should preferably be
  * full sentences, filled to look like real paragraphs.
  */
 
@@ -134,21 +153,22 @@ int
 code_style_example_function(char c)
 {
   /*
-   * Local variables should always be declared at the start of the
-   * function.
-   */
-  int i;                   /* Use short variable names for loop
-                              counters. */
-
-  /*
    * There should be no space between keywords and the first
    * parenthesis. There should be spaces around binary operators, no
    * spaces between a unary operator and its operand.
    *
    * Curly brackets following for(), if(), do, and switch() statements
    * should follow the statement on the same line.
+   *
+   * Use short variable names for loop counters.
    */
-  for(i = 0; i < 10; ++i) {
+  for(int i = 0; i < 10; ++i) {
+
+    /*
+     * Declare variables as locally as possible.
+     */
+    int sum = i + c;
+
     /*
      * Always use full blocks (curly brackets) after if(), for(), and
      * while() statements, even though the statement is a single line
@@ -156,11 +176,13 @@ code_style_example_function(char c)
      * are less error prone.
      */
     if(i == c) {
-      return 1;           /* No parenthesis around return values. */
+      return sum;         /* No parenthesis around return values. */
     } else {              /* The else keyword is placed inbetween
                              curly braces, always on its own line. */
       c++;
     }
+
+    c += sum;
   }
 
   /* Do not indent case and default within a switch block */

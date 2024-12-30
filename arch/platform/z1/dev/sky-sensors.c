@@ -44,7 +44,7 @@
 static uint16_t adc_on;
 static uint16_t ready;
 /*---------------------------------------------------------------------------*/
-static CC_INLINE void
+static inline void
 start(void)
 {
   uint16_t c, last;
@@ -81,7 +81,7 @@ start(void)
   ADC12CTL0 |= ADC12SC;               /* sample & convert */
 }
 /*---------------------------------------------------------------------------*/
-static CC_INLINE void
+static inline void
 stop(void)
 {
   /* stop converting immediately, turn off reference voltage, etc. */

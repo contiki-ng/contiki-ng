@@ -70,6 +70,8 @@
 
 #include "sys/clock.h"
 
+#include <stdbool.h>
+
 /**
  * A timer.
  *
@@ -83,11 +85,45 @@ struct stimer {
   unsigned long interval;
 };
 
-void stimer_set(struct stimer *t, unsigned long interval);
+/**
+ * Set a timer.
+ *
+ * This function is used to set a timer for a time sometime in the
+ * future. The function stimer_expired() will evaluate to true after
+ * the timer has expired.
+ *
+ * \param t A pointer to the timer
+ * \param interval The interval before the timer expires.
+ *
+ */
+static inline void
+stimer_set(struct stimer *t, unsigned long interval)
+{
+  t->interval = interval;
+  t->start = clock_seconds();
+}
+
 void stimer_reset(struct stimer *t);
 void stimer_restart(struct stimer *t);
-int stimer_expired(struct stimer *t);
-unsigned long stimer_remaining(struct stimer *t);
+bool stimer_expired(struct stimer *t);
+
+/**
+ * The time until the timer expires
+ *
+ * This function returns the time until the timer expires.
+ *
+ * \param t A pointer to the timer
+ *
+ * \return The time until the timer expires
+ *
+ */
+static inline unsigned long
+stimer_remaining(struct stimer *t)
+{
+  return t->start + t->interval - clock_seconds();
+}
+
+
 unsigned long stimer_elapsed(struct stimer *t);
 
 

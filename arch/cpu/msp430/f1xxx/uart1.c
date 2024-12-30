@@ -164,28 +164,28 @@ uart1_init(unsigned long ubr)
 
 #if F_CPU == 3900000ul
 
-  case UART1_BAUD2UBR(115200ul):
+  case UART_BAUD2UBR(115200ul):
     UMCTL1 = 0xF7;
     break;
-  case UART1_BAUD2UBR(57600ul):
+  case UART_BAUD2UBR(57600ul):
     UMCTL1 = 0xED;
     break;
-  case UART1_BAUD2UBR(38400ul):
+  case UART_BAUD2UBR(38400ul):
     UMCTL1 = 0xD6;
     break;
-  case UART1_BAUD2UBR(19200ul):
+  case UART_BAUD2UBR(19200ul):
     UMCTL1 = 0x08;
     break;
-  case UART1_BAUD2UBR(9600ul):
+  case UART_BAUD2UBR(9600ul):
     UMCTL1 = 0x22;
     break;
 
 #elif F_CPU == 2457600ul
 
-  case UART1_BAUD2UBR(115200ul):
+  case UART_BAUD2UBR(115200ul):
     UMCTL1 = 0x4A;
     break;
-  case UART1_BAUD2UBR(57600ul):
+  case UART_BAUD2UBR(57600ul):
     UMCTL1 = 0x5B;
     break;
   default:

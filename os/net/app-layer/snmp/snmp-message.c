@@ -317,6 +317,11 @@ snmp_message_decode(snmp_packet_t *snmp_packet, snmp_header_t *header, snmp_varb
       return 0;
     }
 
+    if (snmp_packet->used == 0) {
+      LOG_DBG("Could not decode value type\n");
+      return 0;
+    }
+
     varbinds[i].value_type = *snmp_packet->in;
 
     switch(varbinds[i].value_type) {

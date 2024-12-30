@@ -145,9 +145,13 @@
 #define LOG_CONF_LEVEL_COAP                        LOG_LEVEL_NONE
 #endif /* LOG_CONF_LEVEL_COAP */
 
+#ifndef LOG_CONF_LEVEL_DTLS
+#define LOG_CONF_LEVEL_DTLS                        LOG_LEVEL_NONE
+#endif /* LOG_CONF_LEVEL_DTLS */
+
 #ifndef LOG_CONF_LEVEL_SNMP
 #define LOG_CONF_LEVEL_SNMP                        LOG_LEVEL_NONE
-#endif /* LOG_CONF_LEVEL_COAP */
+#endif /* LOG_CONF_LEVEL_SNMP */
 
 #ifndef LOG_CONF_LEVEL_LWM2M
 #define LOG_CONF_LEVEL_LWM2M                       LOG_LEVEL_NONE
@@ -156,6 +160,10 @@
 #ifndef LOG_CONF_LEVEL_MAIN
 #define LOG_CONF_LEVEL_MAIN                        LOG_LEVEL_INFO
 #endif /* LOG_CONF_LEVEL_MAIN */
+
+#ifndef LOG_CONF_LEVEL_SYS
+#define LOG_CONF_LEVEL_SYS                         LOG_LEVEL_NONE
+#endif /* LOG_CONF_LEVEL_SYS */
 
 #endif /* LOG_CONF_H_ */
 

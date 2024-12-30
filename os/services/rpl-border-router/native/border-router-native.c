@@ -46,6 +46,7 @@
 #include "cmd.h"
 #include "border-router.h"
 #include "border-router-cmds.h"
+#include "tun6-net.h"
 
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
@@ -54,15 +55,15 @@
 #define LOG_LEVEL LOG_LEVEL_INFO
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 extern long slip_sent;
 extern long slip_received;
 
-static uint8_t mac_set;
+static bool is_mac_set;
 
 extern int contiki_argc;
 extern char **contiki_argv;
-extern const char *slip_config_ipaddr;
 
 CMD_HANDLERS(border_router_cmd_handler);
 
@@ -78,6 +79,11 @@ request_mac(void)
 void
 border_router_set_mac(const uint8_t *data)
 {
+  if(is_mac_set) {
+    /* only set MAC address once */
+    return;
+  }
+
   memcpy(uip_lladdr.addr, data, sizeof(uip_lladdr.addr));
   linkaddr_set_node_addr((linkaddr_t *)uip_lladdr.addr);
 
@@ -88,7 +94,7 @@ border_router_set_mac(const uint8_t *data)
   NETSTACK_ROUTING.init();
   PROCESS_CONTEXT_END(&tcpip_process);
 
-  mac_set = 1;
+  is_mac_set = true;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -103,6 +109,8 @@ PROCESS_THREAD(border_router_process, ev, data)
   static struct etimer et;
 
   PROCESS_BEGIN();
+
+  is_mac_set = false;
   prefix_set = 0;
 
   PROCESS_PAUSE();
@@ -116,23 +124,24 @@ PROCESS_THREAD(border_router_process, ev, data)
   /* tun init is also responsible for setting up the SLIP connection */
   tun_init();
 
-  while(!mac_set) {
+  while(!is_mac_set) {
     etimer_set(&et, CLOCK_SECOND);
     request_mac();
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
   }
 
-  if(slip_config_ipaddr != NULL) {
+  const char *config_ipaddr = tun6_net_get_prefix();
+  if(config_ipaddr != NULL) {
     uip_ipaddr_t prefix;
 
-    if(uiplib_ipaddrconv((const char *)slip_config_ipaddr, &prefix)) {
+    if(uiplib_ipaddrconv(config_ipaddr, &prefix)) {
       LOG_INFO("Setting prefix ");
       LOG_INFO_6ADDR(&prefix);
       LOG_INFO_("\n");
       set_prefix_64(&prefix);
     } else {
-      LOG_ERR("Parse error: %s\n", slip_config_ipaddr);
-      exit(0);
+      LOG_ERR("Parse error: %s\n", config_ipaddr);
+      exit(EXIT_FAILURE);
     }
   }
 

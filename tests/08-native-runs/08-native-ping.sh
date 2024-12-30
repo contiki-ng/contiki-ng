@@ -2,7 +2,7 @@
 source ../utils.sh
 
 # Contiki directory
-CONTIKI=$1
+CONTIKI=../..
 # Test basename
 BASENAME=$(basename $0 .sh)
 
@@ -10,8 +10,7 @@ IPADDR=fd00::302:304:506:708
 
 # Starting Contiki-NG native node
 echo "Starting native node"
-make -C $CONTIKI/examples/hello-world > make.log 2> make.err
-sudo $CONTIKI/examples/hello-world/hello-world.native > node.log 2> node.err &
+sudo $CONTIKI/examples/hello-world/build/native/hello-world.native &
 CPID=$!
 sleep 2
 
@@ -29,19 +28,8 @@ if [ $STATUS -eq 0 ] ; then
   cp $BASENAME.log $BASENAME.testlog
   printf "%-32s TEST OK\n" "$BASENAME" | tee $BASENAME.testlog;
 else
-  echo "==== make.log ====" ; cat make.log;
-  echo "==== make.err ====" ; cat make.err;
-  echo "==== node.log ====" ; cat node.log;
-  echo "==== node.err ====" ; cat node.err;
   echo "==== $BASENAME.log ====" ; cat $BASENAME.log;
 
   printf "%-32s TEST FAIL\n" "$BASENAME" | tee $BASENAME.testlog;
-  rm -f make.log make.err node.log node.err
   exit 1
 fi
-
-rm -f make.log make.err node.log node.err
-
-# We do not want Make to stop -> Return 0
-# The Makefile will check if a log contains FAIL at the end
-exit 0

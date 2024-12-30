@@ -183,16 +183,6 @@
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**
- * \name OpenMote-CC2538 antenna switch configuration
- *
- * @{
- */
-#define ANTENNA_BSP_RADIO_BASE   GPIO_PORT_TO_BASE(GPIO_D_NUM)
-#define ANTENNA_BSP_RADIO_INT    GPIO_PIN_MASK(5)
-#define ANTENNA_BSP_RADIO_EXT    GPIO_PIN_MASK(4)
-/** @} */
-/*---------------------------------------------------------------------------*/
-/**
  * \name CC2538 TSCH configuration
  *
  * @{

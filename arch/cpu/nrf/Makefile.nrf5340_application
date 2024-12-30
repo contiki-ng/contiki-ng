@@ -1,6 +1,5 @@
-include $(CONTIKI_CPU)/Makefile.libs  
+include $(CONTIKI_CPU)/Makefile.libs
 
-SOURCE_LDSCRIPT ?= $(NRFX_ROOT)/mdk/nrf5340_xxaa_application.ld
 CFLAGS += -DNRF5340_XXAA_APPLICATION
 
 NRFX_ASM_SRCS += $(NRFX_ROOT)/mdk/gcc_startup_nrf5340_application.s
@@ -18,10 +17,22 @@ CFLAGS += -DNRFX_USBREG_ENABLED
 CFLAGS += -mfloat-abi=hard 
 CFLAGS += -mfpu=fpv5-sp-d16
 
-# GCC automatically invokes the linker with this flag, Clang does not.
-ifeq ($(CLANG),1)
-  LDFLAGS += -L$(NRFX_ROOT)/mdk
+ifeq ($(TRUSTZONE_SECURE_BUILD),1)
+  # Use a custom linker script for the secure world when TrustZone is enabled.
+  SOURCE_LDSCRIPT ?= $(CONTIKI_CPU)/nrf5340/tz-mdk/nrf5340_xxaa_application_SPM_s.lds
+
+  CFLAGS += -DNRFX_RTC1_ENABLED
+  CONTIKI_CPU_DIRS += nrf5340 nrf5340/partition
+  CONTIKI_CPU_SOURCEFILES += tz-target-cfg.c
+else ifeq ($(TRUSTZONE_SECURE_BUILD),0)
+  # Use a custom linker script for the normal world when TrustZone is enabled.
+  SOURCE_LDSCRIPT ?= $(CONTIKI_CPU)/nrf5340/tz-mdk/nrf5340_xxaa_application_SPM_ns.lds
+else
+  # Use the regular linker script when TrustZone is disabled.
+  SOURCE_LDSCRIPT ?= $(NRFX_ROOT)/mdk/nrf5340_xxaa_application.ld
 endif
+
+LDFLAGS += -L$(NRFX_ROOT)/mdk
 LDFLAGS += -mfloat-abi=hard 
 LDFLAGS += -mfpu=fpv5-sp-d16
 

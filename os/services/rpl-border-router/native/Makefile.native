@@ -1,13 +1,20 @@
 MODULES += os/services/slip-cmd
 MODULES += os/services/shell
 
+MODULES_SOURCES_EXCLUDES += serial-shell.c
+
 MAKE_MAC = MAKE_MAC_OTHER
 MAKE_NET = MAKE_NET_IPV6
 
+ifneq ($(PORT),)
+	ROUTER_ARGS = -s $(PORT)
+endif
 
 PREFIX ?= fd00::1/64
+ROUTER_ARGS += $(PREFIX)
+
 connect-router:	border-router.native
-	sudo rlwrap ./border-router.native $(PREFIX)
+	sudo rlwrap build/native/border-router.native $(ROUTER_ARGS)
 
 connect-router-cooja:	border-router.native
-	sudo rlwrap ./border-router.native -a localhost $(PREFIX)
+	sudo rlwrap build/native/border-router.native -a localhost $(ROUTER_ARGS)

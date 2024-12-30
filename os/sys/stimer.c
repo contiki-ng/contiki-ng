@@ -53,24 +53,6 @@
 
 /*---------------------------------------------------------------------------*/
 /**
- * Set a timer.
- *
- * This function is used to set a timer for a time sometime in the
- * future. The function stimer_expired() will evaluate to true after
- * the timer has expired.
- *
- * \param t A pointer to the timer
- * \param interval The interval before the timer expires.
- *
- */
-void
-stimer_set(struct stimer *t, unsigned long interval)
-{
-  t->interval = interval;
-  t->start = clock_seconds();
-}
-/*---------------------------------------------------------------------------*/
-/**
  * Reset the timer with the same interval.
  *
  * This function resets the timer with the same interval that was
@@ -100,7 +82,7 @@ stimer_reset(struct stimer *t)
  * current time.
  *
  * \note A periodic timer will drift if this function is used to reset
- * it. For preioric timers, use the stimer_reset() function instead.
+ * it. For periodic timers, use the stimer_reset() function instead.
  *
  * \param t A pointer to the timer.
  *
@@ -120,29 +102,13 @@ stimer_restart(struct stimer *t)
  *
  * \param t A pointer to the timer
  *
- * \return Non-zero if the timer has expired, zero otherwise.
+ * \return True if the timer has expired.
  *
  */
-int
+bool
 stimer_expired(struct stimer *t)
 {
   return SCLOCK_GEQ(clock_seconds(), t->start + t->interval);
-}
-/*---------------------------------------------------------------------------*/
-/**
- * The time until the timer expires
- *
- * This function returns the time until the timer expires.
- *
- * \param t A pointer to the timer
- *
- * \return The time until the timer expires
- *
- */
-unsigned long
-stimer_remaining(struct stimer *t)
-{
-  return t->start + t->interval - clock_seconds();
 }
 /*---------------------------------------------------------------------------*/
 /**

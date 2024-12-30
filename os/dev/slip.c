@@ -42,8 +42,6 @@
 /*---------------------------------------------------------------------------*/
 PROCESS(slip_process, "SLIP driver");
 /*---------------------------------------------------------------------------*/
-static uint8_t slip_active;
-/*---------------------------------------------------------------------------*/
 #if SLIP_CONF_WITH_STATS
 static uint16_t slip_rubbish, slip_twopackets, slip_overflow, slip_ip_drop;
 #define SLIP_STATISTICS(statement) statement
@@ -248,9 +246,6 @@ PROCESS_THREAD(slip_process, ev, data)
 
   while(1) {
     PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
-
-    slip_active = 1;
-
     /* Move packet from rxbuf to buffer provided by uIP. */
     uip_len = slip_poll_handler(uip_buf, UIP_BUFSIZE);
 

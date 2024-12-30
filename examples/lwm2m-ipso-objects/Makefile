@@ -4,6 +4,15 @@ CONTIKI_SOURCEFILES += example-ipso-temperature.c
 
 PLATFORMS_EXCLUDE = sky z1
 
+ifeq ($(MAKE_WITH_DTLS),1)
+  # Exclude platforms that cannot be built with Mbed DTLS support.
+  PLATFORMS_EXCLUDE += zoul
+
+  CFLAGS += -DPROJECT_CONF_PATH=\"project-conf-dtls.h\"
+else
+  CFLAGS += -DPROJECT_CONF_PATH=\"project-conf-basic.h\"
+endif
+
 all: $(CONTIKI_PROJECT)
 
 CONTIKI=../..

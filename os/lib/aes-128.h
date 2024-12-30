@@ -31,6 +31,8 @@
  */
 
 /**
+ * \addtogroup crypto
+ * @{
  * \file
  *         AES-128.
  * \author
@@ -55,12 +57,12 @@
  * Structure of AES drivers.
  */
 struct aes_128_driver {
-  
+
   /**
    * \brief Sets the current key.
    */
   void (* set_key)(const uint8_t *key);
-  
+
   /**
    * \brief Encrypts.
    */
@@ -70,3 +72,5 @@ struct aes_128_driver {
 extern const struct aes_128_driver AES_128;
 
 #endif /* AES_128_H_ */
+
+/** @} */

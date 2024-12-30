@@ -65,7 +65,9 @@
 static uint16_t current_mid = 0;
 
 coap_status_t coap_status_code = NO_ERROR;
+#if COAP_MESSAGE_ON_ERROR
 const char *coap_error_message = "";
+#endif
 /*---------------------------------------------------------------------------*/
 /*- Local helper functions --------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -396,7 +398,9 @@ coap_serialize_message(coap_message_t *coap_pkt, uint8_t *buffer)
   } else {
     /* an error occurred: caller must check for !=0 */
     coap_pkt->buffer = NULL;
+#if COAP_MESSAGE_ON_ERROR
     coap_error_message = "Serialized header exceeds COAP_MAX_HEADER_SIZE";
+#endif
     return 0;
   }
 
@@ -416,6 +420,16 @@ coap_serialize_message(coap_message_t *coap_pkt, uint8_t *buffer)
 coap_status_t
 coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
 {
+#define CHECK_OPTION_BOUNDARY(byte_count)                               \
+  do {                                                                  \
+    if(current_option + (byte_count) > data + data_len) {               \
+      LOG_WARN("BAD REQUEST: option delta outside buffer (%u > %u)\n",  \
+               (unsigned)(current_option + (byte_count) - data),        \
+               data_len);                                               \
+      return BAD_REQUEST_4_00;                                          \
+    }                                                                   \
+  } while (0)
+
   if(data_len < COAP_HEADER_LEN) {
     /* Too short - malformed CoAP message */
     LOG_WARN("BAD REQUEST: message too short\n");
@@ -439,21 +453,21 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
   coap_pkt->mid = coap_pkt->buffer[2] << 8 | coap_pkt->buffer[3];
 
   if(coap_pkt->version != 1) {
+#if COAP_MESSAGE_ON_ERROR
     coap_error_message = "CoAP version must be 1";
+#endif
     return BAD_REQUEST_4_00;
   }
 
   if(coap_pkt->token_len > COAP_TOKEN_LEN) {
+#if COAP_MESSAGE_ON_ERROR
     coap_error_message = "Token Length must not be more than 8";
+#endif
     return BAD_REQUEST_4_00;
   }
 
   uint8_t *current_option = data + COAP_HEADER_LEN;
-  if(current_option + coap_pkt->token_len > data + data_len) {
-    /* Malformed CoAP message - token length out od message bounds */
-    LOG_WARN("BAD REQUEST: token outside message buffer");
-    return BAD_REQUEST_4_00;
-  }
+  CHECK_OPTION_BOUNDARY(coap_pkt->token_len);
 
   memcpy(coap_pkt->token, current_option, coap_pkt->token_len);
   LOG_DBG("Token (len %u) [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n",
@@ -489,57 +503,34 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
     option_delta = current_option[0] >> 4;
     option_length = current_option[0] & 0x0F;
     ++current_option;
-    if(current_option >= data + data_len) {
-      /* Malformed CoAP - out of bounds */
-      LOG_WARN("BAD REQUEST: option delta outside message buffer\n");
-      return BAD_REQUEST_4_00;
-    }
 
     if(option_delta == 13) {
+      CHECK_OPTION_BOUNDARY(1);
       option_delta += current_option[0];
       ++current_option;
     } else if(option_delta == 14) {
+      CHECK_OPTION_BOUNDARY(2);
       option_delta += 255;
       option_delta += current_option[0] << 8;
       ++current_option;
-      if(current_option >= data + data_len) {
-        /* Malformed CoAP - out of bounds */
-        LOG_WARN("BAD REQUEST: option delta outside message buffer\n");
-        return BAD_REQUEST_4_00;
-      }
       option_delta += current_option[0];
       ++current_option;
     }
 
-    if(current_option >= data + data_len) {
-      /* Malformed CoAP - out of bounds */
-      LOG_WARN("BAD REQUEST: option delta outside message buffer\n");
-      return BAD_REQUEST_4_00;
-    }
-
     if(option_length == 13) {
+      CHECK_OPTION_BOUNDARY(1);
       option_length += current_option[0];
       ++current_option;
     } else if(option_length == 14) {
+      CHECK_OPTION_BOUNDARY(2);
       option_length += 255;
       option_length += current_option[0] << 8;
       ++current_option;
-      if(current_option >= data + data_len) {
-        /* Malformed CoAP - out of bounds */
-        LOG_WARN("BAD REQUEST: option length outside message buffer\n");
-        return BAD_REQUEST_4_00;
-      }
       option_length += current_option[0];
       ++current_option;
     }
 
-    if(current_option + option_length > data + data_len) {
-      /* Malformed CoAP - out of bounds */
-      LOG_WARN("BAD REQUEST: options outside data message: %u > %u\n",
-               (unsigned)(current_option + option_length - data), data_len);
-      return BAD_REQUEST_4_00;
-    }
-
+    CHECK_OPTION_BOUNDARY(option_length);
     option_number += option_delta;
 
     if(option_number > COAP_OPTION_SIZE1) {
@@ -598,23 +589,26 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
 #if COAP_PROXY_OPTION_PROCESSING
       coap_pkt->proxy_uri = (char *)current_option;
       coap_pkt->proxy_uri_len = option_length;
-#endif /* COAP_PROXY_OPTION_PROCESSING */
       LOG_DBG_("Proxy-Uri NOT IMPLEMENTED [");
       LOG_DBG_COAP_STRING(coap_pkt->proxy_uri, coap_pkt->proxy_uri_len);
       LOG_DBG_("]\n");
-
-      coap_error_message = "This is a constrained server (Contiki)";
+#endif /* COAP_PROXY_OPTION_PROCESSING */
+#if COAP_MESSAGE_ON_ERROR
+      coap_error_message = "This is a constrained server (Contiki-NG)";
+#endif
       return PROXYING_NOT_SUPPORTED_5_05;
       break;
     case COAP_OPTION_PROXY_SCHEME:
 #if COAP_PROXY_OPTION_PROCESSING
       coap_pkt->proxy_scheme = (char *)current_option;
       coap_pkt->proxy_scheme_len = option_length;
-#endif
       LOG_DBG_("Proxy-Scheme NOT IMPLEMENTED [");
       LOG_DBG_COAP_STRING(coap_pkt->proxy_scheme, coap_pkt->proxy_scheme_len);
       LOG_DBG_("]\n");
-      coap_error_message = "This is a constrained server (Contiki)";
+#endif
+#if COAP_MESSAGE_ON_ERROR
+      coap_error_message = "This is a constrained server (Contiki-NG)";
+#endif
       return PROXYING_NOT_SUPPORTED_5_05;
       break;
 
@@ -710,7 +704,9 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
       LOG_DBG_("unknown (%u)\n", option_number);
       /* check if critical (odd) */
       if(option_number & 1) {
+#if COAP_MESSAGE_ON_ERROR
         coap_error_message = "Unsupported critical option";
+#endif
         return BAD_OPTION_4_02;
       }
     }
@@ -725,7 +721,7 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
 /*- CoAP Engine API ---------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 int
-coap_get_query_variable(coap_message_t *coap_pkt,
+coap_get_query_variable(const coap_message_t *coap_pkt,
                         const char *name, const char **output)
 {
   if(coap_is_option(coap_pkt, COAP_OPTION_URI_QUERY)) {
@@ -735,7 +731,7 @@ coap_get_query_variable(coap_message_t *coap_pkt,
   return 0;
 }
 int
-coap_get_post_variable(coap_message_t *coap_pkt,
+coap_get_post_variable(const coap_message_t *coap_pkt,
                        const char *name, const char **output)
 {
   if(coap_pkt->payload_len) {
@@ -768,7 +764,8 @@ coap_set_token(coap_message_t *coap_pkt, const uint8_t *token, size_t token_len)
 /*- CoAP Implementation API -------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_content_format(coap_message_t *coap_pkt, unsigned int *format)
+coap_get_header_content_format(const coap_message_t *coap_pkt,
+                               unsigned int *format)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_CONTENT_FORMAT)) {
     return 0;
@@ -785,7 +782,7 @@ coap_set_header_content_format(coap_message_t *coap_pkt, unsigned int format)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_accept(coap_message_t *coap_pkt, unsigned int *accept)
+coap_get_header_accept(const coap_message_t *coap_pkt, unsigned int *accept)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_ACCEPT)) {
     return 0;
@@ -802,7 +799,7 @@ coap_set_header_accept(coap_message_t *coap_pkt, unsigned int accept)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_max_age(coap_message_t *coap_pkt, uint32_t *age)
+coap_get_header_max_age(const coap_message_t *coap_pkt, uint32_t *age)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_MAX_AGE)) {
     *age = COAP_DEFAULT_MAX_AGE;
@@ -819,7 +816,7 @@ coap_set_header_max_age(coap_message_t *coap_pkt, uint32_t age)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_etag(coap_message_t *coap_pkt, const uint8_t **etag)
+coap_get_header_etag(const coap_message_t *coap_pkt, const uint8_t **etag)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_ETAG)) {
     return 0;
@@ -839,7 +836,7 @@ coap_set_header_etag(coap_message_t *coap_pkt, const uint8_t *etag, size_t etag_
 /*---------------------------------------------------------------------------*/
 /*FIXME support multiple ETags */
 int
-coap_get_header_if_match(coap_message_t *coap_pkt, const uint8_t **etag)
+coap_get_header_if_match(const coap_message_t *coap_pkt, const uint8_t **etag)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_IF_MATCH)) {
     return 0;
@@ -858,7 +855,7 @@ coap_set_header_if_match(coap_message_t *coap_pkt, const uint8_t *etag, size_t e
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_if_none_match(coap_message_t *message)
+coap_get_header_if_none_match(const coap_message_t *message)
 {
   return coap_is_option(message, COAP_OPTION_IF_NONE_MATCH) ? 1 : 0;
 }
@@ -870,7 +867,7 @@ coap_set_header_if_none_match(coap_message_t *message)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_proxy_uri(coap_message_t *coap_pkt, const char **uri)
+coap_get_header_proxy_uri(const coap_message_t *coap_pkt, const char **uri)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_PROXY_URI)) {
     return 0;
@@ -891,7 +888,7 @@ coap_set_header_proxy_uri(coap_message_t *coap_pkt, const char *uri)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_uri_host(coap_message_t *coap_pkt, const char **host)
+coap_get_header_uri_host(const coap_message_t *coap_pkt, const char **host)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_URI_HOST)) {
     return 0;
@@ -910,7 +907,7 @@ coap_set_header_uri_host(coap_message_t *coap_pkt, const char *host)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_uri_path(coap_message_t *coap_pkt, const char **path)
+coap_get_header_uri_path(const coap_message_t *coap_pkt, const char **path)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_URI_PATH)) {
     return 0;
@@ -933,7 +930,8 @@ coap_set_header_uri_path(coap_message_t *coap_pkt, const char *path)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_uri_query(coap_message_t *coap_pkt, const char **query)
+coap_get_header_uri_query(const coap_message_t *coap_pkt,
+                          const char **query)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_URI_QUERY)) {
     return 0;
@@ -956,7 +954,8 @@ coap_set_header_uri_query(coap_message_t *coap_pkt, const char *query)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_location_path(coap_message_t *coap_pkt, const char **path)
+coap_get_header_location_path(const coap_message_t *coap_pkt,
+                              const char **path)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_LOCATION_PATH)) {
     return 0;
@@ -987,7 +986,8 @@ coap_set_header_location_path(coap_message_t *coap_pkt, const char *path)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_location_query(coap_message_t *coap_pkt, const char **query)
+coap_get_header_location_query(const coap_message_t *coap_pkt,
+                               const char **query)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_LOCATION_QUERY)) {
     return 0;
@@ -1010,7 +1010,7 @@ coap_set_header_location_query(coap_message_t *coap_pkt, const char *query)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_observe(coap_message_t *coap_pkt, uint32_t *observe)
+coap_get_header_observe(const coap_message_t *coap_pkt, uint32_t *observe)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_OBSERVE)) {
     return 0;
@@ -1027,8 +1027,8 @@ coap_set_header_observe(coap_message_t *coap_pkt, uint32_t observe)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_block2(coap_message_t *coap_pkt, uint32_t *num, uint8_t *more,
-                       uint16_t *size, uint32_t *offset)
+coap_get_header_block2(const coap_message_t *coap_pkt, uint32_t *num,
+                       uint8_t *more, uint16_t *size, uint32_t *offset)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_BLOCK2)) {
     return 0;
@@ -1070,8 +1070,8 @@ coap_set_header_block2(coap_message_t *coap_pkt, uint32_t num, uint8_t more,
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_block1(coap_message_t *coap_pkt, uint32_t *num, uint8_t *more,
-                       uint16_t *size, uint32_t *offset)
+coap_get_header_block1(const coap_message_t *coap_pkt, uint32_t *num,
+                       uint8_t *more, uint16_t *size, uint32_t *offset)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_BLOCK1)) {
     return 0;
@@ -1113,7 +1113,7 @@ coap_set_header_block1(coap_message_t *coap_pkt, uint32_t num, uint8_t more,
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_size2(coap_message_t *coap_pkt, uint32_t *size)
+coap_get_header_size2(const coap_message_t *coap_pkt, uint32_t *size)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_SIZE2)) {
     return 0;
@@ -1130,7 +1130,7 @@ coap_set_header_size2(coap_message_t *coap_pkt, uint32_t size)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_size1(coap_message_t *coap_pkt, uint32_t *size)
+coap_get_header_size1(const coap_message_t *coap_pkt, uint32_t *size)
 {
   if(!coap_is_option(coap_pkt, COAP_OPTION_SIZE1)) {
     return 0;
@@ -1147,7 +1147,7 @@ coap_set_header_size1(coap_message_t *coap_pkt, uint32_t size)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_payload(coap_message_t *coap_pkt, const uint8_t **payload)
+coap_get_payload(const coap_message_t *coap_pkt, const uint8_t **payload)
 {
   if(payload != NULL) {
     *payload = coap_pkt->payload;

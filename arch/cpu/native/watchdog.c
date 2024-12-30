@@ -57,7 +57,7 @@ watchdog_stop(void)
 void
 watchdog_reboot(void)
 {
-	// Death by watchdog.
-	exit(-1);
+  // Death by watchdog.
+  exit(EXIT_FAILURE);
 }
 /*---------------------------------------------------------------------------*/

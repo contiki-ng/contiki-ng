@@ -196,14 +196,6 @@ uip_ds6_periodic(void)
 
   /* Periodic processing on default routers */
   uip_ds6_defrt_periodic();
-  /*  for(locdefrt = uip_ds6_defrt_list;
-      locdefrt < uip_ds6_defrt_list + UIP_DS6_DEFRT_NB; locdefrt++) {
-    if((locdefrt->isused) && (!locdefrt->isinfinite) &&
-       (stimer_expired(&(locdefrt->lifetime)))) {
-      uip_ds6_defrt_rm(locdefrt);
-    }
-    }*/
-
 #if !UIP_CONF_ROUTER
   /* Periodic processing on prefixes */
   for(locprefix = uip_ds6_prefix_list;

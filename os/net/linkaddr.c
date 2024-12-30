@@ -71,10 +71,4 @@ linkaddr_cmp(const linkaddr_t *addr1, const linkaddr_t *addr2)
 	return (memcmp(addr1, addr2, LINKADDR_SIZE) == 0);
 }
 /*---------------------------------------------------------------------------*/
-void
-linkaddr_set_node_addr(linkaddr_t *t)
-{
-  linkaddr_copy(&linkaddr_node_addr, t);
-}
-/*---------------------------------------------------------------------------*/
 /** @} */

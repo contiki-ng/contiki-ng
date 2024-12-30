@@ -48,11 +48,38 @@
 #include "contiki.h"
 #include "sys/process.h"
 
+#include "sys/log.h"
+#define LOG_MODULE "Process"
+#define LOG_LEVEL LOG_LEVEL_SYS
+
+/*
+ * The process_num_events_t type is an uint8_t. It must be able to store
+ * the value of PROCESS_CONF_NUMEVENTS + 1, for the additional
+ * boolean value indicating whether a poll has been requested.
+ */
+static_assert(PROCESS_CONF_NUMEVENTS > 0 && PROCESS_CONF_NUMEVENTS <= 128,
+  "PROCESS_CONF_NUMEVENTS must be a positive value of at most 128.");
+
+/* Require that PROCESS_CONF_NUMEVENTS is a power of 2 to allow
+   optimization of modulo operations. */
+static_assert(!(PROCESS_CONF_NUMEVENTS & (PROCESS_CONF_NUMEVENTS - 1)),
+  "PROCESS_CONF_NUMEVENTS must be a power of 2.");
+
+/*
+ * A configurable function called after a process poll been requested.
+ */
+#ifdef PROCESS_CONF_POLL_REQUESTED
+#define PROCESS_POLL_REQUESTED PROCESS_CONF_POLL_REQUESTED
+void PROCESS_POLL_REQUESTED(void);
+#else
+#define PROCESS_POLL_REQUESTED()
+#endif
+
 /*
  * Pointer to the currently running process structure.
  */
-struct process *process_list = NULL;
-struct process *process_current = NULL;
+struct process *process_list;
+struct process *process_current;
 
 static process_event_t lastevent;
 
@@ -60,9 +87,9 @@ static process_event_t lastevent;
  * Structure used for keeping the queue of active events.
  */
 struct event_data {
-  process_event_t ev;
   process_data_t data;
   struct process *p;
+  process_event_t ev;
 };
 
 static process_num_events_t nevents, fevent;
@@ -72,26 +99,21 @@ static struct event_data events[PROCESS_CONF_NUMEVENTS];
 process_num_events_t process_maxevents;
 #endif
 
-static volatile unsigned char poll_requested;
+static volatile bool poll_requested;
 
 #define PROCESS_STATE_NONE        0
 #define PROCESS_STATE_RUNNING     1
 #define PROCESS_STATE_CALLED      2
 
 static void call_process(struct process *p, process_event_t ev, process_data_t data);
-
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
-
 /*---------------------------------------------------------------------------*/
 process_event_t
 process_alloc_event(void)
 {
+  if(lastevent == (process_event_t)~0U) {
+    LOG_WARN("Cannot allocate another event number\n");
+    return PROCESS_EVENT_NONE;
+  }
   return lastevent++;
 }
 /*---------------------------------------------------------------------------*/
@@ -114,7 +136,7 @@ process_start(struct process *p, process_data_t data)
   p->state = PROCESS_STATE_RUNNING;
   PT_INIT(&p->pt);
 
-  PRINTF("process: starting '%s'\n", PROCESS_NAME_STRING(p));
+  LOG_DBG("starting '%s'\n", PROCESS_NAME_STRING(p));
 
   /* Post a synchronous initialization event to the process. */
   process_post_synch(p, PROCESS_EVENT_INIT, data);
@@ -126,7 +148,7 @@ exit_process(struct process *p, const struct process *fromprocess)
   register struct process *q;
   struct process *old_current = process_current;
 
-  PRINTF("process: exit_process '%s'\n", PROCESS_NAME_STRING(p));
+  LOG_DBG("exit_process '%s'\n", PROCESS_NAME_STRING(p));
 
   /* Make sure the process is in the process list before we try to
      exit it. */
@@ -137,18 +159,6 @@ exit_process(struct process *p, const struct process *fromprocess)
 
   if(process_is_running(p)) {
     /* Process was running */
-    p->state = PROCESS_STATE_NONE;
-
-    /*
-     * Post a synchronous event to all processes to inform them that
-     * this process is about to exit. This will allow services to
-     * deallocate state associated with this process.
-     */
-    for(q = process_list; q != NULL; q = q->next) {
-      if(p != q) {
-        call_process(q, PROCESS_EVENT_EXITED, (process_data_t)p);
-      }
-    }
 
     if(p->thread != NULL && p != fromprocess) {
       /* Post the exit event to the process that is about to exit. */
@@ -168,29 +178,39 @@ exit_process(struct process *p, const struct process *fromprocess)
     }
   }
 
+  if(process_is_running(p)) {
+    /* Process was running */
+    p->state = PROCESS_STATE_NONE;
+
+    /*
+     * Post a synchronous event to all processes to inform them that
+     * this process is about to exit. This will allow services to
+     * deallocate state associated with this process.
+     */
+    for(q = process_list; q != NULL; q = q->next) {
+        call_process(q, PROCESS_EVENT_EXITED, (process_data_t)p);
+    }
+  }
+
   process_current = old_current;
 }
 /*---------------------------------------------------------------------------*/
 static void
 call_process(struct process *p, process_event_t ev, process_data_t data)
 {
-  int ret;
-
-#if DEBUG
   if(p->state == PROCESS_STATE_CALLED) {
-    printf("process: process '%s' called again with event %d\n", PROCESS_NAME_STRING(p), ev);
+    LOG_DBG("process '%s' called again with event %d\n",
+            PROCESS_NAME_STRING(p), ev);
   }
-#endif /* DEBUG */
 
   if((p->state & PROCESS_STATE_RUNNING) &&
      p->thread != NULL) {
-    PRINTF("process: calling process '%s' with event %d\n", PROCESS_NAME_STRING(p), ev);
+    LOG_DBG("calling process '%s' with event %d\n",
+            PROCESS_NAME_STRING(p), ev);
     process_current = p;
     p->state = PROCESS_STATE_CALLED;
-    ret = p->thread(&p->pt, ev, data);
-    if(ret == PT_EXITED ||
-       ret == PT_ENDED ||
-       ev == PROCESS_EVENT_EXIT) {
+    int ret = p->thread(&p->pt, ev, data);
+    if(ret == PT_EXITED || ret == PT_ENDED || ev == PROCESS_EVENT_EXIT) {
       exit_process(p, p);
     } else {
       p->state = PROCESS_STATE_RUNNING;
@@ -208,13 +228,6 @@ void
 process_init(void)
 {
   lastevent = PROCESS_EVENT_MAX;
-
-  nevents = fevent = 0;
-#if PROCESS_CONF_STATS
-  process_maxevents = 0;
-#endif /* PROCESS_CONF_STATS */
-
-  process_current = process_list = NULL;
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -224,14 +237,12 @@ process_init(void)
 static void
 do_poll(void)
 {
-  struct process *p;
-
-  poll_requested = 0;
+  poll_requested = false;
   /* Call the processes that needs to be polled. */
-  for(p = process_list; p != NULL; p = p->next) {
+  for(struct process *p = process_list; p != NULL; p = p->next) {
     if(p->needspoll) {
       p->state = PROCESS_STATE_RUNNING;
-      p->needspoll = 0;
+      p->needspoll = false;
       call_process(p, PROCESS_EVENT_POLL, NULL);
     }
   }
@@ -245,11 +256,6 @@ do_poll(void)
 static void
 do_event(void)
 {
-  process_event_t ev;
-  process_data_t data;
-  struct process *receiver;
-  struct process *p;
-
   /*
    * If there are any events in the queue, take the first one and walk
    * through the list of processes to see if the event should be
@@ -257,14 +263,12 @@ do_event(void)
    * function for the process. We only process one event at a time and
    * call the poll handlers inbetween.
    */
-
   if(nevents > 0) {
 
     /* There are events that we should deliver. */
-    ev = events[fevent].ev;
-
-    data = events[fevent].data;
-    receiver = events[fevent].p;
+    process_event_t ev = events[fevent].ev;
+    process_data_t data = events[fevent].data;
+    struct process *receiver = events[fevent].p;
 
     /* Since we have seen the new event, we move pointer upwards
        and decrease the number of events. */
@@ -274,8 +278,7 @@ do_event(void)
     /* If this is a broadcast event, we deliver it to all events, in
        order of their priority. */
     if(receiver == PROCESS_BROADCAST) {
-      for(p = process_list; p != NULL; p = p->next) {
-
+      for(struct process *p = process_list; p != NULL; p = p->next) {
         /* If we have been requested to poll a process, we do this in
            between processing the broadcast event. */
         if(poll_requested) {
@@ -298,7 +301,7 @@ do_event(void)
   }
 }
 /*---------------------------------------------------------------------------*/
-int
+process_num_events_t
 process_run(void)
 {
   /* Process poll events. */
@@ -312,7 +315,7 @@ process_run(void)
   return nevents + poll_requested;
 }
 /*---------------------------------------------------------------------------*/
-int
+process_num_events_t
 process_nevents(void)
 {
   return nevents + poll_requested;
@@ -321,29 +324,21 @@ process_nevents(void)
 int
 process_post(struct process *p, process_event_t ev, process_data_t data)
 {
-  process_num_events_t snum;
-
-  if(PROCESS_CURRENT() == NULL) {
-    PRINTF("process_post: NULL process posts event %d to process '%s', nevents %d\n",
-           ev, PROCESS_NAME_STRING(p), nevents);
-  } else {
-    PRINTF("process_post: Process '%s' posts event %d to process '%s', nevents %d\n",
-           PROCESS_NAME_STRING(PROCESS_CURRENT()), ev,
-           p == PROCESS_BROADCAST ? "<broadcast>" : PROCESS_NAME_STRING(p), nevents);
-  }
-
   if(nevents == PROCESS_CONF_NUMEVENTS) {
-#if DEBUG
-    if(p == PROCESS_BROADCAST) {
-      printf("soft panic: event queue is full when broadcast event %d was posted from %s\n", ev, PROCESS_NAME_STRING(process_current));
-    } else {
-      printf("soft panic: event queue is full when event %d was posted to %s from %s\n", ev, PROCESS_NAME_STRING(p), PROCESS_NAME_STRING(process_current));
-    }
-#endif /* DEBUG */
+    LOG_WARN("Cannot post event %d to %s from %s because the queue is full\n",
+             ev,
+             p == PROCESS_BROADCAST ? "<broadcast>" : PROCESS_NAME_STRING(p),
+             PROCESS_NAME_STRING(process_current));
     return PROCESS_ERR_FULL;
   }
 
-  snum = (process_num_events_t)(fevent + nevents) % PROCESS_CONF_NUMEVENTS;
+  LOG_DBG("Process '%s' posts event %d to process '%s', nevents %d\n",
+          PROCESS_NAME_STRING(PROCESS_CURRENT()),
+          ev, p == PROCESS_BROADCAST ? "<broadcast>" : PROCESS_NAME_STRING(p),
+          nevents);
+
+  process_num_events_t snum =
+    (process_num_events_t)(fevent + nevents) % PROCESS_CONF_NUMEVENTS;
   events[snum].ev = ev;
   events[snum].data = data;
   events[snum].p = p;
@@ -370,16 +365,15 @@ process_post_synch(struct process *p, process_event_t ev, process_data_t data)
 void
 process_poll(struct process *p)
 {
-  if(p != NULL) {
-    if(p->state == PROCESS_STATE_RUNNING ||
-       p->state == PROCESS_STATE_CALLED) {
-      p->needspoll = 1;
-      poll_requested = 1;
-    }
+  if(p != NULL &&
+     (p->state == PROCESS_STATE_RUNNING || p->state == PROCESS_STATE_CALLED)) {
+    p->needspoll = true;
+    poll_requested = true;
+    PROCESS_POLL_REQUESTED();
   }
 }
 /*---------------------------------------------------------------------------*/
-int
+bool
 process_is_running(struct process *p)
 {
   return p->state != PROCESS_STATE_NONE;

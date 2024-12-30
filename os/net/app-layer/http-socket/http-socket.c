@@ -634,7 +634,7 @@ http_socket_get(struct http_socket *s,
                 void *callbackptr)
 {
   initialize_socket(s);
-  strncpy(s->url, url, sizeof(s->url));
+  strncpy(s->url, url, sizeof(s->url) - 1);
   s->pos = pos;
   s->length = length;
   s->callback = callback;
@@ -657,7 +657,7 @@ http_socket_post(struct http_socket *s,
                  void *callbackptr)
 {
   initialize_socket(s);
-  strncpy(s->url, url, sizeof(s->url));
+  strncpy(s->url, url, sizeof(s->url) - 1);
   s->postdata = postdata;
   s->postdatalen = postdatalen;
   s->content_type = content_type;

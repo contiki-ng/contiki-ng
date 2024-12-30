@@ -44,8 +44,8 @@
 #ifndef NRF53_DK_CONF_H
 #define NRF53_DK_CONF_H
 /*---------------------------------------------------------------------------*/
-#ifndef PLAFTORM_SLIP_ARCH_CONF_USB
-#define PLAFTORM_SLIP_ARCH_CONF_USB 0
+#ifndef PLATFORM_SLIP_ARCH_CONF_USB
+#define PLATFORM_SLIP_ARCH_CONF_USB 0
 #endif
 /*---------------------------------------------------------------------------*/
 #ifndef PLATFORM_DBG_CONF_USB

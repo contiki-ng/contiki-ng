@@ -160,6 +160,8 @@ struct button_hal_button_s {
    */
   const char *description;
 #endif
+  /** The pin's pull configuration */
+  const gpio_hal_pin_cfg_t pull;
 
   /** True if the button uses negative logic (active: low) */
   const bool negative_logic;
@@ -171,9 +173,6 @@ struct button_hal_button_s {
 
   /** The gpio pin connected to the button */
   const gpio_hal_pin_t pin;
-
-  /** The pin's pull configuration */
-  const gpio_hal_pin_cfg_t pull;
 
   /** A counter of the duration (in seconds) of a button press */
   uint8_t press_duration_seconds;

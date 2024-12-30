@@ -13,12 +13,6 @@ endif
 # of attempted matches from the implicit rules for SCCS.
 MAKEFLAGS += --no-builtin-rules
 
-# Despite --no-builtin-rules, make insists on "remaking" the included
-# Makefiles, so disable that with these empty rules. This saves 200+ lines
-# of rule matching on "make -d TARGET=native" on hello-world.
-Makefile: ;
-Makefile.%: ;
-
 # The target logic makes all build artifacts implicit, prevent make from
 # removing object files upon build completion.
 .SECONDARY:
@@ -33,6 +27,7 @@ WERROR ?= 1
 
 # Disable Clang by default.
 CLANG ?= 0
+TIDY ?= 0
 
 include $(CONTIKI)/Makefile.identify-target
 
@@ -131,17 +126,30 @@ include $(target_makefile)
 
 ifneq ($(MAKECMDGOALS),clean)
   ifeq ($(CLANG),1)
+    # Clang Static Analyzer ignores -Werror, run through clang-tidy instead.
+    override ANALYZER = 0
     # Use GCC sysroot unless user specified something else.
     ifndef SYSROOT
       SYSROOT := $(shell $(CC) $(CFLAGS) --print-sysroot)
     endif
     # Default to the most recent Clang in Ubuntu.
-    CLANG_CC ?= clang-14
+    CLANG_CC ?= clang-15
+    CLANG_TIDY ?= clang-tidy-15
     CC := $(CLANG_CC)
     AS := $(CC)
     LD := $(CC)
     CFLAGS += $(CFLAGS_CLANG)
     LDFLAGS += $(LDFLAGS_CLANG)
+    ifdef NO_CLANG
+      PLATFORM_ACTION = skip
+    endif
+  endif
+
+  ifdef BOARD
+    ifeq ("$(filter $(BOARD), $(BOARDS))", "")
+      $(info Available boards: $(BOARDS))
+      $(error Board '$(BOARD)' not available for target '$(TARGET)'.)
+    endif
   endif
 
   # Validate the toolchain.
@@ -156,8 +164,15 @@ ifneq ($(MAKECMDGOALS),clean)
   ifeq ("$(CC)","arm-none-eabi-gcc")
     # Silence some warnings when using GCC 12.
     ifeq (12,$(GCC_MAJOR_VERSION))
-      # Disable -Warray-bounds false positives in GCC 12, GCC 13 has better
-      # precision (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99578).
+      # Disable -Warray-bounds false positives.
+      CFLAGS += --param=min-pagesize=0
+      # FIXME: Investigate if the warning can be re-enabled.
+      # https://www.redhat.com/en/blog/linkers-warnings-about-executable-stacks-and-segments
+      LDFLAGS += -Wl,--no-warn-rwx-segments
+    endif
+    ifeq (13,$(GCC_MAJOR_VERSION))
+      # Disable -Warray-bounds false positives. Supposed to be improved
+      # in GCC 13 (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99578).
       CFLAGS += --param=min-pagesize=0
       # FIXME: Investigate if the warning can be re-enabled.
       # https://www.redhat.com/en/blog/linkers-warnings-about-executable-stacks-and-segments
@@ -184,6 +199,20 @@ endif
 
 CP ?= cp
 
+ifdef NO_CHECK_STRUCTS
+  PAHOLE = echo ""
+else
+  ifeq ($(CHECK_STRUCTS),1)
+    DEBUG = 1
+  endif
+endif
+
+# Default to use pahole for finding holes in structs.
+PAHOLE ?= pahole
+# There are structs with holes in external libraries, exclude these structs.
+PAHOLE_EXCLUDES ?= _IO_FILE
+PAHOLE_FLAGS ?= -H 1 --exclude=$(PAHOLE_EXCLUDES)
+
 # Default to release builds.
 DEBUG ?= 0
 # Default to generate debug information for gdb. Targets can override this.
@@ -191,6 +220,15 @@ CFLAGS_DEBUG ?= -ggdb
 
 ifeq ($(DEBUG),1)
   CFLAGS += $(CFLAGS_DEBUG)
+endif
+
+# Default to not use static analysis.
+ANALYZE ?= 0
+ifeq ($(ANALYZE),1)
+  # Define something corresponding to __clang_analyzer__ for GCC as well.
+  CFLAGS += -fanalyzer -D__gcc_analyzer__ $(CFLAGS_FANALYZER)
+  # FIXME: poor -fanalyzer results with GCC 13 according to documentation.
+  #        Add ANALYZE support to CXXFLAGS when GCC supports it better.
 endif
 
 # Configure link-time-optimization (LTO).
@@ -359,7 +397,7 @@ ifneq ($(MODULES_IMACROS),)
   CFLAGS += ${foreach d, $(MODULES_IMACROS), -imacros $(d)}
 endif
 
-CXXFLAGS += $(subst -std=c99,-std=gnu++11,$(CFLAGS))
+CXXFLAGS += $(subst -std=c11,-std=gnu++11,$(CFLAGS))
 CXXFLAGS += -fpermissive -fno-exceptions -fno-unwind-tables
 CXXFLAGS += -fno-threadsafe-statics -fno-rtti -fno-use-cxa-atexit
 
@@ -401,15 +439,24 @@ CONTIKI_CPU_DIRS_CONCAT    = ${addprefix $(CONTIKI_CPU)/, \
                                $(CONTIKI_CPU_DIRS)}
 
 SOURCEDIRS += . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) \
-              $(CONTIKI_CPU_DIRS_CONCAT) $(MODULEDIRS) $(EXTERNALDIRS)
+              $(CONTIKI_CPU_DIRS_CONCAT) $(MODULEDIRS)
 
-vpath %.c $(SOURCEDIRS)
-vpath %.cpp $(SOURCEDIRS)
-vpath %.in $(SOURCEDIRS)
-vpath %.S $(SOURCEDIRS)
-vpath %.s $(SOURCEDIRS)
+vpath %.c $(SOURCEDIRS) $(EXTERNALDIRS)
+vpath %.cpp $(SOURCEDIRS) $(EXTERNALDIRS)
+vpath %.in $(SOURCEDIRS) $(EXTERNALDIRS)
+vpath %.S $(SOURCEDIRS) $(EXTERNALDIRS)
+vpath %.s $(SOURCEDIRS) $(EXTERNALDIRS)
 
-CFLAGS += ${addprefix -I,$(SOURCEDIRS) $(CONTIKI)}
+CFLAGS += $(addprefix -I,$(SOURCEDIRS))
+# EXTERNALDIRS are used for third-party code, consider them system
+# includes with Clang so clang-tidy does not try to enforce the Contiki-NG
+# style on them.
+ifeq ($(CLANG),1)
+CFLAGS += $(addprefix -isystem,$(EXTERNALDIRS))
+else
+CFLAGS += $(addprefix -I,$(EXTERNALDIRS))
+endif
+CFLAGS += $(addprefix -I,$(CONTIKI))
 
 ### Check for a git repo and pass version if found
 ifndef RELSTR
@@ -445,12 +492,11 @@ PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_FILTERE
 .PHONY: all clean distclean usage help targets boards savetarget savedefines viewconf
 
 clean:
-	$(Q)rm -f *.d *.e *.o $(CLEAN) \
-		$(addsuffix .$(TARGET), $(CONTIKI_PROJECT))
+	$(Q)rm -f *.e $(CLEAN)
 	$(Q)rm -rf $(BUILD_DIR_TARGET)
 
 distclean:
-	$(Q)for TARG in `ls $(CONTIKI_NG_RELOC_PLATFORM_DIR) $(TARGETDIRS)`; do \
+	$(Q)[ "$(TARGETDIRS)" = "" ] || for TARG in `ls $(TARGETDIRS)`; do \
 		$(MAKE) TARGET=$$TARG clean; \
 	done
 	$(Q)rm -rf $(BUILD_DIR)
@@ -470,20 +516,19 @@ endif
 ### Automatic dependency generation, see
 ### http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/#advanced
 
-DEPFLAGS ?= -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
+DEPFLAGS ?= -MT $@ -MMD -MP -MF $(DEPDIR)/$(notdir $<).d
 
-# PROJECT_SOURCEFILES can contain anything, perform one substitution for each
-# file type and filter out the results we want. Without the filter, DEPFILES
-# will contain cpp files from the first PROJECT_SOURCEFILES and c files from
-# the second PROJECT_SOURCEFILES.
+# Source files for CONTIKI_PROJECT can be C or C++, so add both.
 # LDSCRIPT is generated with the preprocessor on some targets, so enable
 # those targets to avoid rebuilds as well.
 DEPFILES := $(TARGET_DEPFILES) \
-            $(addprefix $(DEPDIR)/, $(addsuffix .d, $(CONTIKI_PROJECT))) \
-            ${filter %.d, $(CONTIKI_SOURCEFILES:%.c=$(DEPDIR)/%.d) \
-                          $(PROJECT_SOURCEFILES:%.c=$(DEPDIR)/%.d) \
-                          $(PROJECT_SOURCEFILES:%.cpp=$(DEPDIR)/%.d)} \
-            $(addprefix $(DEPDIR)/, $(addsuffix .d, $(notdir $(LDSCRIPT))))
+            $(addprefix $(DEPDIR)/, \
+               $(addsuffix .c.d, $(CONTIKI_PROJECT)) \
+               $(addsuffix .cpp.d, $(CONTIKI_PROJECT)) \
+               $(addsuffix .d, \
+                  $(notdir $(CONTIKI_SOURCEFILES)) \
+                  $(notdir $(PROJECT_SOURCEFILES)) \
+                  $(notdir $(LDSCRIPT))))
 
 $(DEPFILES):
 include $(wildcard $(DEPFILES))
@@ -515,14 +560,34 @@ endif
 
 ifndef CUSTOM_RULE_C_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.c | $(DEPDIR)
+ifeq ($(CLANG),1)
+ifeq ($(TIDY),1)
+	$(Q)if git ls-files --error-unmatch $< >/dev/null 2>&1; then \
+          $(CLANG_TIDY) $< -- $(CFLAGS); \
+        fi
+endif
+endif
 	$(TRACE_CC)
 	$(Q)$(CCACHE) $(CC) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+ifeq ($(CHECK_STRUCTS),1)
+	$(Q)$(PAHOLE) $(PAHOLE_FLAGS) $@ | perl -ne 'exit 1 if /XXX/'
+endif
 endif
 
 ifndef CUSTOM_RULE_CPP_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.cpp | $(DEPDIR)
+ifeq ($(CLANG),1)
+ifeq ($(TIDY),1)
+	$(Q)if git ls-files --error-unmatch $< >/dev/null 2>&1; then \
+          $(CLANG_TIDY) $< -- $(CXXFLAGS); \
+        fi
+endif
+endif
 	$(TRACE_CXX)
 	$(Q)$(CCACHE) $(CXX) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
+ifeq ($(CHECK_STRUCTS),1)
+	$(Q)$(PAHOLE) $(PAHOLE_FLAGS) $@ | perl -ne 'exit 1 if /XXX/'
+endif
 endif
 
 ifndef CUSTOM_RULE_S_TO_OBJECTDIR_O
@@ -562,6 +627,12 @@ ifndef LD
   LD = $(CC)
 endif
 
+# Force re-linking when LIBNAME is set. This ensures Cooja will always
+# get a fresh binary, even when user has run make manually in their shell.
+ifdef LIBNAME
+  INTERNAL_DEPS += FORCE
+endif
+
 ifndef CUSTOM_RULE_LINK
 # Targets can define LD_START_GROUP and LD_END_GROUP to resolve circular
 # dependencies between linked libraries, see:
@@ -577,17 +648,17 @@ TARGET_LIBEXTRAS = $(LD_START_GROUP) $(TARGET_LIBFILES) $(LD_END_GROUP)
 # a compatibility line for link rule so we can have a single rule that
 # outputs to LIBNAME on all platforms.
 $(BUILD_DIR_BOARD)/%.$(TARGET): LIBNAME ?= $@
-$(BUILD_DIR_BOARD)/%.$(TARGET): $(OBJECTDIR)/%.o $(LDSCRIPT) $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_OBJECTFILES)
+$(BUILD_DIR_BOARD)/%.$(TARGET): $(OBJECTDIR)/%.o $(LDSCRIPT) $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_OBJECTFILES) $(INTERNAL_DEPS)
 	$(TRACE_LD)
-	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) $(sort ${filter-out $(LDSCRIPT) %.a,$^}) ${filter %.a,$^} $(TARGET_LIBEXTRAS) -o $(LIBNAME)
+	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) $(sort ${filter-out FORCE $(LDSCRIPT) %.a,$^}) ${filter %.a,$^} $(TARGET_LIBEXTRAS) $(LDLIBS) -o $(LIBNAME)
 ifdef BINARY_SIZE_LOGFILE
 	$(Q)$(SIZE) $(LIBNAME) | grep $(BUILD_DIR_BOARD) >> $(BINARY_SIZE_LOGFILE)
 endif
 endif
 
+# Keep an empty command so this is a rule, not just a prerequisite.
 %.$(TARGET): $(BUILD_DIR_BOARD)/%.$(TARGET)
-	$(TRACE_CP)
-	$(Q)$(CP) $< $@
+	@
 
 %.ramprof: $(BUILD_DIR_BOARD)/%.$(TARGET)
 	$(NM) -S -td --size-sort $< | grep -i " [abdrw] " | cut -d' ' -f2,4
@@ -614,6 +685,9 @@ savetarget:
 ifneq ($(BOARD),)
 	@echo >>Makefile.target "BOARD = $(BOARD)"
 endif
+ifneq ($(BOARD_REVISION),)
+	@echo >>Makefile.target "BOARD_REVISION = $(BOARD_REVISION)"
+endif
 
 savedefines:
 	@rm -f Makefile.$(TARGET).defines
@@ -625,6 +699,7 @@ viewconf:
 	@echo "----------------- Make variables: --------------"
 	@echo "##### \"TARGET\": ________________________________ $(TARGET)"
 	@echo "##### \"BOARD\": _________________________________ $(BOARD)"
+	@echo "##### \"BOARD_REVISION\": ________________________ $(BOARD_REVISION)"
 	@echo "##### \"MAKE_MAC\": ______________________________ $(MAKE_MAC)"
 	@echo "##### \"MAKE_NET\": ______________________________ $(MAKE_NET)"
 	@echo "##### \"MAKE_ROUTING\": __________________________ $(MAKE_ROUTING)"
@@ -668,6 +743,6 @@ else
 # Match-anything pattern rule to allow the project makefiles to
 # abstract from the actual binary name. It needs to contain some
 # command in order to be a rule, not just a prerequisite.
-%: %.$(TARGET)
+%: $(BUILD_DIR_BOARD)/%.$(TARGET)
 	@
 endif

@@ -18,8 +18,8 @@
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>Root/sender</description>
       <source>[CONTIKI_DIR]/examples/multicast/root.c</source>
-      <commands>make TARGET=cooja clean
-make -j$(CPUS) root.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) TARGET=cooja clean
+$(MAKE) -j$(CPUS) root.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -51,7 +51,7 @@ make -j$(CPUS) root.cooja TARGET=cooja</commands>
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>Intermediate</description>
       <source>[CONTIKI_DIR]/examples/multicast/intermediate.c</source>
-      <commands>make -j$(CPUS) intermediate.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) -j$(CPUS) intermediate.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>
@@ -373,7 +373,7 @@ make -j$(CPUS) root.cooja TARGET=cooja</commands>
       org.contikios.cooja.contikimote.ContikiMoteType
       <description>Receiver</description>
       <source>[CONTIKI_DIR]/examples/multicast/sink.c</source>
-      <commands>make -j$(CPUS) sink.cooja TARGET=cooja</commands>
+      <commands>$(MAKE) -j$(CPUS) sink.cooja TARGET=cooja</commands>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.Battery</moteinterface>
       <moteinterface>org.contikios.cooja.contikimote.interfaces.ContikiVib</moteinterface>

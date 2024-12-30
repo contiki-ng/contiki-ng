@@ -2,7 +2,7 @@
 source ../utils.sh
 
 # Contiki directory
-CONTIKI=$1
+CONTIKI=../..
 
 # 3_1, 3_1_1, or 5
 # default: 3_1
@@ -41,11 +41,7 @@ sleep 2
 
 # Starting Contiki-NG native node
 echo "Starting native node"
-make -C $CODE_DIR -B TARGET=native clean
-make -C $CODE_DIR -B TARGET=native \
-  DEFINES=MQTT_CLIENT_CONF_ORG_ID=\\\"travis-test\\\",MQTT_CLIENT_CONF_LOG_LEVEL=LOG_LEVEL_DBG,MQTT_CONF_VERSION=MQTT_PROTOCOL_VERSION_$MQTT_VERSION \
-  > make.log 2> make.err
-sudo $VALGRIND_CMD $CODE_DIR/$CODE.native > $CLIENT_LOG 2> $CLIENT_ERR &
+sudo $VALGRIND_CMD $CODE_DIR/build/native/$CODE.native > $CLIENT_LOG 2> $CLIENT_ERR &
 CPID=$!
 
 # The mqtt-client will publish every 30 secs. Wait for 45
@@ -81,20 +77,14 @@ then
   cp $CLIENT_LOG $CLIENT_TESTLOG
   printf "%-32s TEST OK\n" "$TEST_NAME" | tee $CLIENT_TESTLOG;
 else
-  echo "==== make.log ====" ; cat make.log;
-  echo "==== make.err ====" ; cat make.err;
   echo "==== $CLIENT_LOG ====" ; cat $CLIENT_LOG;
   echo "==== $CLIENT_ERR ====" ; cat $CLIENT_ERR;
   echo "==== $MOSQ_SUB_LOG ====" ; cat $MOSQ_SUB_LOG;
   echo "==== $MOSQ_SUB_ERR ====" ; cat $MOSQ_SUB_ERR;
 
   printf "%-32s TEST FAIL\n" "$TEST_NAME" | tee $CLIENT_TESTLOG;
-  rm -f make.log make.err $CLIENT_LOG $CLIENT_ERR $MOSQ_SUB_LOG $MOSQ_SUB_ERR mosquitto.conf
+  rm -f $CLIENT_LOG $CLIENT_ERR $MOSQ_SUB_LOG $MOSQ_SUB_ERR mosquitto.conf
   exit 1
 fi
 
-rm -f make.log make.err $CLIENT_LOG $CLIENT_ERR $MOSQ_SUB_LOG $MOSQ_SUB_ERR mosquitto.conf
-
-# We do not want Make to stop -> Return 0
-# The Makefile will check if a log contains FAIL at the end
-exit 0
+rm -f $CLIENT_LOG $CLIENT_ERR $MOSQ_SUB_LOG $MOSQ_SUB_ERR mosquitto.conf

@@ -18,9 +18,9 @@
       org.contikios.cooja.mspmote.Z1MoteType
       <description>Z1 Mote Type #z11</description>
       <source>[CONTIKI_DIR]/examples/hello-world/hello-world.c</source>
-      <commands>make TARGET=z1 clean
-make -j$(CPUS) hello-world.z1 TARGET=z1</commands>
-      <firmware>[CONTIKI_DIR]/examples/hello-world/hello-world.z1</firmware>
+      <commands>$(MAKE) TARGET=z1 clean
+$(MAKE) -j$(CPUS) hello-world.z1 TARGET=z1</commands>
+      <firmware>[CONTIKI_DIR]/examples/hello-world/build/z1/hello-world.z1</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>

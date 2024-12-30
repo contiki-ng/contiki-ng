@@ -1,11 +1,4 @@
-## The COOJA Simulator Contiki platform Makefile
-##
-## This makefile should normally never be called directly, but
-## rather from inside the COOJA simulator.
-## The purpose of this file is to compile a shared library that
-## can be loaded into the Java part of COOJA.
-
-EXPECTED_COOJA_VERSION = 2022071901
+EXPECTED_COOJA_VERSION = 2023090701
 
 ifndef CONTIKI
   $(error CONTIKI not defined!)
@@ -13,17 +6,13 @@ endif
 
 # Detect incompatible Cooja versions when not performing "make clean".
 ifneq ($(MAKECMDGOALS),clean)
-  ifndef LIBNAME
-    $(warning Cooja target should be built by Cooja)
-    $(error Use TARGET=native for quickstarting a .csc simulation file)
-  endif
-
-  ifndef COOJA_VERSION
-    $(error COOJA_VERSION not defined, please upgrade Cooja)
-  endif
-
-  ifneq ($(COOJA_VERSION),$(EXPECTED_COOJA_VERSION))
-    $(error Got COOJA_VERSION $(COOJA_VERSION) but expected $(EXPECTED_COOJA_VERSION))
+  ifndef COOJA_CI
+    # If LIBNAME is set, build is done under Cooja.
+    ifdef LIBNAME
+      ifneq ($(COOJA_VERSION),$(EXPECTED_COOJA_VERSION))
+        $(error Got COOJA_VERSION $(COOJA_VERSION) but expected $(EXPECTED_COOJA_VERSION))
+      endif
+    endif
   endif
 
   ifneq ($(BOARD),)
@@ -31,11 +20,11 @@ ifneq ($(MAKECMDGOALS),clean)
   endif
 endif
 
-# Use dbg-io for IO functions like printf()
-MODULES += os/lib/dbg-io
-WRAPPED_FUNS = printf putchar puts snprintf sprintf vsnprintf
+WRAPPED_FUNS = printf putchar puts
 
 CC = gcc
+
+CFLAGS += -pthread
 
 ifeq ($(HOST_OS),Darwin)
   CFLAGS += -fno-common -DHAVE_SNPRINTF
@@ -43,10 +32,10 @@ ifeq ($(HOST_OS),Darwin)
   LDFLAGS += -dynamiclib -fno-common
 else
   CFLAGS += -fPIC
-  LDFLAGS += -shared -Wl,-zdefs
+  LDFLAGS += -shared -pthread -Wl,-zdefs
   LDFLAGS += -Wl,--warn-common
   LDFLAGS += -Wl,-T$(CONTIKI_NG_RELOC_PLATFORM_DIR)/cooja/cooja.ld
-  # Use the printf-family replacement functions in dbg-io.
+  # Use the printf-family replacement functions in cooja-log.c.
   LDFLAGS += $(addprefix -Wl$(COMMA)--wrap$(COMMA), $(WRAPPED_FUNS))
 endif
 
@@ -63,12 +52,12 @@ MODULES_SOURCES_EXCLUDES += stack-check.c
 MODULES_SOURCES_EXCLUDES += spi.c
 
 ### COOJA platform sources
-CONTIKI_TARGET_DIRS = . dev lib sys cfs
+CONTIKI_TARGET_DIRS = . dev sys cfs
 
 # (COOJA_SOURCEDIRS contains additional sources dirs set from simulator)
 vpath %.c $(COOJA_SOURCEDIRS)
 
-COOJA_BASE	= simEnvChange.c cooja_mt.c cooja_mtarch.c rtimer-arch.c watchdog.c int-master.c
+COOJA_BASE	= cooja_mt.c rtimer-arch.c watchdog.c int-master.c
 
 COOJA_INTFS	= beep.c ip.c leds-arch.c moteid.c \
 		    pir-sensor.c rs232.c vib-sensor.c \
@@ -78,7 +67,7 @@ COOJA_INTFS	= beep.c ip.c leds-arch.c moteid.c \
 COOJA_CORE = platform.c mtype.c random.c sensors.c leds.c gpio-hal-arch.c buttons.c
 
 # (COOJA_SOURCEFILES contains additional sources set from simulator)
-CONTIKI_TARGET_SOURCEFILES = \
+CONTIKI_TARGET_SOURCEFILES += \
 $(COOJA_BASE) $(COOJA_INTFS) $(COOJA_CORE) $(COOJA_NET) $(COOJA_SOURCEFILES)
 
 CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)

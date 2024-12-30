@@ -37,7 +37,6 @@
 #define dint() __disable_interrupt()
 #define eint() __enable_interrupt()
 #define __MSP430__ 1
-#define CC_CONF_INLINE
 
 #else /* __IAR_SYSTEMS_ICC__ */
 
@@ -57,8 +56,6 @@
 #endif
 #endif /* __MSPGCC__ */
 
-#define CC_CONF_INLINE inline
-
 #endif /* __IAR_SYSTEMS_ICC__ */
 
 /* Master interrupt state representation data type */
@@ -70,17 +67,12 @@
 
 #include <stdint.h>
 
-/* These names are deprecated, use C99 names. */
-typedef  uint8_t    u8_t;
-typedef uint16_t   u16_t;
-typedef uint32_t   u32_t;
-typedef  int32_t   s32_t;
-
-/* Types for clocks and uip_stats */
+/* Platform typedefs. */
 typedef unsigned short uip_stats_t;
-typedef unsigned long clock_time_t;
 typedef long off_t;
 
+/* Make clock_time_t smaller than default for size reasons. */
+#define CLOCK_CONF_SIZE 4
 /* Our clock resolution, this is the same as Unix HZ. */
 #define CLOCK_CONF_SECOND 128UL
 

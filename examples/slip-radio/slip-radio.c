@@ -142,7 +142,7 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
 
       packetbuf_clear();
       pos = packetutils_deserialize_atts(&data[3], len - 3);
-      if(pos < 0) {
+      if(pos < 0 || pos + 3 > len) {
         LOG_ERR("illegal packet attributes\n");
         return 1;
       }

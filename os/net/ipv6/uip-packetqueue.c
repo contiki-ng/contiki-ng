@@ -1,29 +1,21 @@
-#include <stdio.h>
-
-#include "net/ipv6/uip.h"
-
-#include "lib/memb.h"
-
 #include "net/ipv6/uip-packetqueue.h"
+#include "lib/memb.h"
+#include <stdio.h>
 
 #define MAX_NUM_QUEUED_PACKETS 2
 MEMB(packets_memb, struct uip_packetqueue_packet, MAX_NUM_QUEUED_PACKETS);
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
-
+/*---------------------------------------------------------------------------*/
+#include "sys/log.h"
+#define LOG_MODULE  "Packet-Q"
+#define LOG_LEVEL   LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
 static void
 packet_timedout(void *ptr)
 {
   struct uip_packetqueue_handle *h = ptr;
 
-  PRINTF("uip_packetqueue_free timed out %p\n", h);
+  LOG_INFO("Timed out %p\n", h);
   memb_free(&packets_memb, h->packet);
   h->packet = NULL;
 }
@@ -31,16 +23,17 @@ packet_timedout(void *ptr)
 void
 uip_packetqueue_new(struct uip_packetqueue_handle *handle)
 {
-  PRINTF("uip_packetqueue_new %p\n", handle);
+  LOG_DBG("New %p\n", handle);
   handle->packet = NULL;
 }
 /*---------------------------------------------------------------------------*/
 struct uip_packetqueue_packet *
-uip_packetqueue_alloc(struct uip_packetqueue_handle *handle, clock_time_t lifetime)
+uip_packetqueue_alloc(struct uip_packetqueue_handle *handle,
+                      clock_time_t lifetime)
 {
-  PRINTF("uip_packetqueue_alloc %p\n", handle);
+  LOG_DBG("Alloc %p\n", handle);
   if(handle->packet != NULL) {
-    PRINTF("alloced\n");
+    LOG_DBG("Alloced\n");
     return NULL;
   }
   handle->packet = memb_alloc(&packets_memb);
@@ -48,7 +41,7 @@ uip_packetqueue_alloc(struct uip_packetqueue_handle *handle, clock_time_t lifeti
     ctimer_set(&handle->packet->lifetimer, lifetime,
                packet_timedout, handle);
   } else {
-    PRINTF("uip_packetqueue_alloc failed\n");
+    LOG_ERR("Alloc failed\n");
   }
   return handle->packet;
 }
@@ -56,7 +49,7 @@ uip_packetqueue_alloc(struct uip_packetqueue_handle *handle, clock_time_t lifeti
 void
 uip_packetqueue_free(struct uip_packetqueue_handle *handle)
 {
-  PRINTF("uip_packetqueue_free %p\n", handle);
+  LOG_DBG("Free %p\n", handle);
   if(handle->packet != NULL) {
     ctimer_stop(&handle->packet->lifetimer);
     memb_free(&packets_memb, handle->packet);
@@ -65,15 +58,15 @@ uip_packetqueue_free(struct uip_packetqueue_handle *handle)
 }
 /*---------------------------------------------------------------------------*/
 uint8_t *
-uip_packetqueue_buf(struct uip_packetqueue_handle *h)
+uip_packetqueue_buf(const struct uip_packetqueue_handle *h)
 {
-  return h->packet != NULL? h->packet->queue_buf: NULL;
+  return h->packet != NULL ? h->packet->queue_buf: NULL;
 }
 /*---------------------------------------------------------------------------*/
 uint16_t
-uip_packetqueue_buflen(struct uip_packetqueue_handle *h)
+uip_packetqueue_buflen(const struct uip_packetqueue_handle *h)
 {
-  return h->packet != NULL? h->packet->queue_buf_len: 0;
+  return h->packet != NULL ? h->packet->queue_buf_len: 0;
 }
 /*---------------------------------------------------------------------------*/
 void
