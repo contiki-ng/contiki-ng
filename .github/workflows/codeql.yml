@@ -51,7 +51,7 @@ jobs:
 
     steps:
     - name: Install git-lfs
-      run: apt-get install -y --no-install-recommends git-lfs
+      run: apt-get update && apt-get install -y --no-install-recommends git-lfs
 
     - name: Checkout github repo (+ download lfs dependencies)
       uses: actions/checkout@v4
