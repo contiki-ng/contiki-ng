@@ -3095,12 +3095,21 @@ propose_channels(csl_nbr_t *csl_nbr)
   }
 
   uint_fast16_t proposed_channels = 0;
+  uint_fast8_t proposed_channels_count = 0;
   for(uint_fast8_t i = 0; i < CSL_CHANNELS_COUNT; i++) {
     if(!pulls[i]) {
       proposed_channels |= 1 << i;
+      proposed_channels_count++;
     }
   }
-  if(proposed_channels) {
+  if(proposed_channels_count >= MAX_PROPOSED_CHANNELS) {
+    /*
+     * Actually, SW-UCB mandates pulling all channels at least once before
+     * exploiting current knowledge. However, this led to long delays when less
+     * than MAX_PROPOSED_CHANNELS are left to explore. So, we only return here
+     * when at least MAX_PROPOSED_CHANNELS are left to explore. Otherwise, we
+     * start taking current knowledge into consideration already.
+     */
     return proposed_channels;
   }
 
@@ -3115,9 +3124,15 @@ propose_channels(csl_nbr_t *csl_nbr)
 
   struct result max_results[MAX_PROPOSED_CHANNELS];
   for(uint_fast8_t i = 0; i < CSL_CHANNELS_COUNT; i++) {
-    ufix16_t exploitation = ufix16_divide(rewards[i], pulls[i]);
-    ufix16_t exploration = ufix16_sqrt(ufix16_divide(intermediate, pulls[i]));
-    ufix16_t ucb = exploitation + exploration;
+    ufix16_t ucb;
+
+    if(pulls[i]) {
+      ufix16_t exploitation = ufix16_divide(rewards[i], pulls[i]);
+      ufix16_t exploration = ufix16_sqrt(ufix16_divide(intermediate, pulls[i]));
+      ucb = exploitation + exploration;
+    } else {
+      ucb = UFIX16_MAX;
+    }
 
     /* sorted insertion */
     bool inserted = false;

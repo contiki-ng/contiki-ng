@@ -71,26 +71,40 @@ static uint_fast16_t
 propose_channels(csl_nbr_t *csl_nbr)
 {
   uint_fast16_t proposed_channels = 0;
+  uint_fast8_t proposed_channels_count = 0;
   ufix22_t intermediate = 0;
   for(uint_fast8_t i = 0; i < CSL_CHANNELS_COUNT; i++) {
     if(csl_nbr->discounted_pulls[i]) {
       intermediate += csl_nbr->discounted_pulls[i];
     } else {
       proposed_channels |= 1 << i;
+      proposed_channels_count++;
     }
   }
-  if(proposed_channels) {
+  if(proposed_channels_count >= MAX_PROPOSED_CHANNELS) {
+    /*
+     * Actually, D-UCB mandates pulling all channels at least once before
+     * exploiting current knowledge. However, this led to long delays when less
+     * than MAX_PROPOSED_CHANNELS are left to explore. So, we only return here
+     * when at least MAX_PROPOSED_CHANNELS are left to explore. Otherwise, we
+     * start taking current knowledge into consideration already.
+     */
     return proposed_channels;
   }
   intermediate = ufix22_multiply(LOG_2_E_INV_XI, ufix22_log2(intermediate));
 
   struct result max_results[MAX_PROPOSED_CHANNELS];
   for(uint_fast8_t i = 0; i < CSL_CHANNELS_COUNT; i++) {
-    ufix22_t exploitation = ufix22_divide(csl_nbr->discounted_rewards[i],
-                                          csl_nbr->discounted_pulls[i]);
-    ufix22_t exploration =
-        ufix22_sqrt(ufix22_divide(intermediate, csl_nbr->discounted_pulls[i]));
-    ufix22_t ucb = exploitation + exploration;
+    ufix22_t ucb;
+    if(csl_nbr->discounted_pulls[i]) {
+      ufix22_t exploitation = ufix22_divide(csl_nbr->discounted_rewards[i],
+                                            csl_nbr->discounted_pulls[i]);
+      ufix22_t exploration =
+          ufix22_sqrt(ufix22_divide(intermediate, csl_nbr->discounted_pulls[i]));
+      ucb = exploitation + exploration;
+    } else {
+      ucb = UFIX22_MAX;
+    }
 
     bool inserted = false;
     uint_fast8_t already_inserted_results = MIN(i, MAX_PROPOSED_CHANNELS);
