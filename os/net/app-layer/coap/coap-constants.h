@@ -157,7 +157,7 @@ typedef enum coap_option_t {
   COAP_OPTION_Q_BLOCK1 = 19,
   // Location-Query; Ref: [RFC7252][RFC8613]
   COAP_OPTION_LOCATION_QUERY = 20,
-  // EDHOC; Ref: [RFC-ietf-core-oscore-edhoc-11]
+  // EDHOC; Ref: [RFC9668]
   COAP_OPTION_EDHOC = 21,
   // Block2; Ref: [RFC7959][RFC8323][RFC8613]
   COAP_OPTION_BLOCK2 = 23,
@@ -295,12 +295,26 @@ typedef enum coap_content_format_t {
   COAP_CONTENT_FORMAT_APPLICATION_CONCISE_PROBLEM_DETAILS_AS_CBOR = 257,
   // application/swid+cbor; Ref: [RFC9393]
   COAP_CONTENT_FORMAT_APPLICATION_SWID_AS_CBOR = 258,
-  // application/pkixcmp; Ref: [RFC9482][RFC4210]
+  // application/pkixcmp; Ref: [RFC9482][RFC-ietf-lamps-rfc6712bis-10]
   COAP_CONTENT_FORMAT_APPLICATION_PKIXCMP = 259,
-  // application/yang-sid+json; Ref: [RFC-ietf-core-sid-24]
+  // application/yang-sid+json; Ref: [RFC9595]
   COAP_CONTENT_FORMAT_APPLICATION_YANG_SID_AS_JSON = 260,
-  // application/ace-groupcomm+cbor; Ref: [RFC-ietf-ace-key-groupcomm-18]
+  // application/ace-groupcomm+cbor; Ref: [RFC9594]
   COAP_CONTENT_FORMAT_APPLICATION_ACE_GROUPCOMM_AS_CBOR = 261,
+  // application/ace-trl+cbor; Ref: [RFC-ietf-ace-revoked-token-notification-09]
+  COAP_CONTENT_FORMAT_APPLICATION_ACE_TRL_AS_CBOR = 262,
+  // application/eat+cwt; Ref: [RFC-ietf-rats-eat-media-type-12]
+  COAP_CONTENT_FORMAT_APPLICATION_EAT_AS_CWT = 263,
+  // application/eat+jwt; Ref: [RFC-ietf-rats-eat-media-type-12]
+  COAP_CONTENT_FORMAT_APPLICATION_EAT_AS_JWT = 264,
+  // application/eat-bun+cbor; Ref: [RFC-ietf-rats-eat-media-type-12]
+  COAP_CONTENT_FORMAT_APPLICATION_EAT_BUN_AS_CBOR = 265,
+  // application/eat-bun+json; Ref: [RFC-ietf-rats-eat-media-type-12]
+  COAP_CONTENT_FORMAT_APPLICATION_EAT_BUN_AS_JSON = 266,
+  // application/eat-ucs+cbor; Ref: [RFC-ietf-rats-eat-media-type-12]
+  COAP_CONTENT_FORMAT_APPLICATION_EAT_UCS_AS_CBOR = 267,
+  // application/eat-ucs+json; Ref: [RFC-ietf-rats-eat-media-type-12]
+  COAP_CONTENT_FORMAT_APPLICATION_EAT_UCS_AS_JSON = 268,
   // application/dots+cbor; Ref: [RFC9132]
   COAP_CONTENT_FORMAT_APPLICATION_DOTS_AS_CBOR = 271,
   // application/missing-blocks+cbor-seq; Ref: [RFC9177]
@@ -337,6 +351,8 @@ typedef enum coap_content_format_t {
   COAP_CONTENT_FORMAT_APPLICATION_TD_AS_JSON = 432,
   // application/tm+json; Ref: ["Web of Things (WoT) Thing Description 1.1", April 2022]
   COAP_CONTENT_FORMAT_APPLICATION_TM_AS_JSON = 433,
+  // application/uccs+cbor; Ref: [RFC-ietf-rats-uccs-12, Section 6.4]
+  COAP_CONTENT_FORMAT_APPLICATION_UCCS_AS_CBOR = 601,
   // application/voucher+cose (TEMPORARY - registered 2022-04-12, extension registered 2024-03-01, expires 2025-04-12); Ref: [draft-ietf-anima-constrained-voucher-23]
   COAP_CONTENT_FORMAT_APPLICATION_VOUCHER_AS_COSE = 836,
 
@@ -347,6 +363,16 @@ typedef enum coap_content_format_t {
   COAP_CONTENT_FORMAT_APPLICATION_OSCORE = 10001,
   // application/javascript; Ref: [RFC4329]
   COAP_CONTENT_FORMAT_APPLICATION_JAVASCRIPT = 10002,
+  // application/eat+cwt; eat_profile="tag:psacertified.org,2023:psa#tfm"; Ref: [RFC-tschofenig-rats-psa-token-24]
+  COAP_CONTENT_FORMAT_APPLICATION_EAT_AS_CWT_TAG_PSACERTIFIED_ORG_2023_PSA_TFM = 10003,
+  // application/eat+cwt; eat_profile="tag:psacertified.org,2019:psa#legacy"; Ref: [RFC-tschofenig-rats-psa-token-24]
+  COAP_CONTENT_FORMAT_APPLICATION_EAT_AS_CWT_TAG_PSACERTIFIED_ORG_2019_PSA_LEGACY = 10004,
+  // application/eat+cwt; eat_profile=2.16.840.1.113741.1.16.1; Ref: [RFC-ietf-rats-eat-media-type-12][draft-cds-rats-intel-corim-profile-02]
+  COAP_CONTENT_FORMAT_APPLICATION_EAT_AS_CWT_2_16_840_1_113741_1_16_1 = 10005,
+  // application/toc+cbor; Ref: [CE-Binding, Section 6.3.1]
+  COAP_CONTENT_FORMAT_APPLICATION_TOC_AS_CBOR = 10570,
+  // application/ce+cbor; Ref: [CE-Binding, Section 6.3.2]
+  COAP_CONTENT_FORMAT_APPLICATION_CE_AS_CBOR = 10571,
   // application/json; deflate; Ref: [RFC8259][RFC9110, Section 8.4.1.2]
   COAP_CONTENT_FORMAT_APPLICATION_JSON_DEFLATE = 11050,
   // application/cbor; deflate; Ref: [RFC8949][RFC9110, Section 8.4.1.2]
