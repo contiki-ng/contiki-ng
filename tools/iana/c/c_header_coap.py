@@ -341,21 +341,20 @@ def iana_coap_content_formats_c_enum_name_generate(content_type: str, content_co
     # Do not include comments indicated by messages within `(...)`
     content_type = re.sub(r'\s+\(.*\)', '', content_type)
     # Specific handling of known extra parameters
-    content_type = re.sub(r'([a-zA-Z0-9\-]+)/([a-zA-Z0-9\-\+\.]+); charset=([^"]+)', r'\1_\2_\3', content_type)
     content_type = re.sub(r'([a-zA-Z0-9\-]+)/([a-zA-Z0-9\-\+\.]+); cose-type="cose-([^"]+)"', r'\1_\2_\3', content_type)
-    content_type = re.sub(r'([a-zA-Z0-9\-]+)/([a-zA-Z0-9\-\+\.]+); smime-type=([^"]+)', r'\1_\2_\3', content_type)
-    content_type = re.sub(r'([a-zA-Z0-9\-]+)/([a-zA-Z0-9\-\+\.]+); id=([^"]+)', r'\1_\2_\3', content_type)
     # General handling of unknown parameters
-    content_type = re.sub(r'([a-zA-Z0-9\-]+)/([a-zA-Z0-9\-\+\.]+); [a-zA-Z0-9\-]+="([^"]+)"', r'\1_\2_\3', content_type)
-    content_type = re.sub(r'([a-zA-Z0-9\-]+)/([a-zA-Z0-9\-\+\.]+); [a-zA-Z0-9\-]+=([^"]+)', r'\1_\2_\3', content_type)
+    content_type = re.sub(r'([a-zA-Z0-9\-]+)/([a-zA-Z0-9\-\+\.]+); *(?:[a-zA-Z0-9\-_]+)="([^"]+)"', r'\1_\2_\3', content_type)
+    content_type = re.sub(r'([a-zA-Z0-9\-]+)/([a-zA-Z0-9\-\+\.]+); *(?:[a-zA-Z0-9\-_]+)=([^"]+)', r'\1_\2_\3', content_type)
     if content_coding:
         content_type += "_" + content_coding
-    # Convert '+' into '_AS_' as it
+    # Convert '+' into '_AS_' as it is a close semantic approximation
     content_type = re.sub(r'\+', r'_AS_', content_type)
     # Convert non alphanumeric characters into variable name friendly underscore
     content_type = re.sub(r'[^a-zA-Z0-9_]', '_', content_type)
     content_type = content_type.strip('_')
     content_type = content_type.upper()
+    # Remove any duplicate runs of '_'
+    content_type = re.sub(r'_+', '_', content_type)
     return f"{typedef_enum_name.upper()}_{content_type}"
 
 def iana_coap_content_formats_parse_csv(csv_content: str, typedef_enum_name: str):
