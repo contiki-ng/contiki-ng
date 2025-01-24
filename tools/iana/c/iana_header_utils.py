@@ -88,7 +88,7 @@ def override_enum_from_existing_typedef_enum(header_file_content: str, c_typedef
     Check for existing enum so we do not break it
     """
     def extract_enum_values_from_typedef_enum(c_code: str, existing_enum_content: str) -> str:
-        matches = re.findall(r'(\w+)\s*=\s*(\d+)', existing_enum_content)
+        matches = re.findall(r'^(\w+)\s*=\s*(\d+)', existing_enum_content)
 
         enum_values = {}
         for match in matches:
