@@ -58,17 +58,6 @@ static int get_light_reading(void);
 static void init_mpu_reading(void);
 static void schedule_rtimer(void);
 
-static void
-print_mpu_reading(int reading)
-{
-  if(reading < 0) {
-    printf("-");
-    reading = -reading;
-  }
-
-  printf("%d.%02d", reading / 100, reading % 100);
-}
-
 /*---------------------------------------------------------------------------*/
 
 static void
@@ -84,7 +73,7 @@ do_rtimer_timeout(struct rtimer *timer, void *ptr)
   ms3 = ((now% RTIMER_SECOND)*1000/RTIMER_SECOND)%10;
   
   counter_rtimer++;
-  printf(": %d (cnt) %d (ticks) %d.%d%d%d (sec) \n",counter_rtimer,now, s, ms1,ms2,ms3); 
+  printf("rtimer: %d (cnt) %d (ticks) %d.%d%d%d (sec) \n",counter_rtimer,now, s, ms1,ms2,ms3); 
 
   if (get_light_reading() || get_mpu_reading()) {
     process_poll(&process_main);
@@ -133,35 +122,23 @@ get_mpu_reading()
 {
   int value;
 
-  printf("MPU Gyro: X=");
   value = mpu_9250_sensor.value(MPU_9250_SENSOR_TYPE_GYRO_X);
-  print_mpu_reading(value);
-  printf(" deg/sec\n");
+  printf("MPU Gyro: X= %d.%02d deg/sec\n", value/100, abs(value)%100);
 
-  printf("MPU Gyro: Y=");
   value = mpu_9250_sensor.value(MPU_9250_SENSOR_TYPE_GYRO_Y);
-  print_mpu_reading(value);
-  printf(" deg/sec\n");
+  printf("MPU Gyro: Y= %d.%02d deg/sec\n", value/100, abs(value)%100);
 
-  printf("MPU Gyro: Z=");
   value = mpu_9250_sensor.value(MPU_9250_SENSOR_TYPE_GYRO_Z);
-  print_mpu_reading(value);
-  printf(" deg/sec\n");
+  printf("MPU Gyro: Z= %d.%02d deg/sec\n", value/100, abs(value)%100);
 
-  printf("MPU Acc: X=");
   value = mpu_9250_sensor.value(MPU_9250_SENSOR_TYPE_ACC_X);
-  print_mpu_reading(value);
-  printf(" G\n");
+  printf("MPU Acc: X= %d.%02d G\n", value/100, abs(value)%100);
 
-  printf("MPU Acc: Y=");
   value = mpu_9250_sensor.value(MPU_9250_SENSOR_TYPE_ACC_Y);
-  print_mpu_reading(value);
-  printf(" G\n");
+  printf("MPU Acc: Y= %d.%02d G\n", value/100, abs(value)%100);
 
-  printf("MPU Acc: Z=");
   value = mpu_9250_sensor.value(MPU_9250_SENSOR_TYPE_ACC_Z);
-  print_mpu_reading(value);
-  printf(" G\n");
+  printf("MPU Acc: Z= %d.%02d G\n", value/100, abs(value)%100);
 
   return 0;
 }
