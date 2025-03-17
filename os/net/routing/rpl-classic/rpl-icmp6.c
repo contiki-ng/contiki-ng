@@ -72,6 +72,8 @@ static void dis_input(void);
 static void dio_input(void);
 static void dao_input(void);
 static void dao_ack_input(void);
+static void dco_input(void);
+static void dco_ack_input(void);
 
 static void dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
                                   uint8_t lifetime, uint8_t seq_no);
@@ -96,6 +98,8 @@ UIP_ICMP6_HANDLER(dis_handler, ICMP6_RPL, RPL_CODE_DIS, dis_input);
 UIP_ICMP6_HANDLER(dio_handler, ICMP6_RPL, RPL_CODE_DIO, dio_input);
 UIP_ICMP6_HANDLER(dao_handler, ICMP6_RPL, RPL_CODE_DAO, dao_input);
 UIP_ICMP6_HANDLER(dao_ack_handler, ICMP6_RPL, RPL_CODE_DAO_ACK, dao_ack_input);
+UIP_ICMP6_HANDLER(dco_handler, ICMP6_RPL, RPL_CODE_DCO, dco_input);
+UIP_ICMP6_HANDLER(dco_ack_handler, ICMP6_RPL, RPL_CODE_DCO_ACK, dco_ack_input);
 /*---------------------------------------------------------------------------*/
 
 #if RPL_WITH_DAO_ACK
@@ -1507,6 +1511,29 @@ dao_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequence,
 #endif /* RPL_WITH_DAO_ACK */
 }
 /*---------------------------------------------------------------------------*/
+static void dco_input(void)
+{
+}
+/*---------------------------------------------------------------------------*/
+#if RPL_WITH_DCO_ROUTE_INVALIDATION
+static void
+dco_output()
+{
+
+}
+#endif
+/*---------------------------------------------------------------------------*/
+static void
+dco_ack_input() {
+
+}
+/*---------------------------------------------------------------------------*/
+#if RPL_WITH_DCO_ACK
+void dco_ack_output()
+{
+}
+#endif
+/*---------------------------------------------------------------------------*/
 void
 rpl_icmp6_register_handlers(void)
 {
@@ -1514,6 +1541,8 @@ rpl_icmp6_register_handlers(void)
   uip_icmp6_register_input_handler(&dio_handler);
   uip_icmp6_register_input_handler(&dao_handler);
   uip_icmp6_register_input_handler(&dao_ack_handler);
+  uip_icmp6_register_input_handler(&dco_handler);
+  uip_icmp6_register_input_handler(&dco_ack_handler);
 }
 /*---------------------------------------------------------------------------*/
 

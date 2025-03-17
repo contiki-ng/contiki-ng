@@ -72,6 +72,8 @@
 #define RPL_CODE_DIO                   0x01   /* DAG Information Option */
 #define RPL_CODE_DAO                   0x02   /* Destination Advertisement Option */
 #define RPL_CODE_DAO_ACK               0x03   /* DAO acknowledgment */
+#define RPL_CODE_DCO                   0x07   /* Destination Cleanup Object [RFC9009]*/
+#define RPL_CODE_DCO_ACK               0x08   /* DCO acknowledgment*/
 #define RPL_CODE_SEC_DIS               0x80   /* Secure DIS */
 #define RPL_CODE_SEC_DIO               0x81   /* Secure DIO */
 #define RPL_CODE_SEC_DAO               0x82   /* Secure DAO */
@@ -91,6 +93,8 @@
 
 #define RPL_DAO_K_FLAG                   0x80 /* DAO ACK requested */
 #define RPL_DAO_D_FLAG                   0x40 /* DODAG ID present */
+#define RPL_DCO_K_FLAG                   0x80 /* DCO ACK requested */
+#define RPL_DCO_D_FLAG                   0x40 /* DODAG ID present */
 
 #define RPL_DAO_ACK_UNCONDITIONAL_ACCEPT 0
 #define RPL_DAO_ACK_ACCEPT               1   /* 1 - 127 is OK but not good */
