@@ -67,25 +67,14 @@
 #define LOG_DBG_COAP_EP(endpoint)  LOG_COAP_EP(LOG_LEVEL_DBG, endpoint)
 
 /* CoAP strings */
-#define LOG_COAP_STRING(level, text, len) do {              \
-    if(level <= (LOG_LEVEL)) {                              \
-      coap_log_string(text, len);                           \
-    }                                                       \
+#define LOG_COAP_STRING(level, text, len) do {  \
+    LOG_STRING(level, text, len);               \
   } while (0)
 
 #define LOG_ERR_COAP_STRING(text, len)  LOG_COAP_STRING(LOG_LEVEL_ERR, text, len)
 #define LOG_WARN_COAP_STRING(text, len) LOG_COAP_STRING(LOG_LEVEL_WARN, text, len)
 #define LOG_INFO_COAP_STRING(text, len) LOG_COAP_STRING(LOG_LEVEL_INFO, text, len)
 #define LOG_DBG_COAP_STRING(text, len)  LOG_COAP_STRING(LOG_LEVEL_DBG, text, len)
-
-/**
- * \brief Logs a CoAP string that has a length specified, but might
- * not be zero-terminated.
- *
- * \param text The CoAP string.
- * \param len  The number of characters in the CoAP string.
- */
-void coap_log_string(const char *text, size_t len);
 
 #endif /* COAP_LOG_H_ */
 /** @} */

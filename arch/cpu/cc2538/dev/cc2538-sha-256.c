@@ -90,7 +90,7 @@ disable_crypto(void)
 /*---------------------------------------------------------------------------*/
 static void
 do_hash(const uint8_t *data, size_t len,
-    void *digest, uint64_t final_bit_count)
+        void *digest, uint64_t final_bit_count)
 {
   /* DMA fails if data does not reside in RAM  */
   assert(udma_is_valid_source_address((uintptr_t)data));
@@ -115,7 +115,7 @@ do_hash(const uint8_t *data, size_t len,
   } else {
     /* configure new hash session */
     REG(AES_HASH_MODE_IN) = AES_HASH_MODE_IN_SHA256_MODE
-        | AES_HASH_MODE_IN_NEW_HASH;
+                            | AES_HASH_MODE_IN_NEW_HASH;
   }
 
   if(final_bit_count) {
@@ -223,7 +223,7 @@ restore_checkpoint(const sha_256_checkpoint_t *cp)
 /*---------------------------------------------------------------------------*/
 static void
 hash(const uint8_t *data, size_t len,
-    uint8_t digest[static SHA_256_DIGEST_LENGTH])
+     uint8_t digest[static SHA_256_DIGEST_LENGTH])
 {
   if(!len) {
     /* the CC2538 would freeze otherwise */

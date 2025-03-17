@@ -88,7 +88,7 @@ aead(const uint8_t *nonce, uint8_t *m, uint16_t m_len, const uint8_t *a,
   /* set up AES interrupts */
   REG(AES_CTRL_INT_CFG) = AES_CTRL_INT_CFG_LEVEL;
   REG(AES_CTRL_INT_EN) = AES_CTRL_INT_EN_DMA_IN_DONE
-      | AES_CTRL_INT_EN_RESULT_AV;
+                         | AES_CTRL_INT_EN_RESULT_AV;
 
   /* enable the DMA path to the AES engine */
   REG(AES_CTRL_ALG_SEL) = AES_CTRL_ALG_SEL_AES;
@@ -102,8 +102,8 @@ aead(const uint8_t *nonce, uint8_t *m, uint16_t m_len, const uint8_t *a,
     iv.u8[0] = CCM_L - 1;
     memcpy(iv.u8 + CCM_FLAGS_LEN, nonce, CCM_STAR_NONCE_LENGTH);
     memset(iv.u8 + CCM_FLAGS_LEN + CCM_STAR_NONCE_LENGTH,
-        0,
-        AES_128_BLOCK_SIZE - CCM_FLAGS_LEN - CCM_STAR_NONCE_LENGTH);
+           0,
+           AES_128_BLOCK_SIZE - CCM_FLAGS_LEN - CCM_STAR_NONCE_LENGTH);
 
     /* wait until the AES key is loaded */
     while(REG(AES_KEY_STORE_READ_AREA) & AES_KEY_STORE_READ_AREA_BUSY);
@@ -124,7 +124,8 @@ aead(const uint8_t *nonce, uint8_t *m, uint16_t m_len, const uint8_t *a,
   }
 
   /* configure AES engine */
-  REG(AES_AES_CTRL) = AES_AES_CTRL_SAVE_CONTEXT /* Save context */
+  REG(AES_AES_CTRL) =
+      AES_AES_CTRL_SAVE_CONTEXT /* Save context */
       | (((MAX(mic_len, 2) - 2) >> 1) << AES_AES_CTRL_CCM_M_S) /* M */
       | ((CCM_L - 1) << AES_AES_CTRL_CCM_L_S) /* L */
       | AES_AES_CTRL_CCM /* CCM */
@@ -188,7 +189,8 @@ aead(const uint8_t *nonce, uint8_t *m, uint16_t m_len, const uint8_t *a,
 
   /* check for errors */
   uint32_t errors = REG(AES_CTRL_INT_STAT)
-      & (AES_CTRL_INT_STAT_DMA_BUS_ERR | AES_CTRL_INT_STAT_KEY_ST_RD_ERR);
+                    & (AES_CTRL_INT_STAT_DMA_BUS_ERR
+                       | AES_CTRL_INT_STAT_KEY_ST_RD_ERR);
   if(errors) {
     LOG_ERR("error at line %d\n", __LINE__);
     /* clear errors */
@@ -197,7 +199,8 @@ aead(const uint8_t *nonce, uint8_t *m, uint16_t m_len, const uint8_t *a,
   }
 
   /* wait for the context ready bit */
-  while(!(REG(AES_AES_CTRL) & AES_AES_CTRL_SAVED_CONTEXT_READY)) { }
+  while(!(REG(AES_AES_CTRL) & AES_AES_CTRL_SAVED_CONTEXT_READY)) {
+  }
 
   /* read tag */
   {

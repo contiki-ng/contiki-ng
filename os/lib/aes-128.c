@@ -90,7 +90,7 @@ static uint8_t
 galois_mul2(uint8_t value)
 {
   uint8_t xor_val = (value >> 7) * 0x1b;
-  return ((value << 1) ^ xor_val);
+  return (value << 1) ^ xor_val;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -104,7 +104,7 @@ set_key(const uint8_t *key)
   memcpy(round_keys[0], key, AES_128_KEY_LENGTH);
   for(i = 1; i <= 10; i++) {
     round_keys[i][0] = sbox[round_keys[i - 1][13]] ^ round_keys[i - 1][0]
-        ^ rcon;
+                       ^ rcon;
     round_keys[i][1] = sbox[round_keys[i - 1][14]] ^ round_keys[i - 1][1];
     round_keys[i][2] = sbox[round_keys[i - 1][15]] ^ round_keys[i - 1][2];
     round_keys[i][3] = sbox[round_keys[i - 1][12]] ^ round_keys[i - 1][3];

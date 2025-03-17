@@ -78,6 +78,7 @@ struct log_module all_modules[] = {
   {"framer", &curr_log_level_framer, LOG_CONF_LEVEL_FRAMER},
   {"6top", &curr_log_level_6top, LOG_CONF_LEVEL_6TOP},
   {"coap", &curr_log_level_coap, LOG_CONF_LEVEL_COAP},
+  {"dtls", &curr_log_level_coap, LOG_CONF_LEVEL_DTLS},
   {"snmp", &curr_log_level_snmp, LOG_CONF_LEVEL_SNMP},
   {"lwm2m", &curr_log_level_lwm2m, LOG_CONF_LEVEL_LWM2M},
   {"sys", &curr_log_level_sys, LOG_CONF_LEVEL_SYS},
@@ -166,9 +167,25 @@ void
 log_bytes(const void *data, size_t length)
 {
   const uint8_t *u8data = (const uint8_t *)data;
-  size_t i;
-  for(i = 0; i != length; ++i) {
-    LOG_OUTPUT("%02x", u8data[i]);
+  for(size_t i = 0; i < length; ++i) {
+    if(LOG_WITH_COMPACT_BYTES) {
+      LOG_OUTPUT("%02x", u8data[i]);
+    } else {
+      LOG_OUTPUT(i == 0 ? "%02x" : " %02x", u8data[i]);
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+log_string(const char *text, size_t len)
+{
+  if(text == NULL) {
+    LOG_OUTPUT("(NULL STR)");
+    return;
+  }
+
+  for(int i = 0; i < len && *text != '\0'; i++, text++) {
+    LOG_OUTPUT("%c", *text);
   }
 }
 /*---------------------------------------------------------------------------*/

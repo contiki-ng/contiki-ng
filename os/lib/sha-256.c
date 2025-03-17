@@ -55,9 +55,9 @@ static uint32_t
 be32dec(uint8_t const *p)
 {
   return ((uint32_t)p[0] << 24)
-      | ((uint32_t)p[1] << 16)
-      | ((uint32_t)p[2] << 8)
-      | p[3];
+         | ((uint32_t)p[1] << 16)
+         | ((uint32_t)p[2] << 8)
+         | p[3];
 }
 
 static void
@@ -150,8 +150,10 @@ static const uint32_t K[64] = {
 
 /* Message schedule computation */
 #define MSCH(W, ii, i) \
-  W[i + ii + 16] = \
-      s1(W[i + ii + 14]) + W[i + ii + 9] + s0(W[i + ii + 1]) + W[i + ii]
+  W[i + ii + 16] = s1(W[i + ii + 14]) \
+                   + W[i + ii + 9] \
+                   + s0(W[i + ii + 1]) \
+                   + W[i + ii]
 
 static sha_256_checkpoint_t checkpoint;
 
@@ -236,7 +238,8 @@ sha_256_pad(void)
     memcpy(&checkpoint.buf[checkpoint.buf_len], PAD, 56 - checkpoint.buf_len);
   } else {
     /* Finish the current block and mix. */
-    memcpy(&checkpoint.buf[checkpoint.buf_len], PAD, SHA_256_BLOCK_SIZE - checkpoint.buf_len);
+    memcpy(&checkpoint.buf[checkpoint.buf_len], PAD,
+           SHA_256_BLOCK_SIZE - checkpoint.buf_len);
     transform(checkpoint.buf);
 
     /* The start of the final block is all zeroes. */
@@ -290,8 +293,8 @@ update(const uint8_t *data, size_t len)
 
   /* Finish the current block */
   memcpy(&checkpoint.buf[checkpoint.buf_len],
-      data,
-      SHA_256_BLOCK_SIZE - checkpoint.buf_len);
+         data,
+         SHA_256_BLOCK_SIZE - checkpoint.buf_len);
   transform(checkpoint.buf);
   data += SHA_256_BLOCK_SIZE - checkpoint.buf_len;
   len -= SHA_256_BLOCK_SIZE - checkpoint.buf_len;
@@ -341,7 +344,7 @@ restore_checkpoint(const sha_256_checkpoint_t *cp)
 /*---------------------------------------------------------------------------*/
 void
 sha_256_hash(const uint8_t *data, size_t len,
-    uint8_t digest[static SHA_256_DIGEST_LENGTH])
+             uint8_t digest[static SHA_256_DIGEST_LENGTH])
 {
   SHA_256.init();
   SHA_256.update(data, len);
@@ -392,8 +395,8 @@ sha_256_hmac_finish(uint8_t hmac[SHA_256_DIGEST_LENGTH])
 /*---------------------------------------------------------------------------*/
 void
 sha_256_hmac(const uint8_t *key, size_t key_len,
-    const uint8_t *data, size_t data_len,
-    uint8_t hmac[static SHA_256_DIGEST_LENGTH])
+             const uint8_t *data, size_t data_len,
+             uint8_t hmac[static SHA_256_DIGEST_LENGTH])
 {
   sha_256_hmac_init(key, key_len);
   sha_256_hmac_update(data, data_len);
@@ -402,16 +405,16 @@ sha_256_hmac(const uint8_t *key, size_t key_len,
 /*---------------------------------------------------------------------------*/
 void
 sha_256_hkdf_extract(const uint8_t *salt, size_t salt_len,
-    const uint8_t *ikm, size_t ikm_len,
-    uint8_t prk[static SHA_256_DIGEST_LENGTH])
+                     const uint8_t *ikm, size_t ikm_len,
+                     uint8_t prk[static SHA_256_DIGEST_LENGTH])
 {
   sha_256_hmac(salt, salt_len, ikm, ikm_len, prk);
 }
 /*---------------------------------------------------------------------------*/
 void
 sha_256_hkdf_expand(const uint8_t *prk, size_t prk_len,
-    const uint8_t *info, size_t info_len,
-    uint8_t *okm, uint_fast16_t okm_len)
+                    const uint8_t *info, size_t info_len,
+                    uint8_t *okm, uint_fast16_t okm_len)
 {
   uint_fast8_t n;
   uint8_t i;
@@ -430,17 +433,17 @@ sha_256_hkdf_expand(const uint8_t *prk, size_t prk_len,
     sha_256_hmac_update(&i, sizeof(i));
     sha_256_hmac_finish(t_i);
     memcpy(okm + ((i - 1) * SHA_256_DIGEST_LENGTH),
-        t_i,
-        MIN(SHA_256_DIGEST_LENGTH, okm_len));
+           t_i,
+           MIN(SHA_256_DIGEST_LENGTH, okm_len));
     okm_len -= SHA_256_DIGEST_LENGTH;
   }
 }
 /*---------------------------------------------------------------------------*/
 void
 sha_256_hkdf(const uint8_t *salt, size_t salt_len,
-    const uint8_t *ikm, size_t ikm_len,
-    const uint8_t *info, size_t info_len,
-    uint8_t *okm, uint_fast16_t okm_len)
+             const uint8_t *ikm, size_t ikm_len,
+             const uint8_t *info, size_t info_len,
+             uint8_t *okm, uint_fast16_t okm_len)
 {
   uint8_t prk[SHA_256_DIGEST_LENGTH];
 

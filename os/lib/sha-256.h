@@ -103,7 +103,7 @@ struct sha_256_driver {
    * \param digest pointer to the hash value
    */
   void (* hash)(const uint8_t *data, size_t len,
-      uint8_t digest[static SHA_256_DIGEST_LENGTH]);
+                uint8_t digest[static SHA_256_DIGEST_LENGTH]);
 };
 
 extern const struct sha_256_driver SHA_256;
@@ -112,7 +112,7 @@ extern const struct sha_256_driver SHA_256;
  * \brief Generic implementation of sha_256_driver#hash.
  */
 void sha_256_hash(const uint8_t *data, size_t len,
-    uint8_t digest[static SHA_256_DIGEST_LENGTH]);
+                  uint8_t digest[static SHA_256_DIGEST_LENGTH]);
 
 /**
  * \brief Initiates a stepwise HMAC-SHA-256 computation.
@@ -143,8 +143,8 @@ void sha_256_hmac_finish(uint8_t hmac[static SHA_256_DIGEST_LENGTH]);
  * \param hmac     pointer to where the resulting HMAC shall be stored
  */
 void sha_256_hmac(const uint8_t *key, size_t key_len,
-    const uint8_t *data, size_t data_len,
-    uint8_t hmac[static SHA_256_DIGEST_LENGTH]);
+                  const uint8_t *data, size_t data_len,
+                  uint8_t hmac[static SHA_256_DIGEST_LENGTH]);
 
 /**
  * \brief Extracts a key as per RFC 5869.
@@ -155,8 +155,8 @@ void sha_256_hmac(const uint8_t *key, size_t key_len,
  * \param prk      pointer to where the extracted key shall be stored
  */
 void sha_256_hkdf_extract(const uint8_t *salt, size_t salt_len,
-      const uint8_t *ikm, size_t ikm_len,
-      uint8_t prk[static SHA_256_DIGEST_LENGTH]);
+                          const uint8_t *ikm, size_t ikm_len,
+                          uint8_t prk[static SHA_256_DIGEST_LENGTH]);
 
 /**
  * \brief Expands a key as per RFC 5869.
@@ -168,8 +168,8 @@ void sha_256_hkdf_extract(const uint8_t *salt, size_t salt_len,
  * \param okm_len  length of okm in bytes (<= 255 * SHA_256_DIGEST_LENGTH)
  */
 void sha_256_hkdf_expand(const uint8_t *prk, size_t prk_len,
-      const uint8_t *info, size_t info_len,
-      uint8_t *okm, uint_fast16_t okm_len);
+                         const uint8_t *info, size_t info_len,
+                         uint8_t *okm, uint_fast16_t okm_len);
 
 /**
  * \brief Performs both extraction and expansion as per RFC 5869.
@@ -183,9 +183,9 @@ void sha_256_hkdf_expand(const uint8_t *prk, size_t prk_len,
  * \param okm_len  length of okm in bytes (<= 255 * SHA_256_DIGEST_LENGTH)
  */
 void sha_256_hkdf(const uint8_t *salt, size_t salt_len,
-      const uint8_t *ikm, size_t ikm_len,
-      const uint8_t *info, size_t info_len,
-      uint8_t *okm, uint_fast16_t okm_len);
+                  const uint8_t *ikm, size_t ikm_len,
+                  const uint8_t *info, size_t info_len,
+                  uint8_t *okm, uint_fast16_t okm_len);
 
 #endif /* SHA_256_H_ */
 

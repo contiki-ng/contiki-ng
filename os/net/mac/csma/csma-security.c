@@ -67,8 +67,6 @@ static const char * HEX = "0123456789ABCDEF";
 
 #if LLSEC802154_USES_AUX_HEADER && LLSEC802154_USES_FRAME_COUNTER
 
-#define MIC_LEN(level) LLSEC802154_MIC_LEN(level)
-
 #if LLSEC802154_USES_EXPLICIT_KEYS
 #define LLSEC_KEY_INDEX (FRAME802154_IMPLICIT_KEY == packetbuf_attr(PACKETBUF_ATTR_KEY_ID_MODE) \
                           ? 0 \
@@ -111,7 +109,8 @@ aead(uint8_t hdrlen, int forward)
   uint8_t a_len;
   uint8_t *result;
   /* Allocate for MAX level */
-  uint8_t generated_mic[MIC_LEN(7)];
+  uint8_t generated_mic[LLSEC802154_MIC_LEN(
+                            FRAME802154_SECURITY_LEVEL_ENC_MIC_128)];
   uint8_t *mic;
   uint8_t key_index;
   aes_key_t *key;
@@ -149,14 +148,15 @@ aead(uint8_t hdrlen, int forward)
   CCM_STAR.aead(nonce,
       m, m_len,
       a, a_len,
-      result, MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) & 0x07),
+      result, LLSEC802154_PACKETBUF_MIC_LEN(),
       forward);
 
   if(forward) {
-    packetbuf_set_datalen(packetbuf_datalen() + MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) & 0x07));
+    packetbuf_set_datalen(packetbuf_datalen()
+                          + LLSEC802154_PACKETBUF_MIC_LEN());
     return 1;
   } else {
-    return (memcmp(generated_mic, mic, MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) & 0x07)) == 0);
+    return memcmp(generated_mic, mic, LLSEC802154_PACKETBUF_MIC_LEN()) == 0;
   }
 }
 
@@ -221,8 +221,7 @@ length(void)
 {
   if(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) > 0 &&
      LLSEC_KEY_INDEX != 0xffff) {
-    return framer_802154.length() +
-      MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) & 0x07);
+    return framer_802154.length() + LLSEC802154_PACKETBUF_MIC_LEN();
   }
   return framer_802154.length();
 }
@@ -277,12 +276,12 @@ parse(void)
     return FRAMER_FAILED;
   }
 
-  if(packetbuf_datalen() <= MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) & 0x07)) {
+  if(packetbuf_datalen() <= LLSEC802154_PACKETBUF_MIC_LEN()) {
     LOG_ERR("MIC error - too little data in frame!\n");
     return FRAMER_FAILED;
   }
 
-  packetbuf_set_datalen(packetbuf_datalen() - MIC_LEN(packetbuf_attr(PACKETBUF_ATTR_SECURITY_LEVEL) & 0x07));
+  packetbuf_set_datalen(packetbuf_datalen() - LLSEC802154_PACKETBUF_MIC_LEN());
   if(!aead(hdr_len, 0)) {
     LOG_INFO("received unauthentic frame %u from ",
              (unsigned int) anti_replay_get_counter());

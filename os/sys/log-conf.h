@@ -54,6 +54,13 @@
 #define LOG_WITH_COMPACT_ADDR 0
 #endif /* LOG_CONF_WITH_COMPACT_ADDR */
 
+/* Log bytes as compact hex dump or with whitespace between hexcharacters */
+#ifdef LOG_CONF_WITH_COMPACT_BYTES
+#define LOG_WITH_COMPACT_BYTES LOG_CONF_WITH_COMPACT_BYTES
+#else /* LOG_CONF_WITH_COMPACT_BYTES */
+#define LOG_WITH_COMPACT_BYTES 1
+#endif /* LOG_CONF_WITH_COMPACT_BYTES */
+
 /* Prefix all logs with file name and line-of-code */
 #ifdef LOG_CONF_WITH_LOC
 #define LOG_WITH_LOC LOG_CONF_WITH_LOC

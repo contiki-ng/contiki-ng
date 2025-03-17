@@ -226,11 +226,11 @@ enum radio_param_e {
   RADIO_PARAM_LAST_RSSI,
 
   /**
-    * The current I/Q LSBs.
-    *
-    * This parameter will only be passed as an argument to the `get_value()`
-    * function.
-    */
+   * The current I/Q LSBs.
+   *
+   * This parameter will only be passed as an argument to the `get_value()`
+   * function.
+   */
   RADIO_PARAM_IQ_LSBS,
 
   /**

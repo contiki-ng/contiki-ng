@@ -46,8 +46,8 @@
 
 /* As per RFC 3610. L == 2 (m_len is two bytes long). */
 #define CCM_STAR_AUTH_FLAGS(a_len, mic_len) (((a_len) ? 1u << 6 : 0) \
-    | ((((mic_len) - 2u) >> 1) << 3) \
-    | 1u)
+                                             | ((((mic_len) - 2u) >> 1) << 3) \
+                                             | 1u)
 #define CCM_STAR_ENCRYPTION_FLAGS 1
 /* Valid values are 4, 6, 8, 10, 12, 14, and 16 octets */
 #define MIC_LEN_VALID(x) ((x) >= 4 && (x) <= 16 && (x) % 2 == 0)
@@ -55,9 +55,9 @@
 /*---------------------------------------------------------------------------*/
 static void
 set_iv(uint8_t *iv,
-    uint8_t flags,
-    const uint8_t *nonce,
-    uint16_t counter)
+       uint8_t flags,
+       const uint8_t *nonce,
+       uint16_t counter)
 {
   iv[0] = flags;
   memcpy(iv + 1, nonce, CCM_STAR_NONCE_LENGTH);
@@ -68,9 +68,9 @@ set_iv(uint8_t *iv,
 /* XORs the block m[pos] ... m[pos + 15] with K_{counter} */
 static void
 ctr_step(const uint8_t *nonce,
-    uint16_t pos,
-    uint8_t *m_and_result, uint16_t m_len,
-    uint16_t counter)
+         uint16_t pos,
+         uint8_t *m_and_result, uint16_t m_len,
+         uint16_t counter)
 {
   uint8_t a[AES_128_BLOCK_SIZE];
 
@@ -148,11 +148,11 @@ set_key(const uint8_t *key)
 }
 /*---------------------------------------------------------------------------*/
 static void
-aead(const uint8_t* nonce,
-    uint8_t* m, uint16_t m_len,
-    const uint8_t* a, uint16_t a_len,
-    uint8_t *result, uint8_t mic_len,
-    int forward)
+aead(const uint8_t *nonce,
+     uint8_t *m, uint16_t m_len,
+     const uint8_t *a, uint16_t a_len,
+     uint8_t *result, uint8_t mic_len,
+     int forward)
 {
   if(!MIC_LEN_VALID(mic_len)) {
     return;

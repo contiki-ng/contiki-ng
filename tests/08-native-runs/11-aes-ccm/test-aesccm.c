@@ -49,7 +49,7 @@ static const char *testcases[][3] = {
 #include "test-vectors.c"
 };
 
-#define NUM_TESTSCASES (sizeof(testcases)/sizeof(testcases[0]))
+#define NUM_TESTSCASES (sizeof(testcases) / sizeof(testcases[0]))
 #define MAXLEN 65536
 
 /*---------------------------------------------------------------------------*/
@@ -77,27 +77,28 @@ UNIT_TEST(aesccm_encrypt)
       uint8_t ciphertext_bytes[MAXLEN * 2 + MICLEN];
       size_t a_len = strlen(hdr_string) / 2;
       size_t m_len = strlen(cleartext_string) / 2;
-      hexconv_unhexlify(hdr_string, strlen(hdr_string), buffer, sizeof(buffer));
-      hexconv_unhexlify(cleartext_string, strlen(cleartext_string), buffer + a_len, sizeof(buffer) - a_len);
-      hexconv_unhexlify(ciphertext_string, strlen(ciphertext_string), ciphertext_bytes, sizeof(ciphertext_bytes));
+      hexconv_unhexlify(hdr_string, strlen(hdr_string),
+                        buffer, sizeof(buffer));
+      hexconv_unhexlify(cleartext_string, strlen(cleartext_string),
+                        buffer + a_len, sizeof(buffer) - a_len);
+      hexconv_unhexlify(ciphertext_string, strlen(ciphertext_string),
+                        ciphertext_bytes, sizeof(ciphertext_bytes));
 
       printf("TEST: encrypt in: %u + %u bytes\n",
-        (unsigned)a_len, (unsigned)m_len);
+             (unsigned)a_len,
+             (unsigned)m_len);
 
       CCM_STAR.set_key(key_bytes);
-      CCM_STAR.aead(
-          nonce_bytes,
-          buffer + a_len,
-          m_len,
-          buffer,
-          a_len,
-          buffer + a_len + m_len,
-          MICLEN,
-          1
-      );
+      CCM_STAR.aead(nonce_bytes,
+                    buffer + a_len, m_len,
+                    buffer, a_len,
+                    buffer + a_len + m_len, MICLEN,
+                    1);
 
       success = !memcmp(buffer, ciphertext_bytes, a_len + m_len + MICLEN);
-      printf("TEST: encrypt out: %u bytes --- %s\n", (unsigned)(a_len + m_len + MICLEN), success ? "OK" : "FAIL");
+      printf("TEST: encrypt out: %u bytes --- %s\n",
+             (unsigned)(a_len + m_len + MICLEN),
+             success ? "OK" : "FAIL");
       UNIT_TEST_ASSERT(success);
     }
   }
@@ -131,23 +132,24 @@ UNIT_TEST(aesccm_decrypt)
 
     size_t a_len = hdr_string ? strlen(hdr_string) / 2 : 0;
     size_t m_len = cleartext_string ? strlen(cleartext_string) / 2 : 0;
-    hexconv_unhexlify(ciphertext_string, strlen(ciphertext_string), buffer, sizeof(buffer));
-    hexconv_unhexlify(hdr_string ? hdr_string : "", hdr_string ? strlen(hdr_string) : 0, hdr_bytes, sizeof(hdr_bytes));
-    hexconv_unhexlify(cleartext_string ? cleartext_string : "", cleartext_string ? strlen(cleartext_string) : 0, cleartext_bytes, sizeof(cleartext_bytes));
+    hexconv_unhexlify(ciphertext_string, strlen(ciphertext_string),
+                      buffer, sizeof(buffer));
+    hexconv_unhexlify(hdr_string ? hdr_string : "",
+                      hdr_string ? strlen(hdr_string) : 0,
+                      hdr_bytes, sizeof(hdr_bytes));
+    hexconv_unhexlify(cleartext_string ? cleartext_string : "",
+                      cleartext_string ? strlen(cleartext_string) : 0,
+                      cleartext_bytes, sizeof(cleartext_bytes));
 
-    printf("TEST: decrypt in: %u bytes\n", (unsigned)strlen(ciphertext_string));
+    printf("TEST: decrypt in: %u bytes\n",
+           (unsigned)strlen(ciphertext_string));
 
     CCM_STAR.set_key(key_bytes);
-    CCM_STAR.aead(
-        nonce_bytes,
-        buffer + a_len,
-        m_len,
-        buffer,
-        a_len,
-        generated_mic,
-        MICLEN,
-        0
-    );
+    CCM_STAR.aead(nonce_bytes,
+                  buffer + a_len, m_len,
+                  buffer, a_len,
+                  generated_mic, MICLEN,
+                  0);
 
     auth_check = !memcmp(generated_mic, buffer + a_len + m_len, MICLEN);
     if(hdr_string != NULL && cleartext_string != NULL) {
@@ -158,7 +160,9 @@ UNIT_TEST(aesccm_decrypt)
       /* No input means we expact a failed auth */
       success = !auth_check;
     }
-    printf("TEST: encrypt out: %u + %u bytes --- %s\n", (unsigned)a_len, (unsigned)m_len, success ? "OK" : "FAIL");
+    printf("TEST: encrypt out: %u + %u bytes --- %s\n",
+           (unsigned)a_len,
+           (unsigned)m_len, success ? "OK" : "FAIL");
 
     UNIT_TEST_ASSERT(success);
   }
