@@ -78,6 +78,9 @@ static void dco_ack_input(void);
 static void dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
                                   uint8_t lifetime, uint8_t seq_no);
 
+static void dco_output_target(rpl_dag_t *dag, uip_ipaddr_t *target,
+                              uip_ds6_route_t *route, uint8_t seq_no);
+
 /* Some debug callbacks that are useful when debugging RPL networks. */
 #ifdef RPL_DEBUG_DIO_INPUT
 void RPL_DEBUG_DIO_INPUT(uip_ipaddr_t *, rpl_dio_t *);
@@ -88,6 +91,7 @@ void RPL_DEBUG_DAO_OUTPUT(rpl_parent_t *);
 #endif
 
 static uint8_t dao_sequence = RPL_LOLLIPOP_INIT;
+//static uint8_t dco_sequence = RPL_LOLLIPOP_INIT;
 
 #if RPL_WITH_MULTICAST
 static uip_mcast6_route_t *mcast_group;
@@ -691,9 +695,9 @@ dao_input_storing(void)
   * (Invalidate previous route) flag: The 'I' flag is set by the target node to
   * indicate to the common ancestor node that it wishes to invalidate any previous route between the two paths.
   */
-  #if (Invalidate previous route) flag:
+#if RPL_WITH_DCO_ROUTE_INVALIDATION
   uint8_t i_flag;
-  #endif
+#endif
   prefixlen = 0;
   parent = NULL;
   memset(&prefix, 0, sizeof(prefix));
@@ -823,10 +827,25 @@ dao_input_storing(void)
                  last_valid_pos, i + 5);
         return;
       }
-      #if RPL_WITH_DCO_ROUTE_INVALIDATION
+#if RPL_WITH_DCO_ROUTE_INVALIDATION
+      uip_ds6_route_t *route;
       i_flag = buffer[(i + 2)] & RPL_OPTION_TRANSIT_I_FLAG;
       LOG_DBG("Transit option with I flag %x\n", i_flag);
-      #endif
+      if (i_flag == RPL_OPTION_TRANSIT_I_FLAG)
+      {
+        LOG_DBG("Transit option with I flag set. Check if a DCO needs to be issued \n");
+        // route = check_route(dag, &prefix, prefixlen, &dao_sender_addr);
+        route = check_route(dag, &prefix, prefixlen, &dao_sender_addr);
+        if (route != NULL)
+
+          RPL_LOLLIPOP_INCREMENT(dco_sequence);
+
+          /* Sending a DCO with target learned from DAO. */
+          dco_output_target(dag, &prefix, route, dco_sequence);
+
+      }
+#endif
+
       lifetime = buffer[i + 5];
       /* The parent address is also ignored. */
       break;
@@ -1366,11 +1385,11 @@ dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
   buffer[pos++] = RPL_OPTION_TRANSIT;
   buffer[pos++] = (instance->mop != RPL_MOP_NON_STORING) ? 4 : 20;
 
-  #if RPL_WITH_DCO_ROUTE_INVALIDATION
+#if RPL_WITH_DCO_ROUTE_INVALIDATION
   buffer[pos++] |= RPL_OPTION_TRANSIT_I_FLAG;
-  #else
+#else
   buffer[pos++] = 0; /* flags - ignored */
-  #endif
+#endif
   buffer[pos++] = 0; /* path control - ignored */
   buffer[pos++] = 0; /* path seq - ignored */
   buffer[pos++] = lifetime;
@@ -1529,19 +1548,372 @@ dao_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequence,
 /*---------------------------------------------------------------------------*/
 static void dco_input(void)
 {
+
+  rpl_instance_t *instance;
+  rpl_dag_t *dag;
+  uint8_t instance_id;
+  uip_ipaddr_t dco_sender;
+  uint16_t dco_sequence;
+  unsigned char *buffer;
+
+  uint8_t flags;
+  int pos;
+  int len;
+  int i;
+  uip_ipaddr_t prefix;
+  uint8_t prefixlen;
+  uip_ds6_route_t *route;
+  uint8_t subopt_type;
+
+  prefixlen = 0;
+  memset(&prefix, 0, sizeof(prefix));
+
+  uip_ipaddr_copy(&dco_sender, &UIP_IP_BUF->srcipaddr);
+
+  buffer = UIP_ICMP_PAYLOAD;
+
+  /* Destination Cleanup Object */
+  LOG_INFO("Received a DCO from ");
+  LOG_INFO_6ADDR(&dco_sender);
+  LOG_INFO_("\n");
+
+  uint16_t buffer_length = uip_len - uip_l3_icmp_hdr_len;
+  if (buffer_length < 4)
+  {
+    LOG_WARN("Dropping incomplete DCO (%" PRIu16 " < %d)\n",
+             buffer_length, 4);
+    return;
+  }
+  uint16_t last_valid_pos = buffer_length - 1;
+
+  pos = 0;
+  if (uip_len <= uip_l3_icmp_hdr_len)
+  {
+    LOG_WARN("Ignoring DCO ICMPv6 message without DCO header\n");
+    goto discard;
+  }
+
+  instance_id = buffer[pos++];
+  instance = rpl_get_instance(instance_id);
+  if (instance == NULL)
+  {
+    LOG_INFO("Ignoring a DCO for an unknown RPL instance(%u)\n",
+             instance_id);
+    goto discard;
+  }
+  flags = buffer[pos++];
+  /*RPL status*/
+  pos++;
+  dco_sequence = buffer[pos++];
+
+  dag = instance->current_dag;
+
+  /* Is the DAG ID present? */
+  if (flags & RPL_DAO_D_FLAG)
+  {
+    if (last_valid_pos < pos + 16)
+    {
+      LOG_WARN("Dropping incomplete DCO (%" PRIu16 " < %d)\n",
+               last_valid_pos, pos + 16);
+      return;
+    }
+
+    if (memcmp(&dag->dag_id, &buffer[pos], sizeof(dag->dag_id)))
+    {
+      LOG_INFO("Ignoring a DCO for a DAG different from ours\n");
+      return;
+    }
+    pos += 16;
+  }
+
+  /* Check if there are any RPL options present. */
+  for (i = pos; i < buffer_length; i += len)
+  {
+    subopt_type = buffer[i];
+    if (subopt_type == RPL_OPTION_PAD1)
+    {
+      len = 1;
+    }
+    else
+    {
+      /* The option consists of a two-byte header and a payload. */
+      if (last_valid_pos < i + 1)
+      {
+        LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
+                 last_valid_pos, i + 1);
+        return;
+      }
+      len = 2 + buffer[i + 1];
+    }
+
+    switch (subopt_type)
+    {
+    case RPL_OPTION_TARGET:
+      /* Handle the target option. */
+      if (last_valid_pos < i + 3)
+      {
+        LOG_WARN("Dropping incomplete DCO (%" PRIu16 " < %d)\n",
+                 last_valid_pos, i + 3);
+        return;
+      }
+      prefixlen = buffer[i + 3];
+      if (prefixlen == 0)
+      {
+        /* Ignore option targets with a prefix length of 0. */
+        break;
+      }
+      if (prefixlen > 128)
+      {
+        LOG_ERR("Too large target prefix length %d\n", prefixlen);
+        return;
+      }
+      if (i + 4 + ((prefixlen + 7) / CHAR_BIT) > buffer_length)
+      {
+        LOG_ERR("Incomplete DCO target option with prefix length of %d bits\n",
+                prefixlen);
+        return;
+      }
+      memset(&prefix, 0, sizeof(prefix));
+      memcpy(&prefix, buffer + i + 4, (prefixlen + 7) / CHAR_BIT);
+      break;
+    case RPL_OPTION_TRANSIT:
+      /* The path sequence and control are ignored. */
+      if (last_valid_pos < i + 5)
+      {
+        LOG_WARN("Dropping incomplete DCO (%" PRIu16 " < %d)\n",
+                 last_valid_pos, i + 5);
+        return;
+      }
+    }
+  }
+  /* Check if there is an entry in the routing table for prefix*/
+  route = uip_ds6_route_lookup(&prefix);
+  if (route == NULL)
+  {
+    LOG_DBG("No existing route found for prefix ");
+    LOG_DBG_6ADDR(&prefix);
+    LOG_DBG_("\n");
+    LOG_DBG("The DCO can be discarded \n");
+
+    goto discard;
+  }
+  else
+  {
+    LOG_DBG("Existing route found for prefix \n");
+    LOG_DBG_6ADDR(&prefix);
+    LOG_DBG("\n");
+    LOG_DBG("The DCO can be processed \n");
+    /* Extract next hop and check if it is the target. If it is the target we just delete the entry without forwarding */
+    if (compare_ipv6_no_prefix(uip_ds6_route_nexthop(route), &prefix))
+    {
+      LOG_DBG("The next hop is the target. Deleting the route and all the other entries that are reached via the target \n");
+      remove_routes_with_next_hop(&prefix);
+
+
+
+      goto discard;
+    }
+    else
+    {
+      LOG_DBG("The next hop is not the target. Forward DCO to next hop and delete entry \n");
+      /* Forward the DCO to the next hop */
+      uip_ds6_route_rm(route);
+      dco_output_target(dag, &prefix, route, dco_sequence);
+    }
+  }
+discard:
+  uipbuf_clear();
+
+  if (flags & RPL_DCO_K_FLAG)
+  {
+    /* A DCO ACK must be sent. */
+
+    dco_ack_output(instance, &dco_sender, dco_sequence, RPL_DCO_ACK_UNCONDITIONAL_ACCEPT);
+  }
 }
 /*---------------------------------------------------------------------------*/
-#if RPL_WITH_DCO_ROUTE_INVALIDATION
-static void
-dco_output()
+void remove_routes_with_next_hop(const uip_ipaddr_t *target_next_hop) {
+  uip_ds6_route_t *route;
+
+  // Iterate over all routing table entries
+  route = uip_ds6_route_head();
+  while (route != NULL) {
+    uip_ds6_route_t *next_route = uip_ds6_route_next(route);
+
+    // Check if the next hop matches the target address
+    if (compare_ipv6_no_prefix(uip_ds6_route_nexthop(route), target_next_hop)) {
+      // Remove the route if the next hop matches
+      LOG_DBG("Removed the route because the next hop matches \n" );
+      uip_ds6_route_rm(route);
+    }
+
+    route = next_route; // Move to the next route
+  }
+}
+/*---------------------------------------------------------------------------*/
+// Function to compare two IPv6 addresses ignoring the prefix
+int compare_ipv6_no_prefix(const uip_ipaddr_t *addr1, const uip_ipaddr_t *addr2) {
+  // Compare the last 64 bits (interface identifier) of both addresses
+  if(memcmp(&addr1->u8[8], &addr2->u8[8], 8) == 0) {
+    return 1; // Addresses are the same disregarding the prefix
+  }
+  return 0; // Addresses are different
+}
+/*---------------------------------------------------------------------------*/
+uip_ds6_route_t *check_route(rpl_dag_t *dag, uip_ipaddr_t *target, uint8_t prefixlen, uip_ipaddr_t *dao_sender_addr)
 {
+  /* Check if for the prefix there is a route already */
+  uip_ds6_route_t *route;
 
+  route = uip_ds6_route_lookup(target);
+
+  if (route == NULL)
+  {
+    LOG_DBG("No existing route found for target ");
+    LOG_DBG_6ADDR(target);
+    LOG_DBG_("\n");
+    return NULL;
+  }
+
+  if (route != NULL &&
+      route->length == prefixlen &&
+      uip_ds6_route_nexthop(route) != NULL)
+  {
+    if (uip_ipaddr_cmp(uip_ds6_route_nexthop(route), dao_sender_addr))
+    {
+      LOG_DBG("The existing route is valid for target ");
+      LOG_DBG_6ADDR(target);
+      LOG_DBG_("\n");
+
+      return NULL;
+    }
+    else
+    {
+      LOG_DBG("The existing route is NOT valid for target ");
+      LOG_DBG_6ADDR(target);
+      LOG_DBG_("\n");
+      return route;
+    }
+  }
+  return NULL;
 }
+/*---------------------------------------------------------------------------*/
+static void dco_output_target(rpl_dag_t *dag, uip_ipaddr_t *target,
+                              uip_ds6_route_t *route, uint8_t seq_no)
+{
+  rpl_instance_t *instance;
+  unsigned char *buffer;
+  uint8_t prefixlen;
+  int pos;
+  uip_ipaddr_t *dest_ipaddr = NULL;
+
+  /* Destination Cleanup Object */
+
+  /* If we are in feather mode, we should not send any DCOs. */
+  if (rpl_get_mode() == RPL_MODE_FEATHER)
+  {
+    return;
+  }
+
+  instance = dag->instance;
+
+  if (instance == NULL)
+  {
+    LOG_ERR("dco_output_target error instance NULL\n");
+    return;
+  }
+
+  buffer = UIP_ICMP_PAYLOAD;
+  pos = 0;
+
+  buffer[pos++] = instance->instance_id;
+  buffer[pos] = 0;
+#if RPL_DCO_SPECIFY_DAG
+  buffer[pos] |= RPL_DCO_D_FLAG;
+#endif /* RPL_DAO_SPECIFY_DAG */
+#if RPL_WITH_DCO_ACK
+
+  buffer[pos] |= RPL_DCO_K_FLAG;
+
+#endif /* RPL_WITH_DCO_ACK */
+  ++pos;
+  buffer[pos++] = 195; /* RPL status */
+  buffer[pos++] = seq_no;
+#if RPL_DCO_SPECIFY_DAG
+  memcpy(buffer + pos, &dag->dag_id, sizeof(dag->dag_id));
+  pos += sizeof(dag->dag_id);
+#endif /* RPL_DCO_SPECIFY_DAG */
+
+  /* Create a target suboption. */
+  prefixlen = sizeof(*target) * CHAR_BIT;
+  buffer[pos++] = RPL_OPTION_TARGET;
+  buffer[pos++] = 2 + ((prefixlen + 7) / CHAR_BIT);
+  buffer[pos++] = 0; /* reserved */
+  buffer[pos++] = prefixlen;
+  memcpy(buffer + pos, target, (prefixlen + 7) / CHAR_BIT);
+  pos += ((prefixlen + 7) / CHAR_BIT);
+
+  /* Create a transit information sub-option. */
+  buffer[pos++] = RPL_OPTION_TRANSIT;
+  buffer[pos++] = (instance->mop != RPL_MOP_NON_STORING) ? 4 : 20;
+
+#if RPL_WITH_DCO_ROUTE_INVALIDATION
+  buffer[pos++] |= RPL_OPTION_TRANSIT_I_FLAG;
+#else
+  buffer[pos++] = 0; /* flags - ignored */
 #endif
+  buffer[pos++] = 0; /* path control - ignored */
+  buffer[pos++] = 0; /* path seq - ignored */
+  buffer[pos++] = RPL_DEFAULT_LIFETIME;
+
+  /* Send DCO to next hop. */
+  dest_ipaddr = (uip_ipaddr_t *)uip_ds6_route_nexthop(route);
+
+  LOG_INFO("Sending a DCO with sequence number %u, lifetime %u, prefix ", seq_no, RPL_DEFAULT_LIFETIME);
+
+  LOG_INFO_6ADDR(target);
+  LOG_INFO_(" to ");
+  LOG_INFO_6ADDR(dest_ipaddr);
+  LOG_INFO_("\n");
+
+  if (dest_ipaddr != NULL)
+  {
+    uip_icmp6_send(dest_ipaddr, ICMP6_RPL, RPL_CODE_DCO, pos);
+  }
+}
 /*---------------------------------------------------------------------------*/
 static void
-dco_ack_input() {
+dco_ack_input()
+{
+  /* Destination Cleanup Object Acknowledgement*/
+  LOG_INFO("Received a DCO ACK from ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
+  LOG_INFO_("\n");
 
+  uipbuf_clear();
+}
+/*---------------------------------------------------------------------------*/
+void dco_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequence,
+                    uint8_t status)
+{
+#if RPL_WITH_DCO_ACK
+  unsigned char *buffer;
+  int pos;
+  LOG_INFO("Sending a DCO ACK\n");
+
+  buffer = UIP_ICMP_PAYLOAD;
+  pos = 0;
+  buffer[pos++] = instance->instance_id;
+  buffer[pos] = 0;
+  buffer[pos] |= RPL_DCO_ACK_D_FLAG;
+  ++pos;
+  buffer[pos++] = sequence;
+  buffer[pos++] = status;
+
+  memcpy(buffer + pos, &instance->current_dag->dag_id, sizeof(instance->current_dag->dag_id));
+  pos += sizeof(instance->current_dag->dag_id);
+  uip_icmp6_send(dest, ICMP6_RPL, RPL_CODE_DCO_ACK, 4 + 16);
+#endif
 }
 /*---------------------------------------------------------------------------*/
 #if RPL_WITH_DCO_ACK

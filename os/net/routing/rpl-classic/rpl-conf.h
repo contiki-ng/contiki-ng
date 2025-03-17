@@ -233,6 +233,19 @@
 #endif /* RPL_CONF_DAO_SPECIFY_DAG */
 
 /*
+ *
+ */
+#ifndef RPL_CONF_DCO_SPECIFY_DAG
+  #if RPL_MAX_DAG_PER_INSTANCE > 1
+    #define RPL_DCO_SPECIFY_DAG 1
+  #else
+    #define RPL_DCO_SPECIFY_DAG 0
+  #endif /* RPL_MAX_DAG_PER_INSTANCE > 1 */
+#else
+  #define RPL_DCO_SPECIFY_DAG RPL_CONF_DCO_SPECIFY_DAG
+#endif /* RPL_CONF_DAO_SPECIFY_DAG */
+
+/*
  * The DIO interval (n) represents 2^n ms.
  *
  * According to the specification, the default value is 3, which

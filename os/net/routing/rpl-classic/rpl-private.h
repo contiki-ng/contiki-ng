@@ -105,6 +105,9 @@
 #define RPL_DAO_ACK_UNABLE_TO_ACCEPT     128 /* >127 is fail */
 #define RPL_DAO_ACK_UNABLE_TO_ADD_ROUTE_AT_ROOT 255 /* root can not accept */
 
+#define RPL_DCO_ACK_UNCONDITIONAL_ACCEPT 0
+#define RPL_DCO_ACK_D_FLAG               0x80 /* DODAG ID present */
+
 #define RPL_DAO_ACK_TIMEOUT              -1
 
 /*---------------------------------------------------------------------------*/
@@ -307,7 +310,13 @@ void dis_output(uip_ipaddr_t *addr);
 void dio_output(rpl_instance_t *, uip_ipaddr_t *uc_addr);
 void dao_output(rpl_parent_t *, uint8_t lifetime);
 void dao_output_target(rpl_parent_t *, uip_ipaddr_t *, uint8_t lifetime);
+uip_ds6_route_t * check_route(rpl_dag_t *dag, uip_ipaddr_t *target, uint8_t prefixlen, uip_ipaddr_t *dao_sender_addr);
+int compare_ipv6_no_prefix(const uip_ipaddr_t *addr1, const uip_ipaddr_t *addr2);
+void remove_routes_with_next_hop(const uip_ipaddr_t *target_next_hop);
+
 void dao_ack_output(rpl_instance_t *, uip_ipaddr_t *, uint8_t, uint8_t);
+void dco_ack_output(rpl_instance_t *, uip_ipaddr_t *, uint8_t, uint8_t);
+
 void rpl_icmp6_register_handlers(void);
 uip_ds6_nbr_t *rpl_icmp6_update_nbr_table(uip_ipaddr_t *from,
                                           nbr_table_reason_t r, void *data);
