@@ -686,7 +686,14 @@ dao_input_storing(void)
   rpl_parent_t *parent;
   uip_ds6_nbr_t *nbr;
   int is_root;
-
+  /*
+  * The I flag is introduced in RFC9009 in the Transit Information Option
+  * (Invalidate previous route) flag: The 'I' flag is set by the target node to
+  * indicate to the common ancestor node that it wishes to invalidate any previous route between the two paths.
+  */
+  #if (Invalidate previous route) flag:
+  uint8_t i_flag;
+  #endif
   prefixlen = 0;
   parent = NULL;
   memset(&prefix, 0, sizeof(prefix));
@@ -816,6 +823,10 @@ dao_input_storing(void)
                  last_valid_pos, i + 5);
         return;
       }
+      #if RPL_WITH_DCO_ROUTE_INVALIDATION
+      i_flag = buffer[(i + 2)] & RPL_DAO_I_FLAG;
+      LOG_DBG("Transit option with I flag %x\n", i_flag);
+      #endif
       lifetime = buffer[i + 5];
       /* The parent address is also ignored. */
       break;
@@ -1354,7 +1365,11 @@ dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
   /* Create a transit information sub-option. */
   buffer[pos++] = RPL_OPTION_TRANSIT;
   buffer[pos++] = (instance->mop != RPL_MOP_NON_STORING) ? 4 : 20;
+  #if RPL_WITH_DCO_ROUTE_INVALIDATION
+  buffer[pos++] |= RPL_DAO_I_FLAG;
+  #else
   buffer[pos++] = 0; /* flags - ignored */
+  #endif
   buffer[pos++] = 0; /* path control - ignored */
   buffer[pos++] = 0; /* path seq - ignored */
   buffer[pos++] = lifetime;
