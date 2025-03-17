@@ -91,8 +91,9 @@ void RPL_DEBUG_DAO_OUTPUT(rpl_parent_t *);
 #endif
 
 static uint8_t dao_sequence = RPL_LOLLIPOP_INIT;
-//static uint8_t dco_sequence = RPL_LOLLIPOP_INIT;
-
+#if RPL_WITH_DCO_ROUTE_INVALIDATION
+static uint8_t dco_sequence = RPL_LOLLIPOP_INIT;
+#endif
 #if RPL_WITH_MULTICAST
 static uip_mcast6_route_t *mcast_group;
 #endif
@@ -836,13 +837,13 @@ dao_input_storing(void)
         LOG_DBG("Transit option with I flag set. Check if a DCO needs to be issued \n");
         // route = check_route(dag, &prefix, prefixlen, &dao_sender_addr);
         route = check_route(dag, &prefix, prefixlen, &dao_sender_addr);
-        if (route != NULL)
+        if (route != NULL) {
 
           RPL_LOLLIPOP_INCREMENT(dco_sequence);
 
           /* Sending a DCO with target learned from DAO. */
           dco_output_target(dag, &prefix, route, dco_sequence);
-
+        }
       }
 #endif
 
@@ -1915,12 +1916,6 @@ void dco_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequen
   uip_icmp6_send(dest, ICMP6_RPL, RPL_CODE_DCO_ACK, 4 + 16);
 #endif
 }
-/*---------------------------------------------------------------------------*/
-#if RPL_WITH_DCO_ACK
-void dco_ack_output()
-{
-}
-#endif
 /*---------------------------------------------------------------------------*/
 void
 rpl_icmp6_register_handlers(void)
