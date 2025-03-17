@@ -1710,8 +1710,6 @@ static void dco_input(void)
       LOG_DBG("The next hop is the target. Deleting the route and all the other entries that are reached via the target \n");
       remove_routes_with_next_hop(&prefix);
 
-
-
       goto discard;
     }
     else
@@ -1733,18 +1731,21 @@ discard:
   }
 }
 /*---------------------------------------------------------------------------*/
-void remove_routes_with_next_hop(const uip_ipaddr_t *target_next_hop) {
+void remove_routes_with_next_hop(const uip_ipaddr_t *target_next_hop)
+{
   uip_ds6_route_t *route;
 
   // Iterate over all routing table entries
   route = uip_ds6_route_head();
-  while (route != NULL) {
+  while (route != NULL)
+  {
     uip_ds6_route_t *next_route = uip_ds6_route_next(route);
 
     // Check if the next hop matches the target address
-    if (compare_ipv6_no_prefix(uip_ds6_route_nexthop(route), target_next_hop)) {
+    if (compare_ipv6_no_prefix(uip_ds6_route_nexthop(route), target_next_hop))
+    {
       // Remove the route if the next hop matches
-      LOG_DBG("Removed the route because the next hop matches \n" );
+      LOG_DBG("Removed the route because the next hop matches \n");
       uip_ds6_route_rm(route);
     }
 
@@ -1753,9 +1754,11 @@ void remove_routes_with_next_hop(const uip_ipaddr_t *target_next_hop) {
 }
 /*---------------------------------------------------------------------------*/
 // Function to compare two IPv6 addresses ignoring the prefix
-int compare_ipv6_no_prefix(const uip_ipaddr_t *addr1, const uip_ipaddr_t *addr2) {
+int compare_ipv6_no_prefix(const uip_ipaddr_t *addr1, const uip_ipaddr_t *addr2)
+{
   // Compare the last 64 bits (interface identifier) of both addresses
-  if(memcmp(&addr1->u8[8], &addr2->u8[8], 8) == 0) {
+  if (memcmp(&addr1->u8[8], &addr2->u8[8], 8) == 0)
+  {
     return 1; // Addresses are the same disregarding the prefix
   }
   return 0; // Addresses are different
@@ -1900,7 +1903,10 @@ void dco_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequen
 #if RPL_WITH_DCO_ACK
   unsigned char *buffer;
   int pos;
-  LOG_INFO("Sending a DCO ACK\n");
+  LOG_INFO("Sending a DCO ACK with sequence number %u to ",
+           sequence);
+  LOG_INFO_6ADDR(dest);
+  LOG_INFO_( "\n");
 
   buffer = UIP_ICMP_PAYLOAD;
   pos = 0;

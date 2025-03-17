@@ -522,6 +522,7 @@ update_hbh_header(void)
 {
   rpl_instance_t *instance;
   rpl_parent_t *parent;
+
   struct uip_hbho_hdr *hbh_hdr = (struct uip_hbho_hdr *)UIP_IP_PAYLOAD(0);
   struct uip_ext_hdr_opt_rpl *rpl_opt = (struct uip_ext_hdr_opt_rpl *)(UIP_IP_PAYLOAD(0) + 2);
 
@@ -561,13 +562,19 @@ update_hbh_header(void)
           LOG_WARN("RPL forwarding error\n");
           /* We should send back the packet to the originating parent,
              but it is not feasible yet, so we send a No-Path DAO instead. */
-          LOG_WARN("RPL generate No-Path DAO\n");
+
+
           parent = rpl_get_parent((uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER));
           if(parent != NULL) {
+            #if !RPL_WITH_DCO_ROUTE_INVALIDATION
+            LOG_WARN("RPL generate No-Path DAO\n");
             rpl_schedule_unicast_dao_immediately(instance, parent,
                                                  &UIP_IP_BUF->destipaddr,
                                                  RPL_ZERO_LIFETIME);
+
+            #endif
           }
+
           /* Drop packet. */
           return 0;
         }

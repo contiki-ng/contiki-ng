@@ -118,7 +118,9 @@ rpl_purge_routes(void)
 {
   uip_ds6_route_t *r;
   uip_ipaddr_t prefix;
+  #if !RPL_WITH_DCO_ROUTE_INVALIDATION
   rpl_dag_t *dag;
+  #endif
 #if RPL_WITH_MULTICAST
   uip_mcast6_route_t *mcast_route;
 #endif
@@ -154,9 +156,11 @@ rpl_purge_routes(void)
       r = uip_ds6_route_head();
       LOG_INFO("No more routes to ");
       LOG_INFO_6ADDR(&prefix);
+      #if !RPL_WITH_DCO_ROUTE_INVALIDATION
       dag = default_instance->current_dag;
       /* Propagate this information with a No-Path DAO to the
          preferred parent if we are not a RPL root. */
+
       if(dag->rank != ROOT_RANK(default_instance)) {
         LOG_INFO_(" -> generate No-Path DAO\n");
         dao_output_target(dag->preferred_parent, &prefix, RPL_ZERO_LIFETIME);
@@ -165,6 +169,7 @@ rpl_purge_routes(void)
         return;
       }
       LOG_INFO_("\n");
+      #endif
     } else {
       r = uip_ds6_route_next(r);
     }
