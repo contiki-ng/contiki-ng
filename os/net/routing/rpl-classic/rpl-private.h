@@ -94,7 +94,8 @@
 #define RPL_DAO_K_FLAG                   0x80 /* DAO ACK requested */
 #define RPL_DAO_D_FLAG                   0x40 /* DODAG ID present */
 
-#define RPL_DAO_I_FLAG                   0X40 /* DAO contains the I flag */
+#define RPL_OPTION_TRANSIT_E_FLAG        0X80 /* Transit Infortmation Option contains the E flag */
+#define RPL_OPTION_TRANSIT_I_FLAG        0X40 /* Transit Infortmation Option contains the I flag */
 
 #define RPL_DCO_K_FLAG                   0x80 /* DCO ACK requested */
 #define RPL_DCO_D_FLAG                   0x40 /* DODAG ID present */

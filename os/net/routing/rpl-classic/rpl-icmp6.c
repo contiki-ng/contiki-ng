@@ -824,7 +824,7 @@ dao_input_storing(void)
         return;
       }
       #if RPL_WITH_DCO_ROUTE_INVALIDATION
-      i_flag = buffer[(i + 2)] & RPL_DAO_I_FLAG;
+      i_flag = buffer[(i + 2)] & RPL_OPTION_TRANSIT_I_FLAG;
       LOG_DBG("Transit option with I flag %x\n", i_flag);
       #endif
       lifetime = buffer[i + 5];
@@ -1365,8 +1365,9 @@ dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
   /* Create a transit information sub-option. */
   buffer[pos++] = RPL_OPTION_TRANSIT;
   buffer[pos++] = (instance->mop != RPL_MOP_NON_STORING) ? 4 : 20;
+
   #if RPL_WITH_DCO_ROUTE_INVALIDATION
-  buffer[pos++] |= RPL_DAO_I_FLAG;
+  buffer[pos++] |= RPL_OPTION_TRANSIT_I_FLAG;
   #else
   buffer[pos++] = 0; /* flags - ignored */
   #endif
