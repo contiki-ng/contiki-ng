@@ -78,8 +78,10 @@ static void dco_ack_input(void);
 static void dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
                                   uint8_t lifetime, uint8_t seq_no);
 
+#if RPL_WITH_DCO_ROUTE_INVALIDATION
 static void dco_output_target(rpl_dag_t *dag, uip_ipaddr_t *target,
                               uip_ds6_route_t *route, uint8_t seq_no);
+#endif
 
 /* Some debug callbacks that are useful when debugging RPL networks. */
 #ifdef RPL_DEBUG_DIO_INPUT
@@ -1726,10 +1728,10 @@ static void dco_input(void)
       dco_ack_output(instance, &dco_sender, dco_sequence, RPL_DCO_ACK_UNCONDITIONAL_ACCEPT);
     }
   }
-  #endif /* RPL_WITH_DCO_ROUTE_INVALIDATION */
+
 discard:
   uipbuf_clear();
-
+#endif /* RPL_WITH_DCO_ROUTE_INVALIDATION */
 
 }
 /*---------------------------------------------------------------------------*/
@@ -1804,10 +1806,11 @@ uip_ds6_route_t *check_route(rpl_dag_t *dag, uip_ipaddr_t *target, uint8_t prefi
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
+#if RPL_WITH_DCO_ROUTE_INVALIDATION
 static void dco_output_target(rpl_dag_t *dag, uip_ipaddr_t *target,
                               uip_ds6_route_t *route, uint8_t seq_no)
 {
-  #if WITH_DCO_ROUTE_INVALIDATION
+
   rpl_instance_t *instance;
   unsigned char *buffer;
   uint8_t prefixlen;
@@ -1882,8 +1885,9 @@ static void dco_output_target(rpl_dag_t *dag, uip_ipaddr_t *target,
   {
     uip_icmp6_send(dest_ipaddr, ICMP6_RPL, RPL_CODE_DCO, pos);
   }
-  #endif /* WITH_DCO_ROUTE_INVALIDATION */
+
 }
+#endif /* RPL_WITH_DCO_ROUTE_INVALIDATION */
 /*---------------------------------------------------------------------------*/
 static void
 dco_ack_input()
