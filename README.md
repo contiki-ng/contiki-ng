@@ -30,7 +30,7 @@ Find out more:
 * List of releases and changes: https://github.com/contiki-ng/contiki-ng/releases
 * Web site: http://contiki-ng.org
 
-Engage with the community:
+
 
 * Discussions on GitHub: https://github.com/contiki-ng/contiki-ng/discussions
 * Contiki-NG tag on Stack Overflow: https://stackoverflow.com/questions/tagged/contiki-ng
