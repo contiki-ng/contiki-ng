@@ -1549,7 +1549,7 @@ dao_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequence,
 /*---------------------------------------------------------------------------*/
 static void dco_input(void)
 {
-
+#if RPL_WITH_DCO_ROUTE_INVALIDATION
   rpl_instance_t *instance;
   rpl_dag_t *dag;
   uint8_t instance_id;
@@ -1719,16 +1719,18 @@ static void dco_input(void)
       uip_ds6_route_rm(route);
       dco_output_target(dag, &prefix, route, dco_sequence);
     }
+    if (flags & RPL_DCO_K_FLAG)
+    {
+      /* A DCO ACK must be sent. */
+
+      dco_ack_output(instance, &dco_sender, dco_sequence, RPL_DCO_ACK_UNCONDITIONAL_ACCEPT);
+    }
   }
+  #endif /* RPL_WITH_DCO_ROUTE_INVALIDATION */
 discard:
   uipbuf_clear();
 
-  if (flags & RPL_DCO_K_FLAG)
-  {
-    /* A DCO ACK must be sent. */
 
-    dco_ack_output(instance, &dco_sender, dco_sequence, RPL_DCO_ACK_UNCONDITIONAL_ACCEPT);
-  }
 }
 /*---------------------------------------------------------------------------*/
 void remove_routes_with_next_hop(const uip_ipaddr_t *target_next_hop)
@@ -1805,6 +1807,7 @@ uip_ds6_route_t *check_route(rpl_dag_t *dag, uip_ipaddr_t *target, uint8_t prefi
 static void dco_output_target(rpl_dag_t *dag, uip_ipaddr_t *target,
                               uip_ds6_route_t *route, uint8_t seq_no)
 {
+  #if WITH_DCO_ROUTE_INVALIDATION
   rpl_instance_t *instance;
   unsigned char *buffer;
   uint8_t prefixlen;
@@ -1860,12 +1863,7 @@ static void dco_output_target(rpl_dag_t *dag, uip_ipaddr_t *target,
   /* Create a transit information sub-option. */
   buffer[pos++] = RPL_OPTION_TRANSIT;
   buffer[pos++] = (instance->mop != RPL_MOP_NON_STORING) ? 4 : 20;
-
-#if RPL_WITH_DCO_ROUTE_INVALIDATION
-  buffer[pos++] |= RPL_OPTION_TRANSIT_I_FLAG;
-#else
   buffer[pos++] = 0; /* flags - ignored */
-#endif
   buffer[pos++] = 0; /* path control - ignored */
   buffer[pos++] = 0; /* path seq - ignored */
   buffer[pos++] = RPL_DEFAULT_LIFETIME;
@@ -1884,6 +1882,7 @@ static void dco_output_target(rpl_dag_t *dag, uip_ipaddr_t *target,
   {
     uip_icmp6_send(dest_ipaddr, ICMP6_RPL, RPL_CODE_DCO, pos);
   }
+  #endif /* WITH_DCO_ROUTE_INVALIDATION */
 }
 /*---------------------------------------------------------------------------*/
 static void
