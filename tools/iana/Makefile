@@ -14,7 +14,7 @@ install: venv
 
 # Generate headers
 .PHONY: generate
-generate: venv
+generate: venv install
 	@echo "Generating Headers"
 	. venv/bin/activate && cd c && ./c_header_coap.py
 
