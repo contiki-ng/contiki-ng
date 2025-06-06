@@ -194,7 +194,7 @@ cmd_rx_restore(uint_fast8_t rx_key)
   RF_ScheduleCmdParams sched_params;
   RF_ScheduleCmdParams_init(&sched_params);
 
-  sched_params.priority = RF_PriorityNormal;
+  sched_params.coexPriority = RF_PriorityCoexDefault;
   sched_params.endTime = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 
@@ -229,7 +229,7 @@ rf_yield(void)
   RF_ScheduleCmdParams sched_params;
   RF_ScheduleCmdParams_init(&sched_params);
 
-  sched_params.priority = RF_PriorityNormal;
+  sched_params.coexPriority = RF_PriorityCoexDefault;
   sched_params.endTime = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 
@@ -262,7 +262,7 @@ rf_restart_rat(void)
   /* Stop SYNC RAT */
   RF_ScheduleCmdParams_init(&sched_params);
 
-  sched_params.priority = RF_PriorityNormal;
+  sched_params.coexPriority = RF_PriorityCoexDefault;
   sched_params.endTime = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 
@@ -278,7 +278,7 @@ rf_restart_rat(void)
   /* Start SYNC RAT */
   RF_ScheduleCmdParams_init(&sched_params);
 
-  sched_params.priority = RF_PriorityNormal;
+  sched_params.coexPriority = RF_PriorityCoexDefault;
   sched_params.endTime = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 
@@ -354,7 +354,7 @@ netstack_sched_fs(void)
     RF_ScheduleCmdParams sched_params;
     RF_ScheduleCmdParams_init(&sched_params);
 
-    sched_params.priority = RF_PriorityNormal;
+    sched_params.coexPriority = RF_PriorityCoexDefault;
     sched_params.endTime = 0;
     sched_params.allowDelay = RF_AllowDelayAny;
 
@@ -392,7 +392,7 @@ netstack_sched_fs(void)
       events = RF_runCmd(
           &rf_netstack,
           (RF_Op *)&netstack_cmd_fs,
-          RF_PriorityNormal,
+          RF_PriorityCoexDefault,
           NULL,
           0);
 
@@ -417,7 +417,7 @@ netstack_sched_ieee_tx(uint16_t payload_length, bool ack_request)
   RF_ScheduleCmdParams sched_params;
   RF_ScheduleCmdParams_init(&sched_params);
 
-  sched_params.priority = RF_PriorityNormal;
+  sched_params.coexPriority = RF_PriorityCoexDefault;
   sched_params.endTime = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 
@@ -502,7 +502,7 @@ netstack_sched_prop_tx(uint16_t payload_length)
   RF_ScheduleCmdParams sched_params;
   RF_ScheduleCmdParams_init(&sched_params);
 
-  sched_params.priority = RF_PriorityNormal;
+  sched_params.coexPriority = RF_PriorityCoexDefault;
   sched_params.endTime = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 
@@ -580,7 +580,7 @@ netstack_sched_rx(bool start)
     /* Start SYNC RAT */
     RF_ScheduleCmdParams_init(&sched_params);
 
-    sched_params.priority = RF_PriorityNormal;
+    sched_params.coexPriority = RF_PriorityCoexDefault;
     sched_params.endTime = 0;
     sched_params.allowDelay = RF_AllowDelayAny;
 
@@ -597,7 +597,7 @@ netstack_sched_rx(bool start)
 
   RF_ScheduleCmdParams_init(&sched_params);
 
-  sched_params.priority = RF_PriorityNormal;
+  sched_params.coexPriority = RF_PriorityCoexDefault;
   sched_params.endTime = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 
@@ -779,7 +779,7 @@ ble_sched_beacons(uint8_t bm_channel)
   }
 
   RF_ScheduleCmdParams_init(&sched_params);
-  sched_params.priority = RF_PriorityNormal;
+  sched_params.coexPriority = RF_PriorityCoexDefault;
   sched_params.endTime = 0;
   sched_params.allowDelay = RF_AllowDelayAny;
 

@@ -58,19 +58,17 @@
 #include <NoRTOS.h>
 
 #include <ti/devices/DeviceFamily.h>
-#include DeviceFamily_constructPath(driverlib/driverlib_release.h)
 #include DeviceFamily_constructPath(driverlib/chipinfo.h)
 #include DeviceFamily_constructPath(driverlib/vims.h)
 
 #include <ti/drivers/dpl/HwiP.h>
 #include <ti/drivers/I2C.h>
 #include <ti/drivers/NVS.h>
-#include <ti/drivers/PIN.h>
-#include <ti/drivers/pin/PINCC26XX.h>
+#include <ti/drivers/GPIO.h>
 #include <ti/drivers/Power.h>
 #include <ti/drivers/SPI.h>
 #include <ti/drivers/TRNG.h>
-#include <ti/drivers/UART.h>
+#include <ti/drivers/UART2.h>
 /*---------------------------------------------------------------------------*/
 #include "board-peripherals.h"
 #include "clock-arch.h"
@@ -99,7 +97,7 @@ extern void Board_initHook(void);
  * \brief  Fade a specified LED.
  */
 static void
-fade(PIN_Id pin)
+fade(uint_least8_t pin)
 {
   volatile uint32_t i;
   uint32_t k;
@@ -110,11 +108,11 @@ fade(PIN_Id pin)
   for(k = 0; k < pivot; ++k) {
     j = (k > pivot_half) ? pivot - k : k;
 
-    PINCC26XX_setOutputValue(pin, 1);
+    GPIO_write(pin, 1);
     for(i = 0; i < j; ++i) {
       __asm__ __volatile__ ("nop");
     }
-    PINCC26XX_setOutputValue(pin, 0);
+    GPIO_write(pin, 0);
     for(i = 0; i < pivot_half - j; ++i) {
       __asm__ __volatile__ ("nop");
     }
@@ -146,26 +144,7 @@ set_rf_params(void)
 void
 platform_init_stage_one(void)
 {
-  DRIVERLIB_ASSERT_CURR_RELEASE();
-
-  /* Enable flash cache */
-  VIMSModeSet(VIMS_BASE, VIMS_MODE_ENABLED);
-  /* Configure round robin arbitration and prefetching */
-  VIMSConfigure(VIMS_BASE, true, true);
-
-  Power_init();
-
-  /* BoardGpioInitTable declared in Board.h */
-  if(PIN_init(BoardGpioInitTable) != PIN_SUCCESS) {
-    /*
-     * Something is seriously wrong if PIN initialization of the Board GPIO
-     * table fails.
-     */
-    for(;;) { /* hang */ }
-  }
-
-  /* Perform board-specific initialization */
-  Board_initHook();
+  Board_init();
 
   /* Contiki drivers init */
   gpio_hal_init();
@@ -174,9 +153,6 @@ platform_init_stage_one(void)
   fade(Board_PIN_LED0);
 
   /* TI Drivers init */
-#if TI_UART_CONF_ENABLE
-  UART_init();
-#endif
 #if TI_I2C_CONF_ENABLE
   I2C_init();
 #endif
@@ -236,8 +212,6 @@ platform_init_stage_three(void)
 
   set_rf_params();
 
-  LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
-          DRIVERLIB_RELEASE_BUILD);
   LOG_DBG("IEEE 802.15.4: %s, Sub-1 GHz: %s, BLE: %s\n",
           ChipInfo_SupportsIEEE_802_15_4() ? "Yes" : "No",
           ChipInfo_SupportsPROPRIETARY() ? "Yes" : "No",

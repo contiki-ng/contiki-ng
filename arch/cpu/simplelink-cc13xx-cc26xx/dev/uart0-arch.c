@@ -43,12 +43,12 @@
 /*---------------------------------------------------------------------------*/
 #include <Board.h>
 
-#include <ti/drivers/UART.h>
+#include <ti/drivers/UART2.h>
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-static UART_Handle uart_handle;
+static UART2_Handle uart_handle;
 
 static volatile uart0_input_fxn_t curr_input_cb;
 static unsigned char char_buf;
@@ -56,7 +56,10 @@ static unsigned char char_buf;
 static bool initialized;
 /*---------------------------------------------------------------------------*/
 static void
-uart0_cb(UART_Handle handle, void *buf, size_t count)
+uart0_cb(UART2_Handle handle,
+         void *buf, size_t count,
+         void *userArg,
+         int_fast16_t status)
 {
   /* Simply return if the current callback is NULL. */
   if(!curr_input_cb) {
@@ -75,7 +78,7 @@ uart0_cb(UART_Handle handle, void *buf, size_t count)
    * and triggered an another read.
    */
   if(curr_cb == curr_input_cb) {
-    UART_read(uart_handle, &char_buf, 1);
+    UART2_read(uart_handle, &char_buf, 1, NULL);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -86,18 +89,17 @@ uart0_init(void)
     return;
   }
 
-  UART_Params uart_params;
-  UART_Params_init(&uart_params);
+  UART2_Params uart_params;
+  UART2_Params_init(&uart_params);
 
   uart_params.baudRate = TI_UART_CONF_BAUD_RATE;
-  uart_params.readMode = UART_MODE_CALLBACK;
-  uart_params.writeMode = UART_MODE_BLOCKING;
+  uart_params.readMode = UART2_Mode_CALLBACK;
+  uart_params.writeMode = UART2_Mode_BLOCKING;
   uart_params.readCallback = uart0_cb;
-  uart_params.readDataMode = UART_DATA_TEXT;
-  uart_params.readReturnMode = UART_RETURN_NEWLINE;
+  uart_params.readReturnMode = UART2_ReadReturnMode_PARTIAL;
 
   /* No error handling. */
-  uart_handle = UART_open(Board_UART0, &uart_params);
+  uart_handle = UART2_open(Board_UART0, &uart_params);
 
   initialized = true;
 }
@@ -106,37 +108,37 @@ int_fast32_t
 uart0_write(const void *buf, size_t buf_size)
 {
   if(!initialized) {
-    return UART_STATUS_ERROR;
+    return UART2_STATUS_ENOTOPEN;
   }
-  return UART_write(uart_handle, buf, buf_size);
+  return UART2_write(uart_handle, buf, buf_size, NULL);
 }
 /*---------------------------------------------------------------------------*/
 int_fast32_t
 uart0_write_byte(uint8_t byte)
 {
   if(!initialized) {
-    return UART_STATUS_ERROR;
+    return UART2_STATUS_ENOTOPEN;
   }
-  return UART_write(uart_handle, &byte, 1);
+  return UART2_write(uart_handle, &byte, 1, NULL);
 }
 /*---------------------------------------------------------------------------*/
 int_fast32_t
 uart0_set_callback(uart0_input_fxn_t input_cb)
 {
   if(!initialized) {
-    return UART_STATUS_ERROR;
+    return UART2_STATUS_ENOTOPEN;
   }
 
   if(curr_input_cb == input_cb) {
-    return UART_STATUS_SUCCESS;
+    return UART2_STATUS_SUCCESS;
   }
 
   curr_input_cb = input_cb;
   if(input_cb) {
-    return UART_read(uart_handle, &char_buf, 1);
+    return UART2_read(uart_handle, &char_buf, 1, NULL);
   } else {
-    UART_readCancel(uart_handle);
-    return UART_STATUS_SUCCESS;
+    UART2_readCancel(uart_handle);
+    return UART2_STATUS_SUCCESS;
   }
 }
 /*---------------------------------------------------------------------------*/

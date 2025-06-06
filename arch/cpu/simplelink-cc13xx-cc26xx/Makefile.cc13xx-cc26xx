@@ -6,7 +6,7 @@ CC13x2_CC26x2_PRE_RTM ?= 1
 # Core SDK is placed as a submodule under arch/cpu/simplelink-cc13xx-cc26xx/lib.
 # Do a sanity check that Core SDK submodule has been initialized.
 ifndef CORE_SDK
- CORE_SDK := $(CONTIKI_CPU)/lib/coresdk_cc13xx_cc26xx
+ CORE_SDK := $(CONTIKI_CPU)/lib/simplelink-lowpower-f2-sdk
  CORE_SDK_INIT := $(shell [ -f $(CORE_SDK)/.git ] && echo 1)
 
  ifneq ($(CORE_SDK_INIT),1)
@@ -39,7 +39,7 @@ ifeq ($(SUBFAMILY),cc13x2-cc26x2)
 # CC13x0/CC26x0 does not have this, with both its devices name and library
 # name the same as its own device family name.
 else
- SDK_DEVICES_NAME := $(DEVICE_FAMILY_LC)
+ SDK_DEVICES_NAME := $(SUBFAMILY_LC)
  SDK_LIB_NAME := $(DEVICE_FAMILY_LC)
 endif
 

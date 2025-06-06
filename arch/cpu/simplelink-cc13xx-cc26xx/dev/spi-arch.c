@@ -46,7 +46,6 @@
 /*---------------------------------------------------------------------------*/
 #include <ti/drivers/SPI.h>
 #include <ti/drivers/dpl/HwiP.h>
-#include <ti/drivers/pin/PINCC26XX.h>
 /*---------------------------------------------------------------------------*/
 #include <stdbool.h>
 #include <stddef.h>
@@ -144,7 +143,7 @@ spi_arch_lock_and_open(const spi_device_t *dev)
   SPI_Params_init(&spi_params);
 
   spi_params.transferMode = SPI_MODE_BLOCKING;
-  spi_params.mode = SPI_MASTER;
+  spi_params.mode = SPI_CONTROLLER;
   spi_params.bitRate = dev->spi_bit_rate;
   spi_params.dataSize = 8;
   spi_params.frameFormat = convert_frame_format(dev->spi_pol, dev->spi_pha);

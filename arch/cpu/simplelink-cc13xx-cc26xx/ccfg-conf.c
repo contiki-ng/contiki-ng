@@ -51,6 +51,10 @@
  * to secure deployed images.
  * @{
  */
+#ifndef CCFG_CONF_JTAG_INTERFACE_DISABLE
+#define CCFG_CONF_JTAG_INTERFACE_DISABLE             0
+#endif /* CCFG_CONF_JTAG_INTERFACE_DISABLE */
+
 #if CCFG_CONF_JTAG_INTERFACE_DISABLE
 #define SET_CCFG_CCFG_TI_OPTIONS_TI_FA_ENABLE        0x00
 #define SET_CCFG_CCFG_TAP_DAP_0_CPU_DAP_ENABLE       0x00
@@ -59,6 +63,9 @@
 #define SET_CCFG_CCFG_TAP_DAP_1_PBIST2_TAP_ENABLE    0x00
 #define SET_CCFG_CCFG_TAP_DAP_1_PBIST1_TAP_ENABLE    0x00
 #define SET_CCFG_CCFG_TAP_DAP_1_WUC_TAP_ENABLE       0x00
+#define SET_CCFG_CCFG_TI_OPTIONS_C_FA_DIS            0xC5
+#define SET_CCFG_CCFG_TAP_DAP_0_PWRPROF_TAP_ENABLE   0x00
+#define SET_CCFG_CCFG_TAP_DAP_1_AON_TAP_ENABLE       0x00
 #endif /* CCFG_CONF_JTAG_INTERFACE_DISABLE */
 /** @} */
 /*---------------------------------------------------------------------------*/
@@ -95,6 +102,21 @@
 #define SET_CCFG_BL_CONFIG_BL_ENABLE                 0xC5
 #endif /* CCFG_CONF_ROM_BOOTLOADER_ENABLE */
 /** @} */
+/*---------------------------------------------------------------------------*/
+/* Cache is enabled and GPRAM is disabled (unavailable) */
+#define SET_CCFG_SIZE_AND_DIS_FLAGS_DIS_GPRAM           0x1
+
+#ifndef CCFG_CONF_TRUSTZONE_ENABLE
+#define CCFG_CONF_TRUSTZONE_ENABLE                      0
+#endif /* CCFG_CONF_TRUSTZONE_ENABLE */
+
+#if CCFG_CONF_TRUSTZONE_ENABLE
+/* Set all of flash to secure-only access, using the special value of 0 */
+#define SET_CCFG_TRUSTZONE_FLASH_CFG_NSADDR_BOUNDARY    0x0
+#else /* CCFG_CONF_TRUSTZONE_ENABLE */
+/* Set all of flash to non-secure, except the lowest 8 KB */
+#define SET_CCFG_TRUSTZONE_FLASH_CFG_NSADDR_BOUNDARY    0x1
+#endif /* CCFG_CONF_TRUSTZONE_ENABLE */
 /*---------------------------------------------------------------------------*/
 /**
  * \name Include the device-specific CCFG file from the SDK.

@@ -70,6 +70,13 @@ static ClockP_Struct wakeup_clk;
     (clock_time_t)(((uint64_t)(t) * CLOCK_SECOND * ClockP_getSystemTickPeriod()) / (1000 * 1000))
 
 #define RTC_SUBSEC_FRAC  ((uint64_t)1 << 32)  /* Important to cast to 64-bit */
+
+/* Bit-band access to address x bit number b using word access (32 bit) */
+#ifndef HWREGBITW
+#define HWREGBITW(x, b) \
+  HWREG(((unsigned long)(x) & 0xF0000000) | 0x02000000 | \
+        (((unsigned long)(x) & 0x000FFFFF) << 5) | ((b) << 2))
+#endif
 /*---------------------------------------------------------------------------*/
 static void
 check_etimer(void)

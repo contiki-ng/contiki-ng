@@ -59,7 +59,7 @@ i2c_arch_write_read(I2C_Handle i2c_handle, uint_least8_t slave_addr,
     .writeCount = wcount,
     .readBuf = rbuf,
     .readCount = rcount,
-    .slaveAddress = slave_addr,
+    .targetAddress = slave_addr,
   };
 
   if(!i2c_handle) {

@@ -58,6 +58,19 @@
 static Watchdog_Handle wdt_handle;
 #endif
 /*---------------------------------------------------------------------------*/
+static void
+watchdog_callback(uintptr_t watchdog_handle)
+{
+    /*
+     * If the Watchdog Non-Maskable Interrupt (NMI) is called,
+     * loop until the device resets. Some devices will invoke
+     * this callback upon watchdog expiration while others will
+     * reset. See the device specific watchdog driver documentation
+     * for your device.
+     */
+    while (1) {}
+}
+/*---------------------------------------------------------------------------*/
 /**
  * \brief  Initialises the Watchdog module.
  *
@@ -75,6 +88,7 @@ watchdog_init(void)
 
   wdt_params.resetMode = Watchdog_RESET_ON;
   wdt_params.debugStallMode = Watchdog_DEBUG_STALL_ON;
+  wdt_params.callbackFxn = watchdog_callback;
 
   wdt_handle = Watchdog_open(Board_WATCHDOG0, &wdt_params);
 #endif
@@ -112,7 +126,9 @@ void
 watchdog_start(void)
 {
 #if (WATCHDOG_DISABLE == 0)
-  watchdog_periodic();
+  uint32_t timeout_ticks = Watchdog_convertMsToTicks(wdt_handle,
+                                                     WATCHDOG_TIMEOUT_MS);
+  Watchdog_setReload(wdt_handle, timeout_ticks);
 #endif
 }
 /*---------------------------------------------------------------------------*/
@@ -123,8 +139,7 @@ void
 watchdog_periodic(void)
 {
 #if (WATCHDOG_DISABLE == 0)
-  uint32_t timeout_ticks = Watchdog_convertMsToTicks(wdt_handle, WATCHDOG_TIMEOUT_MS);
-  Watchdog_setReload(wdt_handle, timeout_ticks);
+  Watchdog_clear(wdt_handle);
 #endif
 }
 /*---------------------------------------------------------------------------*/
@@ -136,7 +151,7 @@ void
 watchdog_stop(void)
 {
 #if (WATCHDOG_DISABLE == 0)
-  Watchdog_clear(wdt_handle);
+  Watchdog_close(wdt_handle);
 #endif
 }
 /*---------------------------------------------------------------------------*/

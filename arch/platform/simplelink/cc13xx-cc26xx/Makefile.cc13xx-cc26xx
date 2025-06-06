@@ -18,6 +18,7 @@ include $(BOARD_PATH)/Makefile.$(notdir $(BOARD))
 
 DEVICE_LC        := $(shell echo "$(DEVICE)" | tr A-Z a-z)
 DEVICE_FAMILY_LC := $(shell echo "$(DEVICE_FAMILY)" | tr A-Z a-z)
+SUBFAMILY_LC     := $(shell echo "$(SUBFAMILY)" | tr - _)
 
 # Add to the source dirs
 TARGET_FAMILY_DIRS += common

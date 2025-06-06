@@ -50,20 +50,11 @@
 /*---------------------------------------------------------------------------*/
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(driverlib/gpio.h)
-
-#include <ti/drivers/pin/PINCC26XX.h>
 /*---------------------------------------------------------------------------*/
-#define gpio_hal_arch_set_pin(port, pin)        PINCC26XX_setOutputValue(pin, 1)
-#define gpio_hal_arch_clear_pin(port, pin)      PINCC26XX_setOutputValue(pin, 0)
-#define gpio_hal_arch_toggle_pin(port, pin)     PINCC26XX_setOutputValue(pin, \
-                                                  PINCC26XX_getOutputValue(pin) \
-                                                  ? 0 : 1)
-#define gpio_hal_arch_write_pin(port, pin, v)   PINCC26XX_setOutputValue(pin, v)
-
-#define gpio_hal_arch_set_pins(port, pin)       GPIO_setMultiDio(pin)
-#define gpio_hal_arch_clear_pins(port, pin)     GPIO_clearMultiDio(pin)
-#define gpio_hal_arch_toggle_pins(port, pin)    GPIO_toggleMultiDio(pin)
-#define gpio_hal_arch_write_pins(port, pin, v)  GPIO_writeMultiDio(pin, v)
+#define gpio_hal_arch_set_pin(port, pin)        GPIO_setDio(pin)
+#define gpio_hal_arch_clear_pin(port, pin)      GPIO_clearDio(pin)
+#define gpio_hal_arch_toggle_pin(port, pin)     GPIO_toggleDio(pin)
+#define gpio_hal_arch_write_pin(port, pin, v)   GPIO_writeDio(pin, v)
 /*---------------------------------------------------------------------------*/
 #endif /* GPIO_HAL_ARCH_H_ */
 /*---------------------------------------------------------------------------*/
