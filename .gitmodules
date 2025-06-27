@@ -43,3 +43,6 @@
 [submodule "os/net/security/mbedtls"]
 	path = os/net/security/mbedtls
 	url = https://github.com/Mbed-TLS/mbedtls.git
+[submodule "arch/cpu/gecko2/lib/simplicity_sdk"]
+	path = arch/cpu/gecko2/lib/simplicity_sdk
+	url = https://github.com/SiliconLabs/simplicity_sdk.git
