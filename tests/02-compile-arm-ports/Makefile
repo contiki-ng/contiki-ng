@@ -110,6 +110,7 @@ hello-world/nrf:BOARD=nrf52840/dongle:NRF_NATIVE_USB=1 \
 hello-world/nrf:BOARD=nrf5340/dk/application:NRF_NATIVE_USB=1 \
 hello-world/gecko:BOARD=brd4162a \
 hello-world/gecko:BOARD=brd4166a \
+libs/crypto/zoul \
 libs/data-structures/zoul \
 libs/deployment/openmote \
 libs/ecc/zoul \

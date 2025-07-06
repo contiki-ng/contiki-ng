@@ -1,0 +1,1 @@
+../../../tests/08-native-runs/14-sha-256/test-sha-256.c

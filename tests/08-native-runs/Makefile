@@ -26,6 +26,7 @@ tests/08-native-runs/18-ecc/native:./18-ecc.sh \
 tests/08-native-runs/19-bitrev/native:./19-bitrev-test.sh \
 tests/08-native-runs/20-random/native:./20-random.sh \
 tests/08-native-runs/21-coffee-validation/native:./21-coffee-validation.sh \
+tests/08-native-runs/22-ccm-star/native:./22-ccm-star.sh \
 tests/08-native-runs/23-uiplib/native:./23-uiplib.sh \
 tests/08-native-runs/21-dbg-io/native:./21-dbg-io.sh \
 tests/08-native-runs/24-antelope/native:./24-antelope.sh \
