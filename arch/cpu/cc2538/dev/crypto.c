@@ -37,48 +37,14 @@
  */
 #include "contiki.h"
 #include "dev/sys-ctrl.h"
-#include "dev/nvic.h"
 #include "dev/crypto.h"
-#include "dev/aes.h"
 #include "reg.h"
-#include "lpm.h"
 
-#include <stdbool.h>
-/*---------------------------------------------------------------------------*/
-static volatile struct process *notification_process = NULL;
-/*---------------------------------------------------------------------------*/
-/** \brief The AES/SHA cryptoprocessor ISR
- *
- *        This is the interrupt service routine for the AES/SHA
- *        cryptoprocessor.
- *
- *        This ISR is called at worst from PM0, so lpm_exit() does not need
- *        to be called.
- */
-void
-crypto_isr(void)
-{
-  NVIC_ClearPendingIRQ(AES_IRQn);
-  NVIC_DisableIRQ(AES_IRQn);
-
-  if(notification_process != NULL) {
-    process_poll((struct process *)notification_process);
-    notification_process = NULL;
-  }
-}
-/*---------------------------------------------------------------------------*/
-static bool
-permit_pm1(void)
-{
-  return REG(AES_CTRL_ALG_SEL) == 0;
-}
 /*---------------------------------------------------------------------------*/
 void
 crypto_init(void)
 {
   volatile int i;
-
-  lpm_register_peripheral(permit_pm1);
 
   crypto_enable();
 
@@ -93,8 +59,6 @@ crypto_enable(void)
 {
   /* Enable the clock for the AES/SHA cryptoprocessor */
   REG(SYS_CTRL_RCGCSEC) |= SYS_CTRL_RCGCSEC_AES;
-  REG(SYS_CTRL_SCGCSEC) |= SYS_CTRL_SCGCSEC_AES;
-  REG(SYS_CTRL_DCGCSEC) |= SYS_CTRL_DCGCSEC_AES;
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -102,14 +66,7 @@ crypto_disable(void)
 {
   /* Gate the clock for the AES/SHA cryptoprocessor */
   REG(SYS_CTRL_RCGCSEC) &= ~SYS_CTRL_RCGCSEC_AES;
-  REG(SYS_CTRL_SCGCSEC) &= ~SYS_CTRL_SCGCSEC_AES;
-  REG(SYS_CTRL_DCGCSEC) &= ~SYS_CTRL_DCGCSEC_AES;
 }
 /*---------------------------------------------------------------------------*/
-void
-crypto_register_process_notification(struct process *p)
-{
-  notification_process = p;
-}
 
 /** @} */
