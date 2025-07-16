@@ -1,0 +1,5 @@
+# Include uECC
+MODULES += os/net/security/micro-ecc
+
+# Disable hardware-accelerated ECC
+CONTIKI_SOURCES_EXCLUDES += cc2538-ecc.c

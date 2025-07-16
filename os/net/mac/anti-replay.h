@@ -31,15 +31,13 @@
  */
 
 /**
+ * \addtogroup llsec802154
+ * @{
+ *
  * \file
  *         Interface to anti-replay mechanisms.
  * \author
  *         Konrad Krentz <konrad.krentz@gmail.com>
- */
-
-/**
- * \addtogroup llsec802154
- * @{
  */
 
 #ifndef ANTI_REPLAY_H

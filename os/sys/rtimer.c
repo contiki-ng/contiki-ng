@@ -58,7 +58,7 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
 	   rtimer_clock_t duration,
 	   rtimer_callback_t func, void *ptr)
 {
-  LOG_DBG("rtimer_set time %lu\n", (unsigned long)time);
+  LOG_DBG("rtimer_set time %" RTIMER_PRI "\n", time);
 
   if(next_rtimer) {
     return RTIMER_ERR_ALREADY_SCHEDULED;

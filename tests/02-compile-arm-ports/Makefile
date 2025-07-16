@@ -78,6 +78,7 @@ dev/dht11/nrf52840:BOARD=dk \
 hello-world/nrf52840:BOARD=dk \
 hello-world/nrf52840:BOARD=dongle \
 hello-world/openmote:BOARD=openmote-b \
+hello-world/openmote:BOARD=openmote-b:DEFINES=OPENMOTEB_CONF_USE_ATMEL_RADIO=1 \
 hello-world/openmote:BOARD=openmote-cc2538 \
 hello-world/zoul:BOARD=firefly-reva:DEFINES=ZOUL_CONF_USE_CC1200_RADIO=1 \
 hello-world/zoul:BOARD=firefly-reva:DEFINES=ZOUL_CONF_USE_CC1200_RADIO=1,CC1200_CONF_802154G=1 \
@@ -108,6 +109,7 @@ hello-world/gecko:BOARD=brd4162a \
 hello-world/gecko:BOARD=brd4166a \
 libs/data-structures/zoul \
 libs/deployment/openmote \
+libs/ecc/zoul \
 libs/energest/zoul \
 libs/ipv6-hooks/openmote \
 libs/ipv6-uipbuf/zoul \
@@ -151,7 +153,6 @@ multicast/zoul \
 nullnet/zoul \
 platform-specific/cc2538-common/cc2538dk \
 platform-specific/cc2538-common/crypto/zoul \
-platform-specific/cc2538-common/pka/zoul \
 platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
 platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc1350 \
 platform-specific/cc26x0-cc13x0/base-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \

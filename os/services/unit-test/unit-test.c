@@ -34,10 +34,9 @@
  * 	Nicolas Tsiftes <nicolas.tsiftes@ri.se>
  */
 
-#include <inttypes.h>
-#include <stdio.h>
-
 #include "unit-test.h"
+
+#include <stdio.h>
 
 struct pt unit_test_pt;
 
@@ -54,9 +53,9 @@ unit_test_print_report(const unit_test_t *utp)
   printf("Result: %s\n", utp->passed ? "success" : "failure");
   printf("Exit point: %s:%u\n", utp->test_file, utp->exit_line);
   printf("Assertions executed: %"PRIu32"\n", utp->assertions);
-  printf("Start: %"PRIu64"\n", (uint64_t)utp->start);
-  printf("End: %"PRIu64"\n", (uint64_t)utp->end);
-  printf("Duration: %"PRId64" ticks\n", (int64_t)(utp->end - utp->start));
+  printf("Start: %"CLOCK_PRI"\n", utp->start);
+  printf("End: %"CLOCK_PRI"\n", utp->end);
+  printf("Duration: %"CLOCK_PRI" ticks\n", utp->end - utp->start);
   printf("Ticks per second: %u\n", (unsigned)CLOCK_SECOND);
 }
 /*---------------------------------------------------------------------------*/

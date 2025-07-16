@@ -94,32 +94,32 @@ struct rom_util_api {
 /** \name Pointer to the ROM utility function library API table
  * @{
  */
-#define ROM_UTIL_API            ((struct rom_util_api *)0x00000048)
+extern const struct rom_util_api *const rom_util_api;
 /** @} */
 /*---------------------------------------------------------------------------*/
 /** \name ROM utility function library API accessor macros
  * @{
  */
 #define rom_util_crc32(data, byte_count) \
-  (ROM_UTIL_API->crc32((data), (byte_count)))
+  (rom_util_api->crc32((data), (byte_count)))
 #define rom_util_get_flash_size() \
-  (ROM_UTIL_API->get_flash_size())
+  (rom_util_api->get_flash_size())
 #define rom_util_get_chip_id() \
-  (ROM_UTIL_API->get_chip_id())
+  (rom_util_api->get_chip_id())
 #define rom_util_page_erase(flash_addr, size) \
-  (ROM_UTIL_API->page_erase((flash_addr), (size)))
+  (rom_util_api->page_erase((flash_addr), (size)))
 #define rom_util_program_flash(ram_data, flash_addr, byte_count) \
-  (ROM_UTIL_API->program_flash((ram_data), (flash_addr), (byte_count)))
+  (rom_util_api->program_flash((ram_data), (flash_addr), (byte_count)))
 #define rom_util_reset_device() \
-  (ROM_UTIL_API->reset_device())
+  (rom_util_api->reset_device())
 #define rom_util_memset(s, c, n) \
-  (ROM_UTIL_API->memset((s), (c), (n)))
+  (rom_util_api->memset((s), (c), (n)))
 #define rom_util_memcpy(dest, src, n) \
-  (ROM_UTIL_API->memcpy((dest), (src), (n)))
+  (rom_util_api->memcpy((dest), (src), (n)))
 #define rom_util_memcmp(s1, s2, n) \
-  (ROM_UTIL_API->memcmp((s1), (s2), (n)))
+  (rom_util_api->memcmp((s1), (s2), (n)))
 #define rom_util_memmove(dest, src, n) \
-  (ROM_UTIL_API->memmove((dest), (src), (n)))
+  (rom_util_api->memmove((dest), (src), (n)))
 /** @} */
 
 #endif /* ROM_UTIL_H_ */

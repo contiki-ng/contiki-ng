@@ -268,7 +268,7 @@ ifconf_setup(void)
   ssystem("ifconfig %s inet6 %s add", config_tundev, config_ipaddr );
   ssystem("sysctl -w net.inet6.ip6.forwarding=1");
 #else
-  ssystem("ifconfig %s inet `hostname` %s mtu %d up", cofnig_tundev, config_ipaddr, config_mtu);
+  ssystem("ifconfig %s inet `hostname` %s mtu %d up", config_tundev, config_ipaddr, config_mtu);
   ssystem("sysctl -w net.inet.ip.forwarding=1");
 #endif /* !linux */
 

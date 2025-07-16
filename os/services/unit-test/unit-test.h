@@ -37,9 +37,7 @@
 #ifndef UNIT_TEST_H
 #define UNIT_TEST_H
 
-#include "sys/clock.h"
-#include "sys/process.h"
-#include "sys/pt.h"
+#include "contiki.h"
 #include <stdbool.h>
 #include <stdint.h>
 

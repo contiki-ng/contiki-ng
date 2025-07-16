@@ -69,7 +69,7 @@ typedef enum {
 
 const linkaddr_t *NBR_TABLE_GC_GET_WORST(const linkaddr_t *lladdr1,
                                          const linkaddr_t *lladdr2);
-bool NBR_TABLE_CAN_ACCEPT_NEW(const linkaddr_t *new,
+bool NBR_TABLE_CAN_ACCEPT_NEW(const linkaddr_t *new_linkaddr,
                               const linkaddr_t *candidate_for_removal,
                               nbr_table_reason_t reason, const void *data);
 

@@ -55,8 +55,8 @@
 
 #include "cfs/cfs.h"
 #include "cfs/cfs-coffee.h"
+#include "lib/crc16.h"
 #include "lib/memb.h"
-#include "lib/random.h"
 
 #include "db-options.h"
 #include "index.h"
@@ -196,8 +196,7 @@ invalidate_cache(void)
 static maxheap_key_t
 transform_key(maxheap_key_t key)
 {
-  random_init(key);
-  return random_rand();
+  return crc16_data((const uint8_t *)&key, sizeof(key), 0);
 }
 
 static int

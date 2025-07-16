@@ -58,6 +58,14 @@
 #ifndef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM 8
 #endif /* QUEUEBUF_CONF_NUM */
+
+/* Enable 802.15.4g payload bit-reversal (LSB⇄MSB) on TX/RX */
+#ifdef RADIO_CONF_PAYLOAD_BIT_REVERSE
+#define RADIO_PAYLOAD_BIT_REVERSE RADIO_CONF_PAYLOAD_BIT_REVERSE
+#else
+#define RADIO_PAYLOAD_BIT_REVERSE 0
+#endif
+
 /*---------------------------------------------------------------------------*/
 /* uIPv6 configuration options.
  *

@@ -49,7 +49,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-static volatile struct process *notification_process = NULL;
+static volatile struct process *notification_process;
 /*---------------------------------------------------------------------------*/
 /** \brief The PKA engine ISR
  *
@@ -73,23 +73,13 @@ pka_isr(void)
 static bool
 permit_pm1(void)
 {
-  return (REG(PKA_FUNCTION) & PKA_FUNCTION_RUN) == 0;
+  return (REG(SYS_CTRL_RCGCSEC) & SYS_CTRL_RCGCSEC_PKA) == 0;
 }
 /*---------------------------------------------------------------------------*/
 void
 pka_init(void)
 {
-  volatile int i;
-
   lpm_register_peripheral(permit_pm1);
-
-  pka_enable();
-
-  /* Reset the PKA engine */
-  REG(SYS_CTRL_SRSEC)   |= SYS_CTRL_SRSEC_PKA;
-  for(i = 0; i < 16; i++) {
-    REG(SYS_CTRL_SRSEC) &= ~SYS_CTRL_SRSEC_PKA;
-  }
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -110,14 +100,89 @@ pka_disable(void)
   REG(SYS_CTRL_DCGCSEC) &= ~SYS_CTRL_DCGCSEC_PKA;
 }
 /*---------------------------------------------------------------------------*/
-uint8_t
+bool
 pka_check_status(void)
 {
   return (REG(PKA_FUNCTION) & PKA_FUNCTION_RUN) == 0;
 }
+/*---------------------------------------------------------------------------*/
 void
 pka_register_process_notification(struct process *p)
 {
   notification_process = p;
 }
+/*---------------------------------------------------------------------------*/
+void
+pka_run_function(uint32_t function)
+{
+  pka_register_process_notification(process_current);
+  REG(PKA_FUNCTION) = PKA_FUNCTION_RUN | function;
+  NVIC_ClearPendingIRQ(PKA_IRQn);
+  NVIC_EnableIRQ(PKA_IRQn);
+}
+/*---------------------------------------------------------------------------*/
+void
+pka_little_endian_to_pka_ram(const uint32_t *words,
+                             size_t num_words,
+                             uintptr_t offset)
+{
+  offset *= sizeof(uint32_t);
+  offset += PKA_RAM_BASE;
+  for(size_t i = 0; i < num_words; i++) {
+    REG(offset + sizeof(uint32_t) * i) = words[i];
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+pka_word_to_pka_ram(uint32_t word, uintptr_t offset)
+{
+  offset *= sizeof(uint32_t);
+  offset += PKA_RAM_BASE;
+  REG(offset) = word;
+}
+/*---------------------------------------------------------------------------*/
+uint32_t
+pka_word_from_pka_ram(uintptr_t offset)
+{
+  offset *= sizeof(uint32_t);
+  offset += PKA_RAM_BASE;
+  return REG(offset);
+}
+/*---------------------------------------------------------------------------*/
+void
+pka_big_endian_to_pka_ram(const uint8_t *bytes,
+                          size_t num_bytes,
+                          uintptr_t offset)
+{
+  offset *= sizeof(uint32_t);
+  offset += PKA_RAM_BASE;
+  while(num_bytes) {
+    uint32_t word = bytes[--num_bytes];
+    word |= bytes[--num_bytes] << 8;
+    word |= bytes[--num_bytes] << 16;
+    word |= bytes[--num_bytes] << 24;
+    REG(offset) = word;
+    offset += sizeof(uint32_t);
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
+pka_big_endian_from_pka_ram(uint8_t *bytes,
+                            size_t num_words,
+                            uintptr_t offset)
+{
+  offset *= sizeof(uint32_t);
+  offset += PKA_RAM_BASE;
+  size_t remaining_bytes = num_words * sizeof(uint32_t);
+  while(remaining_bytes) {
+    uint32_t word = REG(offset);
+    bytes[--remaining_bytes] = word;
+    bytes[--remaining_bytes] = word >> 8;
+    bytes[--remaining_bytes] = word >> 16;
+    bytes[--remaining_bytes] = word >> 24;
+    offset += sizeof(uint32_t);
+  }
+}
+/*---------------------------------------------------------------------------*/
+
 /** @} */
