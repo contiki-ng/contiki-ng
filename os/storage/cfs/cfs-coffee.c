@@ -410,6 +410,18 @@ next_file(coffee_page_t page, struct file_header *hdr)
   } else if(HDR_ISOLATED(*hdr)) {
     return page + 1;
   }
+
+  // Negative max_pages may lead to endless loops as it causes scans
+  // through the flash to jump backwards. The same applies if max_pages is too
+  // large and cause page + hdr->max_pages to wrap around.  In these cases we
+  // rather return one page forward. This may cause strange behavior(?), but
+  // more importantly it avoids endless loops.
+  if(hdr->max_pages < 0 || hdr->max_pages >= COFFEE_PAGE_COUNT) {
+    PRINTF("Coffee: %s has invalid max_pages %d\n",
+        hdr->name, (int)hdr->max_pages);
+    return page + 1;
+  }
+
   return page + hdr->max_pages;
 }
 /*---------------------------------------------------------------------------*/
