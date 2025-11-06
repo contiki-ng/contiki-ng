@@ -117,6 +117,10 @@ newdata(struct tcp_socket *s)
      data are copied down into the input buffer. */
   do {
     copylen = MIN(len, s->input_data_maxlen - bytesleft);
+    if(copylen == 0) {
+      /* Buffer is full with retained data, cannot accept more */
+      break;
+    }
     inputlen = copylen + bytesleft;
     memcpy(s->input_data_ptr + bytesleft, dataptr, copylen);
     if(s->input_callback) {
