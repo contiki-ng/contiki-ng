@@ -41,6 +41,7 @@
 #include "contiki.h"
 
 #include "em_chip.h"
+#include "em_system.h"
 #include "sl_device_init_nvic.h"
 #include "sl_board_init.h"
 #include "sl_device_init_dcdc.h"
@@ -51,12 +52,14 @@
 #include "sl_board_control.h"
 #include "sl_power_manager.h"
 #include "sl_sleeptimer.h"
+#include "rail.h"
 
 #include "dev/gpio-hal.h"
 #include "dev/button-hal.h"
 #include "dev/leds.h"
 #include "dev/serial-line.h"
 #include "lib/random.h"
+#include "lib/csprng.h"
 #include "dev/uart-arch.h"
 #include "sys/linkaddr-arch.h"
 /*---------------------------------------------------------------------------*/
@@ -96,6 +99,21 @@ platform_init_stage_one(void)
   leds_init();
 }
 /*---------------------------------------------------------------------------*/
+static void
+feed_csprng(void)
+{
+#if CSPRNG_ENABLED
+  struct csprng_seed seed;
+  if(sizeof(seed) != RAIL_GetRadioEntropy(RAIL_EFR32_HANDLE,
+                                          seed.u8,
+                                          sizeof(seed.u8))) {
+    LOG_ERR("RAIL_GetRadioEntropy failed\n");
+    return;
+  }
+  csprng_feed(&seed);
+#endif /* CSPRNG_ENABLED */
+}
+/*---------------------------------------------------------------------------*/
 void
 platform_init_stage_two(void)
 {
@@ -113,6 +131,8 @@ platform_init_stage_two(void)
 #endif /* BUILD_WITH_SHELL */
 
   populate_link_address();
+
+  feed_csprng();
 }
 /*---------------------------------------------------------------------------*/
 void
