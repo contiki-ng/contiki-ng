@@ -58,6 +58,7 @@ CONTIKI_CPU_SOURCEFILES += gpio-hal-arch.c  int-master-arch.c
 CONTIKI_CPU_SOURCEFILES += random.c         trng-arch.c
 CONTIKI_CPU_SOURCEFILES += spi-arch.c       i2c-arch.c
 CONTIKI_CPU_SOURCEFILES += crypto.c         simplelink-aes-128.c
+CONTIKI_CPU_SOURCEFILES += simplelink-ccm-star.c
 
 # RF source files
 CONTIKI_CPU_SOURCEFILES += sched.c          data-queue.c

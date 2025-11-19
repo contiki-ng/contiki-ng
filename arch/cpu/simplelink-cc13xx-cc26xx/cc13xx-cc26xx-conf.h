@@ -504,6 +504,10 @@
 #define AES_128_CONF simplelink_aes_128_driver
 #endif
 
+#ifndef CCM_STAR_CONF
+#define CCM_STAR_CONF simplelink_ccm_star_driver
+#endif
+
 /** @} */
 /*---------------------------------------------------------------------------*/
 #endif /* CC13XX_CC26XX_CONF_H_ */
