@@ -395,7 +395,7 @@ UNIT_TEST(sha_256_hash_stepwise)
                      strlen(hashes[i].data[j]));
     }
     uint8_t digest[SHA_256_DIGEST_LENGTH];
-    SHA_256.finalize(digest);
+    UNIT_TEST_ASSERT(SHA_256.finalize(digest));
     UNIT_TEST_ASSERT(!memcmp(digest, hashes[i].hash, sizeof(digest)));
   }
 
@@ -422,7 +422,7 @@ UNIT_TEST(sha_256_hash_with_checkpoint)
     }
     SHA_256.restore_checkpoint(&checkpoint);
     uint8_t sha256[SHA_256_DIGEST_LENGTH];
-    SHA_256.finalize(sha256);
+    UNIT_TEST_ASSERT(SHA_256.finalize(sha256));
     UNIT_TEST_ASSERT(!memcmp(sha256, hashes[i].hash, sizeof(sha256)));
   }
 
@@ -445,7 +445,7 @@ UNIT_TEST(sha_256_hash_shorthand)
       buf_len += strlen(hashes[i].data[j]);
     }
     uint8_t digest[SHA_256_DIGEST_LENGTH];
-    SHA_256.hash(buf, buf_len, digest);
+    UNIT_TEST_ASSERT(SHA_256.hash(buf, buf_len, digest));
     UNIT_TEST_ASSERT(!memcmp(digest, hashes[i].hash, sizeof(digest)));
   }
 
@@ -459,9 +459,9 @@ UNIT_TEST(sha_256_hmac)
 
   for(size_t i = 0; i < CC_ARRAY_LENGTH(hmacs); i++) {
     uint8_t hmac[SHA_256_DIGEST_LENGTH];
-    sha_256_hmac((uint8_t *)hmacs[i].key, hmacs[i].keylen,
-                 hmacs[i].data, hmacs[i].datalen,
-                 hmac);
+    UNIT_TEST_ASSERT(sha_256_hmac((uint8_t *)hmacs[i].key, hmacs[i].keylen,
+                                  hmacs[i].data, hmacs[i].datalen,
+                                  hmac));
     UNIT_TEST_ASSERT(!memcmp(hmac, hmacs[i].hmac, sizeof(hmac)));
   }
 
@@ -479,7 +479,7 @@ UNIT_TEST(sha_256_hmac_stepwise)
     sha_256_hmac_update(hmacs[i].data, hmacs[i].datalen / 2);
     sha_256_hmac_update(hmacs[i].data + hmacs[i].datalen / 2,
                         hmacs[i].datalen - (hmacs[i].datalen / 2));
-    sha_256_hmac_finish(hmac);
+    UNIT_TEST_ASSERT(sha_256_hmac_finish(hmac));
     UNIT_TEST_ASSERT(!memcmp(hmac, hmacs[i].hmac, sizeof(hmac)));
   }
 
@@ -500,7 +500,7 @@ UNIT_TEST(sha_256_hmac_checkpoint)
     SHA_256.restore_checkpoint(&checkpoint);
     sha_256_hmac_update(hmacs[i].data + hmacs[i].datalen / 2,
                         hmacs[i].datalen - (hmacs[i].datalen / 2));
-    sha_256_hmac_finish(hmac);
+    UNIT_TEST_ASSERT(sha_256_hmac_finish(hmac));
     UNIT_TEST_ASSERT(!memcmp(hmac, hmacs[i].hmac, sizeof(hmac)));
   }
 
@@ -526,13 +526,13 @@ UNIT_TEST(sha_256_hmac_interleaved)
   sha_256_hmac_update(hmacs[0].data + hmacs[0].datalen / 2,
                       hmacs[0].datalen - (hmacs[0].datalen / 2));
   uint8_t hmac[SHA_256_DIGEST_LENGTH];
-  sha_256_hmac_finish(hmac);
+  UNIT_TEST_ASSERT(sha_256_hmac_finish(hmac));
   UNIT_TEST_ASSERT(!memcmp(hmac, hmacs[0].hmac, sizeof(hmac)));
 
   SHA_256.restore_checkpoint(&checkpoint2);
   sha_256_hmac_update(hmacs[1].data + hmacs[1].datalen / 2,
                       hmacs[1].datalen - (hmacs[1].datalen / 2));
-  sha_256_hmac_finish(hmac);
+  UNIT_TEST_ASSERT(sha_256_hmac_finish(hmac));
   UNIT_TEST_ASSERT(!memcmp(hmac, hmacs[1].hmac, sizeof(hmac)));
 
   UNIT_TEST_END();
@@ -545,14 +545,14 @@ UNIT_TEST(sha_256_hkdf)
 
   for(size_t i = 0; i < CC_ARRAY_LENGTH(keys); i++) {
     uint8_t prk[SHA_256_DIGEST_LENGTH];
-    sha_256_hkdf_extract(keys[i].salt, keys[i].salt_len,
-                         keys[i].ikm, keys[i].ikm_len,
-                         prk);
+    UNIT_TEST_ASSERT(sha_256_hkdf_extract(keys[i].salt, keys[i].salt_len,
+                                          keys[i].ikm, keys[i].ikm_len,
+                                          prk));
     UNIT_TEST_ASSERT(!memcmp(prk, keys[i].prk, sizeof(prk)));
     uint8_t okm[128];
-    sha_256_hkdf_expand(prk, sizeof(prk),
-                        keys[i].info, keys[i].info_len,
-                        okm, keys[i].okm_len);
+    UNIT_TEST_ASSERT(sha_256_hkdf_expand(prk, sizeof(prk),
+                                         keys[i].info, keys[i].info_len,
+                                         okm, keys[i].okm_len));
     UNIT_TEST_ASSERT(!memcmp(okm, keys[i].okm, keys[i].okm_len));
   }
 
@@ -566,10 +566,10 @@ UNIT_TEST(sha_256_hkdf_shorthand)
 
   for(size_t i = 0; i < CC_ARRAY_LENGTH(keys); i++) {
     uint8_t okm[128];
-    sha_256_hkdf(keys[i].salt, keys[i].salt_len,
-                 keys[i].ikm, keys[i].ikm_len,
-                 keys[i].info, keys[i].info_len,
-                 okm, keys[i].okm_len);
+    UNIT_TEST_ASSERT(sha_256_hkdf(keys[i].salt, keys[i].salt_len,
+                                  keys[i].ikm, keys[i].ikm_len,
+                                  keys[i].info, keys[i].info_len,
+                                  okm, keys[i].okm_len));
     UNIT_TEST_ASSERT(!memcmp(okm, keys[i].okm, keys[i].okm_len));
   }
 

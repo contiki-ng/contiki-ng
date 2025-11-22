@@ -150,6 +150,7 @@ do_hash(const uint8_t *data, size_t len,
   if(cc_crypto->ctrl.int_stat & CC_CRYPTO_CTRL_INT_STAT_DMA_BUS_ERR) {
     LOG_ERR("error at line %d\n", __LINE__);
     cc_crypto->ctrl.int_clr = CC_CRYPTO_CTRL_INT_STAT_DMA_BUS_ERR;
+    sha_256_checkpoint.is_error_free = false;
   }
 
   /* all interrupts should have been acknowledged */
@@ -161,6 +162,7 @@ init(void)
 {
   sha_256_checkpoint.buf_len = 0;
   sha_256_checkpoint.bit_count = 0;
+  sha_256_checkpoint.is_error_free = true;
   enable_crypto();
 }
 /*---------------------------------------------------------------------------*/
@@ -197,7 +199,7 @@ update(const uint8_t *data, size_t len)
   }
 }
 /*---------------------------------------------------------------------------*/
-static void
+static bool
 finalize(uint8_t digest[static SHA_256_DIGEST_LENGTH])
 {
   uint64_t final_bit_count = sha_256_checkpoint.bit_count
@@ -210,6 +212,7 @@ finalize(uint8_t digest[static SHA_256_DIGEST_LENGTH])
             digest, final_bit_count);
   }
   disable_crypto();
+  return sha_256_checkpoint.is_error_free;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -226,19 +229,21 @@ restore_checkpoint(const sha_256_checkpoint_t *cp)
   enable_crypto();
 }
 /*---------------------------------------------------------------------------*/
-static void
+static bool
 hash(const uint8_t *data, size_t len,
      uint8_t digest[static SHA_256_DIGEST_LENGTH])
 {
   if(!len) {
     /* the CC2538 would freeze otherwise */
     memcpy(digest, empty_digest, sizeof(empty_digest));
+    return true;
   } else if(is_valid_source_address((uintptr_t)data)) {
     init();
     do_hash(data, len, digest, len << 3);
     disable_crypto();
+    return sha_256_checkpoint.is_error_free;
   } else {
-    sha_256_hash(data, len, digest);
+    return sha_256_hash(data, len, digest);
   }
 }
 /*---------------------------------------------------------------------------*/
