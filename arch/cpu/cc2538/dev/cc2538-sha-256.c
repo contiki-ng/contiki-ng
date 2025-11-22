@@ -156,6 +156,8 @@ do_hash(const uint8_t *data, size_t len,
 static void
 init(void)
 {
+  sha_256_checkpoint.buf_len = 0;
+  sha_256_checkpoint.bit_count = 0;
   enable_crypto();
 }
 /*---------------------------------------------------------------------------*/
@@ -205,8 +207,6 @@ finalize(uint8_t digest[static SHA_256_DIGEST_LENGTH])
             digest, final_bit_count);
   }
   disable_crypto();
-  sha_256_checkpoint.buf_len = 0;
-  sha_256_checkpoint.bit_count = 0;
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -231,7 +231,7 @@ hash(const uint8_t *data, size_t len,
     /* the CC2538 would freeze otherwise */
     memcpy(digest, empty_digest, sizeof(empty_digest));
   } else if(udma_is_valid_source_address((uintptr_t)data)) {
-    enable_crypto();
+    init();
     do_hash(data, len, digest, len << 3);
     disable_crypto();
   } else {
