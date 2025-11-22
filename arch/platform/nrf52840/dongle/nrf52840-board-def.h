@@ -62,9 +62,9 @@
 #define PLATFORM_HAS_LEDS                       1
 #define LEDS_CONF_COUNT                         4
 
-#define LEDS_CONF_RED       2
-#define LEDS_CONF_GREEN     4
-#define LEDS_CONF_BLUE      8
+#define LEDS_CONF_RED       1
+#define LEDS_CONF_GREEN     2
+#define LEDS_CONF_BLUE      3
 /** @} */
 /**
  * \name Button configurations
