@@ -63,7 +63,6 @@ static const uint8_t empty_digest[SHA_256_DIGEST_LENGTH] = {
   0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c,
   0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55
 };
-static sha_256_checkpoint_t checkpoint;
 static bool was_crypto_enabled;
 
 /*---------------------------------------------------------------------------*/
@@ -101,17 +100,17 @@ do_hash(const uint8_t *data, size_t len,
   REG(AES_CTRL_INT_CFG) = AES_CTRL_INT_CFG_LEVEL;
   REG(AES_CTRL_INT_EN) = AES_CTRL_INT_EN_RESULT_AV;
 
-  if(checkpoint.bit_count) {
+  if(sha_256_checkpoint.bit_count) {
     /* configure resumed hash session */
     REG(AES_HASH_MODE_IN) = AES_HASH_MODE_IN_SHA256_MODE;
-    REG(AES_HASH_DIGEST_A) = checkpoint.state[0];
-    REG(AES_HASH_DIGEST_B) = checkpoint.state[1];
-    REG(AES_HASH_DIGEST_C) = checkpoint.state[2];
-    REG(AES_HASH_DIGEST_D) = checkpoint.state[3];
-    REG(AES_HASH_DIGEST_E) = checkpoint.state[4];
-    REG(AES_HASH_DIGEST_F) = checkpoint.state[5];
-    REG(AES_HASH_DIGEST_G) = checkpoint.state[6];
-    REG(AES_HASH_DIGEST_H) = checkpoint.state[7];
+    REG(AES_HASH_DIGEST_A) = sha_256_checkpoint.state[0];
+    REG(AES_HASH_DIGEST_B) = sha_256_checkpoint.state[1];
+    REG(AES_HASH_DIGEST_C) = sha_256_checkpoint.state[2];
+    REG(AES_HASH_DIGEST_D) = sha_256_checkpoint.state[3];
+    REG(AES_HASH_DIGEST_E) = sha_256_checkpoint.state[4];
+    REG(AES_HASH_DIGEST_F) = sha_256_checkpoint.state[5];
+    REG(AES_HASH_DIGEST_G) = sha_256_checkpoint.state[6];
+    REG(AES_HASH_DIGEST_H) = sha_256_checkpoint.state[7];
   } else {
     /* configure new hash session */
     REG(AES_HASH_MODE_IN) = AES_HASH_MODE_IN_SHA256_MODE
@@ -165,28 +164,29 @@ update(const uint8_t *data, size_t len)
 {
   while(len) {
     size_t n;
-    if(!checkpoint.buf_len && (len > SHA_256_BLOCK_SIZE)) {
+    if(!sha_256_checkpoint.buf_len && (len > SHA_256_BLOCK_SIZE)) {
       if(udma_is_valid_source_address((uintptr_t)data)) {
         n = (len - 1) & ~(SHA_256_BLOCK_SIZE - 1);
-        do_hash(data, n, checkpoint.state, 0);
+        do_hash(data, n, sha_256_checkpoint.state, 0);
       } else {
         n = SHA_256_BLOCK_SIZE;
-        memcpy(checkpoint.buf, data, n);
-        do_hash(checkpoint.buf, n, checkpoint.state, 0);
+        memcpy(sha_256_checkpoint.buf, data, n);
+        do_hash(sha_256_checkpoint.buf, n, sha_256_checkpoint.state, 0);
       }
-      checkpoint.bit_count += n << 3;
+      sha_256_checkpoint.bit_count += n << 3;
       data += n;
       len -= n;
     } else {
-      n = MIN(len, SHA_256_BLOCK_SIZE - checkpoint.buf_len);
-      memcpy(checkpoint.buf + checkpoint.buf_len, data, n);
-      checkpoint.buf_len += n;
+      n = MIN(len, SHA_256_BLOCK_SIZE - sha_256_checkpoint.buf_len);
+      memcpy(sha_256_checkpoint.buf + sha_256_checkpoint.buf_len, data, n);
+      sha_256_checkpoint.buf_len += n;
       data += n;
       len -= n;
-      if((checkpoint.buf_len == SHA_256_BLOCK_SIZE) && len) {
-        do_hash(checkpoint.buf, SHA_256_BLOCK_SIZE, checkpoint.state, 0);
-        checkpoint.bit_count += SHA_256_BLOCK_SIZE << 3;
-        checkpoint.buf_len = 0;
+      if((sha_256_checkpoint.buf_len == SHA_256_BLOCK_SIZE) && len) {
+        do_hash(sha_256_checkpoint.buf, SHA_256_BLOCK_SIZE,
+                sha_256_checkpoint.state, 0);
+        sha_256_checkpoint.bit_count += SHA_256_BLOCK_SIZE << 3;
+        sha_256_checkpoint.buf_len = 0;
       }
     }
   }
@@ -195,29 +195,31 @@ update(const uint8_t *data, size_t len)
 static void
 finalize(uint8_t digest[static SHA_256_DIGEST_LENGTH])
 {
-  uint64_t final_bit_count = checkpoint.bit_count + (checkpoint.buf_len << 3);
+  uint64_t final_bit_count = sha_256_checkpoint.bit_count
+                             + (sha_256_checkpoint.buf_len << 3);
   if(!final_bit_count) {
     /* the CC2538 would freeze otherwise */
     memcpy(digest, empty_digest, sizeof(empty_digest));
   } else {
-    do_hash(checkpoint.buf, checkpoint.buf_len, digest, final_bit_count);
+    do_hash(sha_256_checkpoint.buf, sha_256_checkpoint.buf_len,
+            digest, final_bit_count);
   }
   disable_crypto();
-  checkpoint.buf_len = 0;
-  checkpoint.bit_count = 0;
+  sha_256_checkpoint.buf_len = 0;
+  sha_256_checkpoint.bit_count = 0;
 }
 /*---------------------------------------------------------------------------*/
 static void
 create_checkpoint(sha_256_checkpoint_t *cp)
 {
   disable_crypto();
-  memcpy(cp, &checkpoint, sizeof(*cp));
+  memcpy(cp, &sha_256_checkpoint, sizeof(*cp));
 }
 /*---------------------------------------------------------------------------*/
 static void
 restore_checkpoint(const sha_256_checkpoint_t *cp)
 {
-  memcpy(&checkpoint, cp, sizeof(checkpoint));
+  memcpy(&sha_256_checkpoint, cp, sizeof(sha_256_checkpoint));
   enable_crypto();
 }
 /*---------------------------------------------------------------------------*/
