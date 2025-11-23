@@ -312,6 +312,11 @@ update(const uint8_t *data, size_t len)
   sha_256_checkpoint.buf_len += len;
 }
 /*---------------------------------------------------------------------------*/
+static void
+cancel(void)
+{
+}
+/*---------------------------------------------------------------------------*/
 /*
  * SHA-256 finalization.  Pads the input data, exports the hash value,
  * and clears the context state.
@@ -473,6 +478,7 @@ sha_256_hkdf(const uint8_t *salt, size_t salt_len,
 const struct sha_256_driver sha_256_driver = {
   init,
   update,
+  cancel,
   finalize,
   create_checkpoint,
   restore_checkpoint,

@@ -83,6 +83,11 @@ struct sha_256_driver {
   void (* update)(const uint8_t *data, size_t len);
 
   /**
+   * \brief Aborts the current hash session (if any).
+   */
+  void (* cancel)(void);
+
+  /**
    * \brief Terminates the hash session and produces the digest.
    * \param digest pointer to the hash value
    * \return       \c true on success and \c false otherwise.

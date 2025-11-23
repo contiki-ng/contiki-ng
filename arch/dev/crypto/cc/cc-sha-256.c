@@ -199,6 +199,15 @@ update(const uint8_t *data, size_t len)
   }
 }
 /*---------------------------------------------------------------------------*/
+static void
+cancel(void)
+{
+  if(cc_crypto_is_enabled()
+     && (cc_crypto->ctrl.alg_sel & CC_CRYPTO_CTRL_ALG_SEL_HASH_SHA_256)) {
+    disable_crypto();
+  }
+}
+/*---------------------------------------------------------------------------*/
 static bool
 finalize(uint8_t digest[static SHA_256_DIGEST_LENGTH])
 {
@@ -250,6 +259,7 @@ hash(const uint8_t *data, size_t len,
 const struct sha_256_driver cc_sha_256_driver = {
   init,
   update,
+  cancel,
   finalize,
   create_checkpoint,
   restore_checkpoint,
