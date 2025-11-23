@@ -49,8 +49,6 @@
                                              | ((((mic_len) - 2u) >> 1) << 3) \
                                              | 1u)
 #define CCM_STAR_ENCRYPTION_FLAGS 1
-/* Valid values are 4, 6, 8, 10, 12, 14, and 16 octets */
-#define MIC_LEN_VALID(x) ((x) >= 4 && (x) <= 16 && (x) % 2 == 0)
 
 /*---------------------------------------------------------------------------*/
 static void
@@ -172,7 +170,7 @@ aead(const uint8_t nonce[static CCM_STAR_NONCE_LENGTH],
      uint8_t *result, uint8_t mic_len,
      bool forward)
 {
-  if(!MIC_LEN_VALID(mic_len)) {
+  if(mic_len > AES_128_BLOCK_SIZE) {
     return false;
   }
 
