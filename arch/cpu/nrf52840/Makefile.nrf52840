@@ -137,7 +137,7 @@ endif
 ifeq (, $(shell which $(NRFJPROG)))
 	$(error Could not find nrfjprog "$(NRFJPROG)", please install it)
 else
-	$(NRFJPROG) -f nrf52 $(NRFJPROG_FLAGS) --sectorerase --verify --program $<
+	$(NRFJPROG) -f nrf52 $(NRFJPROG_FLAGS) --recover --verify --program $<
 	$(NRFJPROG) -f nrf52 $(NRFJPROG_FLAGS) --reset
 endif
 
