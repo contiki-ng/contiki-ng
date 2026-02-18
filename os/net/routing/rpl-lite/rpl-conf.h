@@ -79,7 +79,7 @@
  * point (OCP) of the OF, RPL_OCP_OF0 or RPL_OCP_MRHOF. This flag is of
  * no relevance to non-root nodes, which run the OF advertised in the
  * instance they join.
- * Make sure the selected of is inRPL_SUPPORTED_OFS.
+ * Make sure the selected of is in RPL_SUPPORTED_OFS.
  */
 #ifdef RPL_CONF_OF_OCP
 #define RPL_OF_OCP RPL_CONF_OF_OCP
