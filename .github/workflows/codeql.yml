@@ -28,7 +28,7 @@ jobs:
     #   - https://gh.io/supported-runners-and-hardware-resources
     #   - https://gh.io/using-larger-runners
     # Consider using larger runners for possible analysis time improvements.
-    runs-on: ${{ (matrix.language == 'swift' && 'macos-13') || 'ubuntu-22.04' }}
+    runs-on: ${{ (matrix.language == 'swift' && 'macos-15-intel') || 'ubuntu-22.04' }}
     timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 360 }}
     permissions:
       actions: read
@@ -54,7 +54,7 @@ jobs:
       run: apt-get update && apt-get install -y --no-install-recommends git-lfs
 
     - name: Checkout github repo (+ download lfs dependencies)
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
           fetch-depth: 2
           submodules: 'recursive'
@@ -66,13 +66,13 @@ jobs:
         git lfs checkout
 
     - name: arm-none-eabi-gcc GNU Arm Embedded Toolchain
-      uses: carlosperate/arm-none-eabi-gcc-action@v1.10.1
+      uses: carlosperate/arm-none-eabi-gcc-action@v1.12.0
       with:
         release: '10.3-2021.10'
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -99,7 +99,7 @@ jobs:
         ./.github/workflows/codeql-buildscript.sh
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
       with:
         category: "/language:${{matrix.language}}"
         upload: false
@@ -133,13 +133,13 @@ jobs:
         output: ${{ steps.step1.outputs.sarif-output }}/cpp.sarif
 
     - name: Upload SARIF
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: ${{ steps.step1.outputs.sarif-output }}
         category: "/language:${{matrix.language}}"
 
     - name: Archive CodeQL results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: codeql-results
         path: ${{ steps.step1.outputs.sarif-output }}

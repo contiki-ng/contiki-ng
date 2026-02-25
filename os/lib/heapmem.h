@@ -78,7 +78,7 @@
 
 #include "contiki.h"
 
-#include <stdlib.h>
+#include <stddef.h>
 /*****************************************************************************/
 #ifndef HEAPMEM_DEBUG
 #define HEAPMEM_DEBUG 0

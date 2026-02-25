@@ -312,8 +312,8 @@ cbor_end_reader(cbor_reader_state_t *state)
   return state->cbor_size == 0;
 }
 /*---------------------------------------------------------------------------*/
-cbor_size_t
-cbor_read_unsigned(cbor_reader_state_t *state, uint64_t *value)
+static cbor_size_t
+read_unsigned(cbor_reader_state_t *state, uint64_t *value)
 {
   size_t bytes_to_read;
 
@@ -361,11 +361,20 @@ cbor_read_unsigned(cbor_reader_state_t *state, uint64_t *value)
 }
 /*---------------------------------------------------------------------------*/
 cbor_size_t
+cbor_read_unsigned(cbor_reader_state_t *state, uint64_t *value)
+{
+  if(cbor_peek_next(state) != CBOR_MAJOR_TYPE_UNSIGNED) {
+    return CBOR_SIZE_NONE;
+  }
+  return read_unsigned(state, value);
+}
+/*---------------------------------------------------------------------------*/
+cbor_size_t
 cbor_read_signed(cbor_reader_state_t *state, int64_t *value)
 {
   uint64_t unsigned_value;
   cbor_major_type_t type = cbor_peek_next(state);
-  cbor_size_t size = cbor_read_unsigned(state, &unsigned_value);
+  cbor_size_t size = read_unsigned(state, &unsigned_value);
   if(size == CBOR_SIZE_NONE || unsigned_value > INT64_MAX) {
     return CBOR_SIZE_NONE;
   }
@@ -375,7 +384,7 @@ cbor_read_signed(cbor_reader_state_t *state, int64_t *value)
     *value = (int64_t)unsigned_value;
     return size;
   case CBOR_MAJOR_TYPE_SIGNED:
-    *value = -(int64_t)(unsigned_value + 1);
+    *value = -(int64_t)unsigned_value - 1;
     return size;
   default:
     return CBOR_SIZE_NONE;
@@ -387,7 +396,7 @@ read_byte_or_text_string(cbor_reader_state_t *state, size_t *size)
 {
   uint64_t value;
 
-  if((CBOR_SIZE_NONE == cbor_read_unsigned(state, &value))
+  if((CBOR_SIZE_NONE == read_unsigned(state, &value))
      || (state->cbor_size < value)) {
     return NULL;
   }
@@ -431,7 +440,7 @@ read_array_or_map(cbor_reader_state_t *state)
 {
   uint64_t value;
 
-  if((CBOR_SIZE_NONE == cbor_read_unsigned(state, &value))
+  if((CBOR_SIZE_NONE == read_unsigned(state, &value))
      || (value >= SIZE_MAX)) {
     return SIZE_MAX;
   }

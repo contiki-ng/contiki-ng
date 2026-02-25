@@ -41,6 +41,7 @@
 
 #include "net/mac/csma/csma.h"
 #include "net/mac/csma/csma-security.h"
+#include "net/mac/framer/frame802154.h"
 #include "net/mac/mac-sequence.h"
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"

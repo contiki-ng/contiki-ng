@@ -236,6 +236,7 @@ platform_init_stage_one()
   gpio_hal_init();
   button_hal_init();
   leds_init();
+#if CSPRNG_ENABLED
   struct csprng_seed seed;
 #ifdef __APPLE__
   if(SecRandomCopyBytes(kSecRandomDefault, CSPRNG_SEED_LEN, seed.u8)
@@ -245,6 +246,7 @@ platform_init_stage_one()
 #endif /* __APPLE__ */
     csprng_feed(&seed);
   }
+#endif /* CSPRNG_ENABLED */
 }
 /*---------------------------------------------------------------------------*/
 void

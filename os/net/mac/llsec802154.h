@@ -51,7 +51,6 @@
 #ifndef LLSEC802154_H_
 #define LLSEC802154_H_
 
-#include "net/mac/framer/frame802154.h"
 #include "net/ipv6/uip.h"
 
 #ifdef LLSEC802154_CONF_ENABLED

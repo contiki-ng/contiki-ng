@@ -37,6 +37,7 @@
 #include "dev/radio/cc1200/cc1200-arch.h"
 #include "dev/radio/cc1200/cc1200-rf-cfg.h"
 
+#include "net/mac/framer/frame802154.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "dev/watchdog.h"
@@ -928,7 +929,8 @@ read(void *buf, unsigned short buf_len)
 
   if(rx_pkt_len > 0) {
 
-    rssi = (int8_t)rx_pkt[rx_pkt_len - 2] + (int)CC1200_RF_CFG.rssi_offset;
+    /* RSSI offset already applied by hardware via AGC_GAIN_ADJUST register */
+    rssi = (int8_t)rx_pkt[rx_pkt_len - 2];
     /* CRC is already checked */
     uint8_t crc_lqi = rx_pkt[rx_pkt_len - 1];
 
@@ -1215,7 +1217,8 @@ get_rssi(void)
                 & CC1200_CARRIER_SENSE_VALID),
                 RTIMER_SECOND / 100);
   RF_ASSERT(rssi0 & CC1200_CARRIER_SENSE_VALID);
-  rssi1 = (int8_t)single_read(CC1200_RSSI1) + (int)CC1200_RF_CFG.rssi_offset;
+  /* RSSI offset already applied by hardware via AGC_GAIN_ADJUST register */
+  rssi1 = (int8_t)single_read(CC1200_RSSI1);
 
   /* If we were off, turn back off */
   if(was_off) {

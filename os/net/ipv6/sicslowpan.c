@@ -70,6 +70,7 @@
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uipbuf.h"
 #include "net/ipv6/sicslowpan.h"
+#include "net/mac/framer/frame802154.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"

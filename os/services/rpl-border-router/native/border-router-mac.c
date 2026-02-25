@@ -40,6 +40,7 @@
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 #include "net/netstack.h"
+#include "net/mac/framer/frame802154.h"
 #include "net/mac/mac-sequence.h"
 #include "packetutils.h"
 #include "border-router.h"

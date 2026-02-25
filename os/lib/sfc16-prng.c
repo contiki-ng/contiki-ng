@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, Swedish Institute of Computer Science
+ * Copyright (c) 2025, Konrad-Felix Krentz
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,77 +25,58 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
- *
  */
 
 /**
- * \addtogroup lib
- * @{
- *
- * \defgroup random Generation of non-cryptographic random numbers
+ * \addtogroup random
  * @{
  *
  * \file
- *         Header file for generating non-cryptographic random numbers.
+ *         Implements sfc16 of PractRand.
  * \author
  *         Konrad Krentz <konrad.krentz@gmail.com>
  */
 
-#ifndef RANDOM_H_
-#define RANDOM_H_
+#include "lib/random.h"
 
-#include "contiki.h"
-#include <stdint.h>
-
-#ifdef RANDOM_CONF_PRNG
-#define RANDOM_PRNG RANDOM_CONF_PRNG
-#else /* RANDOM_CONF_PRNG */
-#define RANDOM_PRNG sfc32_prng
-#endif /* RANDOM_CONF_PRNG */
-
-/**
- *  Structure of PRNG drivers.
- */
-struct random_prng {
-
-  /**
-   * \brief      Seeds the PRNG with a seed.
-   * \param seed The seed.
-   */
-  void (* seed)(uint64_t seed);
-
-  /**
-   * \brief  Generates a 16-bit pseudo-random number.
-   * \return The 16-bit pseudo-random number.
-   */
-  uint_fast16_t (* rand)(void);
+enum {
+  BARREL_SHIFT = 6,
+  RSHIFT = 5,
+  LSHIFT = 3
 };
 
-extern const struct random_prng RANDOM_PRNG;
+static uint16_t a;
+static uint16_t b;
+static uint16_t c;
+static uint16_t counter;
 
-/*
- * Seeds RANDOM_PRNG using the CSPRNG if enabled and else with the MAC address.
- */
-void random_init(void);
-
-/*
- * Calculate a pseudo random number between 0 and 65535.
- *
- * \return A pseudo-random number between 0 and 65535.
- */
-static inline unsigned short
-random_rand(void)
+/*---------------------------------------------------------------------------*/
+static uint_fast16_t
+rand(void)
 {
-  return RANDOM_PRNG.rand();
+  uint16_t tmp = a + b + counter++;
+  a = b ^ (b >> RSHIFT);
+  b = c + (c << LSHIFT);
+  c = ((c << BARREL_SHIFT) | (c >> (16 - BARREL_SHIFT))) + tmp;
+  return tmp;
 }
+/*---------------------------------------------------------------------------*/
+static void
+seed(uint64_t seed)
+{
+  a = seed;
+  b = seed >> 16;
+  c = seed >> 32;
+  counter = seed >> 48;
+  for(uint_fast8_t i = 0; i < 10; i++) {
+    rand();
+  }
+}
+/*---------------------------------------------------------------------------*/
+const struct random_prng sfc16_prng = {
+  seed,
+  rand
+};
+/*---------------------------------------------------------------------------*/
 
-/* In gcc int rand() uses RAND_MAX and long random() uses RANDOM_MAX */
-/* Since random_rand casts to unsigned short, we'll use this maxmimum */
-#define RANDOM_RAND_MAX 65535U
-
-#endif /* RANDOM_H_ */
-
-/** @} */
 /** @} */

@@ -131,14 +131,6 @@ extern const struct mac_driver NETSTACK_MAC;
 extern const struct radio_driver NETSTACK_RADIO;
 extern const struct framer NETSTACK_FRAMER;
 
-static inline void
-netstack_init(void)
-{
-  NETSTACK_RADIO.init();
-  NETSTACK_MAC.init();
-  NETSTACK_NETWORK.init();
-}
-
 /* Netstack ip_packet_processor - for implementing packet filters, firewalls,
    debuggin info, etc */
 

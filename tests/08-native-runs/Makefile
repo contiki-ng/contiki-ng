@@ -23,6 +23,7 @@ tests/08-native-runs/15-ieee802154-security/native:./15-ieee802154-security.sh \
 tests/08-native-runs/16-cbor/native:./16-cbor.sh \
 tests/08-native-runs/17-process-mutex/native:./17-process-mutex.sh \
 tests/08-native-runs/18-ecc/native:./18-ecc.sh \
-tests/08-native-runs/19-bitrev/native:./19-bitrev-test.sh
+tests/08-native-runs/19-bitrev/native:./19-bitrev-test.sh \
+tests/08-native-runs/20-random/native:./20-random.sh \
 
 include ../Makefile.compile-test

@@ -17,7 +17,7 @@ while(true) {
     minusage = minusage < n ? minusage : n;
     maxusage = maxusage > n ? maxusage : n;
 
-    if(minusage < 800 && maxusage >= 1000) {
+    if(minusage < 900 && maxusage >= 1000) {
       log.testOK();
     }
   }

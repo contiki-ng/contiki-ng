@@ -36,6 +36,7 @@
  *         Joakim Eriksson <joakime@sics.se>
  */
 #include "net/mac/framer/framer.h"
+#include "net/mac/framer/frame802154.h"
 #include "net/packetbuf.h"
 
 #ifdef NULLFRAMER_CONF_PARSE_802154

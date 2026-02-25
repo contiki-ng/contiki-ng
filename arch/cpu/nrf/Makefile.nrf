@@ -12,7 +12,6 @@ CONTIKI_CPU_SOURCEFILES += clock-arch.c
 CONTIKI_CPU_SOURCEFILES += dbg-arch.c
 CONTIKI_CPU_SOURCEFILES += gpio-hal-arch.c
 CONTIKI_CPU_SOURCEFILES += int-master-arch.c
-CONTIKI_CPU_SOURCEFILES += random-arch.c
 CONTIKI_CPU_SOURCEFILES += nrf-ieee-driver-arch.c
 CONTIKI_CPU_SOURCEFILES += uarte-arch.c
 CONTIKI_CPU_SOURCEFILES += temp-arch.c
@@ -26,9 +25,6 @@ ifeq ($(TRUSTZONE_SECURE_BUILD),1)
 else ifeq ($(TRUSTZONE_SECURE_BUILD),0)
   CFLAGS += -DNRF_TRUSTZONE_NONSECURE=1
 endif
-
-# Overrides
-CONTIKI_CPU_SOURCEFILES += random.c
 
 # arm
 CONTIKI_CPU_DIRS += arm/

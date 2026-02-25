@@ -31,6 +31,7 @@
 
 #include "contiki.h"
 #include "dev/radio.h"
+#include "net/mac/framer/frame802154.h"
 #include "net/packetbuf.h"
 #include "net/netstack.h"
 #include "em_core.h"

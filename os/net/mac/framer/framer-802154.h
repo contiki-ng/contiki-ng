@@ -41,6 +41,7 @@
 
 #include "net/packetbuf.h"
 #include "net/mac/framer/framer.h"
+#include "net/mac/framer/frame802154.h"
 
 /* Setup frame802154_t with use of a specified get_attr */
 void framer_802154_setup_params(packetbuf_attr_t (*get_attr)(uint8_t type),

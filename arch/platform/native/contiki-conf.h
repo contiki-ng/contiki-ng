@@ -102,4 +102,8 @@ typedef unsigned int uip_stats_t;
 #define PLATFORM_CONF_MAIN_ACCEPTS_ARGS  1
 #define PLATFORM_CONF_SUPPORTS_STACK_CHECK 0
 
+#ifndef CSPRNG_CONF_ENABLED
+#define CSPRNG_CONF_ENABLED 1
+#endif /* CSPRNG_CONF_ENABLED */
+
 #endif /* CONTIKI_CONF_H_ */

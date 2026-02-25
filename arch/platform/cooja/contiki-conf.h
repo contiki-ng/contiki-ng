@@ -121,6 +121,10 @@ typedef unsigned short uip_stats_t;
 
 #define PLATFORM_CONF_SUPPORTS_STACK_CHECK  0
 
+/* Override CSPRNG_CONF_ENABLED to ensure that simRandomSeed takes effect */
+#undef CSPRNG_CONF_ENABLED
+#define CSPRNG_CONF_ENABLED 1
+
 /*---------------------------------------------------------------------------*/
 /* Support for the new GPIO HAL */
 #define GPIO_HAL_CONF_ARCH_HDR_PATH      "dev/gpio-hal-arch.h"
