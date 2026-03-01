@@ -212,9 +212,24 @@ struct uip_conn uip_conns[UIP_TCP_CONNS];
 /* The uip_listenports list all currently listning ports. */
 uint16_t uip_listenports[UIP_LISTENPORTS];
 
-/* The iss variable is used for the TCP initial sequence number. */
-static uint8_t iss[4];
+/*
+ * The M term of RFC 6528's ISN = M + F: an RFC 793 ISN clock advancing
+ * 250,000 per second, approximated from elapsed clock ticks.
+ */
+static uint32_t iss;
+static clock_time_t iss_last_update;
 
+#define ISS_PER_TICK (250000 / CLOCK_SECOND)
+static_assert(ISS_PER_TICK > 0, "CLOCK_SECOND too large for the ISN clock");
+
+static void
+update_iss(void)
+{
+  clock_time_t now = clock_time();
+  iss += (now - iss_last_update) * ISS_PER_TICK;
+  iss_last_update = now;
+}
+/*---------------------------------------------------------------------------*/
 /* Temporary variables. */
 uint8_t uip_acc32[4];
 #endif /* UIP_TCP */
@@ -502,10 +517,11 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
 
   conn->tcpstateflags = UIP_SYN_SENT;
 
-  conn->snd_nxt[0] = iss[0];
-  conn->snd_nxt[1] = iss[1];
-  conn->snd_nxt[2] = iss[2];
-  conn->snd_nxt[3] = iss[3];
+  update_iss();
+  conn->snd_nxt[0] = (uint8_t)(iss >> 24);
+  conn->snd_nxt[1] = (uint8_t)(iss >> 16);
+  conn->snd_nxt[2] = (uint8_t)(iss >> 8);
+  conn->snd_nxt[3] = (uint8_t)(iss);
 
   conn->rcv_nxt[0] = 0;
   conn->rcv_nxt[1] = 0;
@@ -1085,15 +1101,6 @@ uip_process(uint8_t flag)
 #if UIP_TCP
     uipbuf_clear();
     uip_slen = 0;
-
-    /* Increase the initial sequence number. */
-    if(++iss[3] == 0) {
-      if(++iss[2] == 0) {
-        if(++iss[1] == 0) {
-          ++iss[0];
-        }
-      }
-    }
 
     /*
      * Check if the connection is in a state in which we simply wait
@@ -1863,10 +1870,11 @@ uip_process(uint8_t flag)
   uip_ipaddr_copy(&uip_connr->ripaddr, &UIP_IP_BUF->srcipaddr);
   uip_connr->tcpstateflags = UIP_SYN_RCVD;
 
-  uip_connr->snd_nxt[0] = iss[0];
-  uip_connr->snd_nxt[1] = iss[1];
-  uip_connr->snd_nxt[2] = iss[2];
-  uip_connr->snd_nxt[3] = iss[3];
+  update_iss();
+  uip_connr->snd_nxt[0] = (uint8_t)(iss >> 24);
+  uip_connr->snd_nxt[1] = (uint8_t)(iss >> 16);
+  uip_connr->snd_nxt[2] = (uint8_t)(iss >> 8);
+  uip_connr->snd_nxt[3] = (uint8_t)(iss);
   uip_connr->len = 1;
 
   /* rcv_nxt should be the seqno from the incoming packet + 1. */
