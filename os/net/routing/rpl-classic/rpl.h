@@ -218,6 +218,13 @@ struct rpl_of {
 typedef struct rpl_of rpl_of_t;
 
 /*---------------------------------------------------------------------------*/
+/* Struct for retransmitting DCOs*/
+struct dco_retrans_state {
+  uip_ipaddr_t target;
+  uip_ipaddr_t destination;
+  uint8_t seqno;
+  uint8_t retransmissions;
+};
 /* RPL Instance. */
 struct rpl_instance {
   /* DAG configuration. */
@@ -265,6 +272,10 @@ struct rpl_instance {
 #if RPL_WITH_DAO_ACK
   struct ctimer dao_retransmit_timer;
 #endif /* RPL_WITH_DAO_ACK */
+#if RPL_WITH_DCO_ACK
+  struct ctimer dco_retransmit_timer;
+  struct dco_retrans_state dco_retrans;
+#endif /*RPL_WITH_DCO_ACK*/
   struct ctimer unicast_dao_timer;
   rpl_parent_t *unicast_dao_target;
   uip_ipaddr_t *unicast_dao_prefix;

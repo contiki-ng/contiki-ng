@@ -687,6 +687,10 @@ rpl_free_dag(rpl_dag_t *dag)
     ctimer_stop(&dag->instance->dao_retransmit_timer);
 #endif /* RPL_WITH_DAO_ACK */
 
+    /*Stop the DCO retransmit timer */
+#if RPL_WITH_DCO_ACK
+    ctimer_stop(&dag->instance->dco_retransmit_timer);
+#endif /*RPL_WITH_DCO_ACK*/
     /* Remove autoconfigured address. */
     if((dag->prefix_info.flags & UIP_ND6_RA_FLAG_AUTONOMOUS)) {
       check_prefix(&dag->prefix_info, NULL);

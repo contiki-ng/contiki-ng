@@ -62,10 +62,10 @@
 #define LOG_LEVEL LOG_LEVEL_RPL
 
 /*---------------------------------------------------------------------------*/
-#define RPL_DIO_GROUNDED                 0x80
-#define RPL_DIO_MOP_SHIFT                3
-#define RPL_DIO_MOP_MASK                 0x38
-#define RPL_DIO_PREFERENCE_MASK          0x07
+#define RPL_DIO_GROUNDED 0x80
+#define RPL_DIO_MOP_SHIFT 3
+#define RPL_DIO_MOP_MASK 0x38
+#define RPL_DIO_PREFERENCE_MASK 0x07
 
 /*---------------------------------------------------------------------------*/
 static void dis_input(void);
@@ -80,7 +80,7 @@ static void dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
 
 #if RPL_WITH_DCO_ROUTE_INVALIDATION
 static void dco_output_target(rpl_dag_t *dag, uip_ipaddr_t *target,
-                              uip_ds6_route_t *route, uint8_t seq_no);
+                              uip_ipaddr_t *dest_ipaddr, uint8_t seq_no);
 #endif
 
 /* Some debug callbacks that are useful when debugging RPL networks. */
@@ -114,8 +114,10 @@ static uip_ds6_route_t *
 find_route_entry_by_dao_ack(uint8_t seq)
 {
   uip_ds6_route_t *re = uip_ds6_route_head();
-  while(re != NULL) {
-    if(re->state.dao_seqno_out == seq && RPL_ROUTE_IS_DAO_PENDING(re)) {
+  while (re != NULL)
+  {
+    if (re->state.dao_seqno_out == seq && RPL_ROUTE_IS_DAO_PENDING(re))
+    {
       /* found it! */
       return re;
     }
@@ -150,17 +152,20 @@ get_global_addr(uip_ipaddr_t *addr)
   uint8_t prefix_length = 0;
   rpl_dag_t *dag = rpl_get_any_dag();
 
-  if(dag != NULL && dag->prefix_info.length != 0) {
+  if (dag != NULL && dag->prefix_info.length != 0)
+  {
     prefix = &dag->prefix_info.prefix;
     prefix_length = dag->prefix_info.length;
   }
 
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+  for (i = 0; i < UIP_DS6_ADDR_NB; i++)
+  {
     state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused &&
-       state == ADDR_PREFERRED &&
-       !uip_is_addr_linklocal(&uip_ds6_if.addr_list[i].ipaddr) &&
-       (prefix == NULL || uip_ipaddr_prefixcmp(prefix, &uip_ds6_if.addr_list[i].ipaddr, prefix_length))) {
+    if (uip_ds6_if.addr_list[i].isused &&
+        state == ADDR_PREFERRED &&
+        !uip_is_addr_linklocal(&uip_ds6_if.addr_list[i].ipaddr) &&
+        (prefix == NULL || uip_ipaddr_prefixcmp(prefix, &uip_ds6_if.addr_list[i].ipaddr, prefix_length)))
+    {
       memcpy(addr, &uip_ds6_if.addr_list[i].ipaddr, sizeof(uip_ipaddr_t));
       return 1;
     }
@@ -204,11 +209,13 @@ rpl_icmp6_update_nbr_table(uip_ipaddr_t *from, nbr_table_reason_t reason,
   uip_ds6_nbr_t *nbr;
 
   nbr = uip_ds6_nbr_lookup(from);
-  if(nbr == NULL) {
+  if (nbr == NULL)
+  {
     nbr = uip_ds6_nbr_add(from,
                           (uip_lladdr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER),
                           0, NBR_REACHABLE, reason, data);
-    if(nbr != NULL) {
+    if (nbr != NULL)
+    {
       LOG_INFO("Neighbor added to neighbor cache ");
       LOG_INFO_6ADDR(from);
       LOG_INFO_(", ");
@@ -231,26 +238,34 @@ dis_input(void)
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
   LOG_INFO_("\n");
 
-  for(instance = &instance_table[0], end = instance + RPL_MAX_INSTANCES;
-      instance < end; ++instance) {
-    if(instance->used == 1) {
-      if(uip_is_addr_mcast(&UIP_IP_BUF->destipaddr)) {
+  for (instance = &instance_table[0], end = instance + RPL_MAX_INSTANCES;
+       instance < end; ++instance)
+  {
+    if (instance->used == 1)
+    {
+      if (uip_is_addr_mcast(&UIP_IP_BUF->destipaddr))
+      {
 #if RPL_LEAF_ONLY
         LOG_INFO("LEAF ONLY Multicast DIS will NOT reset DIO timer\n");
-#else /* !RPL_LEAF_ONLY */
+#else  /* !RPL_LEAF_ONLY */
         LOG_DBG("Multicast DIS => reset DIO timer\n");
         rpl_reset_dio_timer(instance);
 #endif /* !RPL_LEAF_ONLY */
-      } else {
+      }
+      else
+      {
         /* Check if this neighbor should be added according to the policy. */
-        if(rpl_icmp6_update_nbr_table(&UIP_IP_BUF->srcipaddr,
-                                      NBR_TABLE_REASON_RPL_DIS, NULL) == NULL) {
+        if (rpl_icmp6_update_nbr_table(&UIP_IP_BUF->srcipaddr,
+                                       NBR_TABLE_REASON_RPL_DIS, NULL) == NULL)
+        {
           LOG_ERR("Out of Memory, not sending unicast DIO, DIS from ");
           LOG_ERR_6ADDR(&UIP_IP_BUF->srcipaddr);
           LOG_ERR_(", ");
           LOG_ERR_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
           LOG_ERR_("\n");
-        } else {
+        }
+        else
+        {
           LOG_DBG("Unicast DIS, reply to sender\n");
           dio_output(instance, &UIP_IP_BUF->srcipaddr);
         }
@@ -260,8 +275,7 @@ dis_input(void)
   uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
-void
-dis_output(uip_ipaddr_t *addr)
+void dis_output(uip_ipaddr_t *addr)
 {
   unsigned char *buffer;
   uip_ipaddr_t tmpaddr;
@@ -278,7 +292,8 @@ dis_output(uip_ipaddr_t *addr)
   buffer = UIP_ICMP_PAYLOAD;
   buffer[0] = buffer[1] = 0;
 
-  if(addr == NULL) {
+  if (addr == NULL)
+  {
     uip_create_linklocal_rplnodes_mcast(&tmpaddr);
     addr = &tmpaddr;
   }
@@ -322,7 +337,8 @@ dio_input(void)
 
   buffer_length = uip_len - uip_l3_icmp_hdr_len;
 
-  if(buffer_length < 8 + sizeof(dio.dag_id)) {
+  if (buffer_length < 8 + sizeof(dio.dag_id))
+  {
     LOG_WARN("dio_input: invalid DIO header, len %" PRIu16 ", discard\n",
              buffer_length);
     goto discard;
@@ -358,20 +374,26 @@ dio_input(void)
   LOG_DBG_(", %u)\n", dio.preference);
 
   /* Check if there are any DIO suboptions. */
-  for(; i < buffer_length; i += len) {
+  for (; i < buffer_length; i += len)
+  {
     subopt_type = buffer[i];
-    if(subopt_type == RPL_OPTION_PAD1) {
+    if (subopt_type == RPL_OPTION_PAD1)
+    {
       len = 1;
-    } else {
+    }
+    else
+    {
       /* Suboption with a two-byte header + payload. */
-      if(i + 1 >= buffer_length) {
+      if (i + 1 >= buffer_length)
+      {
         LOG_ERR("dio_input: malformed packet, discard\n");
         goto discard;
       }
       len = 2 + buffer[i + 1];
     }
 
-    if(len + i > buffer_length) {
+    if (len + i > buffer_length)
+    {
       LOG_WARN("Invalid DIO packet\n");
       RPL_STAT(rpl_stats.malformed_msgs++);
       goto discard;
@@ -380,13 +402,15 @@ dio_input(void)
     LOG_DBG("Incoming DIO (option, length) = (%u, %u)\n",
             subopt_type, len);
 
-    switch(subopt_type) {
+    switch (subopt_type)
+    {
     case RPL_OPTION_PAD1:
     case RPL_OPTION_PADN:
       LOG_DBG("PAD %u bytes\n", len);
       break;
     case RPL_OPTION_DAG_METRIC_CONTAINER:
-      if(len < 6) {
+      if (len < 6)
+      {
         LOG_WARN("Invalid DAG MC, len = %d\n", len);
         RPL_STAT(rpl_stats.malformed_msgs++);
         goto discard;
@@ -398,10 +422,14 @@ dio_input(void)
       dio.mc.prec = buffer[i + 4] & 0xf;
       dio.mc.length = buffer[i + 5];
 
-      if(dio.mc.type == RPL_DAG_MC_NONE) {
+      if (dio.mc.type == RPL_DAG_MC_NONE)
+      {
         /* No metric container: do nothing. */
-      } else if(dio.mc.type == RPL_DAG_MC_ETX) {
-        if(len < 8) {
+      }
+      else if (dio.mc.type == RPL_DAG_MC_ETX)
+      {
+        if (len < 8)
+        {
           LOG_WARN("dio_input: invalid DAG MC, len %u, discard\n", len);
           goto discard;
         }
@@ -414,20 +442,26 @@ dio_input(void)
                 (unsigned)dio.mc.prec,
                 (unsigned)dio.mc.length,
                 (unsigned)dio.mc.obj.etx);
-      } else if(dio.mc.type == RPL_DAG_MC_ENERGY) {
-        if(len < 8) {
+      }
+      else if (dio.mc.type == RPL_DAG_MC_ENERGY)
+      {
+        if (len < 8)
+        {
           LOG_WARN("dio_input: invalid DAG MC, len %u, discard\n", len);
           goto discard;
         }
         dio.mc.obj.energy.flags = buffer[i + 6];
         dio.mc.obj.energy.energy_est = buffer[i + 7];
-      } else {
+      }
+      else
+      {
         LOG_WARN("Unhandled DAG MC type: %u\n", (unsigned)dio.mc.type);
         goto discard;
       }
       break;
     case RPL_OPTION_ROUTE_INFO:
-      if(len < 8) {
+      if (len < 8)
+      {
         LOG_WARN("dio_input: invalid route info option, len %u, discard\n",
                  len);
         RPL_STAT(rpl_stats.malformed_msgs++);
@@ -439,12 +473,15 @@ dio_input(void)
       dio.destination_prefix.flags = buffer[i + 3];
       dio.destination_prefix.lifetime = get32(buffer, i + 4);
 
-      if(((dio.destination_prefix.length + 7) / 8) + 8 <= len &&
-         dio.destination_prefix.length <= 128) {
+      if (((dio.destination_prefix.length + 7) / 8) + 8 <= len &&
+          dio.destination_prefix.length <= 128)
+      {
         LOG_INFO("Copying destination prefix\n");
         memcpy(&dio.destination_prefix.prefix, &buffer[i + 8],
                (dio.destination_prefix.length + 7) / 8);
-      } else {
+      }
+      else
+      {
         LOG_WARN("Invalid route info option, len = %d\n", len);
         RPL_STAT(rpl_stats.malformed_msgs++);
         goto discard;
@@ -452,7 +489,8 @@ dio_input(void)
 
       break;
     case RPL_OPTION_DAG_CONF:
-      if(len != 16) {
+      if (len != 16)
+      {
         LOG_WARN("Invalid DAG configuration option, len = %d\n", len);
         RPL_STAT(rpl_stats.malformed_msgs++);
         goto discard;
@@ -474,14 +512,16 @@ dio_input(void)
                dio.default_lifetime, dio.lifetime_unit);
       break;
     case RPL_OPTION_PREFIX_INFO:
-      if(len != 32) {
+      if (len != 32)
+      {
         LOG_WARN("Invalid DAG prefix info, len != 32\n");
         RPL_STAT(rpl_stats.malformed_msgs++);
         goto discard;
       }
       dio.prefix_info.length = buffer[i + 2];
 
-      if(dio.prefix_info.length > sizeof(uip_ipaddr_t) * 8) {
+      if (dio.prefix_info.length > sizeof(uip_ipaddr_t) * 8)
+      {
         LOG_WARN("Invalid DAG prefix info, len %u > %u\n",
                  dio.prefix_info.length, (unsigned)(sizeof(uip_ipaddr_t) * 8));
         RPL_STAT(rpl_stats.malformed_msgs++);
@@ -512,8 +552,7 @@ discard:
   uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
-void
-dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
+void dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
 {
   unsigned char *buffer;
   int pos;
@@ -526,7 +565,8 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
 #if RPL_LEAF_ONLY
   /* In leaf mode, we only send DIO messages as unicasts in response to
      unicast DIS messages. */
-  if(uc_addr == NULL) {
+  if (uc_addr == NULL)
+  {
     LOG_DBG("LEAF ONLY have multicast addr: skip dio_output\n");
     return;
   }
@@ -543,13 +583,14 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
 #if RPL_LEAF_ONLY
   LOG_DBG("LEAF ONLY DIO rank set to RPL_INFINITE_RANK\n");
   set16(buffer, pos, RPL_INFINITE_RANK);
-#else /* RPL_LEAF_ONLY */
+#else  /* RPL_LEAF_ONLY */
   set16(buffer, pos, dag->rank);
 #endif /* RPL_LEAF_ONLY */
   pos += 2;
 
   buffer[pos] = 0;
-  if(dag->grounded) {
+  if (dag->grounded)
+  {
     buffer[pos] |= RPL_DIO_GROUNDED;
   }
 
@@ -559,7 +600,8 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
 
   buffer[pos++] = instance->dtsn_out;
 
-  if(RPL_DIO_REFRESH_DAO_ROUTES && is_root && uc_addr == NULL) {
+  if (RPL_DIO_REFRESH_DAO_ROUTES && is_root && uc_addr == NULL)
+  {
     /*
      * Request new DAO to refresh route. We do not do this for unicast
      * DIO in order to avoid DAO messages after a DIS-DIO update, or
@@ -576,7 +618,8 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
   pos += 16;
 
 #if !RPL_LEAF_ONLY
-  if(instance->mc.type != RPL_DAG_MC_NONE) {
+  if (instance->mc.type != RPL_DAG_MC_NONE)
+  {
     instance->of->update_metric_container(instance);
 
     buffer[pos++] = RPL_OPTION_DAG_METRIC_CONTAINER;
@@ -585,15 +628,20 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
     buffer[pos++] = instance->mc.flags >> 1;
     buffer[pos] = (instance->mc.flags & 1) << 7;
     buffer[pos++] |= (instance->mc.aggr << 4) | instance->mc.prec;
-    if(instance->mc.type == RPL_DAG_MC_ETX) {
+    if (instance->mc.type == RPL_DAG_MC_ETX)
+    {
       buffer[pos++] = 2;
       set16(buffer, pos, instance->mc.obj.etx);
       pos += 2;
-    } else if(instance->mc.type == RPL_DAG_MC_ENERGY) {
+    }
+    else if (instance->mc.type == RPL_DAG_MC_ENERGY)
+    {
       buffer[pos++] = 2;
       buffer[pos++] = instance->mc.obj.energy.flags;
       buffer[pos++] = instance->mc.obj.energy.energy_est;
-    } else {
+    }
+    else
+    {
       LOG_ERR("Unable to send DIO because of unhandled DAG MC type %u\n",
               (unsigned)instance->mc.type);
       return;
@@ -621,7 +669,8 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
   pos += 2;
 
   /* Check if we have a prefix to send also. */
-  if(dag->prefix_info.length > 0) {
+  if (dag->prefix_info.length > 0)
+  {
     buffer[pos++] = RPL_OPTION_PREFIX_INFO;
     buffer[pos++] = 30; /* always 30 bytes + 2 long */
     buffer[pos++] = dag->prefix_info.length;
@@ -637,14 +686,18 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
     LOG_DBG("Sending prefix info in DIO for ");
     LOG_DBG_6ADDR(&dag->prefix_info.prefix);
     LOG_DBG_("\n");
-  } else {
+  }
+  else
+  {
     LOG_DBG("No prefix to announce (len %d)\n",
             dag->prefix_info.length);
   }
 
 #if RPL_LEAF_ONLY
-  if(LOG_DBG_ENABLED) {
-    if(uc_addr == NULL) {
+  if (LOG_DBG_ENABLED)
+  {
+    if (uc_addr == NULL)
+    {
       LOG_DBG("LEAF ONLY sending unicast-DIO from multicast-DIO\n");
     }
   }
@@ -653,14 +706,17 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
   LOG_INFO_6ADDR(uc_addr);
   LOG_INFO_("\n");
   uip_icmp6_send(uc_addr, ICMP6_RPL, RPL_CODE_DIO, pos);
-#else /* RPL_LEAF_ONLY */
+#else  /* RPL_LEAF_ONLY */
   /* Unicast requests get unicast replies! */
-  if(uc_addr == NULL) {
+  if (uc_addr == NULL)
+  {
     LOG_INFO("Sending a multicast-DIO with rank %u\n",
              (unsigned)instance->current_dag->rank);
     uip_create_linklocal_rplnodes_mcast(&addr);
     uip_icmp6_send(&addr, ICMP6_RPL, RPL_CODE_DIO, pos);
-  } else {
+  }
+  else
+  {
     LOG_INFO("Sending unicast-DIO with rank %u to ",
              (unsigned)instance->current_dag->rank);
     LOG_INFO_6ADDR(uc_addr);
@@ -694,10 +750,10 @@ dao_input_storing(void)
   uip_ds6_nbr_t *nbr;
   int is_root;
   /*
-  * The I flag is introduced in RFC9009 in the Transit Information Option
-  * (Invalidate previous route) flag: The 'I' flag is set by the target node to
-  * indicate to the common ancestor node that it wishes to invalidate any previous route between the two paths.
-  */
+   * The I flag is introduced in RFC9009 in the Transit Information Option
+   * (Invalidate previous route) flag: The 'I' flag is set by the target node to
+   * indicate to the common ancestor node that it wishes to invalidate any previous route between the two paths.
+   */
 #if RPL_WITH_DCO_ROUTE_INVALIDATION
   uint8_t i_flag;
 #endif
@@ -709,7 +765,8 @@ dao_input_storing(void)
 
   buffer = UIP_ICMP_PAYLOAD;
   uint16_t buffer_length = uip_len - uip_l3_icmp_hdr_len;
-  if(buffer_length < 4) {
+  if (buffer_length < 4)
+  {
     LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
              buffer_length, 4);
     return;
@@ -720,7 +777,8 @@ dao_input_storing(void)
   pos = 0;
   instance_id = buffer[pos++];
   instance = rpl_get_instance(instance_id);
-  if(instance == NULL) {
+  if (instance == NULL)
+  {
     LOG_ERR("Cannot get RPL instance\n");
     return;
   }
@@ -736,22 +794,24 @@ dao_input_storing(void)
   is_root = (dag->rank == ROOT_RANK(instance));
 
   /* Is the DAG ID present? */
-  if(flags & RPL_DAO_D_FLAG) {
-    if(last_valid_pos < pos + 16) {
+  if (flags & RPL_DAO_D_FLAG)
+  {
+    if (last_valid_pos < pos + 16)
+    {
       LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
                last_valid_pos, pos + 16);
       return;
     }
 
-    if(memcmp(&dag->dag_id, &buffer[pos], sizeof(dag->dag_id))) {
+    if (memcmp(&dag->dag_id, &buffer[pos], sizeof(dag->dag_id)))
+    {
       LOG_INFO("Ignoring a DAO for a DAG different from ours\n");
       return;
     }
     pos += 16;
   }
 
-  learned_from = uip_is_addr_mcast(&dao_sender_addr) ?
-    RPL_ROUTE_FROM_MULTICAST_DAO : RPL_ROUTE_FROM_UNICAST_DAO;
+  learned_from = uip_is_addr_mcast(&dao_sender_addr) ? RPL_ROUTE_FROM_MULTICAST_DAO : RPL_ROUTE_FROM_UNICAST_DAO;
 
   /* Destination Advertisement Object */
   LOG_DBG("Received a (%s) DAO with sequence number %u from ",
@@ -760,13 +820,15 @@ dao_input_storing(void)
   LOG_DBG_6ADDR(&dao_sender_addr);
   LOG_DBG_("\n");
 
-  if(learned_from == RPL_ROUTE_FROM_UNICAST_DAO) {
+  if (learned_from == RPL_ROUTE_FROM_UNICAST_DAO)
+  {
     /* Check whether this is a DAO forwarding loop. */
     parent = rpl_find_parent(dag, &dao_sender_addr);
     /* Check if this is a new DAO registration with an "illegal" rank.
        If we already route to this node, then it is likely. */
-    if(parent != NULL &&
-       DAG_RANK(parent->rank, instance) < DAG_RANK(dag->rank, instance)) {
+    if (parent != NULL &&
+        DAG_RANK(parent->rank, instance) < DAG_RANK(dag->rank, instance))
+    {
       LOG_WARN("Loop detected when receiving a unicast DAO from a node with a lower rank! (%u < %u)\n",
                DAG_RANK(parent->rank, instance), DAG_RANK(dag->rank, instance));
       parent->rank = RPL_INFINITE_RANK;
@@ -775,7 +837,8 @@ dao_input_storing(void)
     }
 
     /* If we get the DAO from our parent, we also have a loop. */
-    if(parent != NULL && parent == dag->preferred_parent) {
+    if (parent != NULL && parent == dag->preferred_parent)
+    {
       LOG_WARN("Loop detected when receiving a unicast DAO from our parent\n");
       parent->rank = RPL_INFINITE_RANK;
       parent->flags |= RPL_PARENT_FLAG_UPDATED;
@@ -784,13 +847,18 @@ dao_input_storing(void)
   }
 
   /* Check if there are any RPL options present. */
-  for(i = pos; i < buffer_length; i += len) {
+  for (i = pos; i < buffer_length; i += len)
+  {
     subopt_type = buffer[i];
-    if(subopt_type == RPL_OPTION_PAD1) {
+    if (subopt_type == RPL_OPTION_PAD1)
+    {
       len = 1;
-    } else {
+    }
+    else
+    {
       /* The option consists of a two-byte header and a payload. */
-      if(last_valid_pos < i + 1) {
+      if (last_valid_pos < i + 1)
+      {
         LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
                  last_valid_pos, i + 1);
         return;
@@ -798,24 +866,29 @@ dao_input_storing(void)
       len = 2 + buffer[i + 1];
     }
 
-    switch(subopt_type) {
+    switch (subopt_type)
+    {
     case RPL_OPTION_TARGET:
       /* Handle the target option. */
-      if(last_valid_pos < i + 3) {
+      if (last_valid_pos < i + 3)
+      {
         LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
                  last_valid_pos, i + 3);
         return;
       }
       prefixlen = buffer[i + 3];
-      if(prefixlen == 0) {
+      if (prefixlen == 0)
+      {
         /* Ignore option targets with a prefix length of 0. */
         break;
       }
-      if(prefixlen > 128) {
+      if (prefixlen > 128)
+      {
         LOG_ERR("Too large target prefix length %d\n", prefixlen);
         return;
       }
-      if(i + 4 + ((prefixlen + 7) / CHAR_BIT) > buffer_length) {
+      if (i + 4 + ((prefixlen + 7) / CHAR_BIT) > buffer_length)
+      {
         LOG_ERR("Incomplete DAO target option with prefix length of %d bits\n",
                 prefixlen);
         return;
@@ -825,26 +898,29 @@ dao_input_storing(void)
       break;
     case RPL_OPTION_TRANSIT:
       /* The path sequence and control are ignored. */
-      if(last_valid_pos < i + 5) {
+      if (last_valid_pos < i + 5)
+      {
         LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
                  last_valid_pos, i + 5);
         return;
       }
 #if RPL_WITH_DCO_ROUTE_INVALIDATION
       uip_ds6_route_t *route;
+
       i_flag = buffer[(i + 2)] & RPL_OPTION_TRANSIT_I_FLAG;
-      LOG_DBG("Transit option with I flag %x\n", i_flag);
+
       if (i_flag == RPL_OPTION_TRANSIT_I_FLAG)
       {
         LOG_DBG("Transit option with I flag set. Check if a DCO needs to be issued \n");
         // route = check_route(dag, &prefix, prefixlen, &dao_sender_addr);
         route = check_route(dag, &prefix, prefixlen, &dao_sender_addr);
-        if (route != NULL) {
+        if (route != NULL)
+        {
 
           RPL_LOLLIPOP_INCREMENT(dco_sequence);
 
           /* Sending a DCO with target learned from DAO. */
-          dco_output_target(dag, &prefix, route, dco_sequence);
+          dco_output(dag, &prefix, route, dco_sequence);
         }
       }
 #endif
@@ -861,14 +937,16 @@ dao_input_storing(void)
   LOG_INFO_("\n");
 
 #if RPL_WITH_MULTICAST
-  if(uip_is_addr_mcast_global(&prefix)) {
+  if (uip_is_addr_mcast_global(&prefix))
+  {
     /*
      * "rep" is used for a unicast route which we don't need now; so
      * set NULL so that operations on "rep" will be skipped.
      */
     rep = NULL;
     mcast_group = uip_mcast6_route_add(&prefix);
-    if(mcast_group) {
+    if (mcast_group)
+    {
       mcast_group->dag = dag;
       mcast_group->lifetime = RPL_LIFETIME(instance, lifetime);
     }
@@ -878,14 +956,16 @@ dao_input_storing(void)
 
   rep = uip_ds6_route_lookup(&prefix);
 
-  if(lifetime == RPL_ZERO_LIFETIME) {
+  if (lifetime == RPL_ZERO_LIFETIME)
+  {
     LOG_INFO("No-Path DAO received\n");
     /* No-Path DAO received; invoke the route purging routine. */
-    if(rep != NULL &&
-       !RPL_ROUTE_IS_NOPATH_RECEIVED(rep) &&
-       rep->length == prefixlen &&
-       uip_ds6_route_nexthop(rep) != NULL &&
-       uip_ipaddr_cmp(uip_ds6_route_nexthop(rep), &dao_sender_addr)) {
+    if (rep != NULL &&
+        !RPL_ROUTE_IS_NOPATH_RECEIVED(rep) &&
+        rep->length == prefixlen &&
+        uip_ds6_route_nexthop(rep) != NULL &&
+        uip_ipaddr_cmp(uip_ds6_route_nexthop(rep), &dao_sender_addr))
+    {
       LOG_DBG("Setting expiration timer for prefix ");
       LOG_DBG_6ADDR(&prefix);
       LOG_DBG_("\n");
@@ -894,8 +974,9 @@ dao_input_storing(void)
 
       /* We forward the incoming No-Path DAO to our parent, if we have
          one. */
-      if(dag->preferred_parent != NULL &&
-         rpl_parent_get_ipaddr(dag->preferred_parent) != NULL) {
+      if (dag->preferred_parent != NULL &&
+          rpl_parent_get_ipaddr(dag->preferred_parent) != NULL)
+      {
         uint8_t out_seq;
         out_seq = prepare_for_dao_fwd(sequence, rep);
 
@@ -910,7 +991,8 @@ dao_input_storing(void)
       }
     }
     /* Regardless of whether we remove it or not -- ACK the request. */
-    if(flags & RPL_DAO_K_FLAG) {
+    if (flags & RPL_DAO_K_FLAG)
+    {
       /* Indicate that we accepted the no-path DAO. */
       uipbuf_clear();
       dao_ack_output(instance, &dao_sender_addr, sequence,
@@ -924,30 +1006,32 @@ dao_input_storing(void)
   /* Update and add neighbor, and fail if there is no room. */
   nbr = rpl_icmp6_update_nbr_table(&dao_sender_addr,
                                    NBR_TABLE_REASON_RPL_DAO, instance);
-  if(nbr == NULL) {
+  if (nbr == NULL)
+  {
     LOG_ERR("Out of memory, dropping DAO from ");
     LOG_ERR_6ADDR(&dao_sender_addr);
     LOG_ERR_(", ");
     LOG_ERR_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
     LOG_ERR_("\n");
-    if(flags & RPL_DAO_K_FLAG) {
+    if (flags & RPL_DAO_K_FLAG)
+    {
       /* Signal the failure to add the node. */
       dao_ack_output(instance, &dao_sender_addr, sequence,
-                     is_root ? RPL_DAO_ACK_UNABLE_TO_ADD_ROUTE_AT_ROOT :
-                     RPL_DAO_ACK_UNABLE_TO_ACCEPT);
+                     is_root ? RPL_DAO_ACK_UNABLE_TO_ADD_ROUTE_AT_ROOT : RPL_DAO_ACK_UNABLE_TO_ACCEPT);
     }
     return;
   }
 
   rep = rpl_add_route(dag, &prefix, prefixlen, &dao_sender_addr);
-  if(rep == NULL) {
+  if (rep == NULL)
+  {
     RPL_STAT(rpl_stats.mem_overflows++);
     LOG_ERR("Could not add a route after receiving a DAO\n");
-    if(flags & RPL_DAO_K_FLAG) {
+    if (flags & RPL_DAO_K_FLAG)
+    {
       /* Signal the failure to add the node. */
       dao_ack_output(instance, &dao_sender_addr, sequence,
-                     is_root ? RPL_DAO_ACK_UNABLE_TO_ADD_ROUTE_AT_ROOT :
-                     RPL_DAO_ACK_UNABLE_TO_ACCEPT);
+                     is_root ? RPL_DAO_ACK_UNABLE_TO_ADD_ROUTE_AT_ROOT : RPL_DAO_ACK_UNABLE_TO_ACCEPT);
     }
     return;
   }
@@ -960,11 +1044,14 @@ dao_input_storing(void)
 fwd_dao:
 #endif
 
-  if(learned_from == RPL_ROUTE_FROM_UNICAST_DAO) {
+  if (learned_from == RPL_ROUTE_FROM_UNICAST_DAO)
+  {
     int should_ack = 0;
 
-    if(flags & RPL_DAO_K_FLAG) {
-      if(rep != NULL) {
+    if (flags & RPL_DAO_K_FLAG)
+    {
+      if (rep != NULL)
+      {
         /*
          * Check if this route is already installed and that we can
          * acknowledge it now! Not pending and same sequence number
@@ -972,25 +1059,31 @@ fwd_dao:
          * installed already, so it will not take any more room that
          * it already takes. Hence, it should be OK.
          */
-        if((!RPL_ROUTE_IS_DAO_PENDING(rep) &&
-            rep->state.dao_seqno_in == sequence) ||
-           dag->rank == ROOT_RANK(instance)) {
+        if ((!RPL_ROUTE_IS_DAO_PENDING(rep) &&
+             rep->state.dao_seqno_in == sequence) ||
+            dag->rank == ROOT_RANK(instance))
+        {
           should_ack = 1;
         }
       }
     }
 
-    if(dag->preferred_parent != NULL &&
-       rpl_parent_get_ipaddr(dag->preferred_parent) != NULL) {
+    if (dag->preferred_parent != NULL &&
+        rpl_parent_get_ipaddr(dag->preferred_parent) != NULL)
+    {
       uint8_t out_seq = 0;
-      if(rep != NULL) {
+      if (rep != NULL)
+      {
         /* If this is pending and we get the same sequence number,
            then it is a retransmission. */
-        if(RPL_ROUTE_IS_DAO_PENDING(rep) &&
-           rep->state.dao_seqno_in == sequence) {
+        if (RPL_ROUTE_IS_DAO_PENDING(rep) &&
+            rep->state.dao_seqno_in == sequence)
+        {
           /* Keep the same sequence number as before for parent also. */
           out_seq = rep->state.dao_seqno_out;
-        } else {
+        }
+        else
+        {
           out_seq = prepare_for_dao_fwd(sequence, rep);
         }
       }
@@ -1004,7 +1097,8 @@ fwd_dao:
       uip_icmp6_send(rpl_parent_get_ipaddr(dag->preferred_parent),
                      ICMP6_RPL, RPL_CODE_DAO, buffer_length);
     }
-    if(should_ack) {
+    if (should_ack)
+    {
       LOG_DBG("Sending DAO ACK\n");
       uipbuf_clear();
       dao_ack_output(instance, &dao_sender_addr, sequence,
@@ -1046,7 +1140,8 @@ dao_input_nonstoring(void)
 
   buffer = UIP_ICMP_PAYLOAD;
   uint16_t buffer_length = uip_len - uip_l3_icmp_hdr_len;
-  if(buffer_length < 4) {
+  if (buffer_length < 4)
+  {
     LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
              buffer_length, 4);
     return;
@@ -1066,12 +1161,15 @@ dao_input_nonstoring(void)
 
   dag = instance->current_dag;
   /* Is the DAG ID present? */
-  if(flags & RPL_DAO_D_FLAG) {
-    if(pos + sizeof(dag->dag_id) > buffer_length) {
+  if (flags & RPL_DAO_D_FLAG)
+  {
+    if (pos + sizeof(dag->dag_id) > buffer_length)
+    {
       LOG_WARN("Insufficient data to read DAG ID from DAO\n");
       return;
     }
-    if(memcmp(&dag->dag_id, &buffer[pos], sizeof(dag->dag_id))) {
+    if (memcmp(&dag->dag_id, &buffer[pos], sizeof(dag->dag_id)))
+    {
       LOG_INFO("Ignoring a DAO for a DAG different from ours\n");
       return;
     }
@@ -1079,13 +1177,18 @@ dao_input_nonstoring(void)
   }
 
   /* Check if there are any RPL options present. */
-  for(i = pos; i < buffer_length; i += len) {
+  for (i = pos; i < buffer_length; i += len)
+  {
     subopt_type = buffer[i];
-    if(subopt_type == RPL_OPTION_PAD1) {
+    if (subopt_type == RPL_OPTION_PAD1)
+    {
       len = 1;
-    } else {
+    }
+    else
+    {
       /* The option consists of a two-byte header and a payload. */
-      if(last_valid_pos < i + 1) {
+      if (last_valid_pos < i + 1)
+      {
         LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
                  last_valid_pos, i + 1);
         return;
@@ -1093,24 +1196,29 @@ dao_input_nonstoring(void)
       len = 2 + buffer[i + 1];
     }
 
-    switch(subopt_type) {
+    switch (subopt_type)
+    {
     case RPL_OPTION_TARGET:
       /* Handle the target option. */
-      if(last_valid_pos < i + 3) {
+      if (last_valid_pos < i + 3)
+      {
         LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
                  last_valid_pos, i + 3);
         return;
       }
       prefixlen = buffer[i + 3];
-      if(prefixlen == 0) {
+      if (prefixlen == 0)
+      {
         /* Ignore option targets with a prefix length of 0. */
         break;
       }
-      if(prefixlen > 128) {
+      if (prefixlen > 128)
+      {
         LOG_ERR("Too large target prefix length %d\n", prefixlen);
         return;
       }
-      if(i + 4 + ((prefixlen + 7) / CHAR_BIT) > buffer_length) {
+      if (i + 4 + ((prefixlen + 7) / CHAR_BIT) > buffer_length)
+      {
         LOG_ERR("Incomplete DAO target option with prefix length of %d bits\n",
                 prefixlen);
         return;
@@ -1121,13 +1229,15 @@ dao_input_nonstoring(void)
       break;
     case RPL_OPTION_TRANSIT:
       /* The path sequence and control are ignored. */
-      if(i + 6 + 16 > buffer_length) {
+      if (i + 6 + 16 > buffer_length)
+      {
         LOG_WARN("Incomplete DAO transit option (%d > %" PRIu16 ")\n",
                  i + 6 + 16, buffer_length);
         return;
       }
       lifetime = buffer[i + 5];
-      if(len >= 20) {
+      if (len >= 20)
+      {
         memcpy(&dao_parent_addr, buffer + i + 6, 16);
       }
       break;
@@ -1141,12 +1251,16 @@ dao_input_nonstoring(void)
   LOG_INFO_6ADDR(&dao_parent_addr);
   LOG_INFO_("\n");
 
-  if(lifetime == RPL_ZERO_LIFETIME) {
+  if (lifetime == RPL_ZERO_LIFETIME)
+  {
     LOG_DBG("No-Path DAO received\n");
     uip_sr_expire_parent(dag, &prefix, &dao_parent_addr);
-  } else {
-    if(uip_sr_update_node(dag, &prefix, &dao_parent_addr,
-                          RPL_LIFETIME(instance, lifetime)) == NULL) {
+  }
+  else
+  {
+    if (uip_sr_update_node(dag, &prefix, &dao_parent_addr,
+                           RPL_LIFETIME(instance, lifetime)) == NULL)
+    {
       LOG_WARN("DAO failed to add link prefix: ");
       LOG_WARN_6ADDR(&prefix);
       LOG_WARN_(", parent: ");
@@ -1156,7 +1270,8 @@ dao_input_nonstoring(void)
     }
   }
 
-  if(flags & RPL_DAO_K_FLAG) {
+  if (flags & RPL_DAO_K_FLAG)
+  {
     LOG_DBG("Sending DAO ACK\n");
     uipbuf_clear();
     dao_ack_output(instance, &dao_sender_addr, sequence,
@@ -1176,22 +1291,27 @@ dao_input(void)
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
   LOG_INFO_("\n");
 
-  if(uip_len <= uip_l3_icmp_hdr_len) {
+  if (uip_len <= uip_l3_icmp_hdr_len)
+  {
     LOG_WARN("Ignoring DAO ICMPv6 message without DAO header\n");
     goto discard;
   }
 
   instance_id = UIP_ICMP_PAYLOAD[0];
   instance = rpl_get_instance(instance_id);
-  if(instance == NULL) {
+  if (instance == NULL)
+  {
     LOG_INFO("Ignoring a DAO for an unknown RPL instance(%u)\n",
              instance_id);
     goto discard;
   }
 
-  if(RPL_IS_STORING(instance)) {
+  if (RPL_IS_STORING(instance))
+  {
     dao_input_storing();
-  } else if(RPL_IS_NON_STORING(instance)) {
+  }
+  else if (RPL_IS_NON_STORING(instance))
+  {
     dao_input_nonstoring();
   }
 
@@ -1208,14 +1328,17 @@ handle_dao_retransmission(void *ptr)
   rpl_instance_t *instance;
 
   parent = ptr;
-  if(parent == NULL || parent->dag == NULL || parent->dag->instance == NULL) {
+  if (parent == NULL || parent->dag == NULL || parent->dag->instance == NULL)
+  {
     return;
   }
   instance = parent->dag->instance;
 
-  if(instance->my_dao_transmissions >= RPL_DAO_MAX_RETRANSMISSIONS) {
+  if (instance->my_dao_transmissions >= RPL_DAO_MAX_RETRANSMISSIONS)
+  {
     /* No more retransmissions - give up. */
-    if(instance->lifetime_unit == 0xffff && instance->default_lifetime == 0xff) {
+    if (instance->lifetime_unit == 0xffff && instance->default_lifetime == 0xff)
+    {
       /*
        * ContikiRPL was previously using infinite lifetime for routes
        * and no DAO_ACK configured. This probably means that the root
@@ -1226,7 +1349,8 @@ handle_dao_retransmission(void *ptr)
       return;
     }
 
-    if(RPL_IS_STORING(instance) && instance->of->dao_ack_callback) {
+    if (RPL_IS_STORING(instance) && instance->of->dao_ack_callback)
+    {
       /* Inform the objective function about the timeout. */
       instance->of->dao_ack_callback(parent, RPL_DAO_ACK_TIMEOUT);
     }
@@ -1239,13 +1363,14 @@ handle_dao_retransmission(void *ptr)
   LOG_INFO("will retransmit DAO - seq:%d trans:%d\n", instance->my_dao_seqno,
            instance->my_dao_transmissions);
 
-  if(get_global_addr(&prefix) == 0) {
+  if (get_global_addr(&prefix) == 0)
+  {
     return;
   }
 
   ctimer_set(&instance->dao_retransmit_timer,
              RPL_DAO_RETRANSMISSION_TIMEOUT / 2 +
-             (random_rand() % (RPL_DAO_RETRANSMISSION_TIMEOUT / 2)),
+                 (random_rand() % (RPL_DAO_RETRANSMISSION_TIMEOUT / 2)),
              handle_dao_retransmission, parent);
 
   instance->my_dao_transmissions++;
@@ -1254,18 +1379,19 @@ handle_dao_retransmission(void *ptr)
 }
 #endif /* RPL_WITH_DAO_ACK */
 /*---------------------------------------------------------------------------*/
-void
-dao_output(rpl_parent_t *parent, uint8_t lifetime)
+void dao_output(rpl_parent_t *parent, uint8_t lifetime)
 {
   /* Destination Advertisement Object */
   uip_ipaddr_t prefix;
 
-  if(get_global_addr(&prefix) == 0) {
+  if (get_global_addr(&prefix) == 0)
+  {
     LOG_ERR("No global address set for this node - suppressing DAO\n");
     return;
   }
 
-  if(parent == NULL || parent->dag == NULL || parent->dag->instance == NULL) {
+  if (parent == NULL || parent->dag == NULL || parent->dag->instance == NULL)
+  {
     return;
   }
 
@@ -1277,7 +1403,8 @@ dao_output(rpl_parent_t *parent, uint8_t lifetime)
    * Also keep track of my own sending of DAO for handling ack and
    * loss of ack.
    */
-  if(lifetime != RPL_ZERO_LIFETIME) {
+  if (lifetime != RPL_ZERO_LIFETIME)
+  {
     rpl_instance_t *instance;
     instance = parent->dag->instance;
 
@@ -1298,8 +1425,7 @@ dao_output(rpl_parent_t *parent, uint8_t lifetime)
   dao_output_target(parent, &prefix, lifetime);
 }
 /*---------------------------------------------------------------------------*/
-void
-dao_output_target(rpl_parent_t *parent, uip_ipaddr_t *prefix, uint8_t lifetime)
+void dao_output_target(rpl_parent_t *parent, uip_ipaddr_t *prefix, uint8_t lifetime)
 {
   dao_output_target_seq(parent, prefix, lifetime, dao_sequence);
 }
@@ -1319,34 +1445,40 @@ dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
   /* Destination Advertisement Object */
 
   /* If we are in feather mode, we should not send any DAOs. */
-  if(rpl_get_mode() == RPL_MODE_FEATHER) {
+  if (rpl_get_mode() == RPL_MODE_FEATHER)
+  {
     return;
   }
 
-  if(parent == NULL) {
+  if (parent == NULL)
+  {
     LOG_ERR("dao_output_target error parent NULL\n");
     return;
   }
 
   parent_ipaddr = rpl_parent_get_ipaddr(parent);
-  if(parent_ipaddr == NULL) {
+  if (parent_ipaddr == NULL)
+  {
     LOG_ERR("dao_output_target error parent IP address NULL\n");
     return;
   }
 
   dag = parent->dag;
-  if(dag == NULL) {
+  if (dag == NULL)
+  {
     LOG_ERR("dao_output_target error dag NULL\n");
     return;
   }
 
   instance = dag->instance;
 
-  if(instance == NULL) {
+  if (instance == NULL)
+  {
     LOG_ERR("dao_output_target error instance NULL\n");
     return;
   }
-  if(prefix == NULL) {
+  if (prefix == NULL)
+  {
     LOG_ERR("dao_output_target error prefix NULL\n");
     return;
   }
@@ -1363,7 +1495,8 @@ dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
   buffer[pos] |= RPL_DAO_D_FLAG;
 #endif /* RPL_DAO_SPECIFY_DAG */
 #if RPL_WITH_DAO_ACK
-  if(lifetime != RPL_ZERO_LIFETIME) {
+  if (lifetime != RPL_ZERO_LIFETIME)
+  {
     buffer[pos] |= RPL_DAO_K_FLAG;
   }
 #endif /* RPL_WITH_DAO_ACK */
@@ -1397,10 +1530,13 @@ dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
   buffer[pos++] = 0; /* path seq - ignored */
   buffer[pos++] = lifetime;
 
-  if(instance->mop != RPL_MOP_NON_STORING) {
+  if (instance->mop != RPL_MOP_NON_STORING)
+  {
     /* Send DAO to the parent. */
     dest_ipaddr = parent_ipaddr;
-  } else {
+  }
+  else
+  {
     /* Include the parent's global IP address. */
     memcpy(buffer + pos, &parent->dag->dag_id, 8); /* Prefix */
     pos += 8;
@@ -1421,7 +1557,8 @@ dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
   LOG_INFO_6ADDR(parent_ipaddr);
   LOG_INFO_("\n");
 
-  if(dest_ipaddr != NULL) {
+  if (dest_ipaddr != NULL)
+  {
     uip_icmp6_send(dest_ipaddr, ICMP6_RPL, RPL_CODE_DAO, pos);
   }
 }
@@ -1445,23 +1582,29 @@ dao_ack_input(void)
   status = buffer[3];
 
   instance = rpl_get_instance(instance_id);
-  if(instance == NULL) {
+  if (instance == NULL)
+  {
     uipbuf_clear();
     return;
   }
 
-  if(RPL_IS_STORING(instance)) {
+  if (RPL_IS_STORING(instance))
+  {
     parent = rpl_find_parent(instance->current_dag, &UIP_IP_BUF->srcipaddr);
-    if(parent == NULL) {
+    if (parent == NULL)
+    {
       /* Unknown instance -- drop the packet and ignore. */
       uipbuf_clear();
       return;
     }
-  } else {
+  }
+  else
+  {
     parent = NULL;
   }
 
-  if(instance->current_dag->rank == ROOT_RANK(instance)) {
+  if (instance->current_dag->rank == ROOT_RANK(instance))
+  {
     LOG_DBG("DODAG root received a DAO ACK, ignoring it\n");
     uipbuf_clear();
     return;
@@ -1473,19 +1616,22 @@ dao_ack_input(void)
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
   LOG_INFO_("\n");
 
-  if(sequence == instance->my_dao_seqno) {
+  if (sequence == instance->my_dao_seqno)
+  {
     instance->has_downward_route = status < 128;
 
     /* Always stop the retransmit timer when the ACK arrived. */
     ctimer_stop(&instance->dao_retransmit_timer);
 
     /* Inform the objective function on the status of the DAO ACK. */
-    if(RPL_IS_STORING(instance) && instance->of->dao_ack_callback) {
+    if (RPL_IS_STORING(instance) && instance->of->dao_ack_callback)
+    {
       instance->of->dao_ack_callback(parent, status);
     }
 
 #if RPL_REPAIR_ON_DAO_NACK
-    if(status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT) {
+    if (status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT)
+    {
       /*
        * Failed the DAO transmission -- we need to remove the default route.
        * Trigger a local repair since we can not get our DAO in.
@@ -1493,19 +1639,25 @@ dao_ack_input(void)
       rpl_local_repair(instance);
     }
 #endif
-  } else if(RPL_IS_STORING(instance)) {
+  }
+  else if (RPL_IS_STORING(instance))
+  {
     /* This DAO ACK should be forwarded to another recently registered route. */
     uip_ds6_route_t *re;
     const uip_ipaddr_t *nexthop;
-    if((re = find_route_entry_by_dao_ack(sequence)) != NULL) {
+    if ((re = find_route_entry_by_dao_ack(sequence)) != NULL)
+    {
       /* Pick the recorded seq no from that node and forward the DAO ACK.
          Also clear the pending flag. */
       RPL_ROUTE_CLEAR_DAO_PENDING(re);
 
       nexthop = uip_ds6_route_nexthop(re);
-      if(nexthop == NULL) {
+      if (nexthop == NULL)
+      {
         LOG_WARN("No next hop to fwd DAO ACK to\n");
-      } else {
+      }
+      else
+      {
         LOG_INFO("Fwd DAO ACK to:");
         LOG_INFO_6ADDR(nexthop);
         LOG_INFO_("\n");
@@ -1513,11 +1665,14 @@ dao_ack_input(void)
         uip_icmp6_send(nexthop, ICMP6_RPL, RPL_CODE_DAO_ACK, 4);
       }
 
-      if(status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT) {
+      if (status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT)
+      {
         /* This node did not get in to the routing tables above -- remove. */
         uip_ds6_route_rm(re);
       }
-    } else {
+    }
+    else
+    {
       LOG_WARN("No route entry found to forward DAO ACK (seqno %u)\n",
                sequence);
     }
@@ -1526,9 +1681,8 @@ dao_ack_input(void)
   uipbuf_clear();
 }
 /*---------------------------------------------------------------------------*/
-void
-dao_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequence,
-               uint8_t status)
+void dao_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequence,
+                    uint8_t status)
 {
 #if RPL_WITH_DAO_ACK
   unsigned char *buffer;
@@ -1600,7 +1754,7 @@ static void dco_input(void)
   instance = rpl_get_instance(instance_id);
   if (instance == NULL)
   {
-    LOG_INFO("Ignoring a DCO for an unknown RPL instance(%u)\n",
+    LOG_WARN("Ignoring a DCO from an unknown RPL instance(%u)\n",
              instance_id);
     goto discard;
   }
@@ -1623,7 +1777,7 @@ static void dco_input(void)
 
     if (memcmp(&dag->dag_id, &buffer[pos], sizeof(dag->dag_id)))
     {
-      LOG_INFO("Ignoring a DCO for a DAG different from ours\n");
+      LOG_WARN("Ignoring a DCO from a DAG different from ours\n");
       return;
     }
     pos += 16;
@@ -1642,7 +1796,7 @@ static void dco_input(void)
       /* The option consists of a two-byte header and a payload. */
       if (last_valid_pos < i + 1)
       {
-        LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
+        LOG_WARN("Dropping incomplete DCO (%" PRIu16 " < %d)\n",
                  last_valid_pos, i + 1);
         return;
       }
@@ -1693,79 +1847,81 @@ static void dco_input(void)
   route = uip_ds6_route_lookup(&prefix);
   if (route == NULL)
   {
-    LOG_DBG("No existing route found for prefix ");
+    LOG_DBG("dco_input: No existing route found for prefix ");
     LOG_DBG_6ADDR(&prefix);
-    LOG_DBG_("\n");
+    LOG_DBG_(". ");
     LOG_DBG("The DCO can be discarded \n");
 
     goto discard;
   }
   else
   {
-    LOG_DBG("Existing route found for prefix \n");
+    LOG_DBG("dco_input: Existing route found for prefix ");
     LOG_DBG_6ADDR(&prefix);
-    LOG_DBG("\n");
-    LOG_DBG("The DCO can be processed \n");
+    LOG_DBG_(". ");
+    LOG_DBG_("The DCO can be processed \n");
+
     /* Extract next hop and check if it is the target. If it is the target we just delete the entry without forwarding */
     if (compare_ipv6_no_prefix(uip_ds6_route_nexthop(route), &prefix))
     {
-      LOG_DBG("The next hop is the target. Deleting the route and all the other entries that are reached via the target \n");
+      LOG_DBG("dco_input: The next hop is the target. Deleting the route and all the other entries that are reached via the target \n");
       remove_routes_with_next_hop(&prefix);
 
       goto discard;
     }
     else
     {
-      LOG_DBG("The next hop is not the target. Forward DCO to next hop and delete entry \n");
+      LOG_DBG("dco_input: The next hop is not the target. Forward DCO to next hop and delete entry \n");
       /* Forward the DCO to the next hop */
+      uip_ds6_route_t *route_tmp = uip_ds6_route_lookup(&prefix);
+      ;
       uip_ds6_route_rm(route);
-      dco_output_target(dag, &prefix, route, dco_sequence);
-    }
-    if (flags & RPL_DCO_K_FLAG)
-    {
-      /* A DCO ACK must be sent. */
-
-      dco_ack_output(instance, &dco_sender, dco_sequence, RPL_DCO_ACK_UNCONDITIONAL_ACCEPT);
+      dco_output(dag, &prefix, route_tmp, dco_sequence);
     }
   }
 
 discard:
+  if (flags & RPL_DCO_K_FLAG)
+  {
+    /* A DCO ACK must be sent. */
+
+    dco_ack_output(instance, &dco_sender, dco_sequence, RPL_DCO_ACK_UNCONDITIONAL_ACCEPT);
+  }
   uipbuf_clear();
 #endif /* RPL_WITH_DCO_ROUTE_INVALIDATION */
-
 }
 /*---------------------------------------------------------------------------*/
 void remove_routes_with_next_hop(const uip_ipaddr_t *target_next_hop)
 {
   uip_ds6_route_t *route;
 
-  // Iterate over all routing table entries
+  /* Iterate over all routing table entries */
   route = uip_ds6_route_head();
   while (route != NULL)
   {
     uip_ds6_route_t *next_route = uip_ds6_route_next(route);
 
-    // Check if the next hop matches the target address
+    /* Check if the next hop matches the target address */
     if (compare_ipv6_no_prefix(uip_ds6_route_nexthop(route), target_next_hop))
     {
-      // Remove the route if the next hop matches
-      LOG_DBG("Removed the route because the next hop matches \n");
+      /* Remove the route if the next hop matches */
+      LOG_DBG("remove_routes_with_next_hop: Removed the route because the next hop matches \n");
       uip_ds6_route_rm(route);
     }
-
-    route = next_route; // Move to the next route
+    /* Move to the next route */
+    route = next_route;
   }
 }
 /*---------------------------------------------------------------------------*/
-// Function to compare two IPv6 addresses ignoring the prefix
+/* Function to compare two IPv6 addresses ignoring the prefix */
 int compare_ipv6_no_prefix(const uip_ipaddr_t *addr1, const uip_ipaddr_t *addr2)
 {
-  // Compare the last 64 bits (interface identifier) of both addresses
+  /* Compare the last 64 bits (interface identifier) of both addresses */
   if (memcmp(&addr1->u8[8], &addr2->u8[8], 8) == 0)
   {
-    return 1; // Addresses are the same disregarding the prefix
+    return 1;
   }
-  return 0; // Addresses are different
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 uip_ds6_route_t *check_route(rpl_dag_t *dag, uip_ipaddr_t *target, uint8_t prefixlen, uip_ipaddr_t *dao_sender_addr)
@@ -1789,7 +1945,7 @@ uip_ds6_route_t *check_route(rpl_dag_t *dag, uip_ipaddr_t *target, uint8_t prefi
   {
     if (uip_ipaddr_cmp(uip_ds6_route_nexthop(route), dao_sender_addr))
     {
-      LOG_DBG("The existing route is valid for target ");
+      LOG_DBG("check_route: The existing route is valid for target ");
       LOG_DBG_6ADDR(target);
       LOG_DBG_("\n");
 
@@ -1797,7 +1953,7 @@ uip_ds6_route_t *check_route(rpl_dag_t *dag, uip_ipaddr_t *target, uint8_t prefi
     }
     else
     {
-      LOG_DBG("The existing route is NOT valid for target ");
+      LOG_DBG("check_route: The existing route is NOT valid for target ");
       LOG_DBG_6ADDR(target);
       LOG_DBG_("\n");
       return route;
@@ -1806,16 +1962,106 @@ uip_ds6_route_t *check_route(rpl_dag_t *dag, uip_ipaddr_t *target, uint8_t prefi
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
+#if RPL_WITH_DCO_ACK
+static void
+handle_dco_retransmission(void *ptr)
+{
+  rpl_instance_t *instance;
+
+  instance = ptr;
+
+  if (instance == NULL)
+  {
+    LOG_ERR("handle_dco_retransmission: Instance NULL \n");
+    return;
+  }
+
+  if (instance->dco_retrans.retransmissions >= RPL_DCO_MAX_RETRANSMISSIONS)
+  {
+    /* No more retransmissions */
+    /* Should a local repair be performed? */
+    ctimer_stop(&instance->dco_retransmit_timer);
+    return;
+  }
+
+  LOG_INFO("Will retransmit DCO -seq: %d trans: %d\n", instance->dco_retrans.seqno, instance->dco_retrans.retransmissions);
+  ctimer_set(&instance->dco_retransmit_timer,
+             RPL_DCO_RETRANSMISSION_TIMEOUT / 2 +
+                 (random_rand() % (RPL_DCO_RETRANSMISSION_TIMEOUT / 2)),
+             handle_dco_retransmission, instance);
+
+  instance->dco_retrans.retransmissions++;
+  dco_output_target(instance->current_dag, &instance->dco_retrans.target,
+                    &instance->dco_retrans.destination,
+                    instance->dco_retrans.seqno);
+}
+#endif /*RPL_WITH_DCO_ACK*/
+/*---------------------------------------------------------------------------*/
+void dco_output(rpl_dag_t *dag, uip_ipaddr_t *target,
+                uip_ds6_route_t *route, uint8_t seq_no)
+{
+  /*
+   * Destination Cleanup Object (DCO)
+   *
+   *      0                   1                   2                   3
+   *      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   *     |  RPLInstanceID |K|D|   Flags   | RPL Status  | DCOSequence    |
+   *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   *     |                                                               |
+   *     +                                                               +
+   *     |                                                               |
+   *     +                         DODAGID (optional)                    +
+   *     |                                                               |
+   *     +                                                               +
+   *     |                                                               |
+   *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   *     |      Option(s)...
+   *     +-+-+-+-+-+-+-+-+-+
+   */
+#if RPL_WITH_DCO_ROUTE_INVALIDATION
+  if (dag == NULL || dag->instance == NULL || route == NULL)
+  {
+    LOG_ERR("dco_output: DAG, instance or route NULL \n");
+    return;
+  }
+
+  uip_ipaddr_t *dest_ipaddr = NULL;
+  rpl_instance_t *instance = dag->instance;
+
+  /* Send DCO to next hop. */
+  dest_ipaddr = (uip_ipaddr_t *)uip_ds6_route_nexthop(route);
+
+#if RPL_WITH_DCO_ACK
+  LOG_DBG("dco_output: DCO-ACK enabled, setting parameters \n");
+  /* Set variables for retransmission in case DCO not acked*/
+  memset(&instance->dco_retrans, 0, sizeof(instance->dco_retrans));
+  instance->dco_retrans.seqno = seq_no;
+  instance->dco_retrans.retransmissions = 1;
+  memcpy(&instance->dco_retrans.target,
+         target,
+         sizeof(uip_ipaddr_t));
+  memcpy(&instance->dco_retrans.destination,
+         dest_ipaddr,
+         sizeof(uip_ipaddr_t));
+  ctimer_set(&instance->dco_retransmit_timer,
+             RPL_DCO_RETRANSMISSION_TIMEOUT,
+             handle_dco_retransmission,
+             instance);
+#endif /* RPL_WITH_DCO_ACK*/
+  dco_output_target(dag, target, dest_ipaddr, seq_no);
+#endif
+}
+/*---------------------------------------------------------------------------*/
 #if RPL_WITH_DCO_ROUTE_INVALIDATION
 static void dco_output_target(rpl_dag_t *dag, uip_ipaddr_t *target,
-                              uip_ds6_route_t *route, uint8_t seq_no)
+                              uip_ipaddr_t *dest_ipaddr, uint8_t seq_no)
 {
 
   rpl_instance_t *instance;
   unsigned char *buffer;
   uint8_t prefixlen;
   int pos;
-  uip_ipaddr_t *dest_ipaddr = NULL;
 
   /* Destination Cleanup Object */
 
@@ -1825,30 +2071,31 @@ static void dco_output_target(rpl_dag_t *dag, uip_ipaddr_t *target,
     return;
   }
 
-  instance = dag->instance;
-
-  if (instance == NULL)
+  if (dag == NULL || dag->instance == NULL)
   {
-    LOG_ERR("dco_output_target error instance NULL\n");
+    LOG_ERR("dco_output_target: DAG or instance NULL\n");
     return;
   }
+  instance = dag->instance;
 
   buffer = UIP_ICMP_PAYLOAD;
   pos = 0;
 
   buffer[pos++] = instance->instance_id;
   buffer[pos] = 0;
+
 #if RPL_DCO_SPECIFY_DAG
   buffer[pos] |= RPL_DCO_D_FLAG;
 #endif /* RPL_DAO_SPECIFY_DAG */
+
 #if RPL_WITH_DCO_ACK
-
   buffer[pos] |= RPL_DCO_K_FLAG;
-
 #endif /* RPL_WITH_DCO_ACK */
+
   ++pos;
   buffer[pos++] = 195; /* RPL status */
   buffer[pos++] = seq_no;
+
 #if RPL_DCO_SPECIFY_DAG
   memcpy(buffer + pos, &dag->dag_id, sizeof(dag->dag_id));
   pos += sizeof(dag->dag_id);
@@ -1872,10 +2119,7 @@ static void dco_output_target(rpl_dag_t *dag, uip_ipaddr_t *target,
   buffer[pos++] = RPL_DEFAULT_LIFETIME;
 
   /* Send DCO to next hop. */
-  dest_ipaddr = (uip_ipaddr_t *)uip_ds6_route_nexthop(route);
-
   LOG_INFO("Sending a DCO with sequence number %u, lifetime %u, prefix ", seq_no, RPL_DEFAULT_LIFETIME);
-
   LOG_INFO_6ADDR(target);
   LOG_INFO_(" to ");
   LOG_INFO_6ADDR(dest_ipaddr);
@@ -1885,31 +2129,78 @@ static void dco_output_target(rpl_dag_t *dag, uip_ipaddr_t *target,
   {
     uip_icmp6_send(dest_ipaddr, ICMP6_RPL, RPL_CODE_DCO, pos);
   }
-
 }
 #endif /* RPL_WITH_DCO_ROUTE_INVALIDATION */
 /*---------------------------------------------------------------------------*/
 static void
 dco_ack_input()
 {
+#if RPL_WITH_DCO_ACK
+  uint8_t *buffer;
+  uint8_t instance_id;
+  uint8_t sequence;
+  uint8_t status;
+  rpl_instance_t *instance;
+
+  buffer = UIP_ICMP_PAYLOAD;
+
+  instance_id = buffer[0];
+  sequence = buffer[2];
+  status = buffer[3];
+
+  instance = rpl_get_instance(instance_id);
+  if (instance == NULL)
+  {
+    LOG_ERR("dco_ack_input: Instance is NULL");
+    uipbuf_clear();
+    return;
+  }
+  /* Validate sequence no*/
+  if (sequence != instance->dco_retrans.seqno)
+  {
+    LOG_DBG("dco_ack_input: DCO-ACK with wrong seqno");
+    uipbuf_clear();
+    return;
+  }
+
   /* Destination Cleanup Object Acknowledgement*/
-  LOG_INFO("Received a DCO ACK from ");
+  LOG_INFO("Received a DCO ACK with seqno %u and status %u from ", sequence, status);
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
   LOG_INFO_("\n");
-
+  /* When DCO-ACK is received stop the timer to retransmit*/
+  ctimer_stop(&instance->dco_retransmit_timer);
   uipbuf_clear();
+#endif /*RPL_WITH_DCO_ACK*/
 }
+
 /*---------------------------------------------------------------------------*/
 void dco_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequence,
                     uint8_t status)
 {
+  /*
+   * Destination Cleanup Option Acknowledgement (DCO-ACK)
+   *
+   *      0                   1                   2                   3
+   *      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   *     | RPLInstanceID |D|   Flags     | DCOSequence   | DCO-ACK Status|
+   *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   *     |                                                               |
+   *     +                                                               +
+   *     |                                                               |
+   *     +                         DODAGID (optional)                    +
+   *     |                                                               |
+   *     +                                                               +
+   *     |                                                               |
+   *     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   */
 #if RPL_WITH_DCO_ACK
   unsigned char *buffer;
   int pos;
   LOG_INFO("Sending a DCO ACK with sequence number %u to ",
            sequence);
   LOG_INFO_6ADDR(dest);
-  LOG_INFO_( "\n");
+  LOG_INFO_("\n");
 
   buffer = UIP_ICMP_PAYLOAD;
   pos = 0;
@@ -1926,8 +2217,7 @@ void dco_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequen
 #endif
 }
 /*---------------------------------------------------------------------------*/
-void
-rpl_icmp6_register_handlers(void)
+void rpl_icmp6_register_handlers(void)
 {
   uip_icmp6_register_input_handler(&dis_handler);
   uip_icmp6_register_input_handler(&dio_handler);

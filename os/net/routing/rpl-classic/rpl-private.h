@@ -152,6 +152,18 @@
 #define RPL_DAO_RETRANSMISSION_TIMEOUT  (5 * CLOCK_SECOND)
 #endif /* RPL_CONF_DAO_RETRANSMISSION_TIMEOUT */
 
+#ifdef RPL_CONF_DCO_MAX_RETRANSMISSIONS
+#define RPL_DCO_MAX_RETRANSMISSIONS RPL_CONF_DCO_MAX_RETRANSMISSIONS
+#else
+#define RPL_DCO_MAX_RETRANSMISSIONS     5
+#endif /* RPL_CONF_DCO_MAX_RETRANSMISSIONS */
+
+#ifdef RPL_CONF_DCO_RETRANSMISSION_TIMEOUT
+#define RPL_DCO_RETRANSMISSION_TIMEOUT RPL_CONF_DCO_RETRANSMISSION_TIMEOUT
+#else
+#define RPL_DCO_RETRANSMISSION_TIMEOUT (3 * CLOCK_SECOND)
+#endif /*RPL_CONF_DCO_RETRANSMISSION_TIMEOUT*/
+
 /* Special value indicating immediate removal. */
 #define RPL_ZERO_LIFETIME               0
 
@@ -310,6 +322,7 @@ void dis_output(uip_ipaddr_t *addr);
 void dio_output(rpl_instance_t *, uip_ipaddr_t *uc_addr);
 void dao_output(rpl_parent_t *, uint8_t lifetime);
 void dao_output_target(rpl_parent_t *, uip_ipaddr_t *, uint8_t lifetime);
+void dco_output(rpl_dag_t *dag, uip_ipaddr_t *target, uip_ds6_route_t *route, uint8_t seq_no);
 uip_ds6_route_t * check_route(rpl_dag_t *dag, uip_ipaddr_t *target, uint8_t prefixlen, uip_ipaddr_t *dao_sender_addr);
 int compare_ipv6_no_prefix(const uip_ipaddr_t *addr1, const uip_ipaddr_t *addr2);
 void remove_routes_with_next_hop(const uip_ipaddr_t *target_next_hop);
