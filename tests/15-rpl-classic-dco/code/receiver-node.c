@@ -61,9 +61,11 @@ receiver(struct simple_udp_connection *c,
          const uint8_t *data,
          uint16_t datalen)
 {
+  uint32_t hops = uip_ds6_if.cur_hop_limit - UIP_IP_BUF->ttl + 1;
   printf("Node;Receiving;");
   uip_debug_ipaddr_print(sender_addr);
-  printf(";%s\n",data);
+  printf(";%s;%d\n",data,hops);
+
 }
 /*---------------------------------------------------------------------------*/
 static uip_ipaddr_t *
