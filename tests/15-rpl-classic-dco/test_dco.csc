@@ -210,7 +210,7 @@ dcoAckCount = 0;&#xD;
 route_no = 0;&#xD;
 no_hops=0;&#xD;
 &#xD;
-TIMEOUT(2000000, if(dcoCount ==  2 &amp;&amp; dcoAckCount == 2 &amp;&amp; route_no == 1 &amp;&amp; no_hops==4) { log.testOK(); } );&#xD;
+TIMEOUT(2000000, if(dcoCount ==  2 &amp;&amp; dcoAckCount == 2 &amp;&amp; route_no == 1 &amp;&amp; no_hops==4) { log.testOK(); } else {log.testFailed();} );&#xD;
 while(true) {&#xD;
     YIELD();&#xD;
     if(msg.equals("init-7")) {&#xD;
