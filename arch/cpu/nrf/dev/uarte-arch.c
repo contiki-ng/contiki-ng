@@ -49,6 +49,7 @@
 /*---------------------------------------------------------------------------*/
 #if NRF_HAS_UARTE
 /*---------------------------------------------------------------------------*/
+#include "sys/critical.h"
 #include "nrfx_config.h"
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
@@ -89,14 +90,18 @@ static bool is_initialized;
 void
 uarte_write(unsigned char data)
 {
+  static uint8_t tx_byte;
+  int_master_status_t status;
+
   if(!is_initialized) {
     return;
   }
-  static uint8_t tx_byte;
+  status = critical_enter();
   tx_byte = data;
   do {
   } while(nrfx_uarte_tx(&instance, &tx_byte, 1, NRFX_UARTE_TX_BLOCKING)
           == NRFX_ERROR_BUSY);
+  critical_exit(status);
 }
 /*---------------------------------------------------------------------------*/
 /**

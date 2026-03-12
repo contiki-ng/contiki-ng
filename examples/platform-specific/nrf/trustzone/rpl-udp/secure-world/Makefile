@@ -8,10 +8,12 @@ BOARDS_ONLY = nrf54l15/xiao
 TARGET ?= nrf
 BOARD ?= nrf54l15/xiao
 
-# Use a minimal network stack to reduce the trusted computing base.
+PROJECTDIRS += ../../secure-world
+
+# Keep the secure world minimal and let the TrustZone MAC shim own packet delivery.
 MAKE_MAC = MAKE_MAC_NULLMAC
 MAKE_NET = MAKE_NET_NULLNET
 
 TRUSTZONE_SECURE_BUILD = 1
 
-include ../../../../../Makefile.include
+include ../../../../../../Makefile.include

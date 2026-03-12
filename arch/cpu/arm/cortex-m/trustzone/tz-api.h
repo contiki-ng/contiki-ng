@@ -71,6 +71,9 @@
 #ifndef TZ_API_H
 #define TZ_API_H
 
+#include "contiki.h"
+#include "dev/radio.h"
+
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -137,9 +140,13 @@ void tz_arch_signal_ns(void);
 #endif /* TRUSTZONE_SECURE */
 
 typedef bool (*ns_poll_t)(void) CC_TRUSTZONE_NONSECURE_CALL;
+typedef bool (*ns_process_pd_t)(size_t len) CC_TRUSTZONE_NONSECURE_CALL;
 
 struct tz_api {
   ns_poll_t request_poll;
+  ns_process_pd_t process_packet_data;
+  uint8_t *packet_data;
+  size_t packet_data_size;
 };
 
 /**
@@ -195,6 +202,26 @@ void tz_api_println(const char *text, size_t len);
  *               normal world.
  */
 bool tz_api_request_ns_poll(void);
+
+/**
+ * \brief        Deliver a received packet from secure world to normal world.
+ *
+ *               Only called from secure world.
+ */
+void tz_api_process_packet_data(void);
+
+int tz_api_radio_prepare(const void *payload, unsigned short payload_len);
+int tz_api_radio_transmit(unsigned short transmit_len);
+int tz_api_radio_send(const void *payload, unsigned short payload_len);
+int tz_api_radio_read(void *buf, unsigned short buf_len);
+int tz_api_radio_channel_clear(void);
+int tz_api_radio_receiving_packet(void);
+int tz_api_radio_pending_packet(void);
+int tz_api_radio_set_power_mode(bool on);
+radio_result_t tz_api_radio_get_value(radio_param_t param, radio_value_t *value);
+radio_result_t tz_api_radio_set_value(radio_param_t param, radio_value_t value);
+radio_result_t tz_api_radio_get_object(radio_param_t param, void *dest, size_t size);
+radio_result_t tz_api_radio_set_object(radio_param_t param, const void *src, size_t size);
 
 #endif /* !TZ_API_H */
 /** @} */

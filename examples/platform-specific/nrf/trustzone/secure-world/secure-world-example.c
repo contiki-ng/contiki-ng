@@ -37,26 +37,21 @@
 /*---------------------------------------------------------------------------*/
 #include "sys/log.h"
 #define LOG_MODULE "SecureProcess"
-#define LOG_LEVEL LOG_LEVEL_DBG
+#define LOG_LEVEL LOG_LEVEL_INFO
 /*---------------------------------------------------------------------------*/
 PROCESS(secure_process, "Secure process");
 AUTOSTART_PROCESSES(&secure_process);
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(secure_process, ev, data)
 {
-  static struct etimer et;
-
   PROCESS_BEGIN();
 
   PROCESS_WAIT_EVENT_UNTIL(ev == trustzone_init_event);
 
   LOG_INFO("Ready to run\n");
 
-  etimer_set(&et, 60 * CLOCK_SECOND);
   for(;;) {
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-    LOG_INFO("Got a timer event in the secure world\n");
-    etimer_reset(&et);
+    PROCESS_WAIT_EVENT();
   }
 
   PROCESS_END();

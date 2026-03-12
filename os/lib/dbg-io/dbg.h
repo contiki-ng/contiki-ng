@@ -47,6 +47,11 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 /*---------------------------------------------------------------------------*/
+typedef enum {
+  DBG_OUTPUT_CONTEXT_DEFAULT = 0,
+  DBG_OUTPUT_CONTEXT_NONSECURE = 1,
+} dbg_output_context_t;
+/*---------------------------------------------------------------------------*/
 /**
  * \brief Print a stream of bytes
  * \param seq A pointer to the stream
@@ -60,6 +65,12 @@ unsigned int dbg_send_bytes(const unsigned char *seq, unsigned int len);
  * \return Printed character
  */
 int dbg_putchar(int c);
+/**
+ * \brief Swap the current debug output context
+ * \param ctx The new output context
+ * \return The previous output context
+ */
+dbg_output_context_t dbg_output_context_swap(dbg_output_context_t ctx);
 /*---------------------------------------------------------------------------*/
 #endif /* DBG_H_ */
 /*---------------------------------------------------------------------------*/

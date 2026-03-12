@@ -47,6 +47,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 
+#include "lib/dbg-io/dbg.h"
 #include "uarte-arch.h"
 #include "usb.h"
 /*---------------------------------------------------------------------------*/
@@ -58,12 +59,32 @@
 #define flush()
 #endif /* PLATFORM_DBG_CONF_USB */
 /*---------------------------------------------------------------------------*/
+#define ANSI_ESCAPE "\033["
+#define ANSI_RESET  ANSI_ESCAPE "0m"
+#define ANSI_CYAN   ANSI_ESCAPE "36m"
+#define ANSI_GREEN  ANSI_ESCAPE "32m"
+/*---------------------------------------------------------------------------*/
+static void
+write_string_raw(const char *s)
+{
+  while(s != NULL && *s != '\0') {
+    write_byte(*s++);
+  }
+}
+/*---------------------------------------------------------------------------*/
 #if TRUSTZONE_NONSECURE
 #include "trustzone/tz-api.h"
 
 #define DBG_BUF_SIZE 256
 static char dbg_buf[DBG_BUF_SIZE];
 static uint16_t dbg_pos;
+/*---------------------------------------------------------------------------*/
+dbg_output_context_t
+dbg_output_context_swap(dbg_output_context_t ctx)
+{
+  (void)ctx;
+  return DBG_OUTPUT_CONTEXT_DEFAULT;
+}
 /*---------------------------------------------------------------------------*/
 int
 dbg_putchar(int c)
@@ -84,13 +105,57 @@ dbg_putchar(int c)
   return c;
 }
 #else
+static bool line_start = true;
+static dbg_output_context_t output_context = DBG_OUTPUT_CONTEXT_DEFAULT;
+/*---------------------------------------------------------------------------*/
+static const char *
+context_color(dbg_output_context_t ctx)
+{
+#if defined(TRUSTZONE_SECURE)
+  switch(ctx) {
+  case DBG_OUTPUT_CONTEXT_NONSECURE:
+    return ANSI_GREEN;
+  case DBG_OUTPUT_CONTEXT_DEFAULT:
+  default:
+    return ANSI_CYAN;
+  }
+#else
+  (void)ctx;
+  return NULL;
+#endif
+}
+/*---------------------------------------------------------------------------*/
+dbg_output_context_t
+dbg_output_context_swap(dbg_output_context_t ctx)
+{
+  dbg_output_context_t previous = output_context;
+  output_context = ctx;
+  return previous;
+}
+/*---------------------------------------------------------------------------*/
 int
 dbg_putchar(int c)
 {
+  const char *color = context_color(output_context);
+
+  if(line_start && color != NULL && c != '\n') {
+    write_string_raw(color);
+    line_start = false;
+  }
+
+  if(c == '\n') {
+    if(color != NULL) {
+      write_string_raw(ANSI_RESET);
+    }
+    write_byte('\r');
+    line_start = true;
+  }
   write_byte(c);
 
   if(c == '\n') {
     flush();
+  } else {
+    line_start = false;
   }
 
   return c;

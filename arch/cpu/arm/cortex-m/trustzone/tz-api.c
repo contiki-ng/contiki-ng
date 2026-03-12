@@ -37,6 +37,10 @@
  */
 
 #include "contiki.h"
+#include "lib/dbg-io/dbg.h"
+#include "net/linkaddr.h"
+#include "net/netstack.h"
+#include "net/packetbuf.h"
 #include "sys/autostart.h"
 #include "tz-api.h"
 
@@ -53,6 +57,8 @@ static volatile bool ns_poll_pending;
 #define LOG_MODULE "TZAPI"
 #define LOG_LEVEL LOG_LEVEL_INFO
 /*---------------------------------------------------------------------------*/
+#define TZ_API_PRINTLN_MAX_LEN 256
+/*---------------------------------------------------------------------------*/
 process_event_t trustzone_init_event;
 /*---------------------------------------------------------------------------*/
 CC_TRUSTZONE_SECURE_CALL bool
@@ -63,7 +69,11 @@ tz_api_init(struct tz_api *apip)
   }
 
   apip = cmse_check_address_range(apip, sizeof(*apip), CMSE_NONSECURE);
-  if(apip == NULL || apip->request_poll == NULL) {
+  if(apip == NULL ||
+     apip->request_poll == NULL ||
+     apip->process_packet_data == NULL ||
+     apip->packet_data == NULL ||
+     apip->packet_data_size < 2) {
     return false;
   }
 
@@ -72,8 +82,23 @@ tz_api_init(struct tz_api *apip)
     return false;
   }
 
+  if(cmse_check_address_range(apip->process_packet_data,
+                              sizeof(apip->process_packet_data),
+                              CMSE_NONSECURE) == NULL) {
+    return false;
+  }
+
+  if(cmse_check_address_range(apip->packet_data,
+                              apip->packet_data_size,
+                              CMSE_NONSECURE) == NULL) {
+    return false;
+  }
+
   trustzone_init_event = process_alloc_event();
   tz_api.request_poll = poll_fn;
+  tz_api.process_packet_data = apip->process_packet_data;
+  tz_api.packet_data = apip->packet_data;
+  tz_api.packet_data_size = apip->packet_data_size;
 
   initialized = true;
 
@@ -130,8 +155,6 @@ tz_api_poll(void)
   return ns_poll_pending || process_nevents() > 0;
 }
 /*---------------------------------------------------------------------------*/
-#define TZ_API_PRINTLN_MAX_LEN 256
-
 CC_TRUSTZONE_SECURE_CALL void
 tz_api_println(const char *text, size_t len)
 {
@@ -160,5 +183,95 @@ tz_api_request_ns_poll(void)
   ns_poll_pending = true;
   tz_arch_signal_ns();
   return true;
+}
+/*---------------------------------------------------------------------------*/
+void
+tz_api_process_packet_data(void)
+{
+  if(!initialized || packetbuf_datalen() > tz_api.packet_data_size) {
+    return;
+  }
+
+  memcpy(tz_api.packet_data, packetbuf_dataptr(), packetbuf_datalen());
+  tz_api.process_packet_data(packetbuf_datalen());
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_prepare(const void *payload, unsigned short payload_len)
+{
+  return NETSTACK_RADIO.prepare(payload, payload_len);
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_transmit(unsigned short transmit_len)
+{
+  return NETSTACK_RADIO.transmit(transmit_len);
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_send(const void *payload, unsigned short payload_len)
+{
+  return NETSTACK_RADIO.send(payload, payload_len);
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_read(void *buf, unsigned short buf_len)
+{
+  return NETSTACK_RADIO.read(buf, buf_len);
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_channel_clear(void)
+{
+  return NETSTACK_RADIO.channel_clear();
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_receiving_packet(void)
+{
+  return NETSTACK_RADIO.receiving_packet();
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_pending_packet(void)
+{
+  return NETSTACK_RADIO.pending_packet();
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_set_power_mode(bool on)
+{
+  return on ? NETSTACK_RADIO.on() : NETSTACK_RADIO.off();
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL radio_result_t
+tz_api_radio_get_value(radio_param_t param, radio_value_t *value)
+{
+  return NETSTACK_RADIO.get_value(param, value);
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL radio_result_t
+tz_api_radio_set_value(radio_param_t param, radio_value_t value)
+{
+  return NETSTACK_RADIO.set_value(param, value);
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL radio_result_t
+tz_api_radio_get_object(radio_param_t param, void *dest, size_t size)
+{
+  if(param == RADIO_PARAM_64BIT_ADDR && dest != NULL && size >= 8) {
+    memset(dest, 0, size);
+    memcpy((uint8_t *)dest + size - LINKADDR_SIZE, &linkaddr_node_addr,
+           LINKADDR_SIZE);
+    return RADIO_RESULT_OK;
+  }
+
+  return NETSTACK_RADIO.get_object(param, dest, size);
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL radio_result_t
+tz_api_radio_set_object(radio_param_t param, const void *src, size_t size)
+{
+  return NETSTACK_RADIO.set_object(param, src, size);
 }
 /*---------------------------------------------------------------------------*/

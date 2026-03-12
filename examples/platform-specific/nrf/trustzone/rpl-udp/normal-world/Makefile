@@ -1,4 +1,4 @@
-CONTIKI_PROJECT = normal-world-example
+CONTIKI_PROJECT ?= udp-client
 
 all: $(CONTIKI_PROJECT)
 
@@ -8,11 +8,15 @@ BOARDS_ONLY = nrf54l15/xiao
 TARGET ?= nrf
 BOARD ?= nrf54l15/xiao
 
-MAKE_MAC = MAKE_MAC_NULLMAC
-MAKE_NET = MAKE_NET_NULLNET
+PROJECTDIRS += ../../../../../rpl-udp
+
+MAKE_MAC = MAKE_MAC_CSMA
+MAKE_NET = MAKE_NET_IPV6
+MAKE_ROUTING = MAKE_ROUTING_RPL_LITE
+
 TZ_MINIMAL_NONSECURE_PLATFORM = 1
 
 TRUSTZONE_SECURE_BUILD = 0
 TRUSTZONE_SECURE_WORLD_PATH ?= ../secure-world
 
-include ../../../../../Makefile.include
+include ../../../../../../Makefile.include

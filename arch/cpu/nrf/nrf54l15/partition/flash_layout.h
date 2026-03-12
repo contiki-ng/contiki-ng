@@ -1,0 +1,33 @@
+#ifndef NRF54L15_TZ_FLASH_LAYOUT_H_
+#define NRF54L15_TZ_FLASH_LAYOUT_H_
+
+#define FLASH_BASE_ADDRESS                  0x00000000u
+#define SRAM_BASE_ADDRESS                   0x20000000u
+
+#define FLASH_TOTAL_SIZE                    0x00165000u
+#define TOTAL_RAM_SIZE                      0x00028000u
+
+#define FLASH_S_PARTITION_SIZE              0x00080000u
+#define FLASH_PS_AREA_OFFSET                0x00080000u
+#define FLASH_PS_AREA_SIZE                  0x00004000u
+#define FLASH_ITS_AREA_OFFSET               0x00084000u
+#define FLASH_ITS_AREA_SIZE                 0x00004000u
+#define FLASH_OTP_NV_COUNTERS_AREA_OFFSET   0x00088000u
+#define FLASH_OTP_NV_COUNTERS_AREA_SIZE     0x00002000u
+#define SECURE_STORAGE_PARTITIONS_END       0x0008A000u
+#define FLASH_NS_PARTITION_SIZE             0x000D3000u
+#define FLASH_NS_STORAGE_PARTITION_OFFSET   0x0015D000u
+#define FLASH_NS_STORAGE_PARTITION_SIZE     0x00008000u
+
+#define SECURE_IMAGE_OFFSET                 0x00000000u
+#define NON_SECURE_IMAGE_OFFSET             SECURE_STORAGE_PARTITIONS_END
+
+#define S_RAM_PARTITION_SIZE                0x00014000u
+#define NS_RAM_PARTITION_SIZE               0x00014000u
+
+#define S_ROM_ALIAS_BASE                    FLASH_BASE_ADDRESS
+#define NS_ROM_ALIAS_BASE                   FLASH_BASE_ADDRESS
+#define S_RAM_ALIAS_BASE                    SRAM_BASE_ADDRESS
+#define NS_RAM_ALIAS_BASE                   SRAM_BASE_ADDRESS
+
+#endif /* NRF54L15_TZ_FLASH_LAYOUT_H_ */

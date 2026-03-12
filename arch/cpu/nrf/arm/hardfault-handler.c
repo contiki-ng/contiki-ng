@@ -255,6 +255,11 @@ HardFault_c_handler(uint32_t *p_stack_address)
     dbg_putchar('F');
     dbg_putchar('=');
     HF_PUTHEX(crash_info.cfsr);
+    dbg_putchar(' ');
+    dbg_putchar('H');
+    dbg_putchar('F');
+    dbg_putchar('=');
+    HF_PUTHEX(crash_info.hfsr);
     dbg_putchar('\n');
 #undef HF_PUTHEX
   }
@@ -277,16 +282,16 @@ HardFault_Handler(void)
 {
   __ASM volatile (
     "   .syntax unified                        \n"
-
-    "   ldr   r0, =0xFFFFFFFD                  \n"
-    "   cmp   r0, lr                           \n"
-    "   bne   HardFault_Handler_ChooseMSP      \n"
-    /* Reading PSP into R0 */
-    "   mrs   r0, PSP                          \n"
-    "   b     HardFault_Handler_Continue       \n"
-    "HardFault_Handler_ChooseMSP:              \n"
-    /* Reading MSP into R0 */
-    "   mrs   r0, MSP                          \n"
+    /*
+     * EXC_RETURN bit[2] selects the pre-exception stack pointer on Cortex-M:
+     *   0 => MSP, 1 => PSP.
+     * TrustZone adds more EXC_RETURN variants, so comparing against a single
+     * literal like 0xFFFFFFFD is not reliable in secure state.
+     */
+    "   tst   lr, #4                           \n"
+    "   ite   eq                               \n"
+    "   mrseq r0, MSP                          \n"
+    "   mrsne r0, PSP                          \n"
     /* -----------------------------------------------------------------
      * If we have selected MSP check if we may use stack safetly.
      * If not - reset the stack to the initial value. */
@@ -357,7 +362,94 @@ fault_print_and_reset(char f1, char f2)
   NVIC_SystemReset();
 }
 /*---------------------------------------------------------------------------*/
-void BusFault_Handler(void)       { fault_print_and_reset('B', 'F'); }
+static void
+BusFault_c_handler(uint32_t *p_stack_address)
+{
+  extern void uarte_write(unsigned char c);
+  static const char hex[] = "0123456789abcdef";
+  HardFault_stack_t *p_stack = (HardFault_stack_t *)p_stack_address;
+
+#define BF_PUTHEX(val) do { \
+    uint32_t _v = (val); \
+    for(int _s = 28; _s >= 0; _s -= 4) { \
+      uarte_write(hex[(_v >> _s) & 0xf]); \
+    } \
+  } while(0)
+
+  uarte_write('\n');
+  uarte_write('B');
+  uarte_write('F');
+  uarte_write('!');
+  uarte_write(' ');
+  uarte_write('P');
+  uarte_write('C');
+  uarte_write('=');
+  BF_PUTHEX(p_stack != NULL ? p_stack->pc : 0);
+  uarte_write(' ');
+  uarte_write('L');
+  uarte_write('R');
+  uarte_write('=');
+  BF_PUTHEX(p_stack != NULL ? p_stack->lr : 0);
+  uarte_write(' ');
+  uarte_write('C');
+  uarte_write('F');
+  uarte_write('=');
+  BF_PUTHEX(SCB->CFSR);
+  uarte_write(' ');
+  uarte_write('H');
+  uarte_write('F');
+  uarte_write('=');
+  BF_PUTHEX(SCB->HFSR);
+  uarte_write(' ');
+  uarte_write('B');
+  uarte_write('F');
+  uarte_write('A');
+  uarte_write('R');
+  uarte_write('=');
+  BF_PUTHEX(SCB->BFAR);
+  uarte_write(' ');
+  uarte_write('M');
+  uarte_write('M');
+  uarte_write('F');
+  uarte_write('A');
+  uarte_write('R');
+  uarte_write('=');
+  BF_PUTHEX(SCB->MMFAR);
+  uarte_write('\n');
+
+#undef BF_PUTHEX
+
+  for(volatile int i = 0; i < 50000; i++) {}
+  NVIC_SystemReset();
+}
+/*---------------------------------------------------------------------------*/
+void BusFault_Handler(void) __attribute__((naked));
+void
+BusFault_Handler(void)
+{
+  __ASM volatile (
+    "   .syntax unified                        \n"
+    "   tst   lr, #4                           \n"
+    "   ite   eq                               \n"
+    "   mrseq r0, MSP                          \n"
+    "   mrsne r0, PSP                          \n"
+    "   ldr   r1, =__StackTop                  \n"
+    "   ldr   r2, =__StackLimit                \n"
+    "   cmp   r0, r1                           \n"
+    "   bhi   BusFault_MoveSP                  \n"
+    "   cmp   r0, r2                           \n"
+    "   bhi   BusFault_Handler_Continue        \n"
+    "BusFault_MoveSP:                          \n"
+    "   mov   SP, r1                           \n"
+    "   movs  r0, #0                           \n"
+    "BusFault_Handler_Continue:                \n"
+    "   ldr   r3, =%0                          \n"
+    "   bx    r3                               \n"
+    "   .ltorg                                 \n"
+    : : "X" (BusFault_c_handler)
+  );
+}
+/*---------------------------------------------------------------------------*/
 void UsageFault_Handler(void)     { fault_print_and_reset('U', 'F'); }
 void MemoryManagement_Handler(void) { fault_print_and_reset('M', 'M'); }
 #ifndef TRUSTZONE_SECURE
