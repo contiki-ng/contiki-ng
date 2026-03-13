@@ -74,10 +74,27 @@ write_string_raw(const char *s)
 /*---------------------------------------------------------------------------*/
 #if TRUSTZONE_NONSECURE
 #include "trustzone/tz-api.h"
+#include "sys/ctimer.h"
 
 #define DBG_BUF_SIZE 256
 static char dbg_buf[DBG_BUF_SIZE];
 static uint16_t dbg_pos;
+static struct ctimer dbg_flush_timer;
+/*---------------------------------------------------------------------------*/
+static void
+dbg_flush(void)
+{
+  if(dbg_pos > 0) {
+    tz_api_print(dbg_buf, dbg_pos);
+    dbg_pos = 0;
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+dbg_flush_callback(void *ptr)
+{
+  dbg_flush();
+}
 /*---------------------------------------------------------------------------*/
 dbg_output_context_t
 dbg_output_context_swap(dbg_output_context_t ctx)
@@ -94,12 +111,11 @@ dbg_putchar(int c)
   }
 
   if(c == '\n' || dbg_pos >= DBG_BUF_SIZE - 1) {
-    /* Strip the trailing newline; tz_api_println adds one. */
-    uint16_t len = (dbg_pos > 0 && dbg_buf[dbg_pos - 1] == '\n')
-                   ? dbg_pos - 1 : dbg_pos;
-    dbg_buf[len] = '\0';
-    tz_api_println(dbg_buf, len);
-    dbg_pos = 0;
+    ctimer_stop(&dbg_flush_timer);
+    dbg_flush();
+  } else if(dbg_pos == 1) {
+    /* First char in buffer — start a short flush timer */
+    ctimer_set(&dbg_flush_timer, CLOCK_SECOND / 64, dbg_flush_callback, NULL);
   }
 
   return c;

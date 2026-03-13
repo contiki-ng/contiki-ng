@@ -28,6 +28,7 @@
  */
 
 #include "contiki.h"
+#include "dev/serial-line.h"
 #include "arch/platform/nrf/lpm.h"
 
 #include <nrfx.h>
@@ -49,6 +50,7 @@ platform_init_stage_one(void)
 void
 platform_init_stage_two(void)
 {
+  serial_line_init();
 }
 
 void

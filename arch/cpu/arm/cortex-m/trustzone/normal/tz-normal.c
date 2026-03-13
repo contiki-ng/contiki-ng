@@ -40,6 +40,7 @@
  */
 
 #include "contiki.h"
+#include "dev/serial-line.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "sys/platform.h"
@@ -96,6 +97,7 @@ init_tz_api(void)
   tz_api.process_packet_data = process_packet_data;
   tz_api.packet_data = packet_data;
   tz_api.packet_data_size = sizeof(packet_data);
+  tz_api.serial_input = serial_line_input_byte;
   bool result = tz_api_init(&tz_api);
   LOG_INFO("Initialize TrustZone API: %s\n",
            result ? "SUCCESS" : "FAILURE");
