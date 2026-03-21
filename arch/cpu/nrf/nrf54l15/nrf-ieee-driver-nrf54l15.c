@@ -36,7 +36,7 @@
 #define FRAME_ACK_REQUEST_BIT 0x20
 
 /* Default radio parameters */
-#define DEFAULT_CHANNEL     26
+#define DEFAULT_CHANNEL     IEEE802154_DEFAULT_CHANNEL
 #define DEFAULT_TX_POWER    0 /* dBm */
 
 /* Use the radio timer's microsecond clock so timeouts match the nRF 802154

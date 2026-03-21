@@ -12,7 +12,7 @@ Current hardware status:
 - secure world boots and hands off to non-secure world
 - the normal-world example is intentionally limited to a minimal hello-world path via `tz_api_println()`
 - the secure image owns the real nRF54L15 radio
-- the non-secure image uses a TrustZone radio proxy and currently prints `non-secure radio ready on channel 26`
+- the non-secure image uses a TrustZone radio proxy and reports the configured secure-side radio channel at runtime
 - over-the-air packet TX/RX is not validated yet
 
 Notes:
