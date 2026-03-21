@@ -216,6 +216,7 @@ gpio_hal_arch_port_pin_cfg_set(gpio_hal_port_t port, gpio_hal_pin_t pin, gpio_ha
     .p_handler_config = &handler_config,
   };
 
+
   err = nrfx_gpiote_input_configure(p_instance, pin_number, &input_pin_config);
   if(err != NRFX_SUCCESS) {
     return;

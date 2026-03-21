@@ -31,6 +31,7 @@
 #include "net/routing/routing.h"
 #include "net/netstack.h"
 #include "net/ipv6/simple-udp.h"
+#include "net/ipv6/uipbuf.h"
 
 #include "sys/log.h"
 #define LOG_MODULE "App"
@@ -56,7 +57,7 @@ udp_rx_callback(struct simple_udp_connection *c,
 {
   LOG_INFO("Received request '%.*s' from ", datalen, (char *) data);
   LOG_INFO_6ADDR(sender_addr);
-  LOG_INFO_("\n");
+  LOG_INFO_(" RSSI:%d\n", (int16_t)uipbuf_get_attr(UIPBUF_ATTR_RSSI));
 #if WITH_SERVER_REPLY
   /* send back the same string to the client as an echo reply */
   LOG_INFO("Sending response.\n");

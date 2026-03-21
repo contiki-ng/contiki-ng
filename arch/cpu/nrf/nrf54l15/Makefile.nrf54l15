@@ -223,6 +223,7 @@ CONTIKI_CPU_SOURCEFILES += nrf_802154_platform_hp_timer.c
 CONTIKI_CPU_SOURCEFILES += nrf_802154_platform_sl_lptimer.c
 CONTIKI_CPU_SOURCEFILES += nrf_802154_platform_timestamper.c
 CONTIKI_CPU_SOURCEFILES += nrf_802154_platform_misc.c
+CONTIKI_CPU_SOURCEFILES += nrf54l15-radio-debug.c
 CONTIKI_SOURCEFILES += nrf-ieee-driver-nrf54l15.c
 CONTIKI_SOURCEFILES += nrf_802154_platform_clock.c
 CONTIKI_SOURCEFILES += nrf_802154_platform_irq.c
@@ -232,6 +233,7 @@ CONTIKI_SOURCEFILES += nrf_802154_platform_hp_timer.c
 CONTIKI_SOURCEFILES += nrf_802154_platform_sl_lptimer.c
 CONTIKI_SOURCEFILES += nrf_802154_platform_timestamper.c
 CONTIKI_SOURCEFILES += nrf_802154_platform_misc.c
+CONTIKI_SOURCEFILES += nrf54l15-radio-debug.c
 endif
 
 # -- nrf_802154 driver core sources (from driver/src/) --

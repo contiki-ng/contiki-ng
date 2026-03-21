@@ -3,6 +3,7 @@
 #include "random.h"
 #include "net/netstack.h"
 #include "net/ipv6/simple-udp.h"
+#include "net/ipv6/uipbuf.h"
 #include <stdint.h>
 #include <inttypes.h>
 
@@ -38,7 +39,7 @@ udp_rx_callback(struct simple_udp_connection *c,
 #if LLSEC802154_CONF_ENABLED
   LOG_INFO_(" LLSEC LV:%d", uipbuf_get_attr(UIPBUF_ATTR_LLSEC_LEVEL));
 #endif
-  LOG_INFO_("\n");
+  LOG_INFO_(" RSSI:%d\n", (int16_t)uipbuf_get_attr(UIPBUF_ATTR_RSSI));
   rx_count++;
 }
 /*---------------------------------------------------------------------------*/
