@@ -42,14 +42,26 @@ ignore_spurious_irq(IRQn_Type irqn)
   __ISB();
 }
 
+__attribute__((weak)) void
+platform_init_board(void)
+{
+}
+
+__attribute__((weak)) void
+platform_init_board_stage_two(void)
+{
+}
+
 void
 platform_init_stage_one(void)
 {
+  platform_init_board();
 }
 
 void
 platform_init_stage_two(void)
 {
+  platform_init_board_stage_two();
   serial_line_init();
 }
 
