@@ -89,6 +89,8 @@ feed_csprng(void)
 void
 platform_init_stage_two(void)
 {
+  lpm_init();
+
   button_hal_init();
 
   /* There are two images of everything when building with
