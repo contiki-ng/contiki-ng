@@ -2,8 +2,13 @@
 #include "region_defs.h"
 #include "spu.h"
 
+#include "sys/log.h"
+
 #include <arm_cmse.h>
 #include <nrfx.h>
+
+#define LOG_MODULE "tz-spu"
+#define LOG_LEVEL  LOG_LEVEL_INFO
 
 #define SCB_AIRCR_WRITE_MASK (0x5FAUL << SCB_AIRCR_VECTKEY_Pos)
 #define MPC_OVERRIDE_LAST_INDEX 4u
@@ -396,4 +401,35 @@ uint32_t
 tfm_spm_hal_get_ns_entry_point(void)
 {
   return *((uint32_t *)(NS_CODE_START + 4u));
+}
+
+/*---------------------------------------------------------------------------*/
+/* SPU violation diagnostics.
+ *
+ * Persist the violation type across the soft-reset triggered by the SPU IRQ
+ * handler so the next boot can log what happened. nRF54L15 has multiple SPU
+ * instances; we OR together the per-instance event bits.
+ */
+#define SPU_VIOLATION_MAGIC 0x5BADACCEUL
+
+struct spu_violation_info {
+  uint32_t magic;
+  uint32_t periphaccerr;
+  uint32_t memaccerr;
+};
+
+__attribute__((section(".noinit"))) static volatile struct spu_violation_info
+  spu_violation_info;
+
+void
+spu_report_violation(void)
+{
+  if(spu_violation_info.magic != SPU_VIOLATION_MAGIC) {
+    return;
+  }
+  spu_violation_info.magic = 0;
+
+  LOG_WARN("Reboot caused by SPU violation:%s%s\n",
+           spu_violation_info.periphaccerr ? " PERIPHACCERR" : "",
+           spu_violation_info.memaccerr ? " MEMACCERR" : "");
 }

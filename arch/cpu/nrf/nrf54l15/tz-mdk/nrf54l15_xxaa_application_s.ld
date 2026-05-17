@@ -63,10 +63,12 @@ SECTIONS
 
     . = ALIGN(4);
     __etext = .;
+    __data_load_start = __etext;
 
     .data : AT (__etext)
     {
         __data_start__ = .;
+        __data_start = .;
         *(vtable)
         *(.data*)
 
@@ -90,7 +92,19 @@ SECTIONS
         KEEP(*(.jcr*))
         . = ALIGN(4);
         __data_end__ = .;
+        __data_end = .;
     } > RAM
+
+    /* nrfx 3.12.1 startup also copies these sections — keep them empty. */
+    __sdata_load_start = __data_load_start + (__data_end - __data_start);
+    __sdata_start      = __data_end;
+    __sdata_end        = __sdata_start;
+    __tdata_load_start = __sdata_load_start;
+    __tdata_start      = __sdata_end;
+    __tdata_end        = __tdata_start;
+    __fast_load_start  = __tdata_load_start;
+    __fast_start       = __tdata_end;
+    __fast_end         = __fast_start;
 
     .bss :
     {

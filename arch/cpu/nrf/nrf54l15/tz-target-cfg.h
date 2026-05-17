@@ -41,4 +41,6 @@ enum tfm_plat_err_t init_debug(void);
 enum tfm_plat_err_t nvic_interrupt_target_state_cfg(void);
 enum tfm_plat_err_t nvic_interrupt_enable(void);
 
+void spu_report_violation(void);
+
 #endif /* NRF54L15_TZ_TARGET_CFG_H_ */

@@ -3,7 +3,7 @@ CONTIKI_PROJECT = normal-world-example
 all: $(CONTIKI_PROJECT)
 
 PLATFORMS_ONLY += nrf
-BOARDS_ONLY = nrf54l15/xiao
+BOARDS_ONLY = nrf54l15/xiao nrf54l15/dk
 
 TARGET ?= nrf
 BOARD ?= nrf54l15/xiao
