@@ -55,11 +55,11 @@ route_irq_non_secure(IRQn_Type irqn)
   tz_debug_last_route_itns_word = word;
   tz_debug_last_route_target_state = NVIC_SetTargetState(irqn);
   /*
-   * Use the TrustZone-specific CMSIS helpers so we touch the non-secure NVIC
-   * bank explicitly from secure state.
+   * Clear any stale pending state in the NS bank, but do NOT enable the IRQ
+   * here: VTOR_NS is still zero at this point in setup(). The NS firmware
+   * must enable its own IRQs after it has installed its vector table.
    */
   TZ_NVIC_ClearPendingIRQ_NS(irqn);
-  TZ_NVIC_EnableIRQ_NS(irqn);
   tz_debug_last_route_itns_value = NVIC->ITNS[word];
   tz_debug_last_route_iser_ns = TZ_NVIC_GetEnableIRQ_NS(irqn);
 }
@@ -255,7 +255,6 @@ nvic_interrupt_target_state_cfg(void)
   for(size_t i = 0; i < sizeof(NVIC->ITNS) / sizeof(NVIC->ITNS[0]); i++) {
     NVIC->ITNS[i] = 0u;
   }
-
   keep_irq_secure(SPU00_IRQn);
   keep_irq_secure(SPU10_IRQn);
   keep_irq_secure(SPU20_IRQn);
@@ -312,12 +311,14 @@ sau_and_idau_cfg(void)
 void
 non_secure_configuration(void)
 {
+  /* Align with the nrf5340 ordering: tz-secure.c::setup() drives
+   * system_reset_cfg/nvic_*_cfg/nvic_interrupt_enable AFTER the
+   * cmse_check_address_range probe. Calling them here as well caused the
+   * SPU IRQs to be enabled twice, with the second enable potentially
+   * latching a stale pending bit that fired before VTOR_NS was set up. */
   (void)spu_init_cfg();
   (void)nrf_mpc_init_cfg();
   (void)spu_periph_init_cfg();
-  (void)system_reset_cfg();
-  (void)init_debug();
-  (void)nvic_interrupt_enable();
 }
 
 void
