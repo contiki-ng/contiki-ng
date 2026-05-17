@@ -26,6 +26,8 @@
 
 #define GRTC_IRQ_PRIORITY      6
 #define GRTC_TICK_FREQUENCY_HZ 1000000UL
+#define GRTC_WORKAROUND_WAKETIME 2U
+#define GRTC_WORKAROUND_TIMEOUT  2U
 
 #if CLOCK_SIZE != 4
 #error CLOCK_CONF_SIZE must be 4 (32 bit)
@@ -44,6 +46,16 @@ static volatile uint64_t last_tick_syscounter;
 static volatile uint32_t recover_count;
 
 static void schedule_next_tick(void);
+/*---------------------------------------------------------------------------*/
+static inline void
+grtc_apply_sleep_workaround(void)
+{
+  /* Work around nRF54L15 GRTC missed compare events when TIMEOUT < WAKETIME.
+   * Keep the SYSCOUNTER awake long enough that near-future wakeups are not
+   * scheduled in the past or too close to the next LFCLK edge. */
+  NRF_GRTC->WAKETIME = GRTC_WORKAROUND_WAKETIME;
+  NRF_GRTC->TIMEOUT = GRTC_WORKAROUND_TIMEOUT;
+}
 /*---------------------------------------------------------------------------*/
 static inline uint64_t
 grtc_syscounter_read_active(uint8_t index)
@@ -131,6 +143,7 @@ clock_init(void)
     }
   }
 
+  grtc_apply_sleep_workaround();
   nrfx_grtc_active_request_set(true);
   is_initialized = true;
   init_error_code = NRFX_SUCCESS;
@@ -596,6 +609,7 @@ clock_init(void)
     }
   }
 
+  grtc_apply_sleep_workaround();
   wait_for_syscounter_ready();
   nrfx_grtc_active_request_set(true);
 

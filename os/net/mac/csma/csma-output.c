@@ -426,6 +426,14 @@ packet_sent(struct neighbor_queue *n,
             packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
             status, n->transmissions, n->collisions);
 
+  if(status != MAC_TX_OK && status != MAC_TX_DEFERRED) {
+    LOG_WARN("final TX failure to ");
+    LOG_WARN_LLADDR(&n->addr);
+    LOG_WARN_(", seqno %u, status %u, tx %u, coll %u\n",
+              packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
+              status, n->transmissions, n->collisions);
+  }
+
   switch(status) {
   case MAC_TX_OK:
     tx_ok(q, n, num_transmissions);
