@@ -42,6 +42,7 @@
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "sys/autostart.h"
+#include "sys/int-master.h"
 #include "tz-api.h"
 
 #include <arm_cmse.h>
@@ -70,11 +71,21 @@ static uint8_t serial_rxbuf_data[TZ_SERIAL_BUFSIZE];
 /*---------------------------------------------------------------------------*/
 process_event_t trustzone_init_event;
 /*---------------------------------------------------------------------------*/
+/*
+ * The serial RX ring buffer is shared between the secure-side UART ISR
+ * (tz_serial_input_handler) and the NS-thread drain (tz_serial_drain).
+ * The ringbuf implementation explicitly is not ISR-safe (see comments in
+ * os/lib/ringbuf.c), so each side disables interrupts around its
+ * ringbuf access. The critical sections are short — one byte each — so
+ * the IRQ latency impact is negligible.
+ */
 static int
 tz_serial_input_handler(unsigned char c)
 {
+  int_master_status_t s = int_master_read_and_disable();
   ringbuf_put(&serial_rxbuf, c);
   serial_rx_pending = true;
+  int_master_status_set(s);
   /* Wake the NS world so it calls tz_api_poll() to drain the buffer */
   tz_api_request_ns_poll();
   return 1;
@@ -83,15 +94,21 @@ tz_serial_input_handler(unsigned char c)
 static void
 tz_serial_drain(void)
 {
-  int c;
   if(!initialized || tz_api.serial_input == NULL) {
     return;
   }
   if(!serial_rx_pending) {
     return;
   }
-  serial_rx_pending = false;
-  while((c = ringbuf_get(&serial_rxbuf)) != -1) {
+  for(;;) {
+    int_master_status_t s = int_master_read_and_disable();
+    int c = ringbuf_get(&serial_rxbuf);
+    if(c == -1) {
+      serial_rx_pending = false;
+      int_master_status_set(s);
+      break;
+    }
+    int_master_status_set(s);
     tz_api.serial_input((unsigned char)c);
   }
 }

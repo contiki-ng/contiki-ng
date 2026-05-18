@@ -71,16 +71,6 @@ grtc_syscounter_read_active(uint8_t index)
   return ((uint64_t)(hi & GRTC_SYSCOUNTER_SYSCOUNTERH_VALUE_Msk) << 32) | lo;
 }
 
-static inline void
-grtc_cc_set_absolute(uint8_t channel, uint64_t target)
-{
-  NRF_GRTC->EVENTS_COMPARE[channel] = 0;
-  NRF_GRTC->CC[channel].CCEN = GRTC_CC_CCEN_ACTIVE_Disable;
-  NRF_GRTC->CC[channel].CCL = (uint32_t)target;
-  NRF_GRTC->CC[channel].CCH = (uint32_t)(target >> 32) & GRTC_CC_CCH_CCH_Msk;
-  NRF_GRTC->CC[channel].CCEN = GRTC_CC_CCEN_ACTIVE_Enable;
-}
-
 static void
 clock_update(void)
 {

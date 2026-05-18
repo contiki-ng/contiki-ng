@@ -154,9 +154,13 @@ platform_main_loop(void)
     return;
   }
 #if defined(NRF54L15_XXAA)
-  LOG_INFO("nRF54L15 IRQ route: ITNS7=0x%08" PRIx32 " NS_EN_GRTC1=%" PRIu32 "\n",
-           NVIC->ITNS[7],
-           TZ_NVIC_GetEnableIRQ_NS(GRTC_1_IRQn));
+  {
+    const uint32_t grtc1_itns_word = (uint32_t)GRTC_1_IRQn >> 5;
+    LOG_INFO("nRF54L15 IRQ route: ITNS[%" PRIu32 "]=0x%08" PRIx32
+             " NS_EN_GRTC1=%" PRIu32 "\n",
+             grtc1_itns_word, NVIC->ITNS[grtc1_itns_word],
+             TZ_NVIC_GetEnableIRQ_NS(GRTC_1_IRQn));
+  }
 #endif
   LOG_INFO("Jumping to non-secure reset handler\n");
 

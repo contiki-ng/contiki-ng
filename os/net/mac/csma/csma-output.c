@@ -345,6 +345,14 @@ tx_done(int status, struct packet_queue *q, struct neighbor_queue *n)
               packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
               status, n->transmissions, n->collisions);
 
+  if(status != MAC_TX_OK && status != MAC_TX_DEFERRED) {
+    LOG_WARN("final TX failure to ");
+    LOG_WARN_LLADDR(&n->addr);
+    LOG_WARN_(", seqno %u, status %u, tx %u, coll %u\n",
+              packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
+              status, n->transmissions, n->collisions);
+  }
+
   free_packet(n, q, status);
   mac_call_sent_callback(sent, cptr, status, ntx);
 }
@@ -425,14 +433,6 @@ packet_sent(struct neighbor_queue *n,
   LOG_INFO_(", seqno %u, status %u, tx %u, coll %u\n",
             packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
             status, n->transmissions, n->collisions);
-
-  if(status != MAC_TX_OK && status != MAC_TX_DEFERRED) {
-    LOG_WARN("final TX failure to ");
-    LOG_WARN_LLADDR(&n->addr);
-    LOG_WARN_(", seqno %u, status %u, tx %u, coll %u\n",
-              packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),
-              status, n->transmissions, n->collisions);
-  }
 
   switch(status) {
   case MAC_TX_OK:
