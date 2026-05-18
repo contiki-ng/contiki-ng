@@ -362,6 +362,7 @@ fault_print_and_reset(char f1, char f2)
   NVIC_SystemReset();
 }
 /*---------------------------------------------------------------------------*/
+#if NRF_HARDFAULT_HANDLER_EXTENDED
 static void
 BusFault_c_handler(uint32_t *p_stack_address)
 {
@@ -449,6 +450,7 @@ BusFault_Handler(void)
     : : "X" (BusFault_c_handler)
   );
 }
+#endif /* NRF_HARDFAULT_HANDLER_EXTENDED */
 /*---------------------------------------------------------------------------*/
 void UsageFault_Handler(void)     { fault_print_and_reset('U', 'F'); }
 void MemoryManagement_Handler(void) { fault_print_and_reset('M', 'M'); }

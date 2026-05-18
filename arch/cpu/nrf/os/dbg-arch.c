@@ -52,8 +52,12 @@
 #include "usb.h"
 /*---------------------------------------------------------------------------*/
 #if PLATFORM_DBG_CONF_USB
-#define write_byte(b) usb_write((uint8_t *)&b, sizeof(uint8_t))
-#define flush()       usb_flush()
+static inline void
+write_byte(uint8_t b)
+{
+  usb_write(&b, sizeof(b));
+}
+#define flush() usb_flush()
 #else /* PLATFORM_DBG_CONF_USB */
 #define write_byte(b) uarte_write(b)
 #define flush()
