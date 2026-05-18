@@ -87,6 +87,9 @@ tz_serial_drain(void)
   if(!initialized || tz_api.serial_input == NULL) {
     return;
   }
+  if(!serial_rx_pending) {
+    return;
+  }
   serial_rx_pending = false;
   while((c = ringbuf_get(&serial_rxbuf)) != -1) {
     tz_api.serial_input((unsigned char)c);
@@ -109,6 +112,14 @@ tz_api_init(struct tz_api *apip)
     return false;
   }
 
+  /*
+   * Sanitize each NS callback through cmse_nsfptr_create(): this clears
+   * the LSB so subsequent BLXNS instructions see a valid non-secure
+   * function pointer. cmse_is_nsfptr() then verifies the sanitized
+   * pointer is recognized as non-secure (false would mean the original
+   * pointer was secure-tagged, which a compromised NS caller should
+   * not be able to pass in).
+   */
   ns_poll_t poll_fn = cmse_nsfptr_create(apip->request_poll);
   if(!cmse_is_nsfptr(poll_fn)) {
     return false;
@@ -119,6 +130,10 @@ tz_api_init(struct tz_api *apip)
                               CMSE_NONSECURE) == NULL) {
     return false;
   }
+  ns_process_pd_t process_pd_fn = cmse_nsfptr_create(apip->process_packet_data);
+  if(!cmse_is_nsfptr(process_pd_fn)) {
+    return false;
+  }
 
   if(cmse_check_address_range(apip->packet_data,
                               apip->packet_data_size,
@@ -126,20 +141,25 @@ tz_api_init(struct tz_api *apip)
     return false;
   }
 
+  ns_serial_input_t serial_input_fn = NULL;
   if(apip->serial_input != NULL) {
     if(cmse_check_address_range(apip->serial_input,
                                 sizeof(apip->serial_input),
                                 CMSE_NONSECURE) == NULL) {
       return false;
     }
+    serial_input_fn = cmse_nsfptr_create(apip->serial_input);
+    if(!cmse_is_nsfptr(serial_input_fn)) {
+      return false;
+    }
   }
 
   trustzone_init_event = process_alloc_event();
   tz_api.request_poll = poll_fn;
-  tz_api.process_packet_data = apip->process_packet_data;
+  tz_api.process_packet_data = process_pd_fn;
   tz_api.packet_data = apip->packet_data;
   tz_api.packet_data_size = apip->packet_data_size;
-  tz_api.serial_input = apip->serial_input;
+  tz_api.serial_input = serial_input_fn;
 
   ringbuf_init(&serial_rxbuf, serial_rxbuf_data, sizeof(serial_rxbuf_data));
 

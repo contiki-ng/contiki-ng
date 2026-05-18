@@ -434,3 +434,29 @@ spu_report_violation(void)
            spu_violation_info.periphaccerr ? " PERIPHACCERR" : "",
            spu_violation_info.memaccerr ? " MEMACCERR" : "");
 }
+
+/*
+ * Per-instance SPU and MPC IRQs all funnel here. We deliberately do not
+ * log from this context: UARTE TX would block waiting for an ENDTX ISR
+ * that cannot run while the violation handler holds the CPU. Instead we
+ * stash the event bits in .noinit so the next boot's spu_report_violation()
+ * can print what happened, then trigger a synchronous reset.
+ */
+static void
+spu_violation_handler(void)
+{
+  uint32_t events = spu_events_get();
+
+  spu_violation_info.periphaccerr = (events & SPU_EVENT_PERIPHACCERR) ? 1u : 0u;
+  spu_violation_info.memaccerr    = (events & MPC_EVENT_MEMACCERR)    ? 1u : 0u;
+  spu_violation_info.magic        = SPU_VIOLATION_MAGIC;
+
+  spu_clear_events();
+  NVIC_SystemReset();
+}
+
+void SPU00_IRQHandler(void) { spu_violation_handler(); }
+void SPU10_IRQHandler(void) { spu_violation_handler(); }
+void SPU20_IRQHandler(void) { spu_violation_handler(); }
+void SPU30_IRQHandler(void) { spu_violation_handler(); }
+void MPC00_IRQHandler(void) { spu_violation_handler(); }

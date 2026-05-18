@@ -450,6 +450,8 @@ BusFault_Handler(void)
     : : "X" (BusFault_c_handler)
   );
 }
+#else /* NRF_HARDFAULT_HANDLER_EXTENDED */
+void BusFault_Handler(void)       { fault_print_and_reset('B', 'F'); }
 #endif /* NRF_HARDFAULT_HANDLER_EXTENDED */
 /*---------------------------------------------------------------------------*/
 void UsageFault_Handler(void)     { fault_print_and_reset('U', 'F'); }
