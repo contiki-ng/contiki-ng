@@ -219,18 +219,18 @@ bool tz_api_request_ns_poll(void);
  */
 void tz_api_process_packet_data(void);
 
-int tz_api_radio_prepare(const void *payload, unsigned short payload_len);
-int tz_api_radio_transmit(unsigned short transmit_len);
-int tz_api_radio_send(const void *payload, unsigned short payload_len);
-int tz_api_radio_read(void *buf, unsigned short buf_len);
-int tz_api_radio_channel_clear(void);
-int tz_api_radio_receiving_packet(void);
-int tz_api_radio_pending_packet(void);
-int tz_api_radio_set_power_mode(bool on);
-radio_result_t tz_api_radio_get_value(radio_param_t param, radio_value_t *value);
-radio_result_t tz_api_radio_set_value(radio_param_t param, radio_value_t value);
-radio_result_t tz_api_radio_get_object(radio_param_t param, void *dest, size_t size);
-radio_result_t tz_api_radio_set_object(radio_param_t param, const void *src, size_t size);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_prepare(const void *payload, unsigned short payload_len);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_transmit(unsigned short transmit_len);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_send(const void *payload, unsigned short payload_len);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_read(void *buf, unsigned short buf_len);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_channel_clear(void);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_receiving_packet(void);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_pending_packet(void);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_set_power_mode(bool on);
+CC_TRUSTZONE_SECURE_CALL radio_result_t tz_api_radio_get_value(radio_param_t param, radio_value_t *value);
+CC_TRUSTZONE_SECURE_CALL radio_result_t tz_api_radio_set_value(radio_param_t param, radio_value_t value);
+CC_TRUSTZONE_SECURE_CALL radio_result_t tz_api_radio_get_object(radio_param_t param, void *dest, size_t size);
+CC_TRUSTZONE_SECURE_CALL radio_result_t tz_api_radio_set_object(radio_param_t param, const void *src, size_t size);
 
 #endif /* !TZ_API_H */
 /** @} */

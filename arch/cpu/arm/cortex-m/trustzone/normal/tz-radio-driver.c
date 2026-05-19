@@ -35,6 +35,11 @@
 #include <string.h>
 
 /*---------------------------------------------------------------------------*/
+/* tz_api_radio_get_object returns a 64-bit (8-byte) device address; we
+ * take the last LINKADDR_SIZE bytes of it. If LINKADDR_SIZE ever grew
+ * past 8 the subscript would underflow, so guard at compile time. */
+_Static_assert(LINKADDR_SIZE <= 8, "LINKADDR_SIZE must fit in a 64-bit device address");
+
 static int
 init(void)
 {

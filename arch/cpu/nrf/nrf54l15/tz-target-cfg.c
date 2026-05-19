@@ -46,14 +46,13 @@ route_irq_non_secure(IRQn_Type irqn)
 {
   uint32_t irq_number = (uint32_t)irqn;
   uint32_t word = irq_number >> 5;
-  uint32_t mask = 1u << (irq_number & 31u);
 
   NVIC_DisableIRQ(irqn);
   NVIC_ClearPendingIRQ(irqn);
-  NVIC->ITNS[word] |= mask;
+  /* NVIC_SetTargetState writes NVIC->ITNS[word] |= 1<<(irq_number & 31). */
+  tz_debug_last_route_target_state = NVIC_SetTargetState(irqn);
   tz_debug_last_route_irq = irq_number;
   tz_debug_last_route_itns_word = word;
-  tz_debug_last_route_target_state = NVIC_SetTargetState(irqn);
   /*
    * Clear any stale pending state in the NS bank, but do NOT enable the IRQ
    * here: VTOR_NS is still zero at this point in setup(). The NS firmware
@@ -73,23 +72,37 @@ set_grtc_feature_security(nrf_spu_feature_t feature, uint8_t index, bool secure)
   nrf_spu_feature_lock_enable(spu, feature, index, 0);
 }
 
+/*
+ * GRTC security policy:
+ *   CC channels 0..2          → non-secure  (matches NRFX_GRTC_CONFIG_ALLOWED_CC_CHANNELS_MASK 0x07 on NS builds)
+ *   CC channels 3..5          → secure      (matches NRFX_GRTC_CONFIG_ALLOWED_CC_CHANNELS_MASK 0x38 on S builds)
+ *   Interrupt group 1         → non-secure  (drives the NS GRTC_1_IRQn line)
+ *   Other interrupt groups    → secure
+ *   SYSCOUNTER instance 1     → non-secure  (NS reads it without a TZ round-trip)
+ *   Other SYSCOUNTER          → secure
+ */
+#define GRTC_NS_CC_FIRST       0u
+#define GRTC_NS_CC_LAST        2u
+#define GRTC_NS_INTERRUPT_GROUP 1u
+#define GRTC_NS_SYSCOUNTER     1u
+
 static void
 configure_grtc_security_split(void)
 {
   for(uint8_t channel = 0; channel < NRF_SPU_FEATURE_GRTC_CC_COUNT; channel++) {
-    bool secure = !(channel <= 2u);
+    bool secure = !(channel >= GRTC_NS_CC_FIRST && channel <= GRTC_NS_CC_LAST);
 
     set_grtc_feature_security(NRF_SPU_FEATURE_GRTC_CC, channel, secure);
   }
 
   for(uint8_t group = 0; group < NRF_SPU_FEATURE_GRTC_INTERRUPT_COUNT; group++) {
-    bool secure = group != 1u;
+    bool secure = group != GRTC_NS_INTERRUPT_GROUP;
 
     set_grtc_feature_security(NRF_SPU_FEATURE_GRTC_INTERRUPT, group, secure);
   }
 
   for(uint8_t group = 0; group < GRTC_SYSCOUNTER_MaxCount; group++) {
-    bool secure = group != 1u;
+    bool secure = group != GRTC_NS_SYSCOUNTER;
 
     set_grtc_feature_security(NRF_SPU_FEATURE_GRTC_SYSCOUNTER, group, secure);
   }
@@ -317,7 +330,17 @@ non_secure_configuration(void)
    * SPU IRQs to be enabled twice, with the second enable potentially
    * latching a stale pending bit that fired before VTOR_NS was set up. */
   (void)spu_init_cfg();
-  (void)nrf_mpc_init_cfg();
+
+  /* nrf_mpc_init_cfg() returns TFM_PLAT_ERR_SYSTEM_ERR if the override
+   * table overflows (more region overrides requested than the hardware
+   * has slots). If that happens the MPC is partially programmed and
+   * the secure↔NS partition is not enforced — log loudly so it shows
+   * up before the cmse_check_address_range probe finds anomalies. */
+  enum tfm_plat_err_t mpc_err = nrf_mpc_init_cfg();
+  if(mpc_err != TFM_PLAT_ERR_SUCCESS) {
+    LOG_ERR("nrf_mpc_init_cfg failed: 0x%x\n", (unsigned)mpc_err);
+  }
+
   (void)spu_periph_init_cfg();
 }
 

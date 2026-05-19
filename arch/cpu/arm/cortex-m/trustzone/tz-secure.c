@@ -147,12 +147,6 @@ platform_main_loop(void)
     return;
   }
   LOG_INFO("Non-secure reset pointer valid\n");
-  LOG_INFO("Preparing interrupt and console handoff\n");
-  enum tfm_plat_err_t tfm_err = nvic_interrupt_target_state_cfg();
-  if(tfm_err != TFM_PLAT_ERR_SUCCESS) {
-    LOG_DBG("Interrupt state: 0x%x\n", tfm_err);
-    return;
-  }
 #if defined(NRF54L15_XXAA)
   {
     const uint32_t grtc1_itns_word = (uint32_t)GRTC_1_IRQn >> 5;

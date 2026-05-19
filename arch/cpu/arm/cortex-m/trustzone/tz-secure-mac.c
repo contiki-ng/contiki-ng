@@ -60,7 +60,10 @@ off(void)
 static int
 max_payload(void)
 {
-  return PACKETBUF_SIZE;
+  /* This MAC only forwards received frames to the normal world; outgoing
+   * frames are produced and framed in the NS image. Match nullmac and
+   * return 0 to signal "no usable payload size" on the secure side. */
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 static void

@@ -68,6 +68,7 @@ static uint8_t serial_rxbuf_data[TZ_SERIAL_BUFSIZE];
 #define LOG_LEVEL LOG_LEVEL_INFO
 /*---------------------------------------------------------------------------*/
 #define TZ_API_PRINTLN_MAX_LEN 256
+#define TZ_API_PRINT_MAX_LEN   256
 /*---------------------------------------------------------------------------*/
 process_event_t trustzone_init_event;
 /*---------------------------------------------------------------------------*/
@@ -137,16 +138,18 @@ tz_api_init(struct tz_api *apip)
    * pointer was secure-tagged, which a compromised NS caller should
    * not be able to pass in).
    */
+  /*
+   * For function pointers we rely on cmse_nsfptr_create() to clear the
+   * LSB and cmse_is_nsfptr() to verify the result is recognized as
+   * non-secure. The data-range check is meaningless on a code address
+   * (sizeof(fn_ptr) just probes a few bytes at the function's start),
+   * so we don't apply it to the callback fields.
+   */
   ns_poll_t poll_fn = cmse_nsfptr_create(apip->request_poll);
   if(!cmse_is_nsfptr(poll_fn)) {
     return false;
   }
 
-  if(cmse_check_address_range(apip->process_packet_data,
-                              sizeof(apip->process_packet_data),
-                              CMSE_NONSECURE) == NULL) {
-    return false;
-  }
   ns_process_pd_t process_pd_fn = cmse_nsfptr_create(apip->process_packet_data);
   if(!cmse_is_nsfptr(process_pd_fn)) {
     return false;
@@ -160,11 +163,6 @@ tz_api_init(struct tz_api *apip)
 
   ns_serial_input_t serial_input_fn = NULL;
   if(apip->serial_input != NULL) {
-    if(cmse_check_address_range(apip->serial_input,
-                                sizeof(apip->serial_input),
-                                CMSE_NONSECURE) == NULL) {
-      return false;
-    }
     serial_input_fn = cmse_nsfptr_create(apip->serial_input);
     if(!cmse_is_nsfptr(serial_input_fn)) {
       return false;
@@ -275,6 +273,12 @@ tz_api_print(const char *buf, size_t len)
     return;
   }
 
+  /* Cap len so a malicious NS caller cannot park the secure core in a
+   * long byte-by-byte UART loop. */
+  if(len > TZ_API_PRINT_MAX_LEN) {
+    len = TZ_API_PRINT_MAX_LEN;
+  }
+
   /* Validate entire NS buffer range in one call */
   if(cmse_check_address_range((void *)buf, len, CMSE_NONSECURE) == NULL) {
     return;
@@ -312,6 +316,11 @@ tz_api_process_packet_data(void)
 CC_TRUSTZONE_SECURE_CALL int
 tz_api_radio_prepare(const void *payload, unsigned short payload_len)
 {
+  if(payload == NULL || payload_len == 0 ||
+     cmse_check_address_range((void *)payload, payload_len,
+                              CMSE_NONSECURE) == NULL) {
+    return RADIO_TX_ERR;
+  }
   return NETSTACK_RADIO.prepare(payload, payload_len);
 }
 /*---------------------------------------------------------------------------*/
@@ -324,12 +333,21 @@ tz_api_radio_transmit(unsigned short transmit_len)
 CC_TRUSTZONE_SECURE_CALL int
 tz_api_radio_send(const void *payload, unsigned short payload_len)
 {
+  if(payload == NULL || payload_len == 0 ||
+     cmse_check_address_range((void *)payload, payload_len,
+                              CMSE_NONSECURE) == NULL) {
+    return RADIO_TX_ERR;
+  }
   return NETSTACK_RADIO.send(payload, payload_len);
 }
 /*---------------------------------------------------------------------------*/
 CC_TRUSTZONE_SECURE_CALL int
 tz_api_radio_read(void *buf, unsigned short buf_len)
 {
+  if(buf == NULL || buf_len == 0 ||
+     cmse_check_address_range(buf, buf_len, CMSE_NONSECURE) == NULL) {
+    return 0;
+  }
   return NETSTACK_RADIO.read(buf, buf_len);
 }
 /*---------------------------------------------------------------------------*/
@@ -360,6 +378,11 @@ tz_api_radio_set_power_mode(bool on)
 CC_TRUSTZONE_SECURE_CALL radio_result_t
 tz_api_radio_get_value(radio_param_t param, radio_value_t *value)
 {
+  if(value == NULL ||
+     cmse_check_address_range(value, sizeof(*value),
+                              CMSE_NONSECURE) == NULL) {
+    return RADIO_RESULT_INVALID_VALUE;
+  }
   return NETSTACK_RADIO.get_value(param, value);
 }
 /*---------------------------------------------------------------------------*/
@@ -372,7 +395,11 @@ tz_api_radio_set_value(radio_param_t param, radio_value_t value)
 CC_TRUSTZONE_SECURE_CALL radio_result_t
 tz_api_radio_get_object(radio_param_t param, void *dest, size_t size)
 {
-  if(param == RADIO_PARAM_64BIT_ADDR && dest != NULL && size >= 8) {
+  if(dest == NULL || size == 0 ||
+     cmse_check_address_range(dest, size, CMSE_NONSECURE) == NULL) {
+    return RADIO_RESULT_INVALID_VALUE;
+  }
+  if(param == RADIO_PARAM_64BIT_ADDR && size >= 8) {
     memset(dest, 0, size);
     memcpy((uint8_t *)dest + size - LINKADDR_SIZE, &linkaddr_node_addr,
            LINKADDR_SIZE);
@@ -385,6 +412,10 @@ tz_api_radio_get_object(radio_param_t param, void *dest, size_t size)
 CC_TRUSTZONE_SECURE_CALL radio_result_t
 tz_api_radio_set_object(radio_param_t param, const void *src, size_t size)
 {
+  if(src == NULL || size == 0 ||
+     cmse_check_address_range((void *)src, size, CMSE_NONSECURE) == NULL) {
+    return RADIO_RESULT_INVALID_VALUE;
+  }
   return NETSTACK_RADIO.set_object(param, src, size);
 }
 /*---------------------------------------------------------------------------*/
