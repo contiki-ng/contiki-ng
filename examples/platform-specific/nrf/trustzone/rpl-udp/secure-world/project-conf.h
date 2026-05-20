@@ -1,0 +1,9 @@
+#ifndef TZ_RPL_UDP_SECURE_PROJECT_CONF_H
+#define TZ_RPL_UDP_SECURE_PROJECT_CONF_H
+
+#include "../../secure-world/project-conf.h"
+
+#undef IEEE802154_CONF_DEFAULT_CHANNEL
+#define IEEE802154_CONF_DEFAULT_CHANNEL 20
+
+#endif /* TZ_RPL_UDP_SECURE_PROJECT_CONF_H */

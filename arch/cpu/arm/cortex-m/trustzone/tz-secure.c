@@ -43,6 +43,7 @@
 #include "tz-target-cfg.h"
 
 #include <arm_cmse.h>
+#include <inttypes.h>
 
 /*---------------------------------------------------------------------------*/
 #include "sys/log.h"
@@ -67,8 +68,11 @@ setup(void)
    * Set non-secure partition non-secure for both flash and RAM.
    * Set all peripherals non-secure.
    */
+  LOG_INFO("Configuring SAU/IDAU\n");
   sau_and_idau_cfg();
+  LOG_INFO("Configuring non-secure environment\n");
   non_secure_configuration();
+  LOG_INFO("Checking non-secure image permissions\n");
 
   /* Verify that the start of the vector table of the non-secure world
      now has non-secure permissions. */
@@ -110,7 +114,9 @@ setup(void)
       .control_ns.spsel = 0, /* Use MSP in Thread mode */
   };
 
+  LOG_INFO("Configuring non-secure CPU state\n");
   tz_nonsecure_state_setup(&spm_ns_conf);
+  LOG_INFO("Non-secure CPU state configured\n");
 
   return vtor_ns;
 }
@@ -140,9 +146,21 @@ platform_main_loop(void)
     LOG_ERR("Invalid non-secure pointer type\n");
     return;
   }
+  LOG_INFO("Non-secure reset pointer valid\n");
+#if defined(NRF54L15_XXAA)
+  {
+    const uint32_t grtc1_itns_word = (uint32_t)GRTC_1_IRQn >> 5;
+    LOG_INFO("nRF54L15 IRQ route: ITNS[%" PRIu32 "]=0x%08" PRIx32
+             " NS_EN_GRTC1=%" PRIu32 "\n",
+             grtc1_itns_word, NVIC->ITNS[grtc1_itns_word],
+             TZ_NVIC_GetEnableIRQ_NS(GRTC_1_IRQn));
+  }
+#endif
+  LOG_INFO("Jumping to non-secure reset handler\n");
 
-  LOG_INFO("Preparing to jump to the normal world\n");
+#if !defined(TZ_DEBUG_KEEP_SECURE_UART)
   spu_periph_config_uarte();
+#endif
 
   __DSB();
   __ISB();

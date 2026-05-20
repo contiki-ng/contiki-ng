@@ -1,2 +1,3 @@
 #define PLATFORM_CONF_PROVIDES_MAIN_LOOP 1
 #define PROCESS_CONF_POLL_REQUESTED tz_api_request_ns_poll
+#define NETSTACK_CONF_MAC tz_secure_mac_driver

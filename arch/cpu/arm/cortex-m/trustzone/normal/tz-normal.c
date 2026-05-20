@@ -40,6 +40,9 @@
  */
 
 #include "contiki.h"
+#include "dev/serial-line.h"
+#include "net/netstack.h"
+#include "net/packetbuf.h"
 #include "sys/platform.h"
 #include "trustzone/tz-api.h"
 #include "trustzone/normal/tz-normal.h"
@@ -47,9 +50,14 @@
 /*---------------------------------------------------------------------------*/
 #include "sys/log.h"
 #define LOG_MODULE "TZNormalWorld"
+#if defined(TZ_DEBUG_KEEP_SECURE_UART)
+#define LOG_LEVEL LOG_LEVEL_NONE
+#else
 #define LOG_LEVEL LOG_LEVEL_INFO
+#endif
 /*---------------------------------------------------------------------------*/
 static volatile bool is_poll_requested;
+static uint8_t packet_data[PACKETBUF_SIZE];
 
 PROCESS(tz_normal_process, "TZ normal process");
 /*---------------------------------------------------------------------------*/
@@ -66,12 +74,30 @@ tz_arch_init_ns_signal(void)
 {
 }
 /*---------------------------------------------------------------------------*/
+static bool
+process_packet_data(size_t packet_size)
+{
+  if(packet_size == 0 || packet_size > sizeof(packet_data)) {
+    return false;
+  }
+
+  packetbuf_clear();
+  packetbuf_copyfrom(packet_data, packet_size);
+  NETSTACK_MAC.input();
+
+  return true;
+}
+/*---------------------------------------------------------------------------*/
 static void
 init_tz_api(void)
 {
   struct tz_api tz_api = {0};
 
   tz_api.request_poll = tz_normal_request_poll;
+  tz_api.process_packet_data = process_packet_data;
+  tz_api.packet_data = packet_data;
+  tz_api.packet_data_size = sizeof(packet_data);
+  tz_api.serial_input = serial_line_input_byte;
   bool result = tz_api_init(&tz_api);
   LOG_INFO("Initialize TrustZone API: %s\n",
            result ? "SUCCESS" : "FAILURE");

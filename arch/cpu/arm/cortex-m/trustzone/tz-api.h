@@ -71,6 +71,9 @@
 #ifndef TZ_API_H
 #define TZ_API_H
 
+#include "contiki.h"
+#include "dev/radio.h"
+
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -137,9 +140,15 @@ void tz_arch_signal_ns(void);
 #endif /* TRUSTZONE_SECURE */
 
 typedef bool (*ns_poll_t)(void) CC_TRUSTZONE_NONSECURE_CALL;
+typedef bool (*ns_process_pd_t)(size_t len) CC_TRUSTZONE_NONSECURE_CALL;
+typedef int (*ns_serial_input_t)(unsigned char c) CC_TRUSTZONE_NONSECURE_CALL;
 
 struct tz_api {
   ns_poll_t request_poll;
+  ns_process_pd_t process_packet_data;
+  uint8_t *packet_data;
+  size_t packet_data_size;
+  ns_serial_input_t serial_input;
 };
 
 /**
@@ -181,6 +190,13 @@ bool tz_api_poll(void);
 void tz_api_println(const char *text, size_t len);
 
 /**
+ * \brief        Write raw bytes to the secure UART without prefix or newline.
+ * \param buf    Pointer to the data buffer in non-secure memory.
+ * \param len    Number of bytes to write.
+ */
+void tz_api_print(const char *buf, size_t len);
+
+/**
  * \brief        Mark the normal world as needing another poll cycle.
  *
  *               Called from the secure world (e.g. via the Contiki-NG
@@ -195,6 +211,26 @@ void tz_api_println(const char *text, size_t len);
  *               normal world.
  */
 bool tz_api_request_ns_poll(void);
+
+/**
+ * \brief        Deliver a received packet from secure world to normal world.
+ *
+ *               Only called from secure world.
+ */
+void tz_api_process_packet_data(void);
+
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_prepare(const void *payload, unsigned short payload_len);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_transmit(unsigned short transmit_len);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_send(const void *payload, unsigned short payload_len);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_read(void *buf, unsigned short buf_len);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_channel_clear(void);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_receiving_packet(void);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_pending_packet(void);
+CC_TRUSTZONE_SECURE_CALL int tz_api_radio_set_power_mode(bool on);
+CC_TRUSTZONE_SECURE_CALL radio_result_t tz_api_radio_get_value(radio_param_t param, radio_value_t *value);
+CC_TRUSTZONE_SECURE_CALL radio_result_t tz_api_radio_set_value(radio_param_t param, radio_value_t value);
+CC_TRUSTZONE_SECURE_CALL radio_result_t tz_api_radio_get_object(radio_param_t param, void *dest, size_t size);
+CC_TRUSTZONE_SECURE_CALL radio_result_t tz_api_radio_set_object(radio_param_t param, const void *src, size_t size);
 
 #endif /* !TZ_API_H */
 /** @} */

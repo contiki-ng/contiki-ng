@@ -47,23 +47,65 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 
+#include "lib/dbg-io/dbg.h"
 #include "uarte-arch.h"
 #include "usb.h"
 /*---------------------------------------------------------------------------*/
 #if PLATFORM_DBG_CONF_USB
-#define write_byte(b) usb_write((uint8_t *)&b, sizeof(uint8_t))
-#define flush()       usb_flush()
+static inline void
+write_byte(uint8_t b)
+{
+  usb_write(&b, sizeof(b));
+}
+#define flush() usb_flush()
 #else /* PLATFORM_DBG_CONF_USB */
 #define write_byte(b) uarte_write(b)
 #define flush()
 #endif /* PLATFORM_DBG_CONF_USB */
 /*---------------------------------------------------------------------------*/
+#define ANSI_ESCAPE "\033["
+#define ANSI_RESET  ANSI_ESCAPE "0m"
+#define ANSI_CYAN   ANSI_ESCAPE "36m"
+#define ANSI_GREEN  ANSI_ESCAPE "32m"
+/*---------------------------------------------------------------------------*/
+static void
+write_string_raw(const char *s)
+{
+  while(s != NULL && *s != '\0') {
+    write_byte(*s++);
+  }
+}
+/*---------------------------------------------------------------------------*/
 #if TRUSTZONE_NONSECURE
 #include "trustzone/tz-api.h"
+#include "sys/ctimer.h"
 
 #define DBG_BUF_SIZE 256
 static char dbg_buf[DBG_BUF_SIZE];
 static uint16_t dbg_pos;
+static struct ctimer dbg_flush_timer;
+/*---------------------------------------------------------------------------*/
+static void
+dbg_flush(void)
+{
+  if(dbg_pos > 0) {
+    tz_api_print(dbg_buf, dbg_pos);
+    dbg_pos = 0;
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+dbg_flush_callback(void *ptr)
+{
+  dbg_flush();
+}
+/*---------------------------------------------------------------------------*/
+dbg_output_context_t
+dbg_output_context_swap(dbg_output_context_t ctx)
+{
+  (void)ctx;
+  return DBG_OUTPUT_CONTEXT_DEFAULT;
+}
 /*---------------------------------------------------------------------------*/
 int
 dbg_putchar(int c)
@@ -73,24 +115,67 @@ dbg_putchar(int c)
   }
 
   if(c == '\n' || dbg_pos >= DBG_BUF_SIZE - 1) {
-    /* Strip the trailing newline; tz_api_println adds one. */
-    uint16_t len = (dbg_pos > 0 && dbg_buf[dbg_pos - 1] == '\n')
-                   ? dbg_pos - 1 : dbg_pos;
-    dbg_buf[len] = '\0';
-    tz_api_println(dbg_buf, len);
-    dbg_pos = 0;
+    ctimer_stop(&dbg_flush_timer);
+    dbg_flush();
+  } else if(dbg_pos == 1) {
+    /* First char in buffer — start a short flush timer */
+    ctimer_set(&dbg_flush_timer, CLOCK_SECOND / 64, dbg_flush_callback, NULL);
   }
 
   return c;
 }
 #else
+static bool line_start = true;
+static dbg_output_context_t output_context = DBG_OUTPUT_CONTEXT_DEFAULT;
+/*---------------------------------------------------------------------------*/
+static const char *
+context_color(dbg_output_context_t ctx)
+{
+#if defined(TRUSTZONE_SECURE)
+  switch(ctx) {
+  case DBG_OUTPUT_CONTEXT_NONSECURE:
+    return ANSI_GREEN;
+  case DBG_OUTPUT_CONTEXT_DEFAULT:
+  default:
+    return ANSI_CYAN;
+  }
+#else
+  (void)ctx;
+  return NULL;
+#endif
+}
+/*---------------------------------------------------------------------------*/
+dbg_output_context_t
+dbg_output_context_swap(dbg_output_context_t ctx)
+{
+  dbg_output_context_t previous = output_context;
+  output_context = ctx;
+  return previous;
+}
+/*---------------------------------------------------------------------------*/
 int
 dbg_putchar(int c)
 {
+  const char *color = context_color(output_context);
+
+  if(line_start && color != NULL && c != '\n') {
+    write_string_raw(color);
+    line_start = false;
+  }
+
+  if(c == '\n') {
+    if(color != NULL) {
+      write_string_raw(ANSI_RESET);
+    }
+    write_byte('\r');
+    line_start = true;
+  }
   write_byte(c);
 
   if(c == '\n') {
     flush();
+  } else {
+    line_start = false;
   }
 
   return c;

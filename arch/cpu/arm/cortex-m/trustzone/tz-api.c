@@ -37,23 +37,82 @@
  */
 
 #include "contiki.h"
+#include "lib/dbg-io/dbg.h"
+#include "net/linkaddr.h"
+#include "net/netstack.h"
+#include "net/packetbuf.h"
 #include "sys/autostart.h"
+#include "sys/int-master.h"
 #include "tz-api.h"
 
 #include <arm_cmse.h>
 #include <stdarg.h>
 #include <string.h>
 
+#include "lib/ringbuf.h"
+
 static struct tz_api tz_api;
 static bool initialized;
 static volatile bool ns_poll_pending;
+static volatile bool serial_rx_pending;
+
+/*---------------------------------------------------------------------------*/
+/* Secure-side ring buffer for serial RX bytes from UART ISR */
+#define TZ_SERIAL_BUFSIZE 128
+static struct ringbuf serial_rxbuf;
+static uint8_t serial_rxbuf_data[TZ_SERIAL_BUFSIZE];
 
 /*---------------------------------------------------------------------------*/
 #include "sys/log.h"
 #define LOG_MODULE "TZAPI"
 #define LOG_LEVEL LOG_LEVEL_INFO
 /*---------------------------------------------------------------------------*/
+#define TZ_API_PRINTLN_MAX_LEN 256
+#define TZ_API_PRINT_MAX_LEN   256
+/*---------------------------------------------------------------------------*/
 process_event_t trustzone_init_event;
+/*---------------------------------------------------------------------------*/
+/*
+ * The serial RX ring buffer is shared between the secure-side UART ISR
+ * (tz_serial_input_handler) and the NS-thread drain (tz_serial_drain).
+ * The ringbuf implementation explicitly is not ISR-safe (see comments in
+ * os/lib/ringbuf.c), so each side disables interrupts around its
+ * ringbuf access. The critical sections are short — one byte each — so
+ * the IRQ latency impact is negligible.
+ */
+static int
+tz_serial_input_handler(unsigned char c)
+{
+  int_master_status_t s = int_master_read_and_disable();
+  ringbuf_put(&serial_rxbuf, c);
+  serial_rx_pending = true;
+  int_master_status_set(s);
+  /* Wake the NS world so it calls tz_api_poll() to drain the buffer */
+  tz_api_request_ns_poll();
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+static void
+tz_serial_drain(void)
+{
+  if(!initialized || tz_api.serial_input == NULL) {
+    return;
+  }
+  if(!serial_rx_pending) {
+    return;
+  }
+  for(;;) {
+    int_master_status_t s = int_master_read_and_disable();
+    int c = ringbuf_get(&serial_rxbuf);
+    if(c == -1) {
+      serial_rx_pending = false;
+      int_master_status_set(s);
+      break;
+    }
+    int_master_status_set(s);
+    tz_api.serial_input((unsigned char)c);
+  }
+}
 /*---------------------------------------------------------------------------*/
 CC_TRUSTZONE_SECURE_CALL bool
 tz_api_init(struct tz_api *apip)
@@ -63,19 +122,71 @@ tz_api_init(struct tz_api *apip)
   }
 
   apip = cmse_check_address_range(apip, sizeof(*apip), CMSE_NONSECURE);
-  if(apip == NULL || apip->request_poll == NULL) {
+  if(apip == NULL ||
+     apip->request_poll == NULL ||
+     apip->process_packet_data == NULL ||
+     apip->packet_data == NULL ||
+     apip->packet_data_size < 2) {
     return false;
   }
 
+  /*
+   * Sanitize each NS callback through cmse_nsfptr_create(): this clears
+   * the LSB so subsequent BLXNS instructions see a valid non-secure
+   * function pointer. cmse_is_nsfptr() then verifies the sanitized
+   * pointer is recognized as non-secure (false would mean the original
+   * pointer was secure-tagged, which a compromised NS caller should
+   * not be able to pass in).
+   */
+  /*
+   * For function pointers we rely on cmse_nsfptr_create() to clear the
+   * LSB and cmse_is_nsfptr() to verify the result is recognized as
+   * non-secure. The data-range check is meaningless on a code address
+   * (sizeof(fn_ptr) just probes a few bytes at the function's start),
+   * so we don't apply it to the callback fields.
+   */
   ns_poll_t poll_fn = cmse_nsfptr_create(apip->request_poll);
   if(!cmse_is_nsfptr(poll_fn)) {
     return false;
   }
 
+  ns_process_pd_t process_pd_fn = cmse_nsfptr_create(apip->process_packet_data);
+  if(!cmse_is_nsfptr(process_pd_fn)) {
+    return false;
+  }
+
+  if(cmse_check_address_range(apip->packet_data,
+                              apip->packet_data_size,
+                              CMSE_NONSECURE) == NULL) {
+    return false;
+  }
+
+  ns_serial_input_t serial_input_fn = NULL;
+  if(apip->serial_input != NULL) {
+    serial_input_fn = cmse_nsfptr_create(apip->serial_input);
+    if(!cmse_is_nsfptr(serial_input_fn)) {
+      return false;
+    }
+  }
+
   trustzone_init_event = process_alloc_event();
   tz_api.request_poll = poll_fn;
+  tz_api.process_packet_data = process_pd_fn;
+  tz_api.packet_data = apip->packet_data;
+  tz_api.packet_data_size = apip->packet_data_size;
+  tz_api.serial_input = serial_input_fn;
+
+  ringbuf_init(&serial_rxbuf, serial_rxbuf_data, sizeof(serial_rxbuf_data));
 
   initialized = true;
+
+  /* Hook UART RX to forward bytes to NS via the secure ring buffer */
+#if NRF_HAS_UARTE
+  if(tz_api.serial_input != NULL) {
+    extern void uarte_set_input(int (*input)(unsigned char c));
+    uarte_set_input(tz_serial_input_handler);
+  }
+#endif
 
   for(size_t i = 0; autostart_processes[i] != NULL; i++) {
     process_post(autostart_processes[i], trustzone_init_event, NULL);
@@ -125,13 +236,14 @@ tz_api_poll(void)
     watchdog_periodic();
   }
 
+  /* Drain any buffered serial input bytes to the NS callback */
+  tz_serial_drain();
+
   is_poll_running = false;
 
   return ns_poll_pending || process_nevents() > 0;
 }
 /*---------------------------------------------------------------------------*/
-#define TZ_API_PRINTLN_MAX_LEN 256
-
 CC_TRUSTZONE_SECURE_CALL void
 tz_api_println(const char *text, size_t len)
 {
@@ -151,6 +263,34 @@ tz_arch_signal_ns(void)
 {
 }
 /*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL void
+tz_api_print(const char *buf, size_t len)
+{
+  dbg_output_context_t previous_context;
+  size_t i;
+
+  if(buf == NULL || len == 0) {
+    return;
+  }
+
+  /* Cap len so a malicious NS caller cannot park the secure core in a
+   * long byte-by-byte UART loop. */
+  if(len > TZ_API_PRINT_MAX_LEN) {
+    len = TZ_API_PRINT_MAX_LEN;
+  }
+
+  /* Validate entire NS buffer range in one call */
+  if(cmse_check_address_range((void *)buf, len, CMSE_NONSECURE) == NULL) {
+    return;
+  }
+
+  previous_context = dbg_output_context_swap(DBG_OUTPUT_CONTEXT_NONSECURE);
+  for(i = 0; i < len; i++) {
+    dbg_putchar(buf[i]);
+  }
+  dbg_output_context_swap(previous_context);
+}
+/*---------------------------------------------------------------------------*/
 bool
 tz_api_request_ns_poll(void)
 {
@@ -160,5 +300,122 @@ tz_api_request_ns_poll(void)
   ns_poll_pending = true;
   tz_arch_signal_ns();
   return true;
+}
+/*---------------------------------------------------------------------------*/
+void
+tz_api_process_packet_data(void)
+{
+  if(!initialized || packetbuf_datalen() > tz_api.packet_data_size) {
+    return;
+  }
+
+  memcpy(tz_api.packet_data, packetbuf_dataptr(), packetbuf_datalen());
+  tz_api.process_packet_data(packetbuf_datalen());
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_prepare(const void *payload, unsigned short payload_len)
+{
+  if(payload == NULL || payload_len == 0 ||
+     cmse_check_address_range((void *)payload, payload_len,
+                              CMSE_NONSECURE) == NULL) {
+    return RADIO_TX_ERR;
+  }
+  return NETSTACK_RADIO.prepare(payload, payload_len);
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_transmit(unsigned short transmit_len)
+{
+  return NETSTACK_RADIO.transmit(transmit_len);
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_send(const void *payload, unsigned short payload_len)
+{
+  if(payload == NULL || payload_len == 0 ||
+     cmse_check_address_range((void *)payload, payload_len,
+                              CMSE_NONSECURE) == NULL) {
+    return RADIO_TX_ERR;
+  }
+  return NETSTACK_RADIO.send(payload, payload_len);
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_read(void *buf, unsigned short buf_len)
+{
+  if(buf == NULL || buf_len == 0 ||
+     cmse_check_address_range(buf, buf_len, CMSE_NONSECURE) == NULL) {
+    return 0;
+  }
+  return NETSTACK_RADIO.read(buf, buf_len);
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_channel_clear(void)
+{
+  return NETSTACK_RADIO.channel_clear();
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_receiving_packet(void)
+{
+  return NETSTACK_RADIO.receiving_packet();
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_pending_packet(void)
+{
+  return NETSTACK_RADIO.pending_packet();
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL int
+tz_api_radio_set_power_mode(bool on)
+{
+  return on ? NETSTACK_RADIO.on() : NETSTACK_RADIO.off();
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL radio_result_t
+tz_api_radio_get_value(radio_param_t param, radio_value_t *value)
+{
+  if(value == NULL ||
+     cmse_check_address_range(value, sizeof(*value),
+                              CMSE_NONSECURE) == NULL) {
+    return RADIO_RESULT_INVALID_VALUE;
+  }
+  return NETSTACK_RADIO.get_value(param, value);
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL radio_result_t
+tz_api_radio_set_value(radio_param_t param, radio_value_t value)
+{
+  return NETSTACK_RADIO.set_value(param, value);
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL radio_result_t
+tz_api_radio_get_object(radio_param_t param, void *dest, size_t size)
+{
+  if(dest == NULL || size == 0 ||
+     cmse_check_address_range(dest, size, CMSE_NONSECURE) == NULL) {
+    return RADIO_RESULT_INVALID_VALUE;
+  }
+  if(param == RADIO_PARAM_64BIT_ADDR && size >= 8) {
+    memset(dest, 0, size);
+    memcpy((uint8_t *)dest + size - LINKADDR_SIZE, &linkaddr_node_addr,
+           LINKADDR_SIZE);
+    return RADIO_RESULT_OK;
+  }
+
+  return NETSTACK_RADIO.get_object(param, dest, size);
+}
+/*---------------------------------------------------------------------------*/
+CC_TRUSTZONE_SECURE_CALL radio_result_t
+tz_api_radio_set_object(radio_param_t param, const void *src, size_t size)
+{
+  if(src == NULL || size == 0 ||
+     cmse_check_address_range((void *)src, size, CMSE_NONSECURE) == NULL) {
+    return RADIO_RESULT_INVALID_VALUE;
+  }
+  return NETSTACK_RADIO.set_object(param, src, size);
 }
 /*---------------------------------------------------------------------------*/

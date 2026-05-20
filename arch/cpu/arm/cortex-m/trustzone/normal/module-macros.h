@@ -1,1 +1,2 @@
 #define PLATFORM_CONF_PROVIDES_MAIN_LOOP 1
+#define NETSTACK_CONF_RADIO tz_radio_driver

@@ -19,6 +19,7 @@
 #include "sys/energest.h"
 #include "nrf_802154.h"
 #include "nrf_802154_config.h"
+#include "nrf54l15-radio-debug.h"
 #include "nrf.h"
 
 #include <string.h>
@@ -36,7 +37,7 @@
 #define FRAME_ACK_REQUEST_BIT 0x20
 
 /* Default radio parameters */
-#define DEFAULT_CHANNEL     26
+#define DEFAULT_CHANNEL     IEEE802154_DEFAULT_CHANNEL
 #define DEFAULT_TX_POWER    0 /* dBm */
 
 /* Use the radio timer's microsecond clock so timeouts match the nRF 802154
@@ -82,6 +83,18 @@ static bool radio_is_on;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(nrf54l15_radio_process, "nRF54L15 radio driver");
+/*---------------------------------------------------------------------------*/
+static const char *
+bad_ack_reason_name(uint32_t reason)
+{
+  switch(reason) {
+  case NRF54L15_BAD_ACK_NONE:       return "none";
+  case NRF54L15_BAD_ACK_CRC_ERROR:  return "crc_error";
+  case NRF54L15_BAD_ACK_PARSE_FAIL: return "parse_fail";
+  case NRF54L15_BAD_ACK_MISMATCH:   return "mismatch";
+  default:                          return "unknown";
+  }
+}
 /*---------------------------------------------------------------------------*/
 static const char *
 tx_error_name(nrf_802154_tx_error_t error)
@@ -311,17 +324,28 @@ transmit(unsigned short transmit_len)
   }
 
   if(tx_error == NRF_802154_TX_ERROR_NO_ACK) {
-    LOG_WARN("TX failed: no ACK\n");
+    /* The MAC layer may retry this frame. Keep per-attempt no-ACK at debug
+     * level and only warn once the MAC gives up for good. */
+    LOG_DBG("TX attempt failed: no ACK\n");
     return RADIO_TX_NOACK;
   }
 
   if(tx_error == NRF_802154_TX_ERROR_INVALID_ACK) {
-    LOG_WARN("TX failed: invalid ACK\n");
+    LOG_DBG("TX attempt failed: invalid ACK (%s parse=%" PRIu32 " phr=%" PRIu32
+            " fcf=%02" PRIx32 "%02" PRIx32 " ack_dsn=%" PRIu32
+            " tx_dsn=%" PRIu32 ")\n",
+            bad_ack_reason_name(nrf54l15_radio_debug.last_bad_ack_reason),
+            nrf54l15_radio_debug.last_bad_ack_parse_ok,
+            nrf54l15_radio_debug.last_bad_ack_phr,
+            nrf54l15_radio_debug.last_bad_ack_fcf1,
+            nrf54l15_radio_debug.last_bad_ack_fcf0,
+            nrf54l15_radio_debug.last_bad_ack_dsn,
+            nrf54l15_radio_debug.last_bad_ack_tx_dsn);
     return RADIO_TX_NOACK;
   }
 
   if(tx_error == NRF_802154_TX_ERROR_BUSY_CHANNEL) {
-    LOG_WARN("TX failed: busy channel\n");
+    LOG_DBG("TX attempt failed: busy channel\n");
     return RADIO_TX_COLLISION;
   }
 
@@ -684,7 +708,7 @@ PROCESS_THREAD(nrf54l15_radio_process, ev, data)
       rx_fail_count = 0;
     }
     if(tx_fail_count > 0) {
-      LOG_WARN("TX failed %" PRIu32 " times\n", tx_fail_count);
+      LOG_DBG("TX attempts failed %" PRIu32 " times\n", tx_fail_count);
       tx_fail_count = 0;
     }
 
