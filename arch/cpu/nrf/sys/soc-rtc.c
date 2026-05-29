@@ -133,7 +133,7 @@ rtc_config(void)
 {
   /*Initialize RTC instance */
   nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
-  config.prescaler = RTC_FREQ_TO_PRESCALER(32768); /* full speed... */
+  config.prescaler = NRF_RTC_FREQ_TO_PRESCALER(32768); /* full speed... */
   config.interrupt_priority = 6;
   config.reliable = 0;
 
