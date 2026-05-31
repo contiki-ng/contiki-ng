@@ -135,6 +135,16 @@ CONTIKI_SOURCEFILES := $(filter-out rtimer-arch.c,$(CONTIKI_SOURCEFILES))
 CONTIKI_CPU_SOURCEFILES += rtimer-arch.c
 CONTIKI_SOURCEFILES += rtimer-arch.c
 
+# The RTC-based rtimer/LPM (sys/soc-rtc.c, sys/lpm.c) need the legacy RTC
+# peripheral and NRF_TIMER0, neither of which exists on the nRF54L15 (GRTC).
+# Drop soc-rtc.c entirely and replace sys/lpm.c with the minimal nRF54L15 LPM.
+CONTIKI_CPU_SOURCEFILES := $(filter-out soc-rtc.c,$(CONTIKI_CPU_SOURCEFILES))
+CONTIKI_SOURCEFILES := $(filter-out soc-rtc.c,$(CONTIKI_SOURCEFILES))
+CONTIKI_CPU_SOURCEFILES := $(filter-out lpm.c,$(CONTIKI_CPU_SOURCEFILES))
+CONTIKI_SOURCEFILES := $(filter-out lpm.c,$(CONTIKI_SOURCEFILES))
+CONTIKI_CPU_SOURCEFILES += lpm.c
+CONTIKI_SOURCEFILES += lpm.c
+
 # Swap NRFX RTC driver for GRTC.
 NRFX_C_SRCS := $(filter-out $(NRFX_ROOT)/drivers/src/nrfx_rtc.c,$(NRFX_C_SRCS))
 CONTIKI_SOURCEFILES := $(filter-out nrfx_rtc.c,$(CONTIKI_SOURCEFILES))
