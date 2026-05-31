@@ -48,6 +48,10 @@
 
 #include "nrfx_clock.h"
 #include "nrfx_rtc.h"
+#include "hal/nrf_rtc.h"
+
+#include "sys/critical.h"
+#include "sys/int-master.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -58,6 +62,8 @@
 /*---------------------------------------------------------------------------*/
 #define COMPARE_INCREMENT (RTIMER_SECOND / CLOCK_SECOND)
 #define MULTIPLE_256_MASK 0xFFFFFF00
+/* The RTC COUNTER is 24-bit: it wraps (and fires OVERFLOW) every 2^24 ticks. */
+#define RTC_COUNTER_SPAN  (1UL << 24)
 /*---------------------------------------------------------------------------*/
 #if CLOCK_SIZE != 4
 #error CLOCK_CONF_SIZE must be 4 (32 bit)
@@ -78,7 +84,6 @@ static const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(NRF_CLOCK_RTC_INSTANCE);
 /*---------------------------------------------------------------------------*/
 static rtimer_clock_t last_isr_time;
 static clock_time_t rtc_max_clock_ticks;
-static rtimer_clock_t rtc_max_rtimer_ticks;
 static volatile uint32_t overflow;
 /*---------------------------------------------------------------------------*/
 static void
@@ -149,7 +154,6 @@ soc_rtc_init(void)
   rtc_config();
 
   rtc_max_clock_ticks = nrfx_rtc_max_ticks_get(&rtc) / COMPARE_INCREMENT;
-  rtc_max_rtimer_ticks = nrfx_rtc_max_ticks_get(&rtc);
   /* lets handle the overflow  */
   nrfx_rtc_overflow_enable(&rtc, true);
 
@@ -179,9 +183,31 @@ soc_rtc_schedule_one_shot(uint32_t channel, rtimer_clock_t ticks)
 rtimer_clock_t
 soc_rtc_get_rtimer_ticks()
 {
-  /* RTC is a 24 bit counter, so we need to handle the overflow */
-  return (rtc_max_rtimer_ticks * overflow) +
-    (rtimer_clock_t)nrfx_rtc_counter_get(&rtc);
+  uint32_t counter;
+  uint32_t ovf;
+  int_master_status_t status;
+
+  /*
+   * The 24-bit hardware counter is extended to 32 bits with the software
+   * `overflow` counter, which is incremented by the OVERFLOW interrupt. Reading
+   * the two must be atomic with respect to a wrap: a naive read can observe an
+   * old `overflow` together with an already-wrapped (small) `counter`, yielding
+   * a value a full 2^24 ticks (~512 s) in the past.
+   *
+   * Read both with interrupts masked. If the OVERFLOW event is pending, the
+   * counter has wrapped but the ISR has not run yet, so `overflow` does not
+   * include this wrap: re-read the (now post-wrap) counter and add it here.
+   */
+  status = critical_enter();
+  counter = nrfx_rtc_counter_get(&rtc);
+  ovf = overflow;
+  if(nrf_rtc_event_check(rtc.p_reg, NRF_RTC_EVENT_OVERFLOW)) {
+    counter = nrfx_rtc_counter_get(&rtc);
+    ovf++;
+  }
+  critical_exit(status);
+
+  return ((rtimer_clock_t)ovf * RTC_COUNTER_SPAN) + counter;
 }
 /*---------------------------------------------------------------------------*/
 clock_time_t
