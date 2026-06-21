@@ -1058,6 +1058,25 @@ set_value(radio_param_t param, radio_value_t value)
     }
     set_shr_search(value);
     return RADIO_RESULT_OK;
+  case RADIO_PARAM_SHR_SENSITIVITY: {
+    uint_fast8_t demodulation_zeroes;
+    switch(value) {
+    case RADIO_SHR_SENSITIVITY_MEDIUM:
+      demodulation_zeroes = 2;
+      break;
+    case RADIO_SHR_SENSITIVITY_LOW:
+      demodulation_zeroes = 1;
+      break;
+    case RADIO_SHR_SENSITIVITY_HIGH:
+      demodulation_zeroes = 3;
+      break;
+    default:
+      return RADIO_RESULT_INVALID_VALUE;
+    }
+    REG(RFCORE_XREG_MDMCTRL0) &= ~RFCORE_XREG_MDMCTRL0_DEM_NUM_ZEROS;
+    REG(RFCORE_XREG_MDMCTRL0) |= demodulation_zeroes << 6;
+    return RADIO_RESULT_OK;
+  }
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
   }
@@ -1130,9 +1149,6 @@ async_enter(void)
 
   /* Disable disabling of SFD detection after frame reception */
   REG(RFCORE_XREG_FSMCTRL) |= RFCORE_XREG_FSMCTRL_RX2RX_TIME_OFF;
-
-  /* Raise the number of zero symbols needed for SHR detection */
-  REG(RFCORE_XREG_MDMCTRL0) |= 3 << 6;
 
   /* Disable frame filtering */
   REG(RFCORE_XREG_FRMFILT0) &= ~RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN;

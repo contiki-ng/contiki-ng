@@ -409,6 +409,20 @@ enum radio_param_e {
    */
   RADIO_PARAM_SHR_SEARCH,
 
+  /**
+   * For tuning the SHR search.
+   *
+   * Setting this param to `RADIO_SHR_SENSITIVITY_LOW` increases the chances of
+   * detecting an SHR, raising the chances of catching transmissions.
+   *
+   * Setting this param to `RADIO_SHR_SENSITIVITY_HIGH` lowers the chances of
+   * detecting an SHR, reducing the chances of unwanted receptions.
+   *
+   * Setting this param to `RADIO_SHR_SENSITIVITY_MEDIUM` restores the default
+   * settings.
+   */
+  RADIO_PARAM_SHR_SENSITIVITY,
+
   /* Constants (read only) */
 
   /**
@@ -523,6 +537,16 @@ enum radio_power_mode_e {
 enum radio_shr_search_e {
   RADIO_SHR_SEARCH_DIS = 0, /**< Disable SHR search or SHR search is enabled */
   RADIO_SHR_SEARCH_EN = 1,  /**< Enable SHR search or SHR search is enabled */
+};
+
+/**
+ * Possible values of the `get_value()` / `set_value()` `value` argument when
+ * the `param` argument is `RADIO_PARAM_SHR_SENSITIVITY`.
+ */
+enum radio_shr_sensitivity_e {
+  RADIO_SHR_SENSITIVITY_MEDIUM = 0, /**< Default settings */
+  RADIO_SHR_SENSITIVITY_LOW, /**< Higher chances of detecting an SHR */
+  RADIO_SHR_SENSITIVITY_HIGH, /**< Lower chances of detecting an SHR */
 };
 
 /*---------------------------------------------------------------------------*/
