@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2024 Marcel Graber <marcel@clever.design>
- * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,89 +35,79 @@
  * \addtogroup nrf-sys System drivers
  * @{
  *
- * \addtogroup nrf-clock Clock driver
- * @{
+ * For LowPower setup, we use RTC instead of TIMER as the basis for all clocks and
+ * timers
+ *
+ * We use two RTC channels. Channel 0 is used by the rtimer sub-system. Channel 1 is used by the system clock and the LPM module.
+ *
+ * The RTC runs in all power modes except 'shutdown'
  *
  * \file
- *         Software clock implementation for the nRF.
- *
+ *         Header file for the nRF rtimer (LowPower) driver
  * \author
- *         Marcel Graber <marcel@clever.design> (lowpower mode)
- *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ *         Marcel Graber <marcel@clever.design>
  *
  */
+#ifndef SOC_RTC_H_
+#define SOC_RTC_H_
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include "rtimer.h"
 
-#include "nrfx_config.h"
+#include <stdint.h>
 #include "nrfx_rtc.h"
-#include "nrfx_clock.h"
-#include "soc-rtc.h"
 
-#if CLOCK_SIZE != 4
-/* 64 bit variables may not be read atomically without extra handling */
-#error CLOCK_CONF_SIZE must be 4 (32 bit)
-#endif
+#define SOC_RTC_SYSTEM_CH NRFX_RTC_INT_COMPARE0
+#define SOC_RTC_RTIMER_CH NRFX_RTC_INT_COMPARE1
 
-#ifdef NRF_CLOCK_CONF_RTC_INSTANCE
-#define NRF_CLOCK_RTC_INSTANCE NRF_CLOCK_CONF_RTC_INSTANCE
-#else
-#define NRF_CLOCK_RTC_INSTANCE 0
-#endif
-
-/*---------------------------------------------------------------------------*/
-void
-clock_update(void)
-{
-  if(etimer_pending() && !CLOCK_LT(clock_time(), etimer_next_expiration_time())) {
-    etimer_request_poll();
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
-clock_init(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-clock_time_t
-clock_time(void)
-{
-  return soc_rtc_get_clock_ticks();
-}
-/*---------------------------------------------------------------------------*/
-unsigned long
-clock_seconds(void)
-{
-  return (unsigned long)(clock_time() / CLOCK_SECOND);
-}
-/*---------------------------------------------------------------------------*/
-void
-clock_wait(clock_time_t i)
-{
-  clock_time_t start = clock_time();
-  while(clock_time() - start < i) {
-    __WFE();
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
-clock_delay_usec(uint16_t dt)
-{
-  NRFX_DELAY_US(dt);
-}
 /*---------------------------------------------------------------------------*/
 /**
- * @brief Obsolete delay function but we implement it here since some code
- * still uses it
+ * \brief Initialise the RTC module
+ *
+ * This timer configures RTC channels.
+ *
+ * This function must be called before clock_init() and rtimer_init()
  */
-void
-clock_delay(unsigned int i)
-{
-  clock_delay_usec(i);
-}
+void soc_rtc_init(void);
+
+/**
+ * \brief Schedule an RTC one-shot compare event
+ * \param channel The RTC channel to use
+ * \param ref_time The time when the event will be fired.
+ *
+ * Channel RTC_CH0 is reserved for the rtimer. RTC_CH1 is reserved
+ * for the system clock.
+ *
+ * User applications should not use this function. User applications should
+ * instead use Contiki's timer-related libraries
+ */
+void soc_rtc_schedule_one_shot(uint32_t channel, rtimer_clock_t ref_time);
+
+/**
+ * \brief Getting th ticks of the RTIMER since startup
+ * \return The actual ticks of the clock
+ *
+ * The rtimer ticks per seconds are defined in the macro RTIMER_SECOND
+ */
+rtimer_clock_t soc_rtc_get_rtimer_ticks(void);
+
+/**
+ * \brief Getting th ticks of the CLOCK since startup
+ * \return The actual ticks of the clock
+ *
+ * The clock ticks per seccons are defined in the macro CLOCK_SECOND
+ */
+clock_time_t soc_rtc_get_clock_ticks(void);
+
+/**
+ * \brief Helper Function in lpm.c to calculate the next wakeup time
+ * \return The last time the RTC interrupt was fired
+ */
+rtimer_clock_t soc_rtc_last_isr_time(void);
+/*---------------------------------------------------------------------------*/
+#endif /* SOC_RTC_H_ */
 /*---------------------------------------------------------------------------*/
 /**
- * @}
  * @}
  * @}
  */

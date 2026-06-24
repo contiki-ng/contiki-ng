@@ -105,6 +105,9 @@ void
 platform_init_stage_two(void)
 {
   platform_init_board_stage_two();
+
+  lpm_init();
+
   button_hal_init();
 
   /* There are two images of everything when building with

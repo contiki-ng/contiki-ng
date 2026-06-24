@@ -36,89 +36,62 @@
  * \addtogroup nrf-sys System drivers
  * @{
  *
- * \addtogroup nrf-clock Clock driver
- * @{
- *
  * \file
- *         Software clock implementation for the nRF.
+ *         Minimal Low Power Mode (LPM) driver for the nRF54L15.
+ *
+ *         The RTC-based LPM framework in arch/cpu/nrf/sys/lpm.c relies on the
+ *         legacy RTC peripheral and NRF_TIMER0, neither of which exist on the
+ *         nRF54L15 (it uses the GRTC instead). This implementation provides the
+ *         lpm_init()/lpm_drop() entry points expected by the platform code with
+ *         a simple WFI-based idle.
  *
  * \author
- *         Marcel Graber <marcel@clever.design> (lowpower mode)
+ *         Marcel Graber <marcel@clever.design>
  *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  *
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
+#include "lpm.h"
 
-#include "nrfx_config.h"
-#include "nrfx_rtc.h"
-#include "nrfx_clock.h"
-#include "soc-rtc.h"
+#include "sys/energest.h"
+#include "sys/critical.h"
+#include "sys/process.h"
 
-#if CLOCK_SIZE != 4
-/* 64 bit variables may not be read atomically without extra handling */
-#error CLOCK_CONF_SIZE must be 4 (32 bit)
-#endif
-
-#ifdef NRF_CLOCK_CONF_RTC_INSTANCE
-#define NRF_CLOCK_RTC_INSTANCE NRF_CLOCK_CONF_RTC_INSTANCE
-#else
-#define NRF_CLOCK_RTC_INSTANCE 0
-#endif
-
+#include "nrf.h"
+/*---------------------------------------------------------------------------*/
+/* Defined in arch/cpu/nrf/nrf54l15/clock-arch.c */
+extern void clock_arch_check_and_recover(void);
 /*---------------------------------------------------------------------------*/
 void
-clock_update(void)
+lpm_init(void)
 {
-  if(etimer_pending() && !CLOCK_LT(clock_time(), etimer_next_expiration_time())) {
-    etimer_request_poll();
+}
+/*---------------------------------------------------------------------------*/
+void
+lpm_drop(void)
+{
+  int_master_status_t status;
+  int abort;
+
+  status = critical_enter();
+  abort = process_nevents();
+  if(!abort) {
+    ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
+    /*
+     * After a soft reset on the nRF54L15, GRTC interrupts may not wake the CPU
+     * from WFI. Spin instead until that is resolved.
+     */
+    for(volatile int i = 0; i < 1000; i++) {
+      __NOP();
+    }
+    ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
   }
-}
-/*---------------------------------------------------------------------------*/
-void
-clock_init(void)
-{
-}
-/*---------------------------------------------------------------------------*/
-clock_time_t
-clock_time(void)
-{
-  return soc_rtc_get_clock_ticks();
-}
-/*---------------------------------------------------------------------------*/
-unsigned long
-clock_seconds(void)
-{
-  return (unsigned long)(clock_time() / CLOCK_SECOND);
-}
-/*---------------------------------------------------------------------------*/
-void
-clock_wait(clock_time_t i)
-{
-  clock_time_t start = clock_time();
-  while(clock_time() - start < i) {
-    __WFE();
-  }
-}
-/*---------------------------------------------------------------------------*/
-void
-clock_delay_usec(uint16_t dt)
-{
-  NRFX_DELAY_US(dt);
+  critical_exit(status);
+  clock_arch_check_and_recover();
 }
 /*---------------------------------------------------------------------------*/
 /**
- * @brief Obsolete delay function but we implement it here since some code
- * still uses it
- */
-void
-clock_delay(unsigned int i)
-{
-  clock_delay_usec(i);
-}
-/*---------------------------------------------------------------------------*/
-/**
- * @}
  * @}
  * @}
  */
