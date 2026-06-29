@@ -80,6 +80,13 @@
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 #include "net/routing/routing.h"
+#if UIP_TCP
+#include "lib/csprng.h"
+#include "lib/random.h"
+#if CSPRNG_ENABLED
+#include "lib/aes-128.h"
+#endif /* CSPRNG_ENABLED */
+#endif /* UIP_TCP */
 
 #if UIP_ND6_SEND_NS
 #include "net/ipv6/uip-ds6-nbr.h"
@@ -230,6 +237,100 @@ update_iss(void)
   clock_time_t now = clock_time();
   iss += (now - iss_last_update) * ISS_PER_TICK;
   iss_last_update = now;
+}
+
+#if CSPRNG_ENABLED
+static uint8_t isn_secret[AES_128_KEY_LENGTH];
+static bool isn_secret_set;
+#endif /* CSPRNG_ENABLED */
+
+/*
+ * Generate a secure initial sequence number (RFC 6528).
+ *
+ * With CSPRNG: ISN = M + F(localip, localport, remoteip, remoteport,
+ * secret). F is AES-128 keyed by the secret with the ports folded into
+ * the key and the two addresses as the plaintext, truncated to 32 bits,
+ * so each tuple gets an unpredictable F. AES is used as a PRF on its
+ * input (the addresses); folding the ports into the key is a
+ * related-key construction, sound here because AES resists the small,
+ * known key differences involved, not the PRF property itself.
+ *
+ * F is a fixed per-tuple offset, so for a given tuple ISN = M + F
+ * advances with M, which moves forward in sequence space (flat within a
+ * clock tick, wrapping every ~4.5 h, far longer than MSL). This keeps a
+ * new connection incarnation ahead of stale segments from a previous
+ * one, and holds only on the CSPRNG path.
+ *
+ * Without CSPRNG: ISN = M + random_rand(), a fallback for devices that
+ * cannot generate a secret key. random_rand() is not a CSPRNG (without
+ * CSPRNG it is seeded from public link-layer data, see random_init()),
+ * so it does not provide the RFC 6528 guarantee.
+ */
+static void
+generate_isn(uint8_t *isn_out, const uip_ipaddr_t *localipaddr,
+             const struct uip_conn *conn)
+{
+  uint32_t isn;
+
+  update_iss();
+
+#if CSPRNG_ENABLED
+  /*
+   * Generate the per-boot PRF secret once. csprng_rand() writes nothing
+   * and returns false until the CSPRNG is seeded, so until then we take
+   * the fallback rather than key the PRF with a predictable secret;
+   * retry on each connection.
+   */
+  if(!isn_secret_set) {
+    isn_secret_set = csprng_rand(isn_secret, sizeof(isn_secret));
+  }
+  if(isn_secret_set) {
+    uint8_t block[AES_128_BLOCK_SIZE];
+    uint8_t derived_key[AES_128_KEY_LENGTH];
+    static_assert(sizeof(conn->ripaddr) == AES_128_BLOCK_SIZE,
+                  "IPv6 address size must match AES-128 block size");
+
+    /* Fold the ports into the key by XOR (a bijection, so the key keeps
+       the secret's full 128-bit entropy). */
+    memcpy(derived_key, isn_secret, AES_128_KEY_LENGTH);
+    derived_key[0] ^= (uint8_t)(conn->lport >> 8);
+    derived_key[1] ^= (uint8_t)(conn->lport);
+    derived_key[2] ^= (uint8_t)(conn->rport >> 8);
+    derived_key[3] ^= (uint8_t)(conn->rport);
+
+    /* Combine both addresses into the plaintext so F covers the local
+       address as well as the remote one. */
+    for(int i = 0; i < AES_128_BLOCK_SIZE; i++) {
+      block[i] = conn->ripaddr.u8[i] ^ localipaddr->u8[i];
+    }
+    AES_128.set_key(derived_key);
+    AES_128.encrypt(block);
+
+    /* ISN = M + F; use the first 4 bytes of the AES output. */
+    isn = iss + ((uint32_t)block[0] << 24 | (uint32_t)block[1] << 16 |
+                 (uint32_t)block[2] << 8 | block[3]);
+  } else
+#endif /* CSPRNG_ENABLED */
+  {
+    /* Fallback (CSPRNG disabled, or enabled but not yet seeded): M plus
+       a non-cryptographic offset; see the header note. */
+#if CSPRNG_ENABLED
+    /* CSPRNG enabled but unseeded: the secure path is silently off, so
+       warn once to make the downgrade visible. */
+    static bool fallback_warned;
+    if(!fallback_warned) {
+      fallback_warned = true;
+      LOG_WARN("TCP ISN: CSPRNG unseeded, using non-cryptographic ISN\n");
+    }
+#endif /* CSPRNG_ENABLED */
+    isn = iss + ((uint32_t)random_rand() << 16 | random_rand());
+  }
+
+  /* Write ISN in network byte order. */
+  isn_out[0] = (uint8_t)(isn >> 24);
+  isn_out[1] = (uint8_t)(isn >> 16);
+  isn_out[2] = (uint8_t)(isn >> 8);
+  isn_out[3] = (uint8_t)(isn);
 }
 
 /* Temporary variables. */
@@ -437,6 +538,7 @@ struct uip_conn *
 uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
 {
   register struct uip_conn *conn, *cconn;
+  uip_ipaddr_t localipaddr;
   int c;
 
   /* Find an unused local port. */
@@ -478,12 +580,6 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
 
   conn->tcpstateflags = UIP_SYN_SENT;
 
-  update_iss();
-  conn->snd_nxt[0] = (uint8_t)(iss >> 24);
-  conn->snd_nxt[1] = (uint8_t)(iss >> 16);
-  conn->snd_nxt[2] = (uint8_t)(iss >> 8);
-  conn->snd_nxt[3] = (uint8_t)(iss);
-
   conn->rcv_nxt[0] = 0;
   conn->rcv_nxt[1] = 0;
   conn->rcv_nxt[2] = 0;
@@ -500,6 +596,13 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
   conn->lport = uip_htons(lastport);
   conn->rport = rport;
   uip_ipaddr_copy(&conn->ripaddr, ripaddr);
+
+  /* Generate the ISN only after the connection tuple (ports and remote
+     address) is fully populated, since generate_isn() derives it from
+     those fields (RFC 6528). The local address is the source the stack
+     would select for this destination. */
+  uip_ds6_select_src(&localipaddr, &conn->ripaddr);
+  generate_isn(conn->snd_nxt, &localipaddr, conn);
 
   return conn;
 }
@@ -1824,11 +1927,9 @@ uip_process(uint8_t flag)
   uip_ipaddr_copy(&uip_connr->ripaddr, &UIP_IP_BUF->srcipaddr);
   uip_connr->tcpstateflags = UIP_SYN_RCVD;
 
-  update_iss();
-  uip_connr->snd_nxt[0] = (uint8_t)(iss >> 24);
-  uip_connr->snd_nxt[1] = (uint8_t)(iss >> 16);
-  uip_connr->snd_nxt[2] = (uint8_t)(iss >> 8);
-  uip_connr->snd_nxt[3] = (uint8_t)(iss);
+  /* The local address is the destination of the incoming SYN, still
+     present in the buffer before the source/destination swap. */
+  generate_isn(uip_connr->snd_nxt, &UIP_IP_BUF->destipaddr, uip_connr);
   uip_connr->len = 1;
 
   /* rcv_nxt should be the seqno from the incoming packet + 1. */
