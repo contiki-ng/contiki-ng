@@ -92,8 +92,8 @@ neighbor_has_uc_link(const linkaddr_t *linkaddr)
     return 0;
   }
 
-  if(!ORCHESTRA_UNICAST_SENDER_BASED) {
-    /* With the receiver-based Orchestra,
+  if(ORCHESTRA_UNICAST_SENDER_BASED) {
+    /* With the sender-based Orchestra,
      * all nodes have a link installed at their own timeslot */
     return 1;
   }
