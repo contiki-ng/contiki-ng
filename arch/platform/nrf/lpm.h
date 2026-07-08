@@ -62,13 +62,11 @@ lpm_drop(void)
   abort = process_nevents();
   if(!abort) {
     ENERGEST_SWITCH(ENERGEST_TYPE_CPU, ENERGEST_TYPE_LPM);
-#if defined(NRF54L15_XXAA)
-    /* After soft-reset on nRF54L15, GRTC interrupts may not wake the CPU
-     * from WFI. Spin instead until that is resolved. */
-    for(volatile int _i = 0; _i < 1000; _i++) { __NOP(); }
-#else
+    /* Idle in WFI on every nrf variant. The GRTC compare interrupt wakes the
+     * core; the earlier nRF54L15 NOP-spin band-aid ("GRTC may not wake WFI")
+     * made it busy-wait instead of sleeping. clock_arch_check_and_recover()
+     * below re-arms the GRTC if a wake was ever missed. */
     __WFI();
-#endif
     ENERGEST_SWITCH(ENERGEST_TYPE_LPM, ENERGEST_TYPE_CPU);
   }
   critical_exit(status);

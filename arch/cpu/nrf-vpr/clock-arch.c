@@ -68,3 +68,41 @@ clock_delay(unsigned int us)
 {
   clock_delay_usec((uint16_t)us);
 }
+
+/* ---- Interrupt-driven system tick (GRTC compare on the FLPR's group) ----
+ * Mirrors Zephyr's VPR system timer (drivers/timer/nrf_grtc_timer.c): a GRTC
+ * compare channel in the FLPR's IRQ group (GRTC_0 / INTEN0) fires a periodic
+ * interrupt so platform_idle() can WFI instead of busy-polling the syscounter.
+ * Raw register access to the secure GRTC (0x5xxx alias); offsets per the SVD. */
+#include "sys/etimer.h"
+
+#define GRTC_S_BASE            0x500E2000UL
+#define GRTC_REG(o)            (*(volatile uint32_t *)(GRTC_S_BASE + (o)))
+#define GRTC_EVENTS_COMPARE(n) GRTC_REG(0x100u + 4u * (n))
+#define GRTC_INTENSET0         GRTC_REG(0x304u)          /* FLPR IRQ group */
+#define GRTC_CC_CCADD(n)       GRTC_REG(0x528u + 0x10u * (n))
+#define GRTC_CC_CCEN(n)        GRTC_REG(0x52Cu + 0x10u * (n))
+
+#define FLPR_TICK_CH     4                        /* in the FLPR's CC mask (3,4) */
+#define FLPR_TICK_TICKS  (GRTC_TICK_HZ / 100)     /* 10 ms tick (100 Hz)         */
+
+void
+clock_grtc_start_tick(void)
+{
+  /* Arm the first compare relative to the live syscounter (CCADD bit31=1),
+   * then enable the channel + its interrupt in the FLPR's group. */
+  GRTC_CC_CCADD(FLPR_TICK_CH) = FLPR_TICK_TICKS | (1u << 31);
+  GRTC_CC_CCEN(FLPR_TICK_CH)  = 1;
+  GRTC_INTENSET0              = (1u << FLPR_TICK_CH);
+  /* VPR: enable the machine external interrupt + global interrupt enable. */
+  __asm__ volatile("csrs mie, %0" :: "r"(1u << 11));   /* MEIE */
+  __asm__ volatile("csrs mstatus, %0" :: "r"(1u << 3)); /* MIE  */
+}
+
+void
+clock_grtc_tick_isr(void)
+{
+  GRTC_EVENTS_COMPARE(FLPR_TICK_CH) = 0;                /* ack the compare event */
+  GRTC_CC_CCADD(FLPR_TICK_CH) = FLPR_TICK_TICKS;        /* re-arm drift-free (bit31=0) */
+  etimer_request_poll();                               /* let the etimer process run */
+}
