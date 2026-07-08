@@ -222,12 +222,13 @@ JOIN <left-relation>, <right-relation> ON <attribute> PROJECT <projection>;
 
 A `<projection>` is a comma-separated list of attribute names and/or aggregate
 expressions, each applied to a single attribute, e.g. `COUNT(id)` or
-`MAX(score)`. The aggregate functions recognized by the parser are `COUNT`,
-`SUM`, `MAX`, `MIN`, `MEAN`, and `MEDIAN`; `COUNT`, `SUM`, `MAX`, and `MIN` are
-computed by the current implementation. Aggregate results are accumulated and
-returned as signed 32-bit (`LONG`) values, independent of the domain of the
-aggregated attribute. A projection may not mix aggregate expressions with plain
-attribute names in the same query.
+`MAX(score)`. The aggregate functions are `COUNT`, `SUM`, `MAX`, `MIN`, `MEAN`,
+and `MEDIAN`. Aggregate results are accumulated and returned as signed 32-bit
+(`LONG`) values, independent of the domain of the aggregated attribute. A
+projection may not mix aggregate expressions with plain attribute names in the
+same query. At most one `MEDIAN` aggregate may be used per query, and it buffers
+the matching values in RAM (see `DB_MEDIAN_POOL_SIZE`), so a `MEDIAN` over more
+values than the buffer holds fails with a limit error.
 
 A plain `SELECT` reads from a single relation; combining data from two
 relations is expressed with `JOIN`. A `JOIN` performs an equi-join on the named
@@ -290,6 +291,7 @@ configuration file:
 | Attributes per relation | 6 | `DB_MAX_ATTRIBUTES_PER_RELATION` |
 | Attributes per query | 5 | `AQL_ATTRIBUTE_LIMIT` |
 | Relations per query | 3 | `AQL_RELATION_LIMIT` |
+| Values buffered per `MEDIAN` | 16 | `DB_MEDIAN_POOL_SIZE` |
 | Relation name length | 10 characters | `RELATION_NAME_LENGTH` |
 | Attribute name length | 12 characters | `ATTRIBUTE_NAME_LENGTH` |
 | Attribute value size | 16 bytes | `DB_MAX_ELEMENT_SIZE` |

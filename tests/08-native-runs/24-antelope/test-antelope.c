@@ -299,7 +299,8 @@ UNIT_TEST(where_conditions)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
-UNIT_TEST_REGISTER(aggregates, "Aggregate functions COUNT, SUM, MAX and MIN");
+UNIT_TEST_REGISTER(aggregates,
+                   "Aggregate functions COUNT, SUM, MAX, MIN, MEAN and MEDIAN");
 UNIT_TEST(aggregates)
 {
   UNIT_TEST_BEGIN();
@@ -343,6 +344,33 @@ UNIT_TEST(aggregates)
   UNIT_TEST_ASSERT(result_rows == 1);
   UNIT_TEST_ASSERT(cell_long(0, 0) == 95);
   UNIT_TEST_ASSERT(cell_long(0, 1) == 60);
+
+  /* MEAN: 15/5 = 3 over id, 405/5 = 81 over score. */
+  UNIT_TEST_ASSERT(select_query("SELECT MEAN(id) FROM students;") == DB_OK);
+  UNIT_TEST_ASSERT(result_rows == 1);
+  UNIT_TEST_ASSERT(cell_long(0, 0) == 3);
+  UNIT_TEST_ASSERT(select_query("SELECT MEAN(score) FROM students;") == DB_OK);
+  UNIT_TEST_ASSERT(result_rows == 1);
+  UNIT_TEST_ASSERT(cell_long(0, 0) == 81);
+
+  /* MEDIAN of an odd number of values: sorted scores are
+     60, 75, 85, 90, 95, so the median is 85. */
+  UNIT_TEST_ASSERT(select_query("SELECT MEDIAN(score) FROM students;") == DB_OK);
+  UNIT_TEST_ASSERT(result_rows == 1);
+  UNIT_TEST_ASSERT(cell_long(0, 0) == 85);
+
+  /* MEDIAN of an even number of values: filtering out 60 leaves the sorted
+     scores 75, 85, 90, 95, whose median is the mean of the two middle
+     values, (85 + 90) / 2 = 87. */
+  UNIT_TEST_ASSERT(select_query(
+                   "SELECT MEDIAN(score) FROM students WHERE score > 60;")
+                   == DB_OK);
+  UNIT_TEST_ASSERT(result_rows == 1);
+  UNIT_TEST_ASSERT(cell_long(0, 0) == 87);
+
+  /* At most one MEDIAN aggregate is allowed per query. */
+  UNIT_TEST_ASSERT(DB_ERROR(
+                   select_query("SELECT MEDIAN(id), MEDIAN(score) FROM students;")));
 
   /* A sum whose result exceeds 16 bits (100000 + 200000 = 300000). */
   UNIT_TEST_ASSERT(exec_query("CREATE RELATION big;") == DB_OK);

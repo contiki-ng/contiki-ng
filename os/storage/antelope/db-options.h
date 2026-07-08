@@ -134,6 +134,13 @@
 #define AQL_ATTRIBUTE_LIMIT    		5
 #endif /* AQL_ATTRIBUTE_LIMIT */
 
+/* The maximum number of values buffered when computing a MEDIAN aggregate.
+   A query using MEDIAN over more matching values than this fails with a
+   limit error. At most one MEDIAN aggregate may be used per query. */
+#ifndef DB_MEDIAN_POOL_SIZE
+#define DB_MEDIAN_POOL_SIZE    		16
+#endif /* DB_MEDIAN_POOL_SIZE */
+
 /*----------------------------------------------------------------------------*/
 
 /*
