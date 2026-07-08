@@ -134,3 +134,169 @@ that we are querying for `recharge` and `eruption` attribute values. After the `
 ```
 SELECT recharge, eruption FROM faithful WHERE recharge > 5000 AND eruption >= 60000 AND eruption < 90000;
 ```
+
+## AQL syntax reference
+
+This section documents the complete syntax of AQL as implemented by the
+Antelope parser (`os/storage/antelope`). AQL is deliberately small: each query
+is a single statement, terminated by a semicolon (`;`).
+
+### Lexical elements
+
+| Element | Description |
+| --- | --- |
+| Identifier | A name for a relation, attribute, or index. Anything that is not a keyword, number, or operator. Relation names are limited to 10 characters and attribute names to 12 characters by default. |
+| Integer literal | A decimal integer, optionally negative (e.g. `42`, `-7`). |
+| String literal | Text enclosed in single quotes, e.g. `'Alice'`. A string value holds up to `DB_MAX_ELEMENT_SIZE - 1` characters (15 by default). |
+| Comment | A `#` character introduces a comment; a line consisting only of a comment is a no-op. |
+| Keywords | Case-insensitive (e.g. `SELECT`, `select`). Identifiers are matched case-insensitively as well. |
+| Terminator | Every statement ends with `;`. |
+
+Operators:
+
+| Category | Operators |
+| --- | --- |
+| Comparison | `=`, `<>` (not equal), `>`, `<`, `>=`, `<=` |
+| Logical connectives | `AND`, `OR` |
+| Arithmetic (within conditions) | `+`, `-`, `*`, `/`, and parentheses `( )` |
+| Assignment (store a result set) | `<-` |
+
+### Data domains
+
+An attribute belongs to one *domain* (type):
+
+| Domain | Storage | Range / notes |
+| --- | --- | --- |
+| `INT` | 2 bytes | Signed 16-bit integer. |
+| `LONG` | 4 bytes | Signed 32-bit integer. |
+| `STRING(n)` | `n` bytes | Fixed-length text of up to `n` characters (at most `DB_MAX_ELEMENT_SIZE`, 16 by default). |
+| `FLOAT` | 4 bytes | Only available when `DB_FEATURE_FLOATS` is enabled; disabled by default. |
+
+### Statements
+
+The grammar below uses `<...>` for placeholders, `[...]` for optional parts,
+and `...` for repetition.
+
+#### Data definition
+
+```
+CREATE RELATION <relation>;
+CREATE ATTRIBUTE <attribute> DOMAIN <domain> IN <relation>;
+CREATE INDEX <relation>.<attribute> TYPE <index-type>;
+
+REMOVE RELATION <relation>;
+REMOVE ATTRIBUTE <relation>.<attribute>;
+REMOVE INDEX <relation>.<attribute>;
+```
+
+`<domain>` is one of `INT`, `LONG`, or `STRING(<size>)`.
+
+`<index-type>` is one of:
+
+* `INLINE` &mdash; a zero-storage binary search over an attribute whose values
+  are inserted in monotonically increasing order (ideal for time series and
+  keys). Because it stores no data of its own, it is not persisted and is not
+  restored when a relation is reloaded.
+* `MAXHEAP` &mdash; a general-purpose, persistent index for numeric attributes
+  whose values are inserted in an arbitrary order.
+
+Indexes may only be created on `INT` or `LONG` attributes.
+
+#### Data manipulation
+
+```
+INSERT (<value>, ...) INTO <relation>;
+REMOVE FROM <relation> WHERE <condition>;
+```
+
+The values in an `INSERT` are positional: they are assigned to the attributes
+in the same order in which the attributes were created. Integer values are
+written without quotes; string values are single-quoted.
+
+#### Queries
+
+```
+SELECT <projection> FROM <relation> [WHERE <condition>];
+JOIN <left-relation>, <right-relation> ON <attribute> PROJECT <projection>;
+```
+
+A `<projection>` is a comma-separated list of attribute names and/or aggregate
+expressions, each applied to a single attribute, e.g. `COUNT(id)` or
+`MAX(score)`. The aggregate functions recognized by the parser are `COUNT`,
+`SUM`, `MAX`, `MIN`, `MEAN`, and `MEDIAN`; `COUNT`, `SUM`, `MAX`, and `MIN` are
+computed by the current implementation. Aggregate results are represented as
+signed 16-bit integers, so aggregated values are expected to fall within that
+range. A projection may not mix aggregate expressions with plain attribute
+names in the same query.
+
+A plain `SELECT` reads from a single relation; combining data from two
+relations is expressed with `JOIN`. A `JOIN` performs an equi-join on the named
+attribute, which must exist in both relations and **must be indexed in the
+right-hand relation**. The `PROJECT` clause lists the attributes of the result;
+the join attribute itself is not included unless it is listed explicitly.
+
+#### Conditions
+
+A `<condition>` in a `WHERE` clause is a logical expression that is compiled to
+LVM bytecode for efficient evaluation. It is built from comparisons between
+attribute values, arithmetic expressions, and integer or string constants,
+combined with `AND`, `OR`, and parentheses. Any attribute referenced in a
+`WHERE` clause must also appear in the projection of the same `SELECT`.
+Examples:
+
+```
+WHERE score > 80
+WHERE score >= 75 AND score <= 90
+WHERE id = 3 OR id = 5
+WHERE (a + b) * 2 > c
+```
+
+#### Storing a result set
+
+A `SELECT` or `JOIN` result can be stored into a new relation instead of being
+returned to the caller, using the assignment operator `<-`:
+
+```
+adults <- SELECT age FROM people WHERE age >= 18;
+roster <- JOIN members, groups ON gid PROJECT uid, gname;
+```
+
+### Examples
+
+```
+CREATE RELATION students;
+CREATE ATTRIBUTE id DOMAIN INT IN students;
+CREATE ATTRIBUTE score DOMAIN LONG IN students;
+CREATE ATTRIBUTE name DOMAIN STRING(16) IN students;
+
+INSERT (1, 90, 'Alice') INTO students;
+INSERT (2, 75, 'Bob') INTO students;
+
+SELECT score, name FROM students WHERE score > 80;
+SELECT COUNT(id) FROM students;
+SELECT MAX(id), MIN(id) FROM students;
+REMOVE FROM students WHERE score < 80;
+```
+
+### Configuration limits
+
+The default limits below are defined in
+`os/storage/antelope/db-options.h` and can be overridden in a project
+configuration file:
+
+| Limit | Default | Macro |
+| --- | --- | --- |
+| Query length | 128 characters | `AQL_MAX_QUERY_LENGTH` |
+| Attributes per relation | 6 | `DB_MAX_ATTRIBUTES_PER_RELATION` |
+| Attributes per query | 5 | `AQL_ATTRIBUTE_LIMIT` |
+| Relations per query | 3 | `AQL_RELATION_LIMIT` |
+| Relation name length | 10 characters | `RELATION_NAME_LENGTH` |
+| Attribute name length | 12 characters | `ATTRIBUTE_NAME_LENGTH` |
+| Attribute value size | 16 bytes | `DB_MAX_ELEMENT_SIZE` |
+
+### Tests
+
+A suite of unit tests that exercises the Antelope C API and a representative
+range of AQL statements (schema creation, insertion, filtering, aggregation,
+indexing, tuple removal, joins, and error handling) is available under
+`tests/08-native-runs/24-antelope/`.
