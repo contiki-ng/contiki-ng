@@ -89,6 +89,9 @@ struct index_api {
   db_result_t (*insert)(index_t *, attribute_value_t *, tuple_id_t);
   db_result_t (*delete)(index_t *, attribute_value_t *);
   tuple_id_t (*get_next)(index_iterator_t *);
+  /* Optional: reset the component's internal state. Called from
+     index_init(), which in turn runs when the database is (re)initialized. */
+  void (*init)(void);
 };
 
 typedef struct index_api index_api_t;

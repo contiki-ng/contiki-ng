@@ -135,6 +135,7 @@ static struct bucket_cache *bucket_load(heap_t *, int);
 static int bucket_append(heap_t *, int, struct key_value_pair *);
 static int bucket_split(heap_t *, int);
 
+static void init(void);
 static db_result_t create(index_t *);
 static db_result_t destroy(index_t *);
 static db_result_t load(index_t *);
@@ -152,8 +153,41 @@ index_api_t index_maxheap = {
   release,
   insert,
   delete,
-  get_next
+  get_next,
+  init
 };
+
+/*
+ * Reset the module's internal state. This releases any heap objects that
+ * were reserved by earlier indexes and invalidates the bucket cache, so that
+ * re-initializing the database (db_init) does not leave the single heap slot
+ * permanently occupied.
+ */
+static void
+init(void)
+{
+  heap_t *heap;
+  int i;
+
+  /*
+   * Close the storage of heaps that are still allocated. If the file system
+   * has been formatted since they were opened, Coffee has already freed
+   * these descriptors and ignores the close.
+   */
+  for(i = 0; i < heaps.num; i++) {
+    if(heaps.used[i]) {
+      heap = &((heap_t *)heaps.mem)[i];
+      storage_close(heap->heap_storage);
+      storage_close(heap->bucket_storage);
+    }
+  }
+
+  memb_init(&heaps);
+
+  for(i = 0; i < DB_HEAP_CACHE_LIMIT; i++) {
+    bucket_cache[i].heap = NULL;
+  }
+}
 
 static struct bucket_cache *
 get_cache(heap_t *heap, int bucket_id)
