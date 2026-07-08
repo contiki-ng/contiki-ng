@@ -224,10 +224,10 @@ A `<projection>` is a comma-separated list of attribute names and/or aggregate
 expressions, each applied to a single attribute, e.g. `COUNT(id)` or
 `MAX(score)`. The aggregate functions recognized by the parser are `COUNT`,
 `SUM`, `MAX`, `MIN`, `MEAN`, and `MEDIAN`; `COUNT`, `SUM`, `MAX`, and `MIN` are
-computed by the current implementation. Aggregate results are represented as
-signed 16-bit integers, so aggregated values are expected to fall within that
-range. A projection may not mix aggregate expressions with plain attribute
-names in the same query.
+computed by the current implementation. Aggregate results are accumulated and
+returned as signed 32-bit (`LONG`) values, independent of the domain of the
+aggregated attribute. A projection may not mix aggregate expressions with plain
+attribute names in the same query.
 
 A plain `SELECT` reads from a single relation; combining data from two
 relations is expressed with `JOIN`. A `JOIN` performs an equi-join on the named

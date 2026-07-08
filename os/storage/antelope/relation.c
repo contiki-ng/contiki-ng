@@ -771,7 +771,6 @@ relation_process_select(void *handle_ptr)
   unsigned char *from_ptr;
   unsigned char *to_ptr;
   operand_value_t operand_value;
-  uint8_t intbuf[2];
   attribute_value_t value;
   lvm_status_t wanted_result;
 
@@ -816,11 +815,13 @@ relation_process_select(void *handle_ptr)
     from_ptr = row + attr_map_ptr->from_offset;
     result_attr = attr_map_ptr->to_attr;
 
-    /* Update the internal state of the PLE. */
-    if(result_attr->domain == DOMAIN_INT) {
+    /* Update the internal state of the PLE. The stored bytes are interpreted
+       using the domain of the source attribute, which may differ from the
+       result attribute's domain (e.g. for aggregates). */
+    if(attr_map_ptr->from_attr->domain == DOMAIN_INT) {
       operand_value.l = from_ptr[0] << 8 | from_ptr[1];
       lvm_set_variable_value(result_attr->name, operand_value);
-    } else if(result_attr->domain == DOMAIN_LONG) {
+    } else if(attr_map_ptr->from_attr->domain == DOMAIN_LONG) {
       operand_value.l = (uint32_t)from_ptr[0] << 24 |
                         (uint32_t)from_ptr[1] << 16 |
                         (uint32_t)from_ptr[2] << 8 |
@@ -852,7 +853,9 @@ relation_process_select(void *handle_ptr)
     if(AQL_GET_FLAGS(adt) & AQL_FLAG_AGGREGATE) {
       for(attr_map_ptr = attr_map; attr_map_ptr < attr_map_end; attr_map_ptr++) {
         from_ptr = row + attr_map_ptr->from_offset;
-        result = db_phy_to_value(&value, attr_map_ptr->to_attr, from_ptr);
+        /* Read the source value with the source attribute's domain, so that
+           the full value is aggregated (e.g. all 4 bytes of a LONG). */
+        result = db_phy_to_value(&value, attr_map_ptr->from_attr, from_ptr);
         if(DB_ERROR(result)) {
 	  return result;
         }
@@ -878,10 +881,18 @@ end_aggregation:
     result_attr = attr_map_ptr->to_attr;
     to_ptr = result_row + attr_map_ptr->to_offset;
 
-    intbuf[0] = result_attr->aggregation_value >> 8;
-    intbuf[1] = result_attr->aggregation_value & 0xff;
-    from_ptr = intbuf;
-    memcpy(to_ptr, from_ptr, result_attr->element_size);
+    /* Store the accumulated value using the result attribute's domain, which
+       is wide enough to hold it (see the aggregate handling in
+       relation_select). */
+    value.domain = result_attr->domain;
+    if(result_attr->domain == DOMAIN_INT) {
+      VALUE_INT(&value) = (int)result_attr->aggregation_value;
+    } else {
+      VALUE_LONG(&value) = result_attr->aggregation_value;
+    }
+    if(DB_ERROR(db_value_to_phy(to_ptr, result_attr, &value))) {
+      return DB_TYPE_ERROR;
+    }
   }
 
   if(AQL_GET_FLAGS(adt) & AQL_FLAG_ASSIGN) {
@@ -944,10 +955,16 @@ relation_select(void *handle_ptr, relation_t *rel, void *adt_ptr)
     PRINTF("DB: Found attribute %s in relation %s\n",
 	attribute_name, rel->name);
 
-    attr = relation_attribute_add(handle->result_rel, dir,
-				  attribute_name, 
-				  adt->aggregators[i] ? DOMAIN_INT : attr->domain,
-				  attr->element_size);
+    /* Aggregation results are accumulated as long integers, so the result
+       attribute is stored as a LONG regardless of the source domain. */
+    if(adt->aggregators[i]) {
+      attr = relation_attribute_add(handle->result_rel, dir,
+				    attribute_name, DOMAIN_LONG, 4);
+    } else {
+      attr = relation_attribute_add(handle->result_rel, dir,
+				    attribute_name, attr->domain,
+				    attr->element_size);
+    }
     if(attr == NULL) {
       PRINTF("DB: Failed to add a result attribute\n");
       relation_release(handle->result_rel);

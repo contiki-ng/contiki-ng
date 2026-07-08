@@ -306,11 +306,7 @@ UNIT_TEST(aggregates)
 
   UNIT_TEST_ASSERT(setup_students());
 
-  /*
-   * The aggregates operate on the INT attribute "id" (values 1..5). Note that
-   * aggregation results are represented as 16-bit integers, so the aggregated
-   * attribute and its resulting values are expected to fit in that range.
-   */
+  /* Aggregates over the INT attribute "id" (values 1..5). */
 
   /* COUNT over all tuples. */
   UNIT_TEST_ASSERT(select_query("SELECT COUNT(id) FROM students;") == DB_OK);
@@ -329,6 +325,34 @@ UNIT_TEST(aggregates)
   UNIT_TEST_ASSERT(result_cols == 2);
   UNIT_TEST_ASSERT(cell_long(0, 0) == 5);
   UNIT_TEST_ASSERT(cell_long(0, 1) == 1);
+
+  /*
+   * Aggregates over the LONG attribute "score" (90, 75, 60, 85, 95). These
+   * exercise aggregation over a 32-bit attribute; the accumulated value must
+   * reflect the full source values.
+   */
+
+  /* SUM (90+75+60+85+95 = 405). */
+  UNIT_TEST_ASSERT(select_query("SELECT SUM(score) FROM students;") == DB_OK);
+  UNIT_TEST_ASSERT(result_rows == 1);
+  UNIT_TEST_ASSERT(cell_long(0, 0) == 405);
+
+  /* MAX and MIN over the LONG attribute. */
+  UNIT_TEST_ASSERT(select_query("SELECT MAX(score), MIN(score) FROM students;")
+                   == DB_OK);
+  UNIT_TEST_ASSERT(result_rows == 1);
+  UNIT_TEST_ASSERT(cell_long(0, 0) == 95);
+  UNIT_TEST_ASSERT(cell_long(0, 1) == 60);
+
+  /* A sum whose result exceeds 16 bits (100000 + 200000 = 300000). */
+  UNIT_TEST_ASSERT(exec_query("CREATE RELATION big;") == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("CREATE ATTRIBUTE amount DOMAIN LONG IN big;")
+                   == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("INSERT (100000) INTO big;") == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("INSERT (200000) INTO big;") == DB_OK);
+  UNIT_TEST_ASSERT(select_query("SELECT SUM(amount) FROM big;") == DB_OK);
+  UNIT_TEST_ASSERT(result_rows == 1);
+  UNIT_TEST_ASSERT(cell_long(0, 0) == 300000);
 
   UNIT_TEST_END();
 }
