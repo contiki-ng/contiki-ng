@@ -491,6 +491,13 @@ UNIT_TEST(large_relation)
   UNIT_TEST_ASSERT(exec_query("CREATE ATTRIBUTE v DOMAIN LONG IN samples;")
                    == DB_OK);
 
+  /*
+   * A persisted MAXHEAP index over the key. This also confirms that the single
+   * MAXHEAP index slot freed by db_init() can be reused: an earlier test
+   * (join_relations) already created a MAXHEAP index in this run.
+   */
+  UNIT_TEST_ASSERT(exec_query("CREATE INDEX samples.k TYPE MAXHEAP;") == DB_OK);
+
   /* Insert n tuples: k = 0..n-1, v = 2*k. */
   for(i = 0; i < n; i++) {
     snprintf(query, sizeof(query), "INSERT (%d, %d) INTO samples;", i, i * 2);

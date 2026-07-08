@@ -75,8 +75,19 @@ find_index_api(index_type_t index_type)
 void
 index_init(void)
 {
+  int i;
+
   list_init(indices);
   memb_init(&index_memb);
+
+  /* Reset the internal state of each index component, so that indexes
+     allocated before a re-initialization do not remain reserved. */
+  for(i = 0; i < CC_ARRAY_LENGTH(index_components); i++) {
+    if(index_components[i]->init != NULL) {
+      index_components[i]->init();
+    }
+  }
+
   process_start(&db_indexer, NULL);
 }
 
