@@ -55,6 +55,7 @@
 #include "net/mac/frame-queue.h"
 #include "net/mac/mac-sequence.h"
 #include "net/mac/mac.h"
+#include "net/mac/noise-floor.h"
 #include "net/nbr-table.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
@@ -76,15 +77,11 @@
 #define OUTPUT_POWER (0)
 #endif /* CSL_CONF_OUTPUT_POWER */
 
-#ifdef CSL_CONF_CCA_THRESHOLD
-#define CCA_THRESHOLD CSL_CONF_CCA_THRESHOLD
-#else /* CSL_CONF_CCA_THRESHOLD */
-#ifdef CSL_CONF_NO_CCA
-#define CCA_THRESHOLD (0)
-#else /* CSL_CONF_NO_CCA */
-#define CCA_THRESHOLD (-81)
-#endif /* CSL_CONF_NO_CCA */
-#endif /* CSL_CONF_CCA_THRESHOLD */
+#ifdef CSL_CONF_ENERGY_DETECTION_THRESHOLD
+#define ENERGY_DETECTION_THRESHOLD CSL_CONF_ENERGY_DETECTION_THRESHOLD
+#else /* CSL_CONF_ENERGY_DETECTION_THRESHOLD */
+#define ENERGY_DETECTION_THRESHOLD (12) /* dB */
+#endif /* CSL_CONF_ENERGY_DETECTION_THRESHOLD */
 
 #ifdef CSL_CONF_MIN_PREPARE_LEAD_OVER_LOOP
 #define MIN_PREPARE_LEAD_OVER_LOOP CSL_CONF_MIN_PREPARE_LEAD_OVER_LOOP
@@ -351,6 +348,7 @@ init(void)
     LOG_ERR("async_enter failed\n");
     return;
   }
+  noise_floor_init();
 #if !AKES_MAC_ENABLED
   mac_sequence_init();
 #endif /* !AKES_MAC_ENABLED */
@@ -441,7 +439,10 @@ PT_THREAD(duty_cycle(void))
     }
     if(!SHALL_SKIP_TO_RENDEZVOUS
        && !csl_state.duty_cycle.got_wake_up_frames_shr) {
+      radio_value_t rssi;
+      NETSTACK_RADIO.get_value(RADIO_PARAM_RSSI, &rssi);
       NETSTACK_RADIO.async_off();
+      noise_floor_add(current_channel_index, rssi);
     } else {
 #if CC_CRYPTO_ENABLED
       cc_crypto_enable();
@@ -1026,6 +1027,11 @@ PROCESS_THREAD(post_processing, ev, data)
         continue;
       }
 
+      /* autoconfigure CCA threshold */
+      csl_state.transmit.cca_threshold =
+          noise_floor_estimate(current_channel_index)
+          + ENERGY_DETECTION_THRESHOLD;
+
       /* schedule transmission */
       if(schedule_transmission_precise(
              csl_state.transmit.wake_up_sequence_start
@@ -1204,7 +1210,10 @@ PT_THREAD(transmit(void))
   NETSTACK_RADIO.async_on();
   schedule_transmission(RTIMER_NOW() + CCA_SLEEP_DURATION);
   PT_YIELD(&pt);
-  if(radio_get_rssi() >= CCA_THRESHOLD) {
+  radio_value_t radio_value;
+  NETSTACK_RADIO.get_value(RADIO_PARAM_RSSI, &radio_value);
+  int8_t rssi = (int8_t)radio_value;
+  if(rssi >= csl_state.transmit.cca_threshold) {
     NETSTACK_RADIO.async_off();
     LOG_INFO("collision\n");
     csl_state.transmit.result[0] = MAC_TX_COLLISION;
@@ -1218,6 +1227,7 @@ PT_THREAD(transmit(void))
     csl_state.transmit.result[csl_state.transmit.burst_index] = MAC_TX_ERR;
     goto error;
   }
+  noise_floor_add(current_channel_index, rssi);
   while(1) {
     csl_state.transmit.next_rendezvous_time_update =
         csl_state.transmit.wake_up_sequence_start

@@ -291,6 +291,7 @@ typedef union {
     rtimer_clock_t payload_frame_start;
     rtimer_clock_t wake_up_sequence_start;
     uint16_t remaining_wake_up_frames;
+    int8_t cca_threshold;
   } transmit;
 } csl_state_t;
 
