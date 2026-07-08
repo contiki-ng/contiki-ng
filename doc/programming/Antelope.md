@@ -300,3 +300,53 @@ A suite of unit tests that exercises the Antelope C API and a representative
 range of AQL statements (schema creation, insertion, filtering, aggregation,
 indexing, tuple removal, joins, and error handling) is available under
 `tests/08-native-runs/24-antelope/`.
+
+## Notes and limitations
+
+The following practical behaviors of the current Antelope implementation are
+useful to keep in mind.
+
+### Persistence
+
+Relations, their attributes, and `MAXHEAP` indexes are stored in the underlying
+file system and are restored automatically when a relation is loaded, so they
+survive a reboot. An `INLINE` index stores no data of its own and is *not*
+restored on reload; it should be recreated after restarting the system, which is
+inexpensive because it only marks the attribute as indexed.
+
+### Query and handle lifecycle
+
+Each call to `db_query()` loads the target relation from storage, and a query
+handle must be released with `db_free()` once its results have been consumed
+(handles are also freed automatically when processing finishes with an error). A
+plain `SELECT` streams matching tuples to the caller without materializing them;
+only a query whose result is assigned to a relation with `<-` writes a new
+relation to storage.
+
+### Indexes
+
+Only the `INLINE` and `MAXHEAP` index types are available; the `MEMHASH` keyword
+is reserved but has no built-in implementation. Indexes may be created only on
+`INT` or `LONG` attributes. An `INLINE` index requires the attribute's values to
+be inserted in monotonically increasing order. The number of indexes that can
+exist simultaneously is bounded by `DB_INDEX_POOL_SIZE`, and by default at most
+one `MAXHEAP` index (`DB_HEAP_INDEX_LIMIT`) exists at a time.
+
+### Queries
+
+A `SELECT` reads from a single relation; use `JOIN` to combine two relations.
+`JOIN` is an index-based equi-join and requires an index on the join attribute of
+the right-hand relation. Every attribute used in a `WHERE` clause must also be
+projected, and a projection cannot mix aggregate expressions with plain
+attributes.
+
+### Reserved relation names
+
+The names `db-result` and `db-remove` are used internally for intermediate
+results and should not be used for application relations.
+
+### Optional features
+
+Join support, tuple removal, and floating-point attributes are compile-time
+options (`DB_FEATURE_JOIN`, `DB_FEATURE_REMOVE`, and `DB_FEATURE_FLOATS`). Join
+and tuple removal are enabled by default; floating-point support is not.
