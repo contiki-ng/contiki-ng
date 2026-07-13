@@ -121,6 +121,7 @@ MEMB(heaps, heap_t, DB_HEAP_INDEX_LIMIT);
 static struct bucket_cache *get_cache(heap_t *, int);
 static struct bucket_cache *get_cache_free(void);
 static void invalidate_cache(void);
+static void invalidate_heap_cache(heap_t *);
 static maxheap_key_t transform_key(maxheap_key_t);
 static int heap_read(heap_t *, int, heap_node_t *);
 static int heap_write(heap_t *, int, heap_node_t *);
@@ -189,6 +190,19 @@ invalidate_cache(void)
     if(bucket_cache[i].heap != NULL) {
       bucket_cache[i].heap = NULL;
       break;
+    }
+  }
+}
+
+static void
+invalidate_heap_cache(heap_t *heap)
+{
+  int i;
+
+  /* Drop every cached bucket that belongs to this heap. */
+  for(i = 0; i < DB_HEAP_CACHE_LIMIT; i++) {
+    if(bucket_cache[i].heap == heap) {
+      bucket_cache[i].heap = NULL;
     }
   }
 }
@@ -660,6 +674,7 @@ release(index_t *index)
 
   heap = index->opaque_data;
 
+  invalidate_heap_cache(heap);
   storage_close(heap->bucket_storage);
   storage_close(heap->heap_storage);
   memb_free(&heaps, index->opaque_data);
