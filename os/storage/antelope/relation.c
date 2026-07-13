@@ -490,6 +490,8 @@ relation_remove(char *name, int remove_tuples)
   }
 
   if(rel->references > 1) {
+    /* Undo the reference taken by relation_load() above. */
+    relation_release(rel);
     return DB_BUSY_ERROR;
   }
 
