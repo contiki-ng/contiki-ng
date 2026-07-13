@@ -136,10 +136,7 @@ index_create(index_type_t index_type, relation_t *rel, attribute_t *attr)
      DB_ERROR(storage_put_index(index))) {
     PRINTF("DB: Failed to store index data in file \"%s\"\n",
            index->descriptor_file);
-    api->destroy(index);
-    attr->index = NULL;
-    list_remove(indices, index);
-    memb_free(&index_memb, index);
+    index_destroy(index);
     return DB_INDEX_ERROR;
   }
 
@@ -160,15 +157,25 @@ index_create(index_type_t index_type, relation_t *rel, attribute_t *attr)
 db_result_t
 index_destroy(index_t *index)
 {
+  db_result_t result;
+
   /*
-   * Remove the backend's on-disk state first, while the in-memory
-   * representation is still valid, and only then release the in-memory
-   * representation and the pool slot. Calling index_release() first would
-   * free the index object and leave index->api->destroy() operating on
-   * freed memory.
+   * Remove the index record from the relation's catalog first, so that a
+   * failure further on cannot leave a record that refers to removed files.
+   * Then remove the backend's on-disk state while the in-memory
+   * representation is still valid. The in-memory representation and its
+   * pool slots are released in every case, so that a failed removal does
+   * not leak them.
    */
-  if(DB_ERROR(index->api->destroy(index)) ||
-     DB_ERROR(index_release(index))) {
+  result = DB_OK;
+  if(index->descriptor_file[0] != '\0') {
+    result = storage_remove_index(index);
+  }
+  if(DB_SUCCESS(result)) {
+    result = index->api->destroy(index);
+  }
+
+  if(DB_ERROR(index_release(index)) || DB_ERROR(result)) {
     return DB_INDEX_ERROR;
   }
 

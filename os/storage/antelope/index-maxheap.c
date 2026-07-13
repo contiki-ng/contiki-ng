@@ -586,10 +586,31 @@ create(index_t *index)
 static db_result_t
 destroy(index_t *index)
 {
+  heap_t *heap;
+  char bucket_file[DB_MAX_FILENAME_LENGTH];
+  int have_bucket_file;
+
+  heap = index->opaque_data;
+
   /*
-   * The in-memory heap and the descriptors are released separately by
-   * release(), which index_destroy() invokes right after this function.
+   * The bucket filename is stored at the start of the heap file. Read it
+   * before the descriptors are closed so that both backing files can be
+   * removed. The in-memory heap itself is freed afterwards by release(),
+   * which index_destroy() invokes right after this function.
    */
+  have_bucket_file = DB_SUCCESS(storage_read(heap->heap_storage, bucket_file,
+                                             0, sizeof(bucket_file)));
+
+  storage_close(heap->heap_storage);
+  storage_close(heap->bucket_storage);
+  heap->heap_storage = -1;
+  heap->bucket_storage = -1;
+
+  cfs_remove(index->descriptor_file);
+  if(have_bucket_file) {
+    cfs_remove(bucket_file);
+  }
+
   return DB_OK;
 }
 
