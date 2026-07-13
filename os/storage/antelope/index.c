@@ -202,6 +202,7 @@ index_load(relation_t *rel, attribute_t *attr)
   api = find_index_api(index->type);
   if(api == NULL) {
     PRINTF("DB: No API for index type %d\n", index->type);
+    memb_free(&index_memb, index);
     return DB_INDEX_ERROR;
   }
 
@@ -209,6 +210,7 @@ index_load(relation_t *rel, attribute_t *attr)
 
   if(DB_ERROR(api->load(index))) {
     PRINTF("DB: Index-specific load failed\n");
+    memb_free(&index_memb, index);
     return DB_INDEX_ERROR;
   }
 
