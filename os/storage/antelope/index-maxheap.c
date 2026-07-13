@@ -608,12 +608,14 @@ load(index_t *index)
 
   fd = storage_open(index->descriptor_file);
   if(fd < 0) {
+    memb_free(&heaps, heap);
     return DB_STORAGE_ERROR;
   }
 
   if(storage_read(fd, bucket_file, 0, sizeof(bucket_file)) !=
      sizeof(bucket_file)) {
     storage_close(fd);
+    memb_free(&heaps, heap);
     return DB_STORAGE_ERROR;
   }
 
