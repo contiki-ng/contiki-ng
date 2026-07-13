@@ -386,7 +386,16 @@ relation_attribute_add(relation_t *rel, db_direction_t dir, char *name,
   if(dir == DB_STORAGE) {
     if(DB_ERROR(storage_put_attribute(rel, attribute))) {
        PRINTF("DB: Failed to store attribute %s\n", attribute->name);
-       memb_free(&attributes_memb, attribute);
+       /*
+        * Fully roll back the changes made above before freeing the
+        * attribute. Freeing it while it is still linked into
+        * rel->attributes would leave a dangling pointer in the list and
+        * a stale attribute_count/row_length, leading to a later
+        * double-free when the relation is torn down.
+        */
+       list_remove(rel->attributes, attribute);
+       rel->row_length -= element_size;
+       attribute_free(rel, attribute);
        return NULL;
     }
   } else {
