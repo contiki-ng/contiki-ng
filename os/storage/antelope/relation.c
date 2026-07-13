@@ -951,6 +951,8 @@ relation_select(void *handle_ptr, relation_t *rel, void *adt_ptr)
     if(attr == NULL) {
       PRINTF("DB: Failed to add a result attribute\n");
       relation_release(handle->result_rel);
+      /* Cleared so db_free() does not release it again. */
+      handle->result_rel = NULL;
       return DB_ALLOCATION_ERROR;
     }
 
