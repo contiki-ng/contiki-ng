@@ -586,8 +586,11 @@ create(index_t *index)
 static db_result_t
 destroy(index_t *index)
 {
-  release(index);
-  return DB_INDEX_ERROR;
+  /*
+   * The in-memory heap and the descriptors are released separately by
+   * release(), which index_destroy() invokes right after this function.
+   */
+  return DB_OK;
 }
 
 static db_result_t
@@ -637,7 +640,7 @@ release(index_t *index)
   storage_close(heap->bucket_storage);
   storage_close(heap->heap_storage);
   memb_free(&heaps, index->opaque_data);
-  return DB_INDEX_ERROR;
+  return DB_OK;
 }
 
 static db_result_t

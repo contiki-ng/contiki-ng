@@ -160,8 +160,15 @@ index_create(index_type_t index_type, relation_t *rel, attribute_t *attr)
 db_result_t
 index_destroy(index_t *index)
 {
-  if(DB_ERROR(index_release(index)) ||
-     DB_ERROR(index->api->destroy(index))) {
+  /*
+   * Remove the backend's on-disk state first, while the in-memory
+   * representation is still valid, and only then release the in-memory
+   * representation and the pool slot. Calling index_release() first would
+   * free the index object and leave index->api->destroy() operating on
+   * freed memory.
+   */
+  if(DB_ERROR(index->api->destroy(index)) ||
+     DB_ERROR(index_release(index))) {
     return DB_INDEX_ERROR;
   }
 
