@@ -277,6 +277,7 @@ relation_create(char *name, db_direction_t dir)
 {
   relation_t old_rel;
   relation_t *rel;
+  attribute_t *attr;
 
   if(*name != '\0') {
     relation_clear(&old_rel);
@@ -285,6 +286,15 @@ relation_create(char *name, db_direction_t dir)
       /* Reject a creation request if the relation already exists. */
       PRINTF("DB: Attempted to create a relation that already exists (%s)\n",
              name);
+      /*
+       * storage_get_relation() allocated an attribute_t for each attribute
+       * of the existing relation into the stack-local old_rel. Free them
+       * before returning; otherwise those pool slots leak permanently,
+       * because old_rel is never reachable from the relation list.
+       */
+      while((attr = list_pop(old_rel.attributes)) != NULL) {
+        attribute_free(&old_rel, attr);
+      }
       return NULL;
     }
 
