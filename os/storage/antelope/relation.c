@@ -240,7 +240,14 @@ relation_load(char *name)
   }
 
   if(DB_ERROR(storage_get_relation(rel, name))) {
-    memb_free(&relations_memb, rel);
+    /*
+     * storage_get_relation() adds attributes incrementally and may fail
+     * after some have already been linked into rel (e.g. a truncated or
+     * corrupt catalog). Use relation_free() to release those attributes
+     * too, not just the relation_t. rel is not yet on the relation list,
+     * so the list_remove() in relation_free() is a harmless no-op.
+     */
+    relation_free(rel);
     return NULL;
   }
 
