@@ -503,8 +503,28 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
       coap_pkt->payload = current_option;
       coap_pkt->payload_len = data_len - (coap_pkt->payload - data);
 
-      /* also for receiving, the Erbium upper bound is COAP_MAX_CHUNK_SIZE */
       if(coap_pkt->payload_len > COAP_MAX_CHUNK_SIZE) {
+        LOG_WARN("Payload of %u bytes exceeds the %u-byte limit\n",
+                 coap_pkt->payload_len, (unsigned)COAP_MAX_CHUNK_SIZE);
+        if(coap_pkt->code >= COAP_GET && coap_pkt->code <= COAP_DELETE) {
+          /*
+           * A request whose payload we cannot deliver in full is refused
+           * rather than truncated, so that a resource is never handed a
+           * partial payload that looks complete. RFC 7252, Section 4.6
+           * provides for this, and the Size1 option in the reply tells the
+           * sender the limit so that it can use block-wise transfers.
+           */
+#if COAP_MESSAGE_ON_ERROR
+          coap_error_message = "PayloadTooLarge";
+#endif
+          return REQUEST_ENTITY_TOO_LARGE_4_13;
+        }
+        /*
+         * A response is still truncated. Refusing one would mean answering
+         * it, and a response is not something a response can answer: RFC
+         * 7252, Sections 4.2 and 4.3 leave only an acknowledgement or a
+         * reset.
+         */
         coap_pkt->payload_len = COAP_MAX_CHUNK_SIZE;
       }
 
