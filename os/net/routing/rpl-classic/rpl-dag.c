@@ -1156,7 +1156,7 @@ rpl_join_instance(uip_ipaddr_t *from, rpl_dio_t *dio)
   LOG_DBG_(" as a parent: ");
   if(p == NULL) {
     LOG_DBG_("failed\n");
-    instance->used = 0;
+    rpl_free_instance(instance);
     return;
   }
   p->dtsn = dio->dtsn;
