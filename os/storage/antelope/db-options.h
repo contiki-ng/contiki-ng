@@ -202,16 +202,6 @@
 #define DB_INDEX_COST			64
 #endif /* DB_INDEX_COST */
 
-/* The maximum number of hash table indexes. */
-#ifndef DB_MEMHASH_INDEX_LIMIT
-#define DB_MEMHASH_INDEX_LIMIT  	1
-#endif /* DB_MEMHASH_INDEX_LIMIT */
-
-/* The default hash table index size. */
-#ifndef DB_MEMHASH_TABLE_SIZE
-#define DB_MEMHASH_TABLE_SIZE		61
-#endif /* DB_MEMHASH_TABLE_SIZE */
-
 /* The maximum number of Maxheap indexes. */
 #ifndef DB_HEAP_INDEX_LIMIT
 #define DB_HEAP_INDEX_LIMIT		1

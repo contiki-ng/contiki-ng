@@ -327,9 +327,8 @@ relation to storage.
 
 ### Indexes
 
-Only the `INLINE` and `MAXHEAP` index types are available; the `MEMHASH` keyword
-is reserved but has no built-in implementation. Indexes may be created only on
-`INT` or `LONG` attributes. An `INLINE` index requires the attribute's values to
+Only the `INLINE` and `MAXHEAP` index types are available. Indexes may be created
+only on `INT` or `LONG` attributes. An `INLINE` index requires the attribute's values to
 be inserted in monotonically increasing order. The number of indexes that can
 exist simultaneously is bounded by `DB_INDEX_POOL_SIZE`, and by default at most
 one `MAXHEAP` index (`DB_HEAP_INDEX_LIMIT`) exists at a time.
