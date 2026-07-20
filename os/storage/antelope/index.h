@@ -41,7 +41,6 @@
 typedef enum {
   INDEX_NONE = 0,
   INDEX_INLINE = 1,
-  INDEX_MEMHASH = 2,
   INDEX_MAXHEAP = 3
 } index_type_t;
 
@@ -98,7 +97,6 @@ typedef struct index_api index_api_t;
 
 extern index_api_t index_inline;
 extern index_api_t index_maxheap;
-extern index_api_t index_memhash;
 
 void index_init(void);
 db_result_t index_create(index_type_t, relation_t *, attribute_t *);
