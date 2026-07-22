@@ -103,6 +103,12 @@ tsch_packet_create_eack(uint8_t *buf, uint16_t buf_len,
     return -1;
   }
 
+  /* Init to zeros, like framer-802154 does before setting up params.
+     framer_802154_setup_params() deliberately does not zero the struct
+     and leaves some fields unset; with LLSEC enabled, residual stack
+     garbage in aux_hdr.security_control ends up determining the
+     auxiliary security header layout of the enhanced ACK. */
+  memset(&params, 0, sizeof(params));
   memset(eackbuf_attrs, 0, sizeof(eackbuf_attrs));
 
   tsch_packet_eackbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_ACKFRAME);
