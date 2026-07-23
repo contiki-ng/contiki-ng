@@ -8,7 +8,8 @@ This port supports the PCA10095 (nRF5340-DK), PCA10059 (nRF52840-DONGLE) and PCA
 
 The following features have been implemented:
 * Support for the 802.15.4 mode of the radio, including IPv6 using 6LoWPAN
-* Support for both TSCH and CSMA
+* Support for both TSCH and CSMA (TSCH availability varies by SoC; see the
+  per-SoC sections below)
 * No dependency on the nRF5 SDK
 * Contiki-NG system clock and rtimers
 * UART driver
@@ -295,8 +296,15 @@ two nRF54L15 boards are flashed with the `.flash` target:
   board-specific `openocd.cfg` is selected automatically by the Makefile.
 * `nrf54l15/dk` — over its onboard SEGGER J-Link.
 
-**Current limitations.** Low-power modes, the watchdog driver, and the
-temperature sensor are not yet supported on the nRF54L15.
+**Current limitations.** TSCH is not supported on the nRF54L15. The
+`nrf_802154`-based radio driver does not implement
+`RADIO_PARAM_LAST_PACKET_TIMESTAMP`, which TSCH requires for time
+synchronisation, so TSCH aborts during initialisation with:
+
+    [ERR : TSCH] ! radio does not support getting last packet timestamp. Abort init.
+
+Use CSMA as the MAC layer (the default). Low-power modes, the watchdog driver,
+and the temperature sensor are also not yet supported on the nRF54L15.
 
 #### FLPR coprocessor
 
