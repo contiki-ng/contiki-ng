@@ -95,15 +95,21 @@ static rtimer_clock_t sfd_timestamp = 0;
  * Minimum spacing between two SPI reads of the RX FIFO byte count in
  * pending_packet(). Tight pollers (e.g. CSMA's RTIMER_BUSYWAIT_UNTIL after a
  * unicast TX) would otherwise hammer the SPI bus and starve the RX IRQ chain
- * that needs the same bus to drain the incoming ACK. 300 us is the empirical
- * minimum that resolves the race on the CC2538 SoC at 32 MHz (the threshold
- * sits between 200 and 300 us on Zolertia Firefly); other host SoCs / SPI
- * clocks may need a different value.
+ * that needs the same bus to drain the incoming ACK. The threshold was
+ * originally measured between 200 and 300 us on the CC2538 SoC at 32 MHz, but
+ * 300 us is that measured minimum with no margin, and has since been observed
+ * to fail on Zolertia Firefly: nodes receive broadcast DIOs, but no unicast is
+ * ever acknowledged, so they never join a RPL DAG. Default to 500 us, which
+ * restores convergence on the same hardware. A larger window costs no
+ * latency: a delivered packet is reported from rx_pkt_len on every call, and
+ * only the fallback SPI peek at the FIFO byte count is rate-limited. Other
+ * host SoCs / SPI clocks may need a different value; override with
+ * CC1200_CONF_PENDING_POLL_THROTTLE_US.
  */
 #ifdef CC1200_CONF_PENDING_POLL_THROTTLE_US
 #define CC1200_PENDING_POLL_THROTTLE_US CC1200_CONF_PENDING_POLL_THROTTLE_US
 #else
-#define CC1200_PENDING_POLL_THROTTLE_US 300
+#define CC1200_PENDING_POLL_THROTTLE_US 500
 #endif
 /*
  * Set this parameter to 1 in order to use the MARC_STATE register when
