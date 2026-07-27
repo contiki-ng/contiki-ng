@@ -70,6 +70,12 @@ pop(struct jsonparse_state *state)
   return true;
 }
 /*--------------------------------------------------------------------*/
+static bool
+is_whitespace(char c)
+{
+  return c == ' ' || c == '\n' || c == '\r' || c == '\t';
+}
+/*--------------------------------------------------------------------*/
 /* will pass by the value and store the start and length of the value for
    atomic types */
 /*--------------------------------------------------------------------*/
@@ -113,7 +119,8 @@ atomic(struct jsonparse_state *state, char type)
     default:              str = "";      break;
     }
 
-    while ((c = state->json[state->pos]) && c != ' ' && c != ',' && c != ']' && c != '}') {
+    while((c = state->json[state->pos]) && !is_whitespace(c) &&
+          c != ',' && c != ']' && c != '}') {
       state->pos++;
     }
 
@@ -134,10 +141,8 @@ atomic(struct jsonparse_state *state, char type)
 static void
 skip_ws(struct jsonparse_state *state)
 {
-  char c;
-
   while(state->pos < state->len &&
-        ((c = state->json[state->pos]) == ' ' || c == '\n')) {
+        is_whitespace(state->json[state->pos])) {
     state->pos++;
   }
 }
