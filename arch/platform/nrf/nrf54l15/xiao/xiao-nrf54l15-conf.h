@@ -15,8 +15,6 @@
 /* RTIMER_SECOND is defined by the OS based on RTIMER_ARCH_SECOND */
 /* which should come from the CPU/platform architecture files */
 
-/* Disable button-hal for now (no buttons defined, and needs v3.x API updates) */
-#define BUTTON_HAL_CONF_ENABLED 0
 /* Temporarily disable watchdog until we implement feeding it */
 #define WATCHDOG_CONF_ENABLE 0
 
