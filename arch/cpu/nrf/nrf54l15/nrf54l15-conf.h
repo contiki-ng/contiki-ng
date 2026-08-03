@@ -43,6 +43,18 @@
 #define WATCHDOG_CONF_ENABLE 0
 #endif
 
+/*
+ * Enable the instruction cache at boot. The SoC executes from wait-stated
+ * RRAM, so code-fetch-bound work runs several times slower uncached.
+ * Set 0 to run uncached, e.g. for cycle-exact profiling of code-fetch
+ * behavior.
+ */
+#ifdef NRF_CONF_ICACHE
+#define NRF_ICACHE_ENABLED NRF_CONF_ICACHE
+#else
+#define NRF_ICACHE_ENABLED 1
+#endif
+
 /* Enable extended HardFault handler with register dump. */
 #ifndef NRF_CONF_HARDFAULT_HANDLER_EXTENDED
 #define NRF_CONF_HARDFAULT_HANDLER_EXTENDED 1

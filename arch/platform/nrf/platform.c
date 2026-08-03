@@ -76,9 +76,26 @@ platform_init_board_stage_two(void)
 {
 }
 /*---------------------------------------------------------------------------*/
+static void
+icache_init(void)
+{
+#if defined(NRF_ICACHE) && NRF_ICACHE_ENABLED
+  /*
+   * Enable the instruction cache, on SoCs that have the ICACHE peripheral
+   * and have not opted out (see NRF_CONF_ICACHE). Invalidate before
+   * enabling: ENABLE performs no invalidation of its own, and the cache
+   * memory is undefined at power-on and stale after a warm reset over
+   * rewritten code, such as a firmware update.
+   */
+  NRF_ICACHE->TASKS_INVALIDATECACHE = 1;
+  NRF_ICACHE->ENABLE = CACHE_ENABLE_ENABLE_Enabled;
+#endif /* defined(NRF_ICACHE) && NRF_ICACHE_ENABLED */
+}
+/*---------------------------------------------------------------------------*/
 void
 platform_init_stage_one(void)
 {
+  icache_init();
   gpio_hal_init();
   platform_init_board();
   leds_init();
