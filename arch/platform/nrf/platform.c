@@ -105,7 +105,18 @@ void
 platform_init_stage_two(void)
 {
   platform_init_board_stage_two();
+
+  /*
+   * There are two images of everything when building with TrustZone, and the
+   * normal world is the one that owns the buttons, through the non-secure
+   * GPIOTE instance. Initializing button-hal in the secure image as well would
+   * arm the secure instance on the same pins, and a button press would then
+   * raise a secure interrupt that nothing services, because the secure image
+   * has handed over to the normal world and no longer runs a scheduler.
+   */
+#if !defined(NRF_TRUSTZONE_SECURE)
   button_hal_init();
+#endif
 
   /* There are two images of everything when building with
    * TrustZone, and uarte can only be initialized once,
