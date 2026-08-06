@@ -140,6 +140,16 @@
 #if defined(NRF_TRUSTZONE_NONSECURE)
 #define NRF_GPIOTE        NRF_GPIOTE1
 #define GPIOTE_IRQHandler GPIOTE1_IRQHandler
+/*
+ * Since nrfx 3.2 the GPIOTE driver names its interrupt handler after the
+ * instance index rather than using GPIOTE_IRQHandler, and gpio-hal-arch.c asks
+ * for index 0, so the driver defines GPIOTE0_IRQHandler. In the normal world
+ * that index refers to GPIOTE1, and the driver correspondingly enables its
+ * interrupt, GPIOTE1_IRQn. Without this rename the handler is placed on the
+ * GPIOTE0 vector, the enabled interrupt reaches the default handler instead,
+ * and the first edge on a GPIO input hangs the CPU until the watchdog fires.
+ */
+#define GPIOTE0_IRQHandler GPIOTE1_IRQHandler
 #else
 #define NRF_GPIOTE        NRF_GPIOTE0
 #define GPIOTE_IRQHandler GPIOTE0_IRQHandler
