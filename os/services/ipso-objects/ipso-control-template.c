@@ -134,8 +134,12 @@ lwm2m_callback(lwm2m_object_instance_t *object, lwm2m_context_t *ctx)
   if(ctx->operation == LWM2M_OP_READ) {
     switch(ctx->resource_id) {
     case IPSO_ONOFF:
-      v = ipso_control_is_on(control) ? 1 : 0;
-      break;
+      /* 5850 (On/Off) is a Boolean in the IPSO registry, so it must be written
+         with the boolean writer. Writing it as an integer makes the typed
+         encodings (TLV, JSON, SenML) carry the wrong datatype on the wire,
+         which servers that validate against the object model reject. */
+      lwm2m_object_write_boolean(ctx, ipso_control_is_on(control) ? 1 : 0);
+      return LWM2M_STATUS_OK;
     case IPSO_DIMMER:
       v = ipso_control_get_value(control);
       break;
