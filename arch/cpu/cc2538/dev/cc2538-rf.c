@@ -189,7 +189,7 @@ set_channel(uint8_t channel)
   /* Changes to FREQCTRL take effect after the next recalibration */
 
   /* If we are off, save state, otherwise switch off and save state */
-  if((REG(RFCORE_XREG_FSMSTAT0) & RFCORE_XREG_FSMSTAT0_FSM_FFCTRL_STATE) != 0) {
+  if(rf_flags & RX_ACTIVE) {
     was_on = 1;
     off();
   }
@@ -244,7 +244,7 @@ get_rssi(void)
   uint8_t was_off = 0;
 
   /* If we are off, turn on first */
-  if((REG(RFCORE_XREG_FSMSTAT0) & RFCORE_XREG_FSMSTAT0_FSM_FFCTRL_STATE) == 0) {
+  if(!(rf_flags & RX_ACTIVE)) {
     was_off = 1;
     on();
   }
@@ -278,7 +278,7 @@ get_iq_lsbs(radio_value_t *value)
   uint8_t was_off = 0;
 
   /* If we are off, turn on first */
-  if((REG(RFCORE_XREG_FSMSTAT0) & RFCORE_XREG_FSMSTAT0_FSM_FFCTRL_STATE) == 0) {
+  if(!(rf_flags & RX_ACTIVE)) {
     was_off = 1;
     on();
   }
@@ -497,7 +497,7 @@ channel_clear(void)
   LOG_INFO("CCA\n");
 
   /* If we are off, turn on first */
-  if((REG(RFCORE_XREG_FSMSTAT0) & RFCORE_XREG_FSMSTAT0_FSM_FFCTRL_STATE) == 0) {
+  if(!(rf_flags & RX_ACTIVE)) {
     was_off = 1;
     on();
   }
@@ -1178,15 +1178,9 @@ PROCESS_THREAD(cc2538_rf_process, ev, data)
 
     /* If we were polled due to an RF error, reset the transceiver */
     if(rf_flags & RF_MUST_RESET) {
-      uint8_t was_on;
-      rf_flags = 0;
-
       /* save state so we know if to switch on again after re-init */
-      if((REG(RFCORE_XREG_FSMSTAT0) & RFCORE_XREG_FSMSTAT0_FSM_FFCTRL_STATE) == 0) {
-        was_on = 0;
-      } else {
-        was_on = 1;
-      }
+      bool was_on = rf_flags & RX_ACTIVE;
+      rf_flags = 0;
       off();
       init();
       if(was_on) {
