@@ -76,11 +76,6 @@
 #define LOG_MODULE "cc2538-rf"
 #define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
-/* Local RF Flags */
-#define RX_ACTIVE     0x80
-#define RF_MUST_RESET 0x40
-#define RF_ON         0x01
-
 /* Bit Masks for the last byte in the RX FIFO */
 #define CRC_BIT_MASK 0x80
 #define LQI_BIT_MASK 0x7F
@@ -106,8 +101,6 @@
 			while ( !(REG(SYS_CTRL_CLOCK_STA) & (SYS_CTRL_CLOCK_STA_XOSC_STB)));	\
 		} while(0)
 /*---------------------------------------------------------------------------*/
-/* Are we currently in poll mode? Disabled by default */
-static uint8_t volatile poll_mode = 0;
 /* Do we perform a CCA before sending? Enabled by default. */
 static uint8_t send_on_cca = 1;
 static int8_t rssi;
@@ -118,9 +111,15 @@ static bool enter_rx_after_tx;
 static radio_shr_callback_t shr_callback;
 static radio_fifop_callback_t fifop_callback;
 static radio_txdone_callback_t txdone_callback;
-static bool async_mode;
 /*---------------------------------------------------------------------------*/
-static uint8_t rf_flags;
+static struct {
+  bool ran_init:1;
+  bool in_rx_mode:1;
+  bool in_tx_mode:1;
+  bool in_poll_mode:1;
+  bool in_async_mode:1;
+  bool must_reset:1;
+} rf_flags;
 static uint8_t rf_channel = IEEE802154_DEFAULT_CHANNEL;
 
 static int on(void);
@@ -243,7 +242,7 @@ set_channel(uint8_t channel)
   /* Changes to FREQCTRL take effect after the next recalibration */
 
   /* If we are off, save state, otherwise switch off and save state */
-  if(rf_flags & RX_ACTIVE) {
+  if(rf_flags.in_rx_mode) {
     was_on = 1;
     off();
   }
@@ -298,7 +297,7 @@ get_rssi(void)
   uint8_t was_off = 0;
 
   /* If we are off, turn on first */
-  if(!(rf_flags & RX_ACTIVE)) {
+  if(!rf_flags.in_rx_mode) {
     was_off = 1;
     on();
   }
@@ -332,7 +331,7 @@ get_iq_lsbs(radio_value_t *value)
   uint8_t was_off = 0;
 
   /* If we are off, turn on first */
-  if(!(rf_flags & RX_ACTIVE)) {
+  if(!rf_flags.in_rx_mode) {
     was_off = 1;
     on();
   }
@@ -439,9 +438,9 @@ mac_timer_init(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
-set_poll_mode(uint8_t enable)
+set_poll_mode(bool enable)
 {
-  poll_mode = enable;
+  rf_flags.in_poll_mode = enable;
 
   if(enable) {
     mac_timer_init();
@@ -551,7 +550,7 @@ channel_clear(void)
   LOG_INFO("CCA\n");
 
   /* If we are off, turn on first */
-  if(!(rf_flags & RX_ACTIVE)) {
+  if(!rf_flags.in_rx_mode) {
     was_off = 1;
     on();
   }
@@ -578,11 +577,11 @@ on(void)
 {
   LOG_INFO("On\n");
 
-  if(!(rf_flags & RX_ACTIVE)) {
+  if(!rf_flags.in_rx_mode) {
     CC2538_RF_CSP_ISFLUSHRX();
     CC2538_RF_CSP_ISRXON();
 
-    rf_flags |= RX_ACTIVE;
+    rf_flags.in_rx_mode = true;
   }
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
@@ -606,7 +605,7 @@ off(void)
     CC2538_RF_CSP_ISRFOFF();
   }
 
-  rf_flags &= ~RX_ACTIVE;
+  rf_flags.in_rx_mode = false;
 
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
   return 1;
@@ -617,7 +616,7 @@ init(void)
 {
   LOG_INFO("Init\n");
 
-  if(rf_flags & RF_ON) {
+  if(rf_flags.ran_init) {
     return 0;
   }
 
@@ -688,7 +687,7 @@ init(void)
     udma_set_channel_src(CC2538_RF_CONF_RX_DMA_CHAN, RFCORE_SFR_RFDATA);
   }
 
-  set_poll_mode(poll_mode);
+  set_poll_mode(rf_flags.in_poll_mode);
 
 #if CSPRNG_ENABLED
   if(!iq_seeder_seed()) {
@@ -699,7 +698,7 @@ init(void)
 
   process_start(&cc2538_rf_process, NULL);
 
-  rf_flags |= RF_ON;
+  rf_flags.ran_init = true;
 
   return 1;
 }
@@ -719,7 +718,7 @@ prepare(const void *payload, unsigned short payload_len)
    */
   while(is_transmitting());
 
-  if((rf_flags & RX_ACTIVE) == 0) {
+  if(!rf_flags.in_rx_mode) {
     on();
   }
 
@@ -747,7 +746,7 @@ transmit(unsigned short transmit_len)
     return RADIO_TX_ERR;
   }
 
-  if(!(rf_flags & RX_ACTIVE)) {
+  if(!rf_flags.in_rx_mode) {
     t0 = RTIMER_NOW();
     on();
     was_off = 1;
@@ -859,7 +858,7 @@ read(void *buf, unsigned short bufsize)
     return 0;
   }
 
-  if(!poll_mode) {
+  if(!rf_flags.in_poll_mode) {
     /* If FIFOP==1 and FIFO==0 then we had a FIFO overflow at some point. */
     if(REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFOP) {
       if(REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFO) {
@@ -930,7 +929,7 @@ get_value(radio_param_t param, radio_value_t *value)
     if(REG(RFCORE_XREG_FRMCTRL0) & RFCORE_XREG_FRMCTRL0_AUTOACK) {
       *value |= RADIO_RX_MODE_AUTOACK;
     }
-    if(poll_mode) {
+    if(rf_flags.in_poll_mode) {
       *value |= RADIO_RX_MODE_POLL_MODE;
     }
     return RADIO_RESULT_OK;
@@ -1127,7 +1126,7 @@ set_object(radio_param_t param, const void *src, size_t size)
 static radio_async_result_t
 async_enter(void)
 {
-  async_mode = true;
+  rf_flags.in_async_mode = true;
 
   /* Disable disabling of SFD detection after frame reception */
   REG(RFCORE_XREG_FSMCTRL) |= RFCORE_XREG_FSMCTRL_RX2RX_TIME_OFF;
@@ -1181,6 +1180,13 @@ async_reprepare(uint_fast16_t offset, uint8_t *patch, uint_fast16_t patch_len)
 static radio_async_result_t
 async_transmit(bool shall_enter_rx_after_tx)
 {
+  if(rf_flags.in_tx_mode) {
+    LOG_WARN("already transmitting\n");
+    return RADIO_ASYNC_REDUNDANT_CALL;
+  }
+  rf_flags.in_rx_mode = false;
+  rf_flags.in_tx_mode = true;
+
   enter_rx_after_tx = shall_enter_rx_after_tx;
   CC2538_RF_CSP_ISTXON();
   ENERGEST_SWITCH(ENERGEST_TYPE_LISTEN, ENERGEST_TYPE_TRANSMIT);
@@ -1190,6 +1196,12 @@ async_transmit(bool shall_enter_rx_after_tx)
 static radio_async_result_t
 async_on(void)
 {
+  if(rf_flags.in_rx_mode) {
+    LOG_WARN("already receiving\n");
+    return RADIO_ASYNC_REDUNDANT_CALL;
+  }
+  rf_flags.in_rx_mode = true;
+
   CC2538_RF_CSP_ISRXON();
   CC2538_RF_CSP_ISFLUSHRX();
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
@@ -1199,6 +1211,13 @@ async_on(void)
 static radio_async_result_t
 async_off(void)
 {
+  if(!rf_flags.in_rx_mode && !rf_flags.in_tx_mode) {
+    LOG_WARN("already off\n");
+    return RADIO_ASYNC_REDUNDANT_CALL;
+  }
+  rf_flags.in_rx_mode = false;
+  rf_flags.in_tx_mode = false;
+
   CC2538_RF_CSP_ISRFOFF();
   ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
@@ -1365,7 +1384,7 @@ PROCESS_THREAD(cc2538_rf_process, ev, data)
   while(1) {
     PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
 
-    if(!poll_mode) {
+    if(!rf_flags.in_poll_mode) {
       packetbuf_clear();
       len = read(packetbuf_dataptr(), PACKETBUF_SIZE);
 
@@ -1377,10 +1396,10 @@ PROCESS_THREAD(cc2538_rf_process, ev, data)
     }
 
     /* If we were polled due to an RF error, reset the transceiver */
-    if(rf_flags & RF_MUST_RESET) {
+    if(rf_flags.must_reset) {
       /* save state so we know if to switch on again after re-init */
-      bool was_on = rf_flags & RX_ACTIVE;
-      rf_flags = 0;
+      bool was_on = rf_flags.in_rx_mode;
+      memset(&rf_flags, 0, sizeof(rf_flags));
       off();
       init();
       if(was_on) {
@@ -1403,7 +1422,7 @@ PROCESS_THREAD(cc2538_rf_process, ev, data)
 void
 cc2538_rf_rx_tx_isr(void)
 {
-  if(async_mode) {
+  if(rf_flags.in_async_mode) {
     if(REG(RFCORE_SFR_RFIRQF0) & RFCORE_SFR_RFIRQF0_SFD) {
       NVIC_ClearPendingIRQ(RF_TX_RX_IRQn);
       REG(RFCORE_SFR_RFIRQF0) &= ~RFCORE_SFR_RFIRQF0_SFD;
@@ -1423,6 +1442,8 @@ cc2538_rf_rx_tx_isr(void)
       REG(RFCORE_SFR_RFIRQF1) &= ~RFCORE_SFR_RFIRQF1_TXDONE;
       if(enter_rx_after_tx) {
         CC2538_RF_CSP_ISFLUSHRX();
+        rf_flags.in_tx_mode = false;
+        rf_flags.in_rx_mode = true;
         ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
       } else {
         async_off();
@@ -1433,7 +1454,7 @@ cc2538_rf_rx_tx_isr(void)
     }
     return;
   }
-  if(!poll_mode) {
+  if(!rf_flags.in_poll_mode) {
     process_poll(&cc2538_rf_process);
   }
 
@@ -1464,7 +1485,7 @@ cc2538_rf_err_isr(void)
 
   /* If the error is not an RX FIFO overflow, set a flag */
   if(REG(RFCORE_SFR_RFERRF) != RFCORE_SFR_RFERRF_RXOVERF) {
-    rf_flags |= RF_MUST_RESET;
+    rf_flags.must_reset = true;
   }
 
   REG(RFCORE_SFR_RFERRF) = 0;
