@@ -159,6 +159,7 @@ static int schedule_duty_cycle_precise(rtimer_clock_t time);
 static void duty_cycle_wrapper(struct rtimer *t, void *ptr);
 static PT_THREAD(duty_cycle(void));
 static void on_shr(void);
+static void on_rxoverf(void);
 static void on_wake_up_frame_fifop(void);
 static void on_payload_frame_fifop(void);
 static void on_final_payload_frame_fifop(void);
@@ -363,6 +364,7 @@ init(void)
   CSL_FRAMER.init();
   frame_queue_init();
   NETSTACK_RADIO.async_set_shr_callback(on_shr);
+  NETSTACK_RADIO.async_set_rxoverf_callback(on_rxoverf);
   NETSTACK_RADIO.async_set_txdone_callback(on_txdone);
   NETSTACK_RADIO.set_value(RADIO_PARAM_TXPOWER, OUTPUT_POWER);
   process_start(&post_processing, NULL);
@@ -604,6 +606,21 @@ on_shr(void)
         csl_state.transmit.acknowledgment_sfd_timestamp = now;
       }
     }
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+on_rxoverf(void)
+{
+  NETSTACK_RADIO.async_off();
+  if(is_duty_cycling) {
+    /* TODO figure out what causes RXOVERF and maybe avoid it altogether */
+    csl_state.duty_cycle.rejected_payload_frame = true;
+    csl_state.duty_cycle.frame_pending = false;
+    csl_state.duty_cycle.received_frame = false;
+    duty_cycle();
+  } else {
+    LOG_ERR("RXOVERF at unexpected occasion\n");
   }
 }
 /*---------------------------------------------------------------------------*/

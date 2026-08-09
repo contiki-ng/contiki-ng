@@ -192,6 +192,7 @@ typedef unsigned radio_param_t;
 
 typedef void (* radio_shr_callback_t)(void);
 typedef void (* radio_fifop_callback_t)(void);
+typedef void (* radio_rxoverf_callback_t)(void);
 typedef void (* radio_txdone_callback_t)(void);
 
 /**
@@ -982,6 +983,12 @@ struct radio_driver {
    */
   void (* async_set_fifop_callback)(radio_fifop_callback_t fifop_callback,
                                     uint_fast16_t threshold);
+
+  /**
+   * \brief              Registers a callback for complete frame transmissions
+   * \param shr_callback The callback function or NULL
+   */
+  void (* async_set_rxoverf_callback)(radio_rxoverf_callback_t rxoverf_callback);
 
   /**
    * \brief              Registers a callback for complete frame transmissions

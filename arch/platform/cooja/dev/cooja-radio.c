@@ -603,6 +603,12 @@ async_set_fifop_callback(radio_fifop_callback_t cb, uint_fast16_t threshold)
 }
 /*---------------------------------------------------------------------------*/
 static void
+async_set_rxoverf_callback(radio_rxoverf_callback_t cb)
+{
+  /* cannot happen anyway */
+}
+/*---------------------------------------------------------------------------*/
+static void
 async_set_txdone_callback(radio_txdone_callback_t cb)
 {
   txdone_callback = cb;
@@ -707,6 +713,7 @@ const struct radio_driver cooja_radio_driver = {
   async_off,
   async_set_shr_callback,
   async_set_fifop_callback,
+  async_set_rxoverf_callback,
   async_set_txdone_callback,
   async_read_phy_header,
   async_read_payload,

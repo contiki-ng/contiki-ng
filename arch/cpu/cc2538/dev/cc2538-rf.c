@@ -110,6 +110,7 @@ static uint_fast16_t read_bytes;
 static bool enter_rx_after_tx;
 static radio_shr_callback_t shr_callback;
 static radio_fifop_callback_t fifop_callback;
+static radio_rxoverf_callback_t rxoverf_callback;
 static radio_txdone_callback_t txdone_callback;
 /*---------------------------------------------------------------------------*/
 static struct {
@@ -1164,7 +1165,6 @@ async_enter(void)
   REG(RFCORE_XREG_RFIRQM1) = RFCORE_XREG_RFIRQM1_TXDONE;
   NVIC_EnableIRQ(RF_TX_RX_IRQn);
   REG(RFCORE_XREG_RFERRM) = 0;
-  NVIC_DisableIRQ(RF_ERR_IRQn);
   return RADIO_ASYNC_OK;
 }
 /*---------------------------------------------------------------------------*/
@@ -1264,6 +1264,17 @@ async_set_fifop_callback(radio_fifop_callback_t cb, uint_fast16_t threshold)
     REG(RFCORE_XREG_RFIRQM0) |= RFCORE_XREG_RFIRQM0_FIFOP;
   } else {
     REG(RFCORE_XREG_RFIRQM0) &= ~RFCORE_XREG_RFIRQM0_FIFOP;
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+async_set_rxoverf_callback(radio_rxoverf_callback_t cb)
+{
+  rxoverf_callback = cb;
+  if(rxoverf_callback) {
+    REG(RFCORE_XREG_RFERRM) |= RFCORE_XREG_RFERRM_RXOVERF;
+  } else {
+    REG(RFCORE_XREG_RFERRM) &= ~RFCORE_XREG_RFERRM_RXOVERF;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -1372,6 +1383,7 @@ const struct radio_driver cc2538_rf_driver = {
   async_off,
   async_set_shr_callback,
   async_set_fifop_callback,
+  async_set_rxoverf_callback,
   async_set_txdone_callback,
   async_read_phy_header,
   async_read_payload,
@@ -1497,6 +1509,18 @@ cc2538_rf_rx_tx_isr(void)
 void
 cc2538_rf_err_isr(void)
 {
+  if(rf_flags.in_async_mode) {
+    if(REG(RFCORE_SFR_RFERRF) & RFCORE_SFR_RFERRF_RXOVERF) {
+      NVIC_ClearPendingIRQ(RF_ERR_IRQn);
+      REG(RFCORE_SFR_RFERRF) &= ~RFCORE_SFR_RFERRF_RXOVERF;
+      if(rxoverf_callback) {
+        rxoverf_callback();
+      }
+      LOG_ERR("RX FIFO overflowed\n");
+    }
+    return;
+  }
+
   LOG_ERR("Error 0x%08lx occurred\n", REG(RFCORE_SFR_RFERRF));
 
   /* If the error is not an RX FIFO overflow, set a flag */

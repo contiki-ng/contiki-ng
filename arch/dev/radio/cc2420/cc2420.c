@@ -347,6 +347,7 @@ const struct radio_driver cc2420_driver = {
   nullradio_async_off,
   nullradio_async_set_shr_callback,
   nullradio_async_set_fifop_callback,
+  nullradio_async_set_rxoverf_callback,
   nullradio_async_set_txdone_callback,
   nullradio_async_read_phy_header,
   nullradio_async_read_payload,

@@ -150,6 +150,11 @@ nullradio_async_set_fifop_callback(radio_fifop_callback_t cb,
 }
 /*---------------------------------------------------------------------------*/
 void
+nullradio_async_set_rxoverf_callback(radio_rxoverf_callback_t cb)
+{
+}
+/*---------------------------------------------------------------------------*/
+void
 nullradio_async_set_txdone_callback(radio_txdone_callback_t cb)
 {
 }
@@ -221,6 +226,7 @@ const struct radio_driver nullradio_driver = {
   nullradio_async_off,
   nullradio_async_set_shr_callback,
   nullradio_async_set_fifop_callback,
+  nullradio_async_set_rxoverf_callback,
   nullradio_async_set_txdone_callback,
   nullradio_async_read_phy_header,
   nullradio_async_read_payload,
