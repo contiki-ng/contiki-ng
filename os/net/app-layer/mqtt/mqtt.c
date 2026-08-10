@@ -1345,6 +1345,10 @@ handle_auth(struct mqtt_connection *conn)
 static void
 parse_vhdr(struct mqtt_connection *conn)
 {
+#if MQTT_5
+  uint16_t vhdr_len;
+#endif
+
   conn->in_packet.payload_start = conn->in_packet.payload;
 
   /* Some message types include a packet identifier */
@@ -1364,6 +1368,8 @@ parse_vhdr(struct mqtt_connection *conn)
   }
 
 #if MQTT_5
+  vhdr_len = conn->in_packet.payload_start - conn->in_packet.payload;
+
   /* CONNACK, PUBACK, PUBREC, PUBREL, PUBCOMP, DISCONNECT and AUTH have a single
    * Reason Code as part of the Variable Header.
    * SUBACK and UNSUBACK contain a list of one or more Reason Codes in the Payload.
@@ -1376,9 +1382,22 @@ parse_vhdr(struct mqtt_connection *conn)
   case MQTT_FHDR_MSG_TYPE_PUBCOMP:
   case MQTT_FHDR_MSG_TYPE_DISCONNECT:
   case MQTT_FHDR_MSG_TYPE_AUTH:
-    conn->in_packet.reason_code = conn->in_packet.payload_start[0];
+    /*
+     * The Reason Code is omitted when it is 0x00 and there are no properties,
+     * in which case the packet ends after the preceding Variable Header
+     * fields. A PUBACK acknowledging an ordinary QoS 1 publication is the
+     * common case; see Section 3.4.2.1 of the MQTT 5.0 specification. Reading
+     * a Reason Code that the peer did not send would take it from a byte that
+     * was never received.
+     */
+    if(conn->in_packet.remaining_length > vhdr_len) {
+      conn->in_packet.reason_code = conn->in_packet.payload_start[0];
+      conn->in_packet.payload_start += 1;
+      vhdr_len += 1;
+    } else {
+      conn->in_packet.reason_code = MQTT_VHDR_RC_SUCCES_OR_NORMAL;
+    }
     conn->in_packet.has_reason_code = 1;
-    conn->in_packet.payload_start += 1;
     break;
 
   default:
@@ -1386,7 +1405,13 @@ parse_vhdr(struct mqtt_connection *conn)
     break;
   }
 
-  if(!conn->in_packet.has_props) {
+  /*
+   * The Property Length is omitted along with the Reason Code, and is then
+   * taken to be zero. Decoding it in that case would read past the end of the
+   * packet as well.
+   */
+  if(!conn->in_packet.has_props &&
+     conn->in_packet.remaining_length > vhdr_len) {
     mqtt_prop_decode_input_props(conn);
   }
 #endif
@@ -1546,6 +1571,13 @@ parse_next:
 
 #if MQTT_5
       if(!conn->in_packet.has_props) {
+        /*
+         * The Variable Header of a PUBLISH is consumed from the input stream
+         * without being buffered, so the properties start at the first
+         * buffered byte. parse_vhdr() has not run at this point, because the
+         * packet continues past this full buffer.
+         */
+        conn->in_packet.payload_start = conn->in_packet.payload;
         mqtt_prop_decode_input_props(conn);
       }
 
