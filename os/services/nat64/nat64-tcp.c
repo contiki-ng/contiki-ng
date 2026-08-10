@@ -613,11 +613,22 @@ nat64_tcp_send_pending(struct tcp_seqstate *ts)
           ? NAT64_TCP_SEGMENT_SIZE : remaining;
 
   LOG_INFO("TCP paced: %u/%u bytes -> IoT node\n", chunk, remaining);
-  inject_tcp(ts->session, ts, TCP_PSH | TCP_ACK,
-             ts->rxbuf + ts->rxbuf_offset, chunk);
+
+  /*
+   * Record the segment as in flight before injecting it. inject_tcp()
+   * enters the IoT node's stack synchronously through tcpip_input(),
+   * and the ACK that comes straight back is processed before it
+   * returns. Setting in_flight afterwards made that ACK arrive while
+   * the segment was still recorded as unsent, so it was ignored and
+   * every chunk waited out the retransmit timer instead — delivering
+   * each one twice.
+   */
   ts->in_flight = chunk;
   ts->rtx_count = 0;
   timer_set(&ts->rtx_timer, NAT64_TCP_RTX_TIMEOUT);
+
+  inject_tcp(ts->session, ts, TCP_PSH | TCP_ACK,
+             ts->rxbuf + ts->rxbuf_offset, chunk);
 }
 /*---------------------------------------------------------------------------*/
 /**
