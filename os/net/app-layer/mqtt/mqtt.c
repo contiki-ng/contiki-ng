@@ -1485,7 +1485,16 @@ parse_next:
                                &conn->in_packet.remaining_length);
 
     if(remaining_length_bytes == 0) {
+      /*
+       * The length of this packet is not known, so where the next one starts
+       * is not known either: everything that follows would be parsed as
+       * arbitrary packets. Nothing can be recovered from the connection, and
+       * the parse position cannot be resumed on the next segment, so close it
+       * and let the application reconnect on a known state.
+       */
+      PRINTF("MQTT - Error, could not decode the remaining length\n");
       call_event(conn, MQTT_EVENT_ERROR, NULL);
+      abort_connection(conn);
       return 0;
     }
 
