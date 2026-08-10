@@ -59,6 +59,8 @@
 #include "lib/list.h"
 #include "sys/cc.h"
 
+#include <inttypes.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -383,6 +385,7 @@ mqtt_decode_var_byte_int(const uint8_t *input_data_ptr,
   uint8_t read_bytes = 0;
   uint8_t byte_in;
   uint32_t multiplier = 1;
+  uint32_t value = 0;
   uint32_t input_pos_0 = 0;
 
   if(input_pos == NULL) {
@@ -391,8 +394,29 @@ mqtt_decode_var_byte_int(const uint8_t *input_data_ptr,
 
   *dest = 0;
 
+  /*
+   * A caller that has fewer bytes than it expected can compute a negative
+   * length. The bounds check below is made in the unsigned domain, where such
+   * a length would become a very large bound and admit reads past the input,
+   * so reject it here instead.
+   */
+  if(input_data_len <= 0) {
+    DBG("MQTT - No input to decode a Variable Byte Integer from\n");
+    return 0;
+  }
+
   do {
-    if(*input_pos >= input_data_len) {
+    /*
+     * A Variable Byte Integer is encoded using at most four bytes. Stop
+     * before consuming a fifth one, so that a rejected integer does not
+     * advance the parse position past the bytes it was encoded in.
+     */
+    if(read_bytes == MQTT_MAX_REMAINING_LENGTH_BYTES) {
+      DBG("MQTT - Received more than 4 byte 'Variable Byte Integer'\n");
+      return 0;
+    }
+
+    if(*input_pos >= (uint32_t)input_data_len) {
       return 0;
     }
 
@@ -404,14 +428,23 @@ mqtt_decode_var_byte_int(const uint8_t *input_data_ptr,
     read_bytes++;
     DBG("MQTT - Read Variable Byte Integer byte %i\n", byte_in);
 
-    if(read_bytes > 4) {
-      DBG("Received more than 4 byte 'Variable Byte Integer'.");
-      return 0;
-    }
-
-    *dest += (byte_in & 127) * multiplier;
+    value += (uint32_t)(byte_in & 127) * multiplier;
     multiplier *= 128;
   } while((byte_in & 128) != 0);
+
+  /*
+   * A Variable Byte Integer encodes values up to 268435455, whereas the
+   * destination holds 16 bits. Report a value that does not fit as an error
+   * rather than storing a truncated one, which would make the peer appear to
+   * have sent a much shorter packet than it did.
+   */
+  if(value > UINT16_MAX) {
+    DBG("MQTT - Variable Byte Integer %" PRIu32 " exceeds the supported "
+        "maximum of %u\n", value, (unsigned)UINT16_MAX);
+    return 0;
+  }
+
+  *dest = (uint16_t)value;
 
   return read_bytes;
 }
