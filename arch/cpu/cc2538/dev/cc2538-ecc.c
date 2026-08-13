@@ -848,7 +848,6 @@ PT_THREAD(ecc_sign(const uint8_t *message_hash,
 
   element_from_pka_ram(signature, r_offset);
   element_from_pka_ram(signature + curve->bytes, s_offset);
-  *result = PKA_STATUS_SUCCESS;
 
   PT_END(&main_protothread);
 }
@@ -1047,7 +1046,7 @@ PT_THREAD(ecc_generate_key_pair(uint8_t *public_key,
                                    curve_g_offset,
                                    public_key_offset,
                                    result));
-    if(*result == PKA_SHIFT_POINT_AT_INFINITY) {
+    if(*result == PKA_STATUS_POINT_AT_INFINITY) {
       LOG_WARN("public key at infinity\n");
       continue;
     }
@@ -1096,7 +1095,6 @@ PT_THREAD(ecc_generate_shared_secret(const uint8_t *public_key,
     PT_EXIT(&main_protothread);
   }
   element_from_pka_ram(shared_secret, product_offset);
-  *result = PKA_STATUS_SUCCESS;
 
   PT_END(&main_protothread);
 }

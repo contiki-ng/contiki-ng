@@ -71,6 +71,33 @@ typedef union {
 } linkaddr_t;
 
 /**
+ * \brief      Construct a MAC eight-bytes address.
+ * \param addr  The linkaddr_t variable to set (must be of type linkaddr_t)
+ *
+ *             This macro constructs a MAC address of 8 bytes.
+ * Example:
+ \code
+ linkaddr_t addr;
+ linkaddr_u8(addr, 0x01, 0x02, 0x23, 0x24, 0x25, 0x06, 0x07, 0x08);
+ \endcode
+ *
+ * \hideinitializer
+ */
+#define linkaddr_u8(addr, addr0, addr1, addr2, addr3, addr4, addr5, addr6, addr7) \
+  do { \
+    _Static_assert(LINKADDR_SIZE == 8, \
+                   "linkaddr_u8 requires LINKADDR_SIZE == 8"); \
+    (addr).u8[0] = (addr0); \
+    (addr).u8[1] = (addr1); \
+    (addr).u8[2] = (addr2); \
+    (addr).u8[3] = (addr3); \
+    (addr).u8[4] = (addr4); \
+    (addr).u8[5] = (addr5); \
+    (addr).u8[6] = (addr6); \
+    (addr).u8[7] = (addr7); \
+  } while(0)
+
+/**
  * \brief      Copy a link-layer address
  * \param dest The destination
  * \param from The source

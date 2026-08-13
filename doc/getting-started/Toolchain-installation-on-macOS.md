@@ -53,10 +53,10 @@ ARM GCC version 10.3 is known to work. You can also try using a newer version, b
 The best way to achieve this on OS X is through homebrew, using a formula provided in a tap. Follow the instructions here: https://github.com/tgtakaoka/homebrew-mspgcc
 
 ### Install Java JDK for the Cooja network simulator
-Nothing exciting here, just download and install Java for OSX. You will need the JDK 21, not just the runtime. You can also install Java using Homebrew:
+Nothing exciting here, just download and install Java for OSX. You will need the JDK 25, not just the runtime. You can also install Java using Homebrew:
 
 ```bash
-brew install openjdk@21
+brew install openjdk@25
 ```
 
 ### Install a CoAP client (libcoap)

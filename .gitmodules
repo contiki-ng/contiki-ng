@@ -34,6 +34,9 @@
 [submodule "arch/cpu/nrf/lib/nrfx"]
 	path = arch/cpu/nrf/lib/nrfx
 	url = https://github.com/NordicSemiconductor/nrfx.git
+[submodule "arch/cpu/nrf/lib/sdk-nrfxlib"]
+	path = arch/cpu/nrf/lib/sdk-nrfxlib
+	url = https://github.com/nrfconnect/sdk-nrfxlib.git
 [submodule "arch/cpu/nrf/lib/tinyusb"]
 	path = arch/cpu/nrf/lib/tinyusb
 	url = https://github.com/hathach/tinyusb_src.git

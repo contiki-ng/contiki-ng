@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packet Analyzer - Serial Radio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+        }
+
+        .header {
+            background: #16213e;
+            padding: 15px 20px;
+            display: grid;
+            grid-template-columns: 200px 1fr auto;
+            align-items: center;
+            border-bottom: 2px solid #0f3460;
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+            color: #e94560;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .nav-links a {
+            color: #888;
+            text-decoration: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: #eee;
+            background: #0f3460;
+        }
+
+        .nav-links a.active {
+            color: #e94560;
+            background: #0f3460;
+        }
+
+        .status {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .led {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #444;
+        }
+
+        .led.connected {
+            background: #4ade80;
+            box-shadow: 0 0 10px #4ade80;
+        }
+
+        .led.disconnected {
+            background: #ef4444;
+        }
+
+        .led.sniffing {
+            background: #facc15;
+            box-shadow: 0 0 10px #facc15;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            padding: 20px;
+            height: calc(100vh - 70px);
+            overflow: hidden;
+        }
+
+        .packets-panel {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .packets-panel h2 {
+            margin-bottom: 15px;
+            color: #e94560;
+            font-size: 1.2em;
+        }
+
+        .packets-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .packets-list {
+            flex: 1;
+            overflow-y: auto;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 0.85em;
+            background: #0d1117;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .packet-row {
+            display: grid;
+            grid-template-columns: 80px 60px 50px 50px 1fr;
+            gap: 10px;
+            padding: 8px 10px;
+            border-bottom: 1px solid #1a2744;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .packet-row:hover {
+            background: #1a2744;
+        }
+
+        .packet-row.selected {
+            background: #0f3460;
+            border-left: 3px solid #e94560;
+        }
+
+        .packet-row .time {
+            color: #888;
+        }
+
+        .packet-row .rssi {
+            color: #4ade80;
+        }
+
+        .packet-row .rssi.weak {
+            color: #facc15;
+        }
+
+        .packet-row .rssi.very-weak {
+            color: #ef4444;
+        }
+
+        .packet-row .lqi {
+            color: #60a5fa;
+        }
+
+        .packet-row .len {
+            color: #a78bfa;
+        }
+
+        .packet-row .type {
+            color: #eee;
+        }
+
+        .packet-header-row {
+            display: grid;
+            grid-template-columns: 80px 60px 50px 50px 1fr;
+            gap: 10px;
+            padding: 8px 10px;
+            background: #0f3460;
+            font-weight: bold;
+            font-size: 0.8em;
+            color: #888;
+            border-radius: 5px 5px 0 0;
+            margin-bottom: 5px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .panel {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .panel h3 {
+            color: #e94560;
+            margin-bottom: 15px;
+            font-size: 1em;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #d63050;
+        }
+
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+        }
+
+        button.secondary {
+            background: #0f3460;
+        }
+
+        button.secondary:hover {
+            background: #1a4a7a;
+        }
+
+        button.active {
+            background: #4ade80;
+        }
+
+        select, input[type="text"], input[type="number"] {
+            background: #0d1117;
+            color: #eee;
+            border: 1px solid #0f3460;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .packet-detail {
+            background: #0d1117;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 0.8em;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .detail-section {
+            margin-bottom: 15px;
+        }
+
+        .detail-section h4 {
+            color: #e94560;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .detail-row {
+            display: flex;
+            gap: 10px;
+            padding: 4px 0;
+        }
+
+        .detail-row .label {
+            color: #888;
+            min-width: 100px;
+        }
+
+        .detail-row .value {
+            color: #4ade80;
+        }
+
+        .hex-dump {
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 0.8em;
+            line-height: 1.6;
+            white-space: pre;
+            color: #60a5fa;
+        }
+
+        .hex-dump .offset {
+            color: #888;
+        }
+
+        .hex-dump .ascii {
+            color: #a78bfa;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            background: #0f3460;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-item .value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4ade80;
+        }
+
+        .stat-item .label {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .filter-input {
+            flex: 1;
+        }
+
+        .no-packets {
+            color: #666;
+            text-align: center;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Packet Analyzer</h1>
+        <div class="nav-links">
+            <a href="index.html">Spectrum</a>
+            <a href="packets.html" class="active">Packets</a>
+        </div>
+        <div class="status">
+            <div class="status-item">
+                <div class="led" id="wsLed"></div>
+                <span>WebSocket</span>
+            </div>
+            <div class="status-item">
+                <div class="led" id="sniffLed"></div>
+                <span>Sniffing</span>
+            </div>
+            <div class="status-item">
+                <span id="packetRate">-- pkt/s</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="packets-panel">
+            <h2>Captured Packets</h2>
+            <div class="packets-toolbar">
+                <button id="btnSniffStart">Start Capture</button>
+                <button id="btnSniffStop" class="secondary">Stop</button>
+                <button id="btnClear" class="secondary">Clear</button>
+                <input type="text" id="filterInput" class="filter-input" placeholder="Filter (e.g., rssi>-80, len<50, hex:41424344)">
+            </div>
+            <div class="packet-header-row">
+                <span>Time</span>
+                <span>RSSI</span>
+                <span>LQI</span>
+                <span>Len</span>
+                <span>Frame Type</span>
+            </div>
+            <div class="packets-list" id="packetsList">
+                <div class="no-packets">No packets captured. Click "Start Capture" to begin.</div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="panel">
+                <h3>Jammer</h3>
+                <div class="controls">
+                    <div class="control-row">
+                        <label style="line-height: 32px;">Channel:</label>
+                        <input type="number" id="jamChannel" value="26" min="0" max="128" style="width: 60px;">
+                    </div>
+                    <div class="control-row">
+                        <label style="line-height: 32px;">Interval:</label>
+                        <input type="number" id="jamInterval" value="5" min="1" max="1000" style="width: 60px;">
+                        <span style="line-height: 32px;">ms</span>
+                    </div>
+                    <div class="control-row">
+                        <button id="btnJamStart">Start Jam</button>
+                        <button id="btnJamStop" class="secondary">Stop Jam</button>
+                    </div>
+                    <div class="jam-warning" style="font-size: 0.75em; color: #facc15; margin-top: 5px;">
+                        Warning: May be illegal. Use only for authorized testing.
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="value" id="totalPackets">0</div>
+                        <div class="label">Total Packets</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="value" id="avgRssi">--</div>
+                        <div class="label">Avg RSSI</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="value" id="beaconCount">0</div>
+                        <div class="label">Beacons</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="value" id="dataCount">0</div>
+                        <div class="label">Data Frames</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Packet Details</h3>
+                <div class="packet-detail" id="packetDetail">
+                    <div class="no-packets">Select a packet to view details</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Hex Dump</h3>
+                <div class="packet-detail">
+                    <div class="hex-dump" id="hexDump">Select a packet to view hex dump</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="packets.js"></script>
+</body>
+</html>

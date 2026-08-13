@@ -20,6 +20,11 @@ ifndef CONTIKI_CPU_FAM_DIR
  endif
 endif
 ifndef CONTIKI_CPU_FAM_DIR
+ ifneq (,$(findstring msp430fr5,$(MCU)))
+  CONTIKI_CPU_FAM_DIR = f5xxx
+ endif
+endif
+ifndef CONTIKI_CPU_FAM_DIR
  ifneq (,$(findstring msp430f2,$(MCU)))
   CONTIKI_CPU_FAM_DIR = f2xxx f1xxx
  endif

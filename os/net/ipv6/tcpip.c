@@ -628,12 +628,12 @@ tcpip_ipv6_output(void)
   }
 
   if(uip_len > UIP_LINK_MTU) {
-    LOG_ERR("output: Packet too big");
+    LOG_ERR("output: Packet too big\n");
     goto exit;
   }
 
   if(uip_is_addr_unspecified(&UIP_IP_BUF->destipaddr)){
-    LOG_ERR("output: Destination address unspecified");
+    LOG_ERR("output: Destination address unspecified\n");
     goto exit;
   }
 

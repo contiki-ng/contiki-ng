@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serial Radio Web Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+        }
+
+        .header {
+            background: #16213e;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #0f3460;
+        }
+
+        .header h1 {
+            font-size: 1.3em;
+            color: #e94560;
+        }
+
+        .status {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .led {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #444;
+        }
+
+        .led.connected {
+            background: #4ade80;
+            box-shadow: 0 0 8px #4ade80;
+        }
+
+        .led.disconnected {
+            background: #ef4444;
+        }
+
+        /* Tab navigation */
+        .tab-nav {
+            background: #16213e;
+            display: flex;
+            gap: 0;
+            padding: 0 20px;
+            border-bottom: 2px solid #0f3460;
+        }
+
+        .tab-btn {
+            background: transparent;
+            color: #888;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab-btn:hover {
+            color: #eee;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .tab-btn.active {
+            color: #e94560;
+            border-bottom-color: #e94560;
+        }
+
+        /* Tab content */
+        .tab-content {
+            display: none;
+            height: calc(100vh - 100px);
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ============ CLI Tab ============ */
+        .cli-tab {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 20px;
+            padding: 20px;
+            height: 100%;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .cli-main {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-width: 0;
+        }
+
+        .console-output {
+            flex: 1;
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 0.8em;
+            overflow-y: auto;
+            overflow-x: hidden;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #888;
+            border: 1px solid #0f3460;
+            min-height: 100px;
+            max-height: calc(100vh - 300px);
+        }
+
+        .console-output .debug-line { margin: 1px 0; padding: 2px 0; }
+        .console-output .debug-line.info { color: #4ade80; }
+        .console-output .debug-line.warn { color: #facc15; }
+        .console-output .debug-line.error { color: #ef4444; }
+        .console-output .timestamp { color: #666; margin-right: 8px; }
+        .console-output .command-echo { color: #e94560; margin: 8px 0 2px 0; }
+        .console-output .command-result { color: #4ade80; margin-left: 10px; }
+        .console-output .command-error { color: #ef4444; margin-left: 10px; }
+
+        .cli-input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .cli-input-area input {
+            flex: 1;
+            background: #0d1117;
+            color: #4ade80;
+            border: 1px solid #0f3460;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.95em;
+        }
+
+        .cli-input-area input::placeholder { color: #555; }
+        .cli-input-area input:focus { outline: none; border-color: #e94560; }
+
+        /* Sidebar panel */
+        .sidebar-panel {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .sidebar-panel h3 {
+            color: #e94560;
+            font-size: 0.95em;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .info-item {
+            background: #0f3460;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .info-item label {
+            display: block;
+            font-size: 0.75em;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .info-item .value {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #4ade80;
+        }
+
+        /* ============ RSSI Tab ============ */
+        .rssi-tab {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 20px;
+            padding: 20px;
+            height: 100%;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .visualization-panel {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .visualization-panel h2 {
+            margin-bottom: 15px;
+            color: #e94560;
+            font-size: 1.1em;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .view-toggle button {
+            flex: 1;
+            padding: 8px;
+            max-width: 120px;
+        }
+
+        .view-toggle button.active {
+            background: #4ade80;
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            min-height: 300px;
+        }
+
+        #spectrumCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #0d1117;
+            border-radius: 5px;
+        }
+
+        #plotly3d {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: none;
+        }
+
+        .stats {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .stats span { color: #eee; }
+
+        .rssi-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .panel {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .panel h3 {
+            color: #e94560;
+            margin-bottom: 12px;
+            font-size: 0.95em;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 8px;
+        }
+
+        .current-spectrum {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .channel-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .channel-bar .ch {
+            width: 25px;
+            font-size: 0.75em;
+            color: #888;
+        }
+
+        .channel-bar .bar-container {
+            flex: 1;
+            height: 16px;
+            background: #0d1117;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .channel-bar .bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #facc15, #ef4444);
+            transition: width 0.1s ease;
+        }
+
+        .channel-bar .rssi {
+            width: 45px;
+            font-size: 0.75em;
+            text-align: right;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .control-row label {
+            font-size: 0.85em;
+            min-width: 60px;
+        }
+
+        /* ============ Packets Tab ============ */
+        .packets-tab {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 20px;
+            padding: 20px;
+            height: 100%;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .packets-main {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .packets-main h2 {
+            margin-bottom: 15px;
+            color: #e94560;
+            font-size: 1.1em;
+        }
+
+        .packets-list {
+            flex: 1;
+            overflow-y: auto;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.8em;
+        }
+
+        .packet-placeholder {
+            color: #666;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .packet-item {
+            background: #0d1117;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            border-left: 3px solid #4ade80;
+        }
+
+        .packet-item .packet-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .packet-item .packet-data {
+            word-break: break-all;
+            color: #4ade80;
+        }
+
+        .packet-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* ============ Common ============ */
+        button {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background 0.2s;
+        }
+
+        button:hover { background: #d63050; }
+        button:disabled { background: #444; cursor: not-allowed; }
+        button.secondary { background: #0f3460; }
+        button.secondary:hover { background: #1a4a7a; }
+
+        select, input[type="number"] {
+            background: #0d1117;
+            color: #eee;
+            border: 1px solid #0f3460;
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header .clear-btn {
+            font-size: 0.7em;
+            padding: 4px 8px;
+            background: #0f3460;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Serial Radio</h1>
+        <div class="status">
+            <div class="status-item">
+                <div class="led" id="wsLed"></div>
+                <span>WebSocket</span>
+            </div>
+            <div class="status-item">
+                <span id="scanRate">-- scans/s</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-nav">
+        <button class="tab-btn active" data-tab="cli">Serial Radio CLI</button>
+        <button class="tab-btn" data-tab="rssi">RSSI Scan</button>
+        <button class="tab-btn" data-tab="packets">Packet Sniffer</button>
+    </div>
+
+    <!-- CLI Tab -->
+    <div class="tab-content active" id="tab-cli">
+        <div class="cli-tab">
+            <div class="cli-main">
+                <div class="panel-header">
+                    <h3 style="color: #e94560; margin: 0;">Console</h3>
+                    <button class="clear-btn" id="btnClearConsole">Clear</button>
+                </div>
+                <div class="console-output" id="consoleOutput">
+                    <span style="color: #666;">Waiting for output...</span>
+                </div>
+                <div class="cli-input-area">
+                    <input type="text" id="cliInput" placeholder="help, info, ping, channel, power, scan, sniff, fastscan, rx, tx...">
+                    <button id="btnCliSend">Send</button>
+                </div>
+            </div>
+            <div class="sidebar-panel">
+                <h3>Radio Info</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Channel</label>
+                        <div class="value" id="infoChannel">--</div>
+                    </div>
+                    <div class="info-item">
+                        <label>TX Power</label>
+                        <div class="value" id="infoTxPower">--</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Band</label>
+                        <div class="value" id="infoBand">--</div>
+                    </div>
+                    <div class="info-item">
+                        <label>PAN ID</label>
+                        <div class="value" id="infoPanId">--</div>
+                    </div>
+                </div>
+                <h3 style="margin-top: 15px;">Quick Commands</h3>
+                <div class="controls">
+                    <div class="control-row">
+                        <button id="btnPing" class="secondary" style="flex:1;">Ping</button>
+                        <button id="btnGetInfo" class="secondary" style="flex:1;">Refresh</button>
+                    </div>
+                    <div class="control-row">
+                        <label>Channel:</label>
+                        <input type="number" id="channelInput" value="26" min="0" max="128" style="width: 55px;">
+                        <button id="btnSetChannel" class="secondary">Set</button>
+                    </div>
+                    <div class="control-row">
+                        <label>TX Power:</label>
+                        <input type="number" id="powerInput" value="0" min="-30" max="20" style="width: 55px;">
+                        <button id="btnSetPower" class="secondary">Set</button>
+                    </div>
+                    <div class="control-row">
+                        <label>PAN ID:</label>
+                        <input type="text" id="panIdInput" value="0xABCD" style="width: 65px;">
+                        <button id="btnSetPanId" class="secondary">Set</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RSSI Scan Tab -->
+    <div class="tab-content" id="tab-rssi">
+        <div class="rssi-tab">
+            <div class="visualization-panel">
+                <h2>Spectrum Display</h2>
+                <div class="view-toggle">
+                    <button id="view2d" class="active">2D Spectrum</button>
+                    <button id="view3d">3D Waterfall</button>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="spectrumCanvas"></canvas>
+                    <div id="plotly3d"></div>
+                </div>
+                <div class="stats">
+                    Samples: <span id="sampleCount">0</span> |
+                    Min: <span id="minRssi">--</span> dBm |
+                    Max: <span id="maxRssi">--</span> dBm |
+                    Avg: <span id="avgRssi">--</span> dBm
+                </div>
+            </div>
+            <div class="rssi-sidebar">
+                <div class="panel">
+                    <h3>Scan Control</h3>
+                    <div class="controls">
+                        <div class="control-row">
+                            <label>Start:</label>
+                            <input type="number" id="scanStartCh" value="11" min="0" max="128" style="width: 50px;">
+                            <label>End:</label>
+                            <input type="number" id="scanEndCh" value="26" min="0" max="128" style="width: 50px;">
+                        </div>
+                        <div class="control-row">
+                            <button id="btnScanStart" style="flex:1;">Start Scan</button>
+                            <button id="btnScanStop" class="secondary" style="flex:1;">Stop</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h3>Current RSSI</h3>
+                    <div class="current-spectrum" id="currentSpectrum">
+                        <span style="color: #666;">Start a scan to see RSSI values</span>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h3>Display Settings</h3>
+                    <div class="controls">
+                        <div class="control-row">
+                            <label>RSSI Min:</label>
+                            <input type="number" id="rssiMin" value="-120" style="width: 65px;">
+                        </div>
+                        <div class="control-row">
+                            <label>RSSI Max:</label>
+                            <input type="number" id="rssiMax" value="-20" style="width: 65px;">
+                        </div>
+                        <div class="control-row">
+                            <label>History:</label>
+                            <input type="number" id="historyLen" value="50" min="10" max="200" style="width: 65px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Packets Tab -->
+    <div class="tab-content" id="tab-packets">
+        <div class="packets-tab">
+            <div class="packets-main">
+                <h2>Received Packets</h2>
+                <div class="packet-stats">
+                    <div class="info-item">
+                        <label>Packets</label>
+                        <div class="value" id="packetCount">0</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Rate</label>
+                        <div class="value" id="packetRate">0/s</div>
+                    </div>
+                </div>
+                <div class="packets-list" id="packetsList">
+                    <div class="packet-placeholder">No packets received yet. Start sniffing to capture packets.</div>
+                </div>
+            </div>
+            <div class="rssi-sidebar">
+                <div class="panel">
+                    <h3>Sniffer Control</h3>
+                    <div class="controls">
+                        <div class="control-row">
+                            <button id="btnSniffStart" style="flex:1;">Start Sniff</button>
+                            <button id="btnSniffStop" class="secondary" style="flex:1;">Stop</button>
+                        </div>
+                        <div class="control-row">
+                            <label>Channel:</label>
+                            <input type="number" id="sniffChannel" value="26" min="0" max="128" style="width: 55px;">
+                            <button id="btnSniffSetChannel" class="secondary">Set</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h3>Packet Display</h3>
+                    <div class="controls">
+                        <div class="control-row">
+                            <button id="btnClearPackets" class="secondary" style="flex:1;">Clear Packets</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="spectrum.js"></script>
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update buttons
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+
+                // Trigger resize for canvas
+                window.dispatchEvent(new Event('resize'));
+            });
+        });
+
+        // Additional packet tab buttons
+        document.getElementById('btnSniffSetChannel')?.addEventListener('click', () => {
+            const ch = document.getElementById('sniffChannel').value;
+            if (window.analyzer) {
+                window.analyzer.sendCommand('set_channel', { channel: parseInt(ch) });
+            }
+        });
+
+        document.getElementById('btnClearPackets')?.addEventListener('click', () => {
+            const container = document.getElementById('packetsList');
+            container.innerHTML = '<div class="packet-placeholder">Packets cleared</div>';
+            document.getElementById('packetCount').textContent = '0';
+        });
+    </script>
+</body>
+</html>

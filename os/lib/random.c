@@ -30,23 +30,53 @@
  *
  */
 
+/**
+ * \addtogroup random
+ * @{
+ *
+ * \file
+ *         Utility functions for non-cryptographic random numbers.
+ * \author
+ *         Konrad Krentz <konrad.krentz@gmail.com>
+ */
 
 #include "lib/random.h"
-#include <stdlib.h>
+#include "lib/csprng.h"
+#include "net/linkaddr.h"
+#include "net/netstack.h"
+#include <string.h>
+
+/* Log configuration */
+#include "sys/log.h"
+#define LOG_MODULE "random"
+#define LOG_LEVEL LOG_LEVEL_NONE
 
 /*---------------------------------------------------------------------------*/
 void
-random_init(unsigned short seed)
+random_init(void)
 {
-  srand(seed);
+  uint64_t seed;
+#if CSPRNG_ENABLED
+  if(csprng_rand((uint8_t *)&seed, sizeof(seed))) {
+    LOG_DBG("Generated seed with CSPRNG: 0x%" PRIx64 "\n", seed);
+  } else
+#endif /* CSPRNG_ENABLED */
+  {
+#if LINKADDR_SIZE < 8
+    if(NETSTACK_RADIO.get_object(RADIO_PARAM_64BIT_ADDR, &seed, sizeof(seed))
+       == RADIO_RESULT_OK) {
+      LOG_DBG("Using 64-bit address as seed: 0x%" PRIx64 "\n", seed);
+    } else
+#endif /* LINKADDR_SIZE < 8 */
+    {
+      memcpy(&seed, linkaddr_node_addr.u8, sizeof(linkaddr_node_addr.u8));
+      LOG_DBG("Using %zu-byte linkaddr as seed: 0x%" PRIx64 "\n",
+              (size_t)LINKADDR_SIZE,
+              seed);
+    }
+  }
+  RANDOM_PRNG.seed(seed);
 }
 /*---------------------------------------------------------------------------*/
-unsigned short
-random_rand(void)
-{
-/* In gcc int rand() uses RAND_MAX and long random() uses RANDOM_MAX=0x7FFFFFFF */
-/* RAND_MAX varies depending on the architecture */
 
-  return (unsigned short)rand();
-}
-/*---------------------------------------------------------------------------*/
+/** @} */

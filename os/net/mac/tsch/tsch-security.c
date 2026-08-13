@@ -50,6 +50,7 @@
 #include "net/packetbuf.h"
 #include "lib/ccm-star.h"
 #include "lib/aes-128.h"
+#include "sys/cc.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -65,7 +66,7 @@ static aes_key keys[] = {
   TSCH_SECURITY_K1,
   TSCH_SECURITY_K2
 };
-#define N_KEYS (sizeof(keys) / sizeof(aes_key))
+#define N_KEYS CC_ARRAY_LENGTH(keys)
 
 /*---------------------------------------------------------------------------*/
 static void

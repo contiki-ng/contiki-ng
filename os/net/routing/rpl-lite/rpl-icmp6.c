@@ -552,6 +552,11 @@ dao_input(void)
           goto discard;
         }
         dao.prefixlen = buffer[i + 3];
+        if(dao.prefixlen > 8 * sizeof(dao.prefix)) {
+          LOG_WARN("dao_input: invalid target prefix length %u, discard\n",
+                   dao.prefixlen);
+          goto discard;
+        }
         if(4 + (dao.prefixlen + 7) / CHAR_BIT != len) {
           LOG_WARN("dao_input: invalid target option, len %u != %u, discard\n",
                    len, 4 + (dao.prefixlen + 7) / CHAR_BIT);

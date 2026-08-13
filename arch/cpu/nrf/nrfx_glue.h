@@ -32,6 +32,8 @@
 #ifndef NRFX_GLUE_H__
 #define NRFX_GLUE_H__
 
+#include "sys/cc.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -45,6 +47,20 @@ extern "C" {
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  */
+
+#include <nrf.h>
+
+/*
+ * nRF54L15 GRTC IRQ workaround:
+ * The MDK defines GRTC_IRQn as GRTC_0_IRQn, but the nrfx GRTC HAL will try to
+ * redefine it to GRTC_2_IRQn for NRF_APPLICATION && !NRF_TRUSTZONE_NONSECURE.
+ * Undefine the MDK's definition here to allow the HAL's redefinition to proceed
+ * without error. Individual files using GRTC_0 can explicitly use GRTC_0_IRQn.
+ */
+#if defined(NRF54L15_XXAA) && defined(GRTC_IRQn)
+#undef GRTC_IRQn
+#undef GRTC_IRQHandler
+#endif
 
 #include <soc/nrfx_irqs.h>
 #include <soc/nrfx_atomic.h>
@@ -130,14 +146,43 @@ _NVIC_ClearPendingIRQ(IRQn_Type irq_number)
   NVIC_ClearPendingIRQ(irq_number);
 }
 /**
- * @brief Macro for entering into a critical section.
+ * @brief Macro for setting the pending status of a specific IRQ.
+ *
+ * @param irq_number IRQ number.
  */
-#define NRFX_CRITICAL_SECTION_ENTER()   __disable_irq()
+#define NRFX_IRQ_PENDING_SET(irq_number) _NVIC_SetPendingIRQ(irq_number)
+static inline void
+_NVIC_SetPendingIRQ(IRQn_Type irq_number)
+{
+  NVIC_SetPendingIRQ(irq_number);
+}
+/**
+ * @brief Macro for entering into a critical section.
+ *
+ * Uses PRIMASK save/restore to support proper nesting.  The original
+ * __disable_irq()/__enable_irq() pair was non-nesting: EXIT would
+ * unconditionally re-enable interrupts even if the caller had already
+ * disabled them, breaking e.g. the nrf_802154 radio driver's own
+ * critical sections.
+ */
+#define NRFX_CRITICAL_SECTION_ENTER()  { uint32_t _nrfx_pm = __get_PRIMASK(); __disable_irq()
 
 /**
  * @brief Macro for exiting from a critical section.
  */
-#define NRFX_CRITICAL_SECTION_EXIT()    __enable_irq()
+#define NRFX_CRITICAL_SECTION_EXIT()   __set_PRIMASK(_nrfx_pm); }
+
+/*------------------------------------------------------------------------------ */
+
+/**
+ * @brief Macro for counting trailing zeros.
+ *
+ * @param[in] value A word value.
+ *
+ * @return Number of trailing 0-bits in @p value, starting at the least significant bit position.
+ *         If x is 0, the result is undefined.
+ */
+#define NRFX_CTZ(value) __builtin_ctz(value)
 
 /*------------------------------------------------------------------------------ */
 
@@ -158,6 +203,7 @@ _NVIC_ClearPendingIRQ(IRQn_Type irq_number)
  * @return Previous value of the atomic object.
  */
 #define NRFX_ATOMIC_FETCH_AND(p_data, value) nrfx_atomic_u32_fetch_and(p_data, value)
+#define NRFX_ATOMIC_FETCH_OR(p_data, value)  nrfx_atomic_u32_fetch_or(p_data, value)
 
 /*------------------------------------------------------------------------------ */
 

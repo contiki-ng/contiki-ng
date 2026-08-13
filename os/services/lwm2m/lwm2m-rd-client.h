@@ -131,8 +131,8 @@ void lwm2m_rd_client_set_session_callback(lwm2m_session_info_t *session_info, se
 #if LWM2M_QUEUE_MODE_ENABLED
 uint8_t lwm2m_rd_client_is_client_awake(void);
 void lwm2m_rd_client_restart_client_awake_timer(void);
-void lwm2m_rd_client_fsm_execute_queue_mode_awake();
-void lwm2m_rd_client_fsm_execute_queue_mode_update();
+void lwm2m_rd_client_fsm_execute_queue_mode_awake(lwm2m_session_info_t *session_info);
+void lwm2m_rd_client_fsm_execute_queue_mode_update(void);
 #endif
 
 #endif /* LWM2M_RD_CLIENT_H_ */

@@ -60,6 +60,23 @@ PROCESS_THREAD(normal_world_process, ev, data)
   printf("sec ret = %d\n", *sec_retp);
 #endif
 
+#if TEST_SPU_RAMACCERR
+  /*
+   * Trigger an SPU RAMACCERR by pointing a non-secure EasyDMA master
+   * (UARTE2) at a source buffer in secure RAM. The CPU does not
+   * attempt the load, so no SecureFault fires; the SPU catches the
+   * bus-master access, raises its IRQ, captures the violation type,
+   * and resets. On the next boot, spu_report_violation() prints
+   * "Reboot caused by SPU violation: RAMACCERR".
+   */
+  NRF_UARTE2_NS->PSEL.TXD = 0xFFFFFFFFUL;
+  NRF_UARTE2_NS->BAUDRATE = UARTE_BAUDRATE_BAUDRATE_Baud115200;
+  NRF_UARTE2_NS->ENABLE = UARTE_ENABLE_ENABLE_Enabled;
+  NRF_UARTE2_NS->TXD.PTR = 0x20001000UL;
+  NRF_UARTE2_NS->TXD.MAXCNT = 1;
+  NRF_UARTE2_NS->TASKS_STARTTX = 1;
+#endif
+
   etimer_set(&et, CLOCK_SECOND * 10);
   while(true) {
     PROCESS_WAIT_EVENT();

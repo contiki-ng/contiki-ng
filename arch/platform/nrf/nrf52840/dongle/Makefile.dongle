@@ -8,9 +8,114 @@ CFLAGS += -DBOARD_DEF_PATH=\"nrf52840-dongle-def.h\"
 # Dongle only has USB and not UART
 NRF_NATIVE_USB=1
 
+# The dongle is programmed via DFU (see the upload rules below), so
+# disable the J-Link-based upload rules and device enumeration in
+# Makefile.nrf.
+NRF_JLINK_UPLOAD = 0
+
 ### Include the common nrf52840 makefile
 include $(PLATFORM_ROOT_DIR)/nrf52840/Makefile.nrf52840
 
 CONTIKI_TARGET_DIRS += nrf52840/dongle
 
 MODULES += $(CONTIKI_NG_DRIVERS_ETC_DIR)/rgb-led
+
+#
+# Dongle upload via Nordic open-bootloader (no J-Link). Replaces the
+# J-Link-based upload rules from arch/cpu/nrf/Makefile.nrf, which are
+# disabled with NRF_JLINK_UPLOAD=0 above. Triggers
+# DFU mode on a running Contiki-NG firmware if needed, generates the
+# Nordic DFU zip, then flashes via the Rust-based nrfutil.
+#
+# Requirements:
+#   - Rust nrfutil v7+ (https://www.nordicsemi.com/Software-and-tools/
+#     Development-Tools/nrfutil) + `nrfutil install nrf5sdk-tools`
+#   - pyusb for the optional in-firmware DFU trigger
+#     (pip install pyusb). Skipped automatically if not installed.
+#
+# Override the Python interpreter with PYTHON3, the nrfutil binary
+# with NRFUTIL, or pick a specific dongle with NRF_UPLOAD_SN=<serial>
+# or PORT=<serial port>.
+#
+NRFUTIL ?= nrfutil
+PYTHON3 ?= python3
+DONGLE_DFU_TRIGGER := $(CONTIKI)/tools/nrf/dongle-dfu-trigger.py
+DONGLE_DFU_ZIP := $(BUILD_DIR_BOARD)/dongle-dfu-image.zip
+
+# A PORT given on the make command line (as used by the login target)
+# can also select the dongle to program (unless NRF_UPLOAD_SN is used).
+# Only DFU-capable devices are considered, in firmware mode (nordicUsb)
+# or bootloader mode (nordicDfu) - not J-Link devkits. A PORT from the
+# environment or a file-level default must not select the device.
+ifneq ($(filter %.upload,$(MAKECMDGOALS)),)
+  ifndef NRF_UPLOAD_SN
+    ifeq ($(origin PORT),command line)
+      # Skip the lookup when nrfutil is missing: the upload recipe's
+      # $(NRFUTIL_CHECK) reports the missing tool with install guidance.
+      ifneq ($(shell command -v $(NRFUTIL) 2>/dev/null),)
+        NRF_UPLOAD_SN := $(shell NRFUTIL=$(NRFUTIL) $(CONTIKI)/tools/nrf/nrf-serials --traits nordicDfu,nordicUsb --port $(PORT))
+        ifeq ($(NRF_UPLOAD_SN),)
+          $(error Could not find an attached DFU device with serial port $(PORT))
+        endif
+      endif
+    endif
+  endif
+endif
+
+ifdef NRF_UPLOAD_SN
+  # The dongle keeps its serial number across the firmware/bootloader
+  # mode switch, so the same serial selects the device in both steps.
+  DONGLE_TRIGGER_OPTS := --serial-number $(NRF_UPLOAD_SN)
+  DONGLE_PROGRAM_OPTS := --serial-number $(NRF_UPLOAD_SN)
+else
+  DONGLE_PROGRAM_OPTS := --traits nordicDfu
+endif
+
+%.upload: $(BUILD_DIR_BOARD)/%.$(TARGET)
+	$(NRFUTIL_CHECK)
+	@echo "==> Converting ELF to Intel HEX"
+	$(Q)$(OBJCOPY) -O ihex $< $(BUILD_DIR_BOARD)/$*.hex
+	@echo "==> Triggering DFU mode on running firmware (if any)"
+	$(Q)$(PYTHON3) $(DONGLE_DFU_TRIGGER) $(DONGLE_TRIGGER_OPTS) && sleep 2 || { \
+	  [ $$? -eq 3 ] || exit 1; \
+	  echo "    (cannot check dongle state without pyusb; assuming bootloader)"; }
+	@echo "==> Generating Nordic DFU package"
+	$(Q)$(NRFUTIL) nrf5sdk-tools pkg generate --hw-version 52 --sd-req 0x00 --debug-mode --application $(BUILD_DIR_BOARD)/$*.hex $(DONGLE_DFU_ZIP)
+	@echo "==> Flashing"
+	$(Q)$(NRFUTIL) device program --firmware $(DONGLE_DFU_ZIP) $(DONGLE_PROGRAM_OPTS)
+
+# Upload to all attached dongles (in firmware or bootloader mode),
+# analogous to the J-Link %.upload-all rule in Makefile.nrf.
+
+# Only enumerate dongle serial numbers when actually running the
+# upload sequence. Fail when the enumeration returns nothing (the shell
+# function discards its exit status): a silently empty list would make
+# the upload sequence a falsely successful no-op. The --list stderr
+# diagnostic (no dongle, unreadable or duplicate serial numbers,
+# missing pyusb) explains the reason and is passed through to the
+# terminal.
+ifneq ($(filter nrf-dongle-upload-sequence,$(MAKECMDGOALS)),)
+  NRF_DONGLE_SNRS := $(shell $(PYTHON3) $(DONGLE_DFU_TRIGGER) --list)
+  ifeq ($(NRF_DONGLE_SNRS),)
+    $(error No dongles to program)
+  endif
+endif
+
+nrf-dongle-upload-snr.%:
+	@$(PYTHON3) $(DONGLE_DFU_TRIGGER) --serial-number $* && sleep 2 || { \
+	  [ $$? -eq 3 ] || exit 1; \
+	  echo "    (cannot check dongle state without pyusb; assuming bootloader)"; }
+	@echo "==> Flashing dongle $*"
+	$(Q)$(NRFUTIL) device program --firmware $(DONGLE_DFU_ZIP) --serial-number $*
+
+.PHONY: nrf-dongle-upload-sequence
+nrf-dongle-upload-sequence: $(foreach SNR, $(NRF_DONGLE_SNRS), nrf-dongle-upload-snr.$(SNR))
+	@echo Done
+
+%.upload-all: $(BUILD_DIR_BOARD)/%.$(TARGET)
+	$(NRFUTIL_CHECK)
+	@echo "==> Converting ELF to Intel HEX"
+	$(Q)$(OBJCOPY) -O ihex $< $(BUILD_DIR_BOARD)/$*.hex
+	@echo "==> Generating Nordic DFU package"
+	$(Q)$(NRFUTIL) nrf5sdk-tools pkg generate --hw-version 52 --sd-req 0x00 --debug-mode --application $(BUILD_DIR_BOARD)/$*.hex $(DONGLE_DFU_ZIP)
+	$(Q)$(MAKE) -j $(NUMPAR) nrf-dongle-upload-sequence

@@ -293,14 +293,26 @@ mqtt_prop_decode_input_props(struct mqtt_connection *conn)
 /*---------------------------------------------------------------------------*/
 static uint32_t
 decode_prop_utf8(struct mqtt_connection *conn,
-                 uint8_t *buf_in,
+                 uint8_t *buf_in, uint32_t buf_in_len,
                  uint8_t *data)
 {
   uint32_t len;
 
+  /* The 2-byte length prefix must be present in the received input */
+  if(buf_in_len < MQTT_STRING_LEN_SIZE) {
+    DBG("MQTT - Error, truncated UTF8 string property\n");
+    return 0;
+  }
+
   len = (buf_in[0] << 8) + buf_in[1];
 
   DBG("MQTT - Decoding %d-char UTF8 string property\n", len);
+
+  /* The declared string must fit within the received input */
+  if(len + MQTT_STRING_LEN_SIZE > buf_in_len) {
+    DBG("MQTT - Error, UTF8 string property exceeds input\n");
+    return 0;
+  }
 
   /* Include NULL terminator in destination */
   if((len + MQTT_STRING_LEN_SIZE + 1) > MQTT_PROP_MAX_PROP_LENGTH) {
@@ -317,7 +329,7 @@ decode_prop_utf8(struct mqtt_connection *conn,
 /*---------------------------------------------------------------------------*/
 static uint32_t
 decode_prop_fixed_len_int(struct mqtt_connection *conn,
-                          uint8_t *buf_in, int len,
+                          uint8_t *buf_in, uint32_t buf_in_len, int len,
                           uint8_t *data)
 {
   int8_t i;
@@ -327,6 +339,12 @@ decode_prop_fixed_len_int(struct mqtt_connection *conn,
 
   if(len > MQTT_PROP_MAX_PROP_LENGTH) {
     DBG("MQTT - Error, property too long (max %i bytes)", MQTT_PROP_MAX_PROP_LENGTH);
+    return 0;
+  }
+
+  /* All declared value bytes must be present in the received input */
+  if((uint32_t)len > buf_in_len) {
+    DBG("MQTT - Error, int property exceeds input\n");
     return 0;
   }
 
@@ -348,7 +366,7 @@ decode_prop_fixed_len_int(struct mqtt_connection *conn,
 /*---------------------------------------------------------------------------*/
 static uint32_t
 decode_prop_vbi(struct mqtt_connection *conn,
-                uint8_t *buf_in,
+                uint8_t *buf_in, uint32_t buf_in_len,
                 uint8_t *data)
 {
   uint8_t prop_len_bytes;
@@ -358,8 +376,12 @@ decode_prop_vbi(struct mqtt_connection *conn,
   /* All integer input properties will be returned as uint32_t */
   memset(data, 0, 4);
 
+  /* A Variable Byte Integer is at most 4 bytes, but never read past
+   * the bytes actually received in the input.
+   */
   prop_len_bytes =
-    mqtt_decode_var_byte_int(buf_in, 4, NULL, NULL, (uint16_t *)data);
+    mqtt_decode_var_byte_int(buf_in, buf_in_len < 4 ? buf_in_len : 4,
+                             NULL, NULL, (uint16_t *)data);
 
   if(prop_len_bytes == 0) {
     DBG("MQTT - Error decoding Variable Byte Integer\n");
@@ -376,12 +398,18 @@ decode_prop_vbi(struct mqtt_connection *conn,
 /*---------------------------------------------------------------------------*/
 static uint32_t
 decode_prop_binary_data(struct mqtt_connection *conn,
-                        uint8_t *buf_in,
+                        uint8_t *buf_in, uint32_t buf_in_len,
                         uint8_t *data)
 {
-  uint8_t data_len;
+  uint32_t data_len;
 
   DBG("MQTT - Decoding Binary Data property\n");
+
+  /* The 2-byte length prefix must be present in the received input */
+  if(buf_in_len < MQTT_STRING_LEN_SIZE) {
+    DBG("MQTT - Error, truncated Binary Data property\n");
+    return 0;
+  }
 
   data_len = (buf_in[0] << 8) + buf_in[1];
 
@@ -390,30 +418,57 @@ decode_prop_binary_data(struct mqtt_connection *conn,
     return 0;
   }
 
-  if((data_len + 2) > MQTT_PROP_MAX_PROP_LENGTH) {
+  /* The declared data must fit within the received input */
+  if(data_len + MQTT_STRING_LEN_SIZE > buf_in_len) {
+    DBG("MQTT - Error, Binary Data property exceeds input\n");
+    return 0;
+  }
+
+  if((data_len + MQTT_STRING_LEN_SIZE) > MQTT_PROP_MAX_PROP_LENGTH) {
     DBG("MQTT - Error, property too long (max %i bytes)", MQTT_PROP_MAX_PROP_LENGTH);
     return 0;
   }
 
-  memcpy(data, buf_in, data_len + 2);
+  memcpy(data, buf_in, data_len + MQTT_STRING_LEN_SIZE);
 
-  return data_len + 2;
+  return data_len + MQTT_STRING_LEN_SIZE;
 }
 /*---------------------------------------------------------------------------*/
 static uint32_t
 decode_prop_utf8_pair(struct mqtt_connection *conn,
-                      uint8_t *buf_in,
+                      uint8_t *buf_in, uint32_t buf_in_len,
                       uint8_t *data)
 {
   uint32_t len1;
   uint32_t len2;
   uint32_t total_len;
 
+  /* The first 2-byte length prefix must be present in the received input */
+  if(buf_in_len < MQTT_STRING_LEN_SIZE) {
+    DBG("MQTT - Error, truncated UTF8 string pair property\n");
+    return 0;
+  }
+
   len1 = (buf_in[0] << 8) + buf_in[1];
+
+  /* The first string and the second length prefix must be present before
+   * they are read below, otherwise len2 would be read out of bounds.
+   */
+  if(len1 + 2 * MQTT_STRING_LEN_SIZE > buf_in_len) {
+    DBG("MQTT - Error, UTF8 string pair property exceeds input\n");
+    return 0;
+  }
+
   len2 = (buf_in[len1 + MQTT_STRING_LEN_SIZE] << 8) + buf_in[len1 + MQTT_STRING_LEN_SIZE + 1];
   total_len = len1 + len2;
 
   DBG("MQTT - Decoding %d-char UTF8 string pair property (%i + %i)\n", total_len, len1, len2);
+
+  /* The full pair must fit within the received input */
+  if(total_len + 2 * MQTT_STRING_LEN_SIZE > buf_in_len) {
+    DBG("MQTT - Error, UTF8 string pair property exceeds input\n");
+    return 0;
+  }
 
   if((total_len + 2 * MQTT_STRING_LEN_SIZE) > MQTT_PROP_MAX_PROP_LENGTH) {
     DBG("MQTT - Error, property too long (max %i bytes)", MQTT_PROP_MAX_PROP_LENGTH);
@@ -428,7 +483,8 @@ decode_prop_utf8_pair(struct mqtt_connection *conn,
 /*---------------------------------------------------------------------------*/
 uint32_t
 parse_prop(struct mqtt_connection *conn,
-           mqtt_vhdr_prop_t prop_id, uint8_t *buf_in, uint8_t *data)
+           mqtt_vhdr_prop_t prop_id, uint8_t *buf_in, uint32_t buf_in_len,
+           uint8_t *data)
 {
   switch(prop_id) {
   case MQTT_VHDR_PROP_PAYLOAD_FMT_IND:
@@ -439,18 +495,18 @@ parse_prop(struct mqtt_connection *conn,
   case MQTT_VHDR_PROP_WILD_SUB_AVAIL:
   case MQTT_VHDR_PROP_SUB_ID_AVAIL:
   case MQTT_VHDR_PROP_SHARED_SUB_AVAIL: {
-    return decode_prop_fixed_len_int(conn, buf_in, 1, data);
+    return decode_prop_fixed_len_int(conn, buf_in, buf_in_len, 1, data);
   }
   case MQTT_VHDR_PROP_RECEIVE_MAX:
   case MQTT_VHDR_PROP_TOPIC_ALIAS_MAX:
   case MQTT_VHDR_PROP_SERVER_KEEP_ALIVE: {
-    return decode_prop_fixed_len_int(conn, buf_in, 2, data);
+    return decode_prop_fixed_len_int(conn, buf_in, buf_in_len, 2, data);
   }
   case MQTT_VHDR_PROP_MSG_EXP_INT:
   case MQTT_VHDR_PROP_SESS_EXP_INT:
   case MQTT_VHDR_PROP_WILL_DELAY_INT:
   case MQTT_VHDR_PROP_MAX_PKT_SZ: {
-    return decode_prop_fixed_len_int(conn, buf_in, 4, data);
+    return decode_prop_fixed_len_int(conn, buf_in, buf_in_len, 4, data);
   }
   case MQTT_VHDR_PROP_CONTENT_TYPE:
   case MQTT_VHDR_PROP_RESP_TOPIC:
@@ -459,17 +515,17 @@ parse_prop(struct mqtt_connection *conn,
   case MQTT_VHDR_PROP_RESP_INFO:
   case MQTT_VHDR_PROP_SERVER_REFERENCE:
   case MQTT_VHDR_PROP_REASON_STRING: {
-    return decode_prop_utf8(conn, buf_in, data);
+    return decode_prop_utf8(conn, buf_in, buf_in_len, data);
   }
   case MQTT_VHDR_PROP_CORRELATION_DATA:
   case MQTT_VHDR_PROP_AUTH_DATA: {
-    return decode_prop_binary_data(conn, buf_in, data);
+    return decode_prop_binary_data(conn, buf_in, buf_in_len, data);
   }
   case MQTT_VHDR_PROP_SUB_ID: {
-    return decode_prop_vbi(conn, buf_in, data);
+    return decode_prop_vbi(conn, buf_in, buf_in_len, data);
   }
   case MQTT_VHDR_PROP_USER_PROP: {
-    return decode_prop_utf8_pair(conn, buf_in, data);
+    return decode_prop_utf8_pair(conn, buf_in, buf_in_len, data);
   }
   default:
     DBG("MQTT - Error, no such property '%i'", prop_id);
@@ -487,6 +543,10 @@ mqtt_get_next_in_prop(struct mqtt_connection *conn,
   uint32_t prop_len;
   uint8_t prop_id_len_bytes;
   uint16_t prop_id_decode;
+  uint32_t props_offset;
+  uint32_t props_avail;
+  uint32_t props_consumed;
+  uint32_t buf_remaining;
 
   if(!conn->in_packet.has_props) {
     DBG("MQTT - Message has no input properties");
@@ -497,22 +557,52 @@ mqtt_get_next_in_prop(struct mqtt_connection *conn,
       conn->in_packet.properties_len,
       *conn->in_packet.curr_props_pos);
 
-  if((conn->in_packet.curr_props_pos - conn->in_packet.props_start)
-     >= conn->in_packet.properties_len) {
+  /*
+   * Determine how many bytes may safely be read from the current parsing
+   * position. Bound by both the declared properties length and the number
+   * of bytes actually received into the input buffer, so a malformed
+   * property length cannot drive reads past the received data. The
+   * computation is done on offsets rather than pointers, so that a
+   * malformed length never forms a pointer outside the input buffer.
+   */
+  props_offset =
+    (uint32_t)(conn->in_packet.props_start - conn->in_packet.payload);
+  if(conn->in_packet.payload_pos <= props_offset) {
     DBG("MQTT - Message has no more input properties\n");
     return 0;
   }
 
+  props_avail = conn->in_packet.payload_pos - props_offset;
+  if(conn->in_packet.properties_len < props_avail) {
+    props_avail = conn->in_packet.properties_len;
+  }
+
+  props_consumed =
+    (uint32_t)(conn->in_packet.curr_props_pos - conn->in_packet.props_start);
+  if(props_consumed >= props_avail) {
+    DBG("MQTT - Message has no more input properties\n");
+    return 0;
+  }
+
+  buf_remaining = props_avail - props_consumed;
+
   prop_id_len_bytes =
     mqtt_decode_var_byte_int(conn->in_packet.curr_props_pos,
-                             conn->in_packet.properties_len - (conn->in_packet.curr_props_pos - conn->in_packet.props_start),
+                             buf_remaining,
                              NULL, NULL, (uint16_t *)&prop_id_decode);
+
+  if(prop_id_len_bytes == 0 || prop_id_len_bytes >= buf_remaining) {
+    DBG("MQTT - Error decoding property ID (out of bounds)\n");
+    return 0;
+  }
 
   *prop_id = prop_id_decode;
 
   DBG("MQTT - Decoded property ID %i (encoded using %i bytes)\n", *prop_id, prop_id_len_bytes);
 
-  prop_len = parse_prop(conn, *prop_id, conn->in_packet.curr_props_pos + 1, data);
+  prop_len = parse_prop(conn, *prop_id,
+                        conn->in_packet.curr_props_pos + prop_id_len_bytes,
+                        buf_remaining - prop_id_len_bytes, data);
 
   DBG("MQTT - Decoded property len %i bytes\n", prop_len);
 

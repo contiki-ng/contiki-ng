@@ -6,6 +6,9 @@ Contiki-NG comes with standard communication protocols, that provide both per-ho
 Application-layer security is end-to-end, over IPv6 in the Contiki-NG case.
 We currently support DTLS using the Mbed TLS implementation. On top of DTLS, we support CoAPs [doc:coaps], which is the secure version of CoAP. With CoAPs, the CoAP header and payload is encrypted and authenticated end-to-end, that is, from IP host to IP host. This offers some level of protection against malicious routers (can not read nor tamper the data). Note that the only mode included so far is pre-shared keys.
 
+## Key agreement with EDHOC
+For establishing secure communication between IoT devices, Contiki-NG supports EDHOC (Ephemeral Diffie-Hellman Over COSE) as specified in RFC 9528. EDHOC is a lightweight authenticated key exchange protocol optimized for constrained devices. It provides mutual authentication, perfect forward secrecy, and identity protection. See [doc:edhoc] for detailed documentation.
+
 ## Link-layer security
 
 Link-layer security is per-hop, i.e., secures packets on air between two neighbors.
@@ -18,4 +21,5 @@ We currently support link-layer security for IEEE 802.15.4 TSCH [doc:tsch-securi
 For CSMA, we should have link-layer security support fairly soon, see https://github.com/contiki-ng/contiki-ng/pull/558
 
 [doc:coaps]: CoAP.md#coaps---secure-coap
+[doc:edhoc]: EDHOC.md
 [doc:tsch-security]: TSCH-and-6TiSCH.md#using-tsch-with-security

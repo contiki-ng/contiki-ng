@@ -81,6 +81,7 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "dev/gpio-hal.h"
+#include "sys/cc.h"
 #include "sys/clock.h"
 #include "sys/ctimer.h"
 
@@ -256,7 +257,7 @@ struct button_hal_button_s {
 #define BUTTON_HAL_BUTTONS(...) \
   button_hal_button_t *button_hal_buttons[] = {__VA_ARGS__, NULL}; \
   const uint8_t button_hal_button_count = \
-    (sizeof(button_hal_buttons) / sizeof(button_hal_buttons[0])) - 1;
+    CC_ARRAY_LENGTH(button_hal_buttons) - 1;
 /*---------------------------------------------------------------------------*/
 /**
  * \brief The number of buttons on a device

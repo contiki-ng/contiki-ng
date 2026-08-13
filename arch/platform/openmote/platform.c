@@ -51,7 +51,6 @@
 #include "dev/crypto.h"
 #include "dev/button-hal.h"
 #include "usb/usb-serial.h"
-#include "lib/random.h"
 #include "lib/sensors.h"
 #include "net/netstack.h"
 #include "net/mac/framer/frame802154.h"
@@ -144,9 +143,6 @@ platform_init_stage_two()
 
   board_init();
   
-  /* Initialise the H/W RNG engine. */
-  random_init(0);
-
   udma_init();
 
 #if CRYPTO_CONF_INIT

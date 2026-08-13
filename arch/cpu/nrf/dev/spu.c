@@ -35,7 +35,7 @@
 #define DEVICE_SRAM_BASE_ADDRESS SRAM_BASE_ADDRESS
 
 static int arr_flash[NUM_FLASH_SECURE_ATTRIBUTION_REGIONS];
-static int arr_ram[NUM_FLASH_SECURE_ATTRIBUTION_REGIONS];
+static int arr_ram[NUM_SRAM_SECURE_ATTRIBUTION_REGIONS];
 
 /* Convenience macros for SPU Non-Secure Callable (NCS) attribution */
 

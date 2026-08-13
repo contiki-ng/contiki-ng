@@ -53,8 +53,17 @@
 
 #include "nrfx_gpiote.h"
 /*---------------------------------------------------------------------------*/
+/* nrfx 3.2+ uses the new GPIOTE instance-based API. */
+#if NRFX_API_VER_AT_LEAST(3, 2, 0)
+void gpio_hal_arch_interrupt_enable_nrfx_v3(gpio_hal_port_t port, gpio_hal_pin_t pin);
+void gpio_hal_arch_interrupt_disable_nrfx_v3(gpio_hal_port_t port, gpio_hal_pin_t pin);
+
+#define gpio_hal_arch_interrupt_enable(port, pin)  gpio_hal_arch_interrupt_enable_nrfx_v3(port, pin)
+#define gpio_hal_arch_interrupt_disable(port, pin) gpio_hal_arch_interrupt_disable_nrfx_v3(port, pin)
+#else
 #define gpio_hal_arch_interrupt_enable(port, pin)  nrfx_gpiote_in_event_enable(NRF_GPIO_PIN_MAP(port, pin), true)
 #define gpio_hal_arch_interrupt_disable(port, pin) nrfx_gpiote_in_event_disable(NRF_GPIO_PIN_MAP(port, pin))
+#endif
 /*---------------------------------------------------------------------------*/
 #define gpio_hal_arch_pin_set_input(port, pin)     nrf_gpio_cfg_input(NRF_GPIO_PIN_MAP(port, pin), NRF_GPIO_PIN_NOPULL)
 #define gpio_hal_arch_pin_set_output(port, pin)    nrf_gpio_cfg_output(NRF_GPIO_PIN_MAP(port, pin))

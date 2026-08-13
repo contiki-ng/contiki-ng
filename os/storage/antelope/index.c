@@ -47,6 +47,7 @@
 #include "db-options.h"
 #include "index.h"
 #include "storage.h"
+#include "sys/cc.h"
 
 static index_api_t *index_components[] = {&index_inline,
 	&index_maxheap};
@@ -62,7 +63,7 @@ find_index_api(index_type_t index_type)
 {
   int i;
 
-  for(i = 0; i < sizeof(index_components) / sizeof(index_components[0]); i++) {
+  for(i = 0; i < CC_ARRAY_LENGTH(index_components); i++) {
       if(index_components[i]->type == index_type) {
 	return index_components[i];
       }
@@ -133,10 +134,12 @@ index_create(index_type_t index_type, relation_t *rel, attribute_t *attr)
 
   if(index->descriptor_file[0] != '\0' &&
      DB_ERROR(storage_put_index(index))) {
-    api->destroy(index);
-    memb_free(&index_memb, index);
     PRINTF("DB: Failed to store index data in file \"%s\"\n",
            index->descriptor_file);
+    api->destroy(index);
+    attr->index = NULL;
+    list_remove(indices, index);
+    memb_free(&index_memb, index);
     return DB_INDEX_ERROR;
   }
 

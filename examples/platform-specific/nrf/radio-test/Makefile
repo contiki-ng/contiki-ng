@@ -1,0 +1,13 @@
+CONTIKI_PROJECT = radio-test
+all: $(CONTIKI_PROJECT)
+
+CONTIKI = ../../../..
+
+MAKE_MAC = MAKE_MAC_CSMA
+MAKE_NET = MAKE_NET_NULLNET
+
+MODULES += $(CONTIKI_NG_SERVICES_DIR)/shell
+
+PLATFORMS_ONLY = nrf
+
+include $(CONTIKI)/Makefile.include

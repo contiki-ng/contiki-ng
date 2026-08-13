@@ -32,8 +32,16 @@
  *   [MSB]         HID | MSC | CDC          [LSB]
  */
 #define _PID_MAP(itf, n)  ( (CFG_TUD_##itf) << (n) )
-#define USB_PID           (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) | \
-                           _PID_MAP(MIDI, 3) | _PID_MAP(VENDOR, 4) )
+
+/* Use Nordic's blessed VID:PID for the nRF52840 dongle CDC + DFU-trigger
+ * image (0x1915:0x520F). nrfutil v7+ keys its `nordicDfu` trait
+ * detection off this exact pair, so a vendor-specific DFU trigger
+ * interface only gets exercised by the host when the device announces
+ * itself with this PID. This matches what the OLD arch/platform/nrf52840
+ * port did via APP_USBD_PID in sdk_config.h. */
+#ifndef USB_PID
+#define USB_PID  0x520Fu
+#endif
 
 //--------------------------------------------------------------------+
 // Device Descriptors
@@ -78,10 +86,35 @@ enum
 {
   ITF_NUM_CDC = 0,
   ITF_NUM_CDC_DATA,
+#if CFG_TUD_DFU_RUNTIME
+  ITF_NUM_DFU_RT,
+#endif
+  ITF_NUM_NORDIC_DFU,
   ITF_NUM_TOTAL
 };
 
-#define CONFIG_TOTAL_LEN    (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN)
+/* Length of the Nordic-vendor DFU trigger interface descriptor block:
+ * one 9-byte interface descriptor + one 9-byte Nordic functional descriptor. */
+#define NORDIC_DFU_TRIGGER_DESC_LEN (9 + 9)
+
+#if CFG_TUD_DFU_RUNTIME
+#define CONFIG_TOTAL_LEN    (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN \
+                             + TUD_DFU_RT_DESC_LEN + NORDIC_DFU_TRIGGER_DESC_LEN)
+#else
+#define CONFIG_TOTAL_LEN    (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN \
+                             + NORDIC_DFU_TRIGGER_DESC_LEN)
+#endif
+
+/* Raw bytes for the Nordic DFU trigger interface + functional descriptor.
+ * Mirrors what arch/cpu/nrf52840/lib/nrf52-sdk/.../app_usbd_nrf_dfu_trigger
+ * emits so nrfutil can recognise the interface. */
+#define NORDIC_DFU_TRIGGER_DESCRIPTOR(_itfnum, _stridx) \
+  /* Interface */ \
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, 0xFF, 0x01, 0x01, _stridx, \
+  /* Functional (bmAttributes = bitCanDnload | bitWillDetach,
+   *              wDetachTimeout = 1000, wTransferSize = 4096,
+   *              bcdDFUVersion = 0x0101) */ \
+  9, 0x21, 0x09, 0xE8, 0x03, 0x00, 0x10, 0x01, 0x01
 
 #if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X || CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
   // LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
@@ -113,6 +146,15 @@ enum
 
 #endif
 
+/* DFU runtime descriptor parameters: bitWillDetach so the device reboots
+ * to bootloader on its own when the host sends a DETACH request. The
+ * detach timeout and transfer size are conventional values; the actual
+ * download happens after the device has re-enumerated as the bootloader,
+ * so the runtime transfer size is not load-bearing. */
+#define DFU_RT_ATTR     (DFU_ATTR_CAN_DOWNLOAD | DFU_ATTR_WILL_DETACH)
+#define DFU_RT_TIMEOUT  1000
+#define DFU_RT_XFER     4096
+
 uint8_t const desc_fs_configuration[] =
 {
   // Config number, interface count, string index, total length, attribute, power in mA
@@ -120,6 +162,10 @@ uint8_t const desc_fs_configuration[] =
 
   // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
   TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 4, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 64),
+#if CFG_TUD_DFU_RUNTIME
+  TUD_DFU_RT_DESCRIPTOR(ITF_NUM_DFU_RT, 5, DFU_RT_ATTR, DFU_RT_TIMEOUT, DFU_RT_XFER),
+#endif
+  NORDIC_DFU_TRIGGER_DESCRIPTOR(ITF_NUM_NORDIC_DFU, 6),
 };
 
 #if TUD_OPT_HIGH_SPEED
@@ -130,6 +176,10 @@ uint8_t const desc_hs_configuration[] =
 
   // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
   TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 4, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 512),
+#if CFG_TUD_DFU_RUNTIME
+  TUD_DFU_RT_DESCRIPTOR(ITF_NUM_DFU_RT, 5, DFU_RT_ATTR, DFU_RT_TIMEOUT, DFU_RT_XFER),
+#endif
+  NORDIC_DFU_TRIGGER_DESCRIPTOR(ITF_NUM_NORDIC_DFU, 6),
 };
 #endif
 
@@ -161,6 +211,12 @@ char const* string_desc_arr [] =
   NULL,                           // 2: Product
   NULL,                           // 3: Serials, should use chip ID
   NULL,                           // 4: CDC Interface
+#if CFG_TUD_DFU_RUNTIME
+  "Contiki-NG DFU",               // 5: DFU runtime Interface
+#else
+  NULL,                           // 5: (placeholder, keep index alignment)
+#endif
+  "Contiki-NG Nordic DFU",        // 6: Nordic DFU trigger Interface
 };
 
 void usb_descriptor_set_manufacturer(char * manufacturer)

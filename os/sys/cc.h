@@ -73,6 +73,12 @@
 
 #define CC_CONF_NORETURN __attribute__((__noreturn__))
 
+#define CC_CONF_MUST_BE_ARRAY(array) \
+  (sizeof(struct {_Static_assert( \
+                      (!__builtin_types_compatible_p(__typeof(array), \
+                                                     __typeof(&(array)[0]))), \
+                      "not an array");}))
+
 #endif /* __GNUC__ */
 
 /**
@@ -98,6 +104,23 @@
 #else
 #define CC_NORETURN
 #endif /* CC_CONF_NORETURN */
+
+/**
+ * Returns 0 if the provided variable is an array and raises an error if not.
+ */
+#ifdef CC_CONF_MUST_BE_ARRAY
+#define CC_MUST_BE_ARRAY(array) CC_CONF_MUST_BE_ARRAY(array)
+#else /* CC_CONF_MUST_BE_ARRAY */
+#define CC_MUST_BE_ARRAY(array) 0
+#endif /* CC_CONF_MUST_BE_ARRAY */
+
+/**
+ * \brief       Counts the number of elements of an array.
+ * \param array The array.
+ * \return      The number of elements of the array.
+ */
+#define CC_ARRAY_LENGTH(array) ((sizeof(array) / sizeof((array)[0])) \
+                                + CC_MUST_BE_ARRAY(array))
 
 /**
  * Configure if the C compiler supports marking functions as constructors

@@ -40,9 +40,11 @@
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
 #include "net/netstack.h"
+#include "net/mac/framer/frame802154.h"
 #include "net/mac/mac-sequence.h"
 #include "packetutils.h"
 #include "border-router.h"
+#include "border-router-cbor.h"
 #include <string.h>
 
 /*---------------------------------------------------------------------------*/
@@ -115,10 +117,12 @@ setup_callback(mac_callback_t sent, void *ptr)
 static void
 send_packet(mac_callback_t sent, void *ptr)
 {
+  uint8_t sid;
+#if !BORDER_ROUTER_SERIAL_RADIO
   int size;
   /* 3 bytes per packet attribute is required for serialization */
   uint8_t buf[PACKETBUF_NUM_ATTRS * 3 + PACKETBUF_SIZE + 3];
-  uint8_t sid;
+#endif
 
   packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &linkaddr_node_addr);
 
@@ -137,29 +141,39 @@ send_packet(mac_callback_t sent, void *ptr)
     /* Failed to allocate space for headers */
     LOG_WARN("send failed, too large header\n");
     mac_call_sent_callback(sent, ptr, MAC_TX_ERR_FATAL, 1);
-  } else {
-    /* here we send the data over SLIP to the radio-chip */
-#if SERIALIZE_ATTRIBUTES
-    size = packetutils_serialize_atts(&buf[3], sizeof(buf) - 3);
-#else
-    size = 0;
-#endif
-    if(size < 0 || size + packetbuf_totlen() + 3 > sizeof(buf)) {
-      LOG_WARN("send failed, too large header\n");
-      mac_call_sent_callback(sent, ptr, MAC_TX_ERR_FATAL, 1);
-    } else {
-      sid = setup_callback(sent, ptr);
-
-      buf[0] = '!';
-      buf[1] = 'S';
-      buf[2] = sid; /* sequence or session number for this packet */
-
-      /* Copy packet data */
-      memcpy(&buf[3 + size], packetbuf_hdrptr(), packetbuf_totlen());
-
-      write_to_slip(buf, packetbuf_totlen() + size + 3);
-    }
+    return;
   }
+
+#if BORDER_ROUTER_SERIAL_RADIO
+  /* serialradio: hand the fully-framed 802.15.4 packet to the radio as a raw
+     frame (it runs with no framer of its own and transmits it verbatim).  The
+     TX result returns asynchronously as a TX_RESPONSE event, which calls
+     packet_sent() for this session id. */
+  sid = setup_callback(sent, ptr);
+  br_cbor_send_tx_frame(sid, packetbuf_hdrptr(), packetbuf_totlen());
+#else
+  /* legacy slip-radio: send "!S" + serialized attributes + framed packet. */
+#if SERIALIZE_ATTRIBUTES
+  size = packetutils_serialize_atts(&buf[3], sizeof(buf) - 3);
+#else
+  size = 0;
+#endif
+  if(size < 0 || size + packetbuf_totlen() + 3 > sizeof(buf)) {
+    LOG_WARN("send failed, too large header\n");
+    mac_call_sent_callback(sent, ptr, MAC_TX_ERR_FATAL, 1);
+  } else {
+    sid = setup_callback(sent, ptr);
+
+    buf[0] = '!';
+    buf[1] = 'S';
+    buf[2] = sid; /* sequence or session number for this packet */
+
+    /* Copy packet data */
+    memcpy(&buf[3 + size], packetbuf_hdrptr(), packetbuf_totlen());
+
+    write_to_slip(buf, packetbuf_totlen() + size + 3);
+  }
+#endif /* BORDER_ROUTER_SERIAL_RADIO */
 }
 /*---------------------------------------------------------------------------*/
 static void

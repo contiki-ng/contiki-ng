@@ -448,6 +448,7 @@ struct mqtt_in_packet {
   /* Message specific data */
   uint16_t topic_len;
   uint16_t topic_pos;
+  uint8_t topic_len_msb_received;
   uint8_t topic_len_received;
   uint8_t topic_received;
 

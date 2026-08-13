@@ -4,7 +4,7 @@ endif
 
 ### Board and BSP selection
 BOARD ?= nrf5340/dk/application
-BOARDS = nrf5340/dk/application nrf5340/dk/network nrf52840/dk nrf52840/dongle
+BOARDS = nrf5340/dk/application nrf5340/dk/network nrf52840/dk nrf52840/dongle nrf54l15/dk nrf54l15/xiao
 
 ### Unless the example dictates otherwise, build with code size optimisations switched off
 SMALL ?= 0

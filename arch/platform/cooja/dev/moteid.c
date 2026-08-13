@@ -48,7 +48,6 @@ doInterfaceActionsBeforeTick(void)
     struct csprng_seed csprng_seed;
 
     simMoteIDChanged = 0;
-    random_init(simRandomSeed);
 
     sha_256_hkdf(NULL, 0,
                  (const uint8_t *)&simRandomSeed, sizeof(simRandomSeed),

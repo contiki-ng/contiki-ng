@@ -67,10 +67,18 @@
 /*---------------------------------------------------------------------------*/
 #define LEDS_CONF_COUNT     4
 /*---------------------------------------------------------------------------*/
+#ifndef NRF_UARTE0_TX_PIN
 #define NRF_UARTE0_TX_PIN   20
+#endif
+#ifndef NRF_UARTE0_TX_PORT
 #define NRF_UARTE0_TX_PORT  0
+#endif
+#ifndef NRF_UARTE0_RX_PIN
 #define NRF_UARTE0_RX_PIN   22
+#endif
+#ifndef NRF_UARTE0_RX_PORT
 #define NRF_UARTE0_RX_PORT  0
+#endif
 /*---------------------------------------------------------------------------*/
 #endif /* NRF53_DK_DEF_H */
 /*---------------------------------------------------------------------------*/

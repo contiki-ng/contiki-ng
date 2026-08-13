@@ -15,6 +15,8 @@ NRFX_C_SRCS += $(NRFX_ROOT)/mdk/system_nrf52840.c
 
 EXTERNALDIRS += $(NRFX_ROOT)/mdk/
 
+NRF_DEVICE_FAMILY = nrf52
+
 CFLAGS += -DCPU_CONF_PATH=\"nrf52840-conf.h\"
 CFLAGS += -DCPU_DEF_PATH=\"nrf52840-def.h\"
 

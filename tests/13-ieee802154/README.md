@@ -21,3 +21,26 @@ FAILED.
 
 * https://standards.ieee.org/findstds/standard/802.15.4-2015.html
 * https://github.com/contiki-os/contiki/pull/1914
+
+## 10-framer-negative
+
+Negative-path regression tests for the IEEE 802.15.4 framer, covering the
+hardening of `frame802154_parse()` and
+`frame802154e_parse_information_elements()` against malformed input.
+
+### Test Code
+
+[test-framer-negative.c](./code-framer-negative/test-framer-negative.c) feeds
+truncated frames, oversized and zero-length information elements, and a frame
+whose security-control octet sets reserved bits, and asserts that the parsers
+reject the input (returning the documented failure value) and never store
+unvalidated state. Positive controls confirm that well-formed frames and a
+valid TSCH channel hopping sequence IE still parse. The mote prints results
+with the `"=check-me="` prefix, examined by
+[10-framer-negative.js](./js/10-framer-negative.js) as in 01-panid-handling.
+
+Under Cooja the assertions check the parsers' return values and stored state.
+Some guards additionally prevent out-of-bounds *reads* whose return value is
+unchanged; because every test vector is an exact-length array, those reads can
+be caught by compiling the framer together with these vectors under
+AddressSanitizer (its global redzones turn an over-read into a hard failure).

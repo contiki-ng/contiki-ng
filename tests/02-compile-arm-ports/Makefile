@@ -102,6 +102,8 @@ hello-world/nrf:BOARD=nrf52840/dk \
 hello-world/nrf:BOARD=nrf52840/dongle \
 hello-world/nrf:BOARD=nrf5340/dk/application \
 hello-world/nrf:BOARD=nrf5340/dk/network \
+hello-world/nrf:BOARD=nrf54l15/dk \
+hello-world/nrf:BOARD=nrf54l15/xiao \
 hello-world/nrf:BOARD=nrf52840/dk:NRF_NATIVE_USB=1 \
 hello-world/nrf:BOARD=nrf52840/dongle:NRF_NATIVE_USB=1 \
 hello-world/nrf:BOARD=nrf5340/dk/application:NRF_NATIVE_USB=1 \
@@ -158,6 +160,8 @@ platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc
 platform-specific/cc26x0-cc13x0/base-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
 platform-specific/cc26x0-cc13x0/base-demo/simplelink:BOARD=sensortag/cc1350 \
 platform-specific/cc26x0-cc13x0/base-demo/simplelink:BOARD=sensortag/cc1352r1 \
+platform-specific/nrf/ipc-radio-service/nrf:BOARD=nrf5340/dk/network \
+platform-specific/nrf/ipc-radio-service/nrf:BOARD=nrf5340/dk/network:NRF_802154=1 \
 platform-specific/nrf/start-network-core/nrf:BOARD=nrf5340/dk/application \
 platform-specific/nrf/start-network-core/nrf:BOARD=nrf5340/dk/network \
 platform-specific/nrf/trustzone/nrf:BOARD=nrf5340/dk/application \
@@ -174,6 +178,7 @@ rpl-border-router/nrf:BOARD=nrf52840/dongle \
 rpl-border-router/nrf:BOARD=nrf5340/dk/application \
 rpl-border-router/nrf:BOARD=nrf5340/dk/network \
 rpl-udp/cc2538dk \
+rpl-udp/nrf:BOARD=nrf5340/dk/application:NRF_802154=1 \
 sensniff/zoul:DEFINES=ZOUL_CONF_SUB_GHZ_SNIFFER=1 \
 slip-radio/zoul \
 slip-radio/nrf:BOARD=nrf52840/dk \

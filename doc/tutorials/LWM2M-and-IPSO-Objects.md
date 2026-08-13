@@ -59,7 +59,7 @@ To access the demo server go to http://localhost:8080 and you should see the reg
 If everything is set up correctly, your device should show up on the Leshan server's device list.
 
 ### Registering with global LWM2M server via NAT64
-If you like to register with the demo server at Eclipse you can change the registration address in the code to the NAT64 format. Note: this requires your 6LoWPAN border router to have a NAT64 running on the same network (so that the IPv6 address is converted into an IPv4 address). You can use the Jool NAT64 for that (see [doc:ip64]).
+If you like to register with the demo server at Eclipse you can change the registration address in the code to the NAT64 format. The address `64:ff9b::527:53ce` embeds the IPv4 address of the Eclipse server using the well-known NAT64 prefix (RFC 6052). Start the native border router with `--nat64` so it translates the IPv6 traffic from the IoT network to IPv4 (see [doc:ip64]).
 
 ```c
 #define LWM2M_SERVER_ADDRESS "coap://[64:ff9b::527:53ce]"

@@ -30,16 +30,16 @@
  *
  */
 
- /**
-  * \addtogroup link-layer
-  * @{
-  *
-  * \defgroup llsec802154 Link-layer security common functionality
-  *
-  * Macros related to 802.15.4 link-layer security.
-  *
-  * @{
-  */
+/**
+ * \addtogroup link-layer
+ * @{
+ *
+ * \defgroup llsec802154 Link-layer security common functionality
+ *
+ * Macros related to 802.15.4 link-layer security.
+ *
+ * @{
+ */
 
 /**
  * \file
@@ -51,7 +51,6 @@
 #ifndef LLSEC802154_H_
 #define LLSEC802154_H_
 
-#include "net/mac/framer/frame802154.h"
 #include "net/ipv6/uip.h"
 
 #ifdef LLSEC802154_CONF_ENABLED

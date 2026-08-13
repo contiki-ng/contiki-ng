@@ -35,7 +35,7 @@
  */
 
 #include "aql.h"
-
+#include "sys/cc.h"
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -140,7 +140,7 @@ get_token_id(const char *string, const size_t length)
 
   start = skip_hint[length - 1];
   if(sizeof(skip_hint) == length) {
-    end = sizeof(keywords) / sizeof(keywords[0]);
+    end = CC_ARRAY_LENGTH(keywords);
   } else {
     end = skip_hint[length];
   }

@@ -1,0 +1,2 @@
+# NAT64 module Makefile
+# Platform-specific subdirectories should be added by the including Makefile.

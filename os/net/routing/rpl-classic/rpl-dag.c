@@ -52,6 +52,7 @@
 #include "net/ipv6/multicast/uip-mcast6.h"
 #include "lib/list.h"
 #include "lib/memb.h"
+#include "sys/cc.h"
 #include "sys/ctimer.h"
 #include "sys/log.h"
 
@@ -1108,9 +1109,7 @@ rpl_get_instance(uint8_t instance_id)
 rpl_of_t *
 rpl_find_of(rpl_ocp_t ocp)
 {
-  for(unsigned i = 0;
-      i < sizeof(objective_functions) / sizeof(objective_functions[0]);
-      i++) {
+  for(unsigned i = 0; i < CC_ARRAY_LENGTH(objective_functions); i++) {
     if(objective_functions[i]->ocp == ocp) {
       return objective_functions[i];
     }

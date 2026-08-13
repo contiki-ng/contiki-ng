@@ -2,20 +2,61 @@ include $(CONTIKI_CPU)/Makefile.libs
 
 CFLAGS += -DNRF5340_XXAA_APPLICATION
 
-NRFX_ASM_SRCS += $(NRFX_ROOT)/mdk/gcc_startup_nrf5340_application.s
+# Use the locally-vendored MDK SystemInit + startup from nrfx 2.10.0 for
+# the nRF5340 application core. The 3.12.1 MDK adds peripheral access in
+# SystemInit (FICR-NS RAM copy, errata 160 writes to 0x501xxxxx) that the
+# default SPU blocks before our TZ tz-target-cfg.c runs, breaking secure
+# boot. The 2.10.0 SystemInit is the version that's known to work with
+# our TrustZone setup. Driver/HAL code still comes from the new nrfx
+# elsewhere in the tree.
+NRFX_ASM_SRCS += $(CONTIKI_CPU)/nrf5340/legacy-mdk/gcc_startup_nrf5340_application.S
 
-NRFX_C_SRCS += $(NRFX_ROOT)/mdk/system_nrf5340_application.c
+NRFX_C_SRCS += $(CONTIKI_CPU)/nrf5340/legacy-mdk/system_nrf5340_application.c
 
+EXTERNALDIRS += $(CONTIKI_CPU)/nrf5340/legacy-mdk
 EXTERNALDIRS += $(NRFX_ROOT)/mdk/
 
-NRFJPROG_OPTIONS=-f NRF53 --coprocessor CP_APPLICATION 
+NRF_DEVICE_FAMILY = nrf53
+NRFUTIL_CORE = --core application
 
 CFLAGS += -DCPU_CONF_PATH=\"nrf5340-application-conf.h\"
 CFLAGS += -DCPU_DEF_PATH=\"nrf5340-application-def.h\"
 CFLAGS += -DNRFX_USBREG_ENABLED
 
-CFLAGS += -mfloat-abi=hard 
+CFLAGS += -mfloat-abi=hard
 CFLAGS += -mfpu=fpv5-sp-d16
+
+## nrf_802154 net-core pairing.
+##
+## Build with NRF_802154=1 when the network core runs the IPC radio
+## service built with NRF_802154=1 (nrf_802154 library radio). That radio
+## acknowledges received frames in hardware and reports the transmit
+## verdict (RADIO_TX_OK/RADIO_TX_NOACK) over IPC, so CSMA must trust the
+## verdict instead of polling for ACK frames, which the net core never
+## forwards. Both firmwares must be built with the same setting.
+ifeq ($(NRF_802154),1)
+CFLAGS += -DCSMA_CONF_USE_RADIO_ACK=1
+endif
+
+## TrustZone convenience flag.
+##
+## Setting TRUSTZONE=1 in an application Makefile (or on the command line)
+## builds the application as the TrustZone normal world, automatically
+## (re)builds the configured secure world, links against its CMSE import
+## library, and produces a merged hex that combines both worlds. Standard
+## targets such as %.upload then flash the merged image transparently.
+##
+## TRUSTZONE_SECURE_WORLD_PATH and TRUSTZONE_SECURE_FIRMWARE may be
+## overridden to point at a custom secure world. The default uses the
+## bundled secure-world example.
+ifeq ($(TRUSTZONE),1)
+  ifeq ($(TRUSTZONE_SECURE_BUILD),1)
+    $(error TRUSTZONE=1 selects the normal world; do not combine with TRUSTZONE_SECURE_BUILD=1)
+  endif
+  TRUSTZONE_SECURE_BUILD := 0
+  TRUSTZONE_SECURE_WORLD_PATH ?= $(CONTIKI)/examples/platform-specific/nrf/trustzone/secure-world
+  TRUSTZONE_SECURE_FIRMWARE ?= secure-world-example
+endif
 
 ifeq ($(TRUSTZONE_SECURE_BUILD),1)
   # Use a custom linker script for the secure world when TrustZone is enabled.
@@ -27,6 +68,9 @@ ifeq ($(TRUSTZONE_SECURE_BUILD),1)
 else ifeq ($(TRUSTZONE_SECURE_BUILD),0)
   # Use a custom linker script for the normal world when TrustZone is enabled.
   SOURCE_LDSCRIPT ?= $(CONTIKI_CPU)/nrf5340/tz-mdk/nrf5340_xxaa_application_SPM_ns.lds
+
+  CONTIKI_CPU_DIRS += nrf5340
+  CONTIKI_CPU_SOURCEFILES += tz-ns-cfg.c
 else
   # Use the regular linker script when TrustZone is disabled.
   SOURCE_LDSCRIPT ?= $(NRFX_ROOT)/mdk/nrf5340_xxaa_application.ld
@@ -41,4 +85,43 @@ LDGENFLAGS += -x c -P -E
 
 include $(CONTIKI)/$(CONTIKI_NG_CM33_DIR)/Makefile.cm33
 
+## TrustZone build glue (only active when TRUSTZONE=1).
+##
+## OUT_HEX must be redirected here, BEFORE Makefile.nrf is included,
+## because Makefile.nrf's "%.upload: $(OUT_HEX)" rule expands its
+## prerequisites at parse time. The rules that produce the merged hex
+## and the recursive secure-world build are defined further down, after
+## Makefile.nrf and the link rules from Makefile.include have been seen.
+ifeq ($(TRUSTZONE),1)
+  SECURE_WORLD_HEX    := $(TRUSTZONE_SECURE_WORLD_PATH)/$(BUILD_DIR_BOARD)/$(TRUSTZONE_SECURE_FIRMWARE).hex
+  SECURE_WORLD_IMPLIB := $(TRUSTZONE_SECURE_WORLD_PATH)/$(BUILD_DIR_BOARD)/$(CMSE_IMPORT_LIB)
+  SREC_CAT ?= srec_cat
+
+  # Redirect upload to flash the merged image.
+  OUT_HEX = $(BUILD_DIR_BOARD)/%.tz.hex
+endif
+
 include $(CONTIKI_CPU)/Makefile.nrf
+
+ifeq ($(TRUSTZONE),1)
+  ## Recursively (re)build the secure world. The phony target makes the
+  ## inner make run on every invocation; that build is itself
+  ## incremental, so it costs almost nothing when nothing has changed.
+  ## TRUSTZONE= is cleared so the secure world's own
+  ## TRUSTZONE_SECURE_BUILD=1 is not overridden by inheritance.
+  .PHONY: trustzone-secure-world
+  trustzone-secure-world:
+	$(MAKE) -C $(TRUSTZONE_SECURE_WORLD_PATH) TRUSTZONE= \
+	  $(BUILD_DIR_BOARD)/$(TRUSTZONE_SECURE_FIRMWARE).hex
+
+  $(SECURE_WORLD_HEX) $(SECURE_WORLD_IMPLIB): trustzone-secure-world
+
+  ## The CMSE import library must exist when the normal world links,
+  ## but should not by itself force a relink on every invocation. The
+  ## pipe makes it an order-only prerequisite of the link targets.
+  $(addprefix $(BUILD_DIR_BOARD)/, $(addsuffix .$(TARGET), $(CONTIKI_PROJECT))): | $(SECURE_WORLD_IMPLIB)
+
+  ## Merge the normal world's hex with the secure world's hex.
+  $(BUILD_DIR_BOARD)/%.tz.hex: $(BUILD_DIR_BOARD)/%.hex $(SECURE_WORLD_HEX)
+	$(SREC_CAT) $(SECURE_WORLD_HEX) -Intel $< -Intel -o $@ -Intel
+endif

@@ -43,6 +43,7 @@
 #include "contiki.h"
 #include "contiki-net.h"
 #include "lib/ecc.h"
+#include "lib/random.h"
 #include "sys/node-id.h"
 #include "sys/platform.h"
 #include "sys/energest.h"
@@ -52,6 +53,7 @@
 #include "net/queuebuf.h"
 #include "net/app-layer/coap/coap-engine.h"
 #include "net/app-layer/snmp/snmp.h"
+#include "net/mac/framer/frame802154.h"
 #include "services/rpl-border-router/rpl-border-router.h"
 #include "services/orchestra/orchestra.h"
 #include "services/shell/serial-shell.h"
@@ -213,7 +215,15 @@ main(void)
 #if QUEUEBUF_ENABLED
   queuebuf_init();
 #endif /* QUEUEBUF_ENABLED */
-  netstack_init();
+
+  NETSTACK_RADIO.init();
+
+  /* at this point, the CSPRNG may have been fed with radio noise */
+  random_init();
+
+  NETSTACK_MAC.init();
+  NETSTACK_NETWORK.init();
+
   node_id_init();
 #if ECC_ENABLED
   ecc_init();

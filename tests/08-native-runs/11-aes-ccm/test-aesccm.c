@@ -33,6 +33,7 @@
 #include "unit-test.h"
 #include "lib/ccm-star.h"
 #include "lib/hexconv.h"
+#include "sys/cc.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -49,7 +50,6 @@ static const char *testcases[][3] = {
 #include "test-vectors.c"
 };
 
-#define NUM_TESTSCASES (sizeof(testcases) / sizeof(testcases[0]))
 #define MAXLEN 65536
 
 /*---------------------------------------------------------------------------*/
@@ -66,7 +66,7 @@ UNIT_TEST(aesccm_encrypt)
   hexconv_unhexlify(key, strlen(key), key_bytes, sizeof(key_bytes));
   hexconv_unhexlify(nonce, strlen(nonce), nonce_bytes, sizeof(nonce_bytes));
 
-  for(i = 0; i < NUM_TESTSCASES; i++) {
+  for(i = 0; i < CC_ARRAY_LENGTH(testcases); i++) {
     bool success;
     const char *hdr_string = testcases[i][0];
     const char *cleartext_string = testcases[i][1];
@@ -119,7 +119,7 @@ UNIT_TEST(aesccm_decrypt)
   hexconv_unhexlify(key, strlen(key), key_bytes, sizeof(key_bytes));
   hexconv_unhexlify(nonce, strlen(nonce), nonce_bytes, sizeof(nonce_bytes));
 
-  for(i = 0; i < NUM_TESTSCASES; i++) {
+  for(i = 0; i < CC_ARRAY_LENGTH(testcases); i++) {
     bool success;
     bool auth_check;
     const char *hdr_string = testcases[i][0];

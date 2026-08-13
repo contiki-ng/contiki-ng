@@ -35,7 +35,9 @@ def api_doc_build(app, exception):
 
         api_doc_build_dir = "/".join((app.config.api_doc_doxygen_src_dir,
                                       app.config.api_doc_doxygen_out_dir))
-        api_doc_static_api_dir = "/".join((app.outdir, '_api'))
+        # Sphinx >= 7.2 makes app.outdir a Path object; coerce to str so the
+        # join below works the same way across Sphinx versions.
+        api_doc_static_api_dir = "/".join((str(app.outdir), '_api'))
 
         logger.info('%s moving "%s" to "%s"'
                      % (__name__, api_doc_build_dir, api_doc_static_api_dir))

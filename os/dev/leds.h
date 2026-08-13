@@ -211,7 +211,8 @@ void leds_arch_set(leds_mask_t leds);
  * \e port corresponds to the GPIO port that the pin is connected to. This
  * only makes sense if GPIO_HAL_CONF_PORT_PIN_NUMBERING is non-zero.
  *
- * \e negative_logic should be set to false if the LED is active low.
+ * \e negative_logic should be set to true if the LED is active low (that is,
+ * the LED turns on when the GPIO pin is driven low).
  *
  * \note Do not access the \e port member of this struct direct, use the
  * LED_PORT() macro instead.

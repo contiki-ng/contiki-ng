@@ -47,6 +47,7 @@
 #include "net/routing/rpl-classic/rpl.h"
 #include "net/routing/rpl-classic/rpl-private.h"
 #endif
+#include "sys/cc.h"
 
 #include "sys/log.h"
 #define LOG_MODULE "Orchestra"
@@ -64,7 +65,7 @@ int orchestra_parent_knows_us = 0;
 
 /* The set of Orchestra rules in use */
 const struct orchestra_rule *all_rules[] = ORCHESTRA_RULES;
-#define NUM_RULES (sizeof(all_rules) / sizeof(struct orchestra_rule *))
+#define NUM_RULES CC_ARRAY_LENGTH(all_rules)
 
 /*---------------------------------------------------------------------------*/
 static void

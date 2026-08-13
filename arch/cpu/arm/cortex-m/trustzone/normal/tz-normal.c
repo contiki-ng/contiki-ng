@@ -42,6 +42,7 @@
 #include "contiki.h"
 #include "sys/platform.h"
 #include "trustzone/tz-api.h"
+#include "trustzone/normal/tz-normal.h"
 
 /*---------------------------------------------------------------------------*/
 #include "sys/log.h"
@@ -52,12 +53,17 @@ static volatile bool is_poll_requested;
 
 PROCESS(tz_normal_process, "TZ normal process");
 /*---------------------------------------------------------------------------*/
-static bool
-request_poll(void)
+bool
+tz_normal_request_poll(void)
 {
   is_poll_requested = true;
   process_poll(&tz_normal_process);
   return true;
+}
+/*---------------------------------------------------------------------------*/
+__attribute__((weak)) void
+tz_arch_init_ns_signal(void)
+{
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -65,10 +71,12 @@ init_tz_api(void)
 {
   struct tz_api tz_api = {0};
 
-  tz_api.request_poll = request_poll;
+  tz_api.request_poll = tz_normal_request_poll;
   bool result = tz_api_init(&tz_api);
   LOG_INFO("Initialize TrustZone API: %s\n",
            result ? "SUCCESS" : "FAILURE");
+
+  tz_arch_init_ns_signal();
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(tz_normal_process, ev, data)
@@ -81,7 +89,7 @@ PROCESS_THREAD(tz_normal_process, ev, data)
       is_poll_requested = false;
       LOG_DBG("> Poll secure world\n");
       if(tz_api_poll()) {
-        request_poll();
+        tz_normal_request_poll();
       }
       LOG_DBG("< Poll secure world %s!\n",
               is_poll_requested ? "waiting" : "done");
@@ -94,8 +102,18 @@ PROCESS_THREAD(tz_normal_process, ev, data)
 void
 platform_main_loop(void)
 {
-  init_tz_api();
+  /*
+   * Start tz_normal_process before init_tz_api so the EGU doorbell
+   * armed by tz_arch_init_ns_signal() can validly poll a process in
+   * PROCESS_STATE_RUNNING if the IRQ fires immediately on enable.
+   * Then issue one explicit poll to drain trustzone_init_event and
+   * any other secure-side events queued during init -- process_post
+   * does not fire PROCESS_POLL_REQUESTED, so without this kick the
+   * init events would sit unread until something else woke NS.
+   */
   process_start(&tz_normal_process, NULL);
+  init_tz_api();
+  tz_normal_request_poll();
 
   while(1) {
     process_num_events_t r;

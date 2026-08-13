@@ -285,13 +285,22 @@ static uint8_t
 decode_name(const unsigned char *query, char *dest,
 	    const unsigned char *packet, size_t packet_len)
 {
+  const unsigned char *end = packet + packet_len;
   int dest_len = RESOLV_CONF_MAX_DOMAIN_NAME_SIZE;
-  unsigned char label_len = *query++;
+  unsigned char label_len;
 
   LOG_DBG("decoding name: \"");
 
+  if(query >= end) {
+    return 0;
+  }
+  label_len = *query++;
+
   while(dest_len && label_len) {
     if(label_len & 0xc0) {
+      if(query >= end) {
+        return 0;
+      }
       const uint16_t offset = query[0] + ((label_len & ~0xC0) << 8);
       if(offset >= packet_len) {
 	LOG_ERR("Offset %"PRIu16" exceeds packet length %zu\n",
@@ -324,6 +333,10 @@ decode_name(const unsigned char *query, char *dest,
       }
     }
 
+    if(query >= end) {
+      LOG_ERR("Cannot read outside the packet data\n");
+      return 0;
+    }
     label_len = *query++;
 
     if(label_len > 0) {
@@ -343,22 +356,32 @@ decode_name(const unsigned char *query, char *dest,
 #if RESOLV_SUPPORTS_MDNS
 static uint8_t
 dns_name_isequal(const unsigned char *queryptr, const char *name,
-                 const unsigned char *packet)
+                 const unsigned char *packet, size_t packet_len)
 {
-  unsigned char label_len = *queryptr++;
+  const unsigned char *end = packet + packet_len;
+  unsigned char label_len;
 
-  if(*name == 0) {
+  if(*name == 0 || queryptr >= end) {
     return 0;
   }
 
+  label_len = *queryptr++;
+
   while(label_len > 0) {
     if(label_len & 0xc0) {
-      queryptr = packet + queryptr[0] + ((label_len & ~0xC0) << 8);
+      if(queryptr >= end) {
+        return 0;
+      }
+      const uint16_t offset = queryptr[0] + ((label_len & ~0xC0) << 8);
+      if(offset >= packet_len) {
+        return 0;
+      }
+      queryptr = packet + offset;
       label_len = *queryptr++;
     }
 
     for(; label_len; --label_len) {
-      if(!*name) {
+      if(!*name || queryptr >= end) {
         return 0;
       }
 
@@ -367,6 +390,9 @@ dns_name_isequal(const unsigned char *queryptr, const char *name,
       }
     }
 
+    if(queryptr >= end) {
+      return 0;
+    }
     label_len = *queryptr++;
 
     if(label_len != 0 && *name++ != '.') {
@@ -385,19 +411,35 @@ dns_name_isequal(const unsigned char *queryptr, const char *name,
 /** \internal
  */
 static unsigned char *
-skip_name(unsigned char *query)
+skip_name(unsigned char *query, const unsigned char *packet, size_t packet_len)
 {
+  const unsigned char *end = packet + packet_len;
+
   LOG_DBG("skip name: ");
 
-  do {
+  while(query < end) {
     unsigned char n = *query;
+
     if(n & 0xc0) {
-      LOG_DBG_("<skip-to-%d>", query[0] + ((n & ~0xC0) << 8));
-      ++query;
-      break;
+      /* A compression pointer is two bytes long and terminates the name. */
+      if(query + 2 > end) {
+        break;
+      }
+      LOG_DBG_("<skip-to-%d>\n", query[0] + ((n & ~0xC0) << 8));
+      return query + 2;
     }
 
     ++query;
+
+    if(n == 0) {
+      /* The terminating zero-length label ends the name. */
+      LOG_DBG_("\n");
+      return query;
+    }
+
+    if(query + n > end) {
+      break;
+    }
 
     while(n > 0) {
       LOG_DBG_("%c", *query);
@@ -405,9 +447,10 @@ skip_name(unsigned char *query)
       --n;
     }
     LOG_DBG_(".");
-  } while(*query != 0);
-  LOG_DBG_("\n");
-  return query + 1;
+  }
+
+  LOG_ERR("skip_name: name runs past end of packet\n");
+  return NULL;
 }
 /*---------------------------------------------------------------------------*/
 /** \internal
@@ -720,23 +763,32 @@ newdata(void)
 {
   int8_t i = 0;
   struct dns_hdr const *hdr = (struct dns_hdr *)uip_appdata;
-  unsigned char *queryptr = (unsigned char *)hdr + sizeof(*hdr);
+
+  /*
+   * Make sure the fixed-size DNS header is fully present before reading
+   * any of its fields.
+   */
+  if(uip_datalen() < sizeof(*hdr)) {
+    LOG_DBG("Packet too short to contain a DNS header\n");
+    return;
+  }
+
   const uint8_t is_request = (hdr->flags1 & ~1) == 0 && hdr->flags2 == 0;
 
   /* We only care about the question(s) and the answers. The authrr
    * and the extrarr are simply discarded.
    */
-  uint8_t nquestions = (uint8_t)uip_ntohs(hdr->numquestions);
-  uint8_t nanswers = (uint8_t)uip_ntohs(hdr->numanswers);
+  uint16_t nquestions = uip_ntohs(hdr->numquestions);
+  uint16_t nanswers = uip_ntohs(hdr->numanswers);
 
-  queryptr = (unsigned char *)hdr + sizeof(*hdr);
+  unsigned char *queryptr = (unsigned char *)hdr + sizeof(*hdr);
   i = 0;
 
   LOG_DBG("flags1=0x%02X flags2=0x%02X nquestions=%d, nanswers=%d, " \
           "nauthrr=%d, nextrarr=%d\n",
-          hdr->flags1, hdr->flags2, (uint8_t)nquestions, (uint8_t)nanswers,
-          (uint8_t)uip_ntohs(hdr->numauthrr),
-          (uint8_t)uip_ntohs(hdr->numextrarr));
+          hdr->flags1, hdr->flags2, nquestions, nanswers,
+          uip_ntohs(hdr->numauthrr),
+          uip_ntohs(hdr->numextrarr));
 
   if(is_request && nquestions == 0) {
     /* Skip requests with no questions. */
@@ -746,10 +798,22 @@ newdata(void)
 
 /** QUESTION HANDLING SECTION ************************************************/
 
-  for(; nquestions > 0;
-      queryptr = skip_name(queryptr) + sizeof(struct dns_question),
-      --nquestions
-      ) {
+  while(nquestions > 0) {
+    /*
+     * Skip past the question name to reach the question record. The same
+     * name is also used below for the mDNS comparison, so keep a pointer
+     * to it before advancing.
+     */
+    unsigned char *qname = queryptr;
+    unsigned char *qrecord = skip_name(qname, uip_appdata, uip_datalen());
+    if(qrecord == NULL) {
+      return;
+    }
+
+    /* Advance to the next question for the following iteration. */
+    queryptr = qrecord + sizeof(struct dns_question);
+    --nquestions;
+
 #if RESOLV_SUPPORTS_MDNS
     if(!is_request) {
       /* If this isn't a request, we don't need to bother
@@ -760,8 +824,16 @@ newdata(void)
     }
 
     {
-      struct dns_question *question =
-        (struct dns_question *)skip_name(queryptr);
+      struct dns_question *question = (struct dns_question *)qrecord;
+
+      /*
+       * Make sure the fixed-size question record lies within the packet
+       * before dereferencing it.
+       */
+      if(qrecord + sizeof(struct dns_question) >
+         (const unsigned char *)uip_appdata + uip_datalen()) {
+        return;
+      }
 
 #if !ARCH_DOESNT_NEED_ALIGNED_STRUCTS
       static struct dns_question aligned;
@@ -779,7 +851,7 @@ newdata(void)
         continue;
       }
 
-      if(!dns_name_isequal(queryptr, resolv_hostname, uip_appdata)) {
+      if(!dns_name_isequal(qname, resolv_hostname, uip_appdata, uip_datalen())) {
 	continue;
       }
 
@@ -799,7 +871,7 @@ newdata(void)
         }
         return;
       } else {
-        uint8_t nauthrr;
+        uint16_t nauthrr;
 
         LOG_DBG("But we are still probing. Waiting...\n");
 
@@ -807,7 +879,7 @@ newdata(void)
          * probe race condition check here and make sure
          * we don't need to delay probing for a second.
          */
-        nauthrr = (uint8_t)uip_ntohs(hdr->numauthrr);
+        nauthrr = uip_ntohs(hdr->numauthrr);
 
         /* For now, we will always restart the collision check if
          * there are *any* authority records present.
@@ -872,12 +944,37 @@ newdata(void)
 
   /* Answer parsing loop */
   while(nanswers > 0) {
-    struct dns_answer *ans = (struct dns_answer *)skip_name(queryptr);
+    /*
+     * The fixed part of a DNS answer record (type, class, ttl, len) is
+     * 10 bytes; the rdata that follows is ans->len bytes long.
+     */
+    const unsigned char *packet_end =
+      (const unsigned char *)uip_appdata + uip_datalen();
+    unsigned char *arecord = skip_name(queryptr, uip_appdata, uip_datalen());
+    if(arecord == NULL) {
+      break;
+    }
+
+    struct dns_answer *ans = (struct dns_answer *)arecord;
+
+    /*
+     * Make sure the fixed-size answer header lies within the packet before
+     * dereferencing it.
+     */
+    if(arecord + 10 > packet_end) {
+      break;
+    }
 
 #if !ARCH_DOESNT_NEED_ALIGNED_STRUCTS
     {
+      /*
+       * Copy only the bytes that are actually present in the packet. The
+       * rdata (ipaddr) tail is read only after the length check below has
+       * confirmed the full record is present, so a short copy here is safe.
+       */
       static struct dns_answer aligned;
-      memcpy(&aligned, ans, sizeof(aligned));
+      size_t avail = (size_t)(packet_end - arecord);
+      memcpy(&aligned, ans, avail < sizeof(aligned) ? avail : sizeof(aligned));
       ans = &aligned;
     }
 #endif /* !ARCH_DOESNT_NEED_ALIGNED_STRUCTS */
@@ -904,6 +1001,15 @@ newdata(void)
       goto skip_to_next_answer;
     }
 
+    /*
+     * The address rdata is read below; make sure the full record (10-byte
+     * header plus ans->len bytes of rdata) lies within the packet.
+     */
+    if(arecord + 10 + uip_ntohs(ans->len) > packet_end) {
+      LOG_ERR("Answer rdata runs past end of packet\n");
+      break;
+    }
+
 #if RESOLV_SUPPORTS_MDNS
     if(UIP_UDP_BUF->srcport == UIP_HTONS(MDNS_PORT) && hdr->id == 0) {
       int8_t available_i = RESOLV_ENTRIES;
@@ -915,7 +1021,8 @@ newdata(void)
        */
       for(i = 0; i < RESOLV_ENTRIES; ++i) {
         namemapptr = &names[i];
-        if(dns_name_isequal(queryptr, namemapptr->name, uip_appdata)) {
+        if(dns_name_isequal(queryptr, namemapptr->name, uip_appdata,
+                            uip_datalen())) {
           break;
         }
         if((namemapptr->state == STATE_UNUSED)
@@ -928,6 +1035,23 @@ newdata(void)
         }
       }
       if(i == RESOLV_ENTRIES) {
+        /*
+         * The name is not cached yet. We need a free (or expired) slot to
+         * store it in; bail out before touching names[] if there is none,
+         * since available_i is then still RESOLV_ENTRIES (one past the end).
+         */
+        if(available_i == RESOLV_ENTRIES) {
+          LOG_DBG("Not enough room to keep track of unsolicited MDNS answer\n");
+
+          if(dns_name_isequal(queryptr, resolv_hostname, uip_appdata,
+                              uip_datalen())) {
+            /* Oh snap, they say they are us! We had better report them... */
+            resolv_found(resolv_hostname, (uip_ipaddr_t *)ans->ipaddr);
+          }
+          namemapptr = NULL;
+          goto skip_to_next_answer;
+        }
+
         LOG_DBG("Unsolicited MDNS response\n");
         i = available_i;
         namemapptr = &names[i];
@@ -937,16 +1061,6 @@ newdata(void)
           namemapptr = NULL;
           goto skip_to_next_answer;
         }
-      }
-      if(i == RESOLV_ENTRIES) {
-        LOG_DBG("Not enough room to keep track of unsolicited MDNS answer\n");
-
-        if(dns_name_isequal(queryptr, resolv_hostname, uip_appdata)) {
-          /* Oh snap, they say they are us! We had better report them... */
-          resolv_found(resolv_hostname, (uip_ipaddr_t *)ans->ipaddr);
-        }
-        namemapptr = NULL;
-        goto skip_to_next_answer;
       }
       namemapptr = &names[i];
     } else
@@ -958,7 +1072,7 @@ newdata(void)
 
 /*  This is disabled for now, so that we don't fail on CNAME records.
  #if RESOLV_VERIFY_ANSWER_NAMES
-    if(namemapptr && !dns_name_isequal(queryptr, namemapptr->name, uip_appdata)) {
+    if(namemapptr && !dns_name_isequal(queryptr, namemapptr->name, uip_appdata, uip_datalen())) {
       LOG_DBG("Answer name doesn't match the query!\n");
       goto skip_to_next_answer;
     }
@@ -982,7 +1096,12 @@ newdata(void)
     break;
 
 skip_to_next_answer:
-    queryptr = (unsigned char *)skip_name(queryptr) + 10 + uip_htons(ans->len);
+    /*
+     * Advance past this record's name (already validated above via
+     * arecord), its 10-byte header and its rdata. The next iteration
+     * re-validates the resulting pointer through skip_name().
+     */
+    queryptr = arecord + 10 + uip_ntohs(ans->len);
     --nanswers;
   }
 
@@ -1011,6 +1130,9 @@ void
 resolv_set_hostname(const char *hostname)
 {
   strncpy(resolv_hostname, hostname, RESOLV_CONF_MAX_DOMAIN_NAME_SIZE);
+  /* strncpy() does not terminate when the source is too long; do it here so
+   * the strlen() calls below cannot read past the end of the buffer. */
+  resolv_hostname[RESOLV_CONF_MAX_DOMAIN_NAME_SIZE] = '\0';
 
   /* Add the .local suffix if it isn't already there */
   if(strlen(resolv_hostname) < 7 ||

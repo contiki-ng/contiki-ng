@@ -38,7 +38,12 @@
 #include <sys/time.h>
 #include <err.h>
 #include "border-router.h"
+#include "sys/platform.h"
 #include "tun6-net.h"
+
+#if BUILD_WITH_NAT64
+#include "nat64.h"
+#endif /* BUILD_WITH_NAT64 */
 
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
@@ -52,6 +57,17 @@ extern uint16_t slip_config_basedelay;
 #error The system clock must be ticking in milliseconds
 #endif
 static struct timer delay_timer;
+
+/* Set by --no-tun: skip the TUN device entirely.  Useful when the
+ * border router only needs to handle NAT64-translated traffic, since
+ * the NAT64 gateway opens its own AF_INET sockets and does not need
+ * the TUN.  Non-NAT64 IPv6 packets are silently dropped at the
+ * fallback interface in this mode. */
+static int no_tun_mode;
+#define NO_TUN_PRIO (CONTIKI_VERBOSE_PRIO + 41)
+CONTIKI_OPTION(NO_TUN_PRIO, { "no-tun", no_argument, &no_tun_mode, 1 }, NULL,
+               "Skip TUN device setup; pair with --nat64 for unprivileged\n"
+               "\t\toperation when only NAT64 traffic needs to be forwarded.\n");
 /*---------------------------------------------------------------------------*/
 static void
 tun_input_callback(void)
@@ -75,6 +91,12 @@ tun_init(void)
 
   slip_init();
 
+  if(no_tun_mode) {
+    LOG_INFO("--no-tun: skipping TUN device, non-NAT64 IPv6 packets "
+             "will be dropped\n");
+    return;
+  }
+
   if(!tun6_net_init(tun_input_callback)) {
     err(EXIT_FAILURE, "failed to open tun device %s", tun6_net_get_tun_name());
   }
@@ -90,6 +112,15 @@ output(void)
 {
   LOG_DBG("SUT: %u\n", uip_len);
   if(uip_len > 0) {
+#if BUILD_WITH_NAT64
+    if(nat64_is_ip64_addr(&UIP_IP_BUF->destipaddr)) {
+      return nat64_output(uip_buf, uip_len);
+    }
+#endif /* BUILD_WITH_NAT64 */
+    if(no_tun_mode) {
+      LOG_DBG("--no-tun: dropping %u-byte non-NAT64 packet\n", uip_len);
+      return 0;
+    }
     return tun6_net_output(uip_buf, uip_len);
   }
   return 0;

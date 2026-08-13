@@ -57,10 +57,12 @@ If desired, a script to compile MSP430 GCC 4.7.2 from source can be found [here]
 
 ### Install Java for the Cooja network simulator
 
+Cooja requires JDK 25. On recent Ubuntu versions it can be installed with apt:
+
 ```bash
-$ sudo apt install default-jdk ant
+$ sudo apt install openjdk-25-jdk
 $ update-alternatives --config java
-There is only one alternative in link group java (providing /usr/bin/java): /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+There is only one alternative in link group java (providing /usr/bin/java): /usr/lib/jvm/java-25-openjdk-amd64/bin/java
 Nothing to configure.
 ```
 

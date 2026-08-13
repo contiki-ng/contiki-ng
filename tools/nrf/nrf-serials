@@ -1,0 +1,186 @@
+#!/usr/bin/env bash
+#
+# Copyright (C) 2026 RISE Research Institutes of Sweden AB
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the names of its contributors
+#    may be used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# Print the serial numbers (one per line) of all attached Nordic
+# Semiconductor J-Link debug probes, using "nrfutil device list".
+
+set -e
+
+PROGRAM="${0##*/}"
+
+usage() {
+    cat <<EOF
+Usage: $PROGRAM [-h] [--traits <traits>] [--port <serial port>] [device family]
+
+Print the serial numbers (one per line) of attached Nordic Semiconductor
+devices, using "nrfutil device list". By default, only J-Link debug
+probes are considered; use --traits to select other device types, e.g.
+"nordicDfu,nordicUsb" for DFU-capable dongles (the list is an OR filter).
+
+With --port, print the serial number of the device that owns the given
+serial port instead. Serial port lookup requires jq.
+
+When a device family (e.g. nrf52, nrf53) is given, only devkits of that
+family are listed. Family filtering requires jq and information from the
+devkit's board controller; devices whose family cannot be determined
+(e.g. external J-Link probes) are excluded when a family is given.
+
+Options:
+  --traits <traits>     Only consider devices with one of the given
+                        comma-separated device traits (default: jlink)
+  --port <serial port>  Print the serial number of the device owning
+                        the given serial port
+  -h, --help            Show this help and exit
+
+Environment:
+  NRFUTIL       The nrfutil binary to use (default: nrfutil)
+
+Exit status:
+  0  one or more serial numbers were printed
+  1  nrfutil is unavailable, no matching devices are attached, or jq is
+     required for the requested filtering but unavailable
+  2  invalid usage
+EOF
+}
+
+FAMILY=
+PORT=
+TRAITS=jlink
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        --port)
+            if [[ $# -lt 2 || "$2" == -* ]]; then
+                echo "$PROGRAM: --port requires an argument" >&2
+                exit 2
+            fi
+            PORT="$2"
+            shift
+            ;;
+        --traits)
+            if [[ $# -lt 2 || "$2" == -* ]]; then
+                echo "$PROGRAM: --traits requires an argument" >&2
+                exit 2
+            fi
+            TRAITS="$2"
+            shift
+            ;;
+        -*)
+            echo "$PROGRAM: unknown option: $1" >&2
+            usage >&2
+            exit 2
+            ;;
+        *)
+            if [[ -n "$FAMILY" ]]; then
+                echo "$PROGRAM: too many arguments: $1" >&2
+                usage >&2
+                exit 2
+            fi
+            FAMILY="$1"
+            ;;
+    esac
+    shift
+done
+
+NRFUTIL="${NRFUTIL:-nrfutil}"
+
+# nrfutil device list reports the family as e.g. "NRF52_FAMILY".
+family_filter=""
+if [[ -n "$FAMILY" ]]; then
+    family_filter="$(echo "$FAMILY" | tr '[:lower:]' '[:upper:]')_FAMILY"
+fi
+
+if [[ -n "$PORT" ]]; then
+    # Serial port lookup: print the serial number of the device that
+    # owns the given serial port.
+    if ! command -v jq >/dev/null 2>&1; then
+        echo "$PROGRAM: serial port lookup requires jq" >&2
+        exit 1
+    fi
+    device_output=$("$NRFUTIL" device list --traits "$TRAITS" --json-pretty --skip-overhead 2>/dev/null) || {
+        echo "$PROGRAM: failed to run \"$NRFUTIL device list\"" >&2
+        exit 1
+    }
+    serial_numbers=$(printf '%s\n' "$device_output" \
+        | jq -r --arg fam "$family_filter" --arg port "$PORT" \
+            '.devices[]?
+             | select($fam == "" or (.devkit.deviceFamily // "") == $fam)
+             | select(any(.serialPorts[]?; .comName == $port or .path == $port))
+             | .serialNumber // empty' \
+            2>/dev/null | sort -u)
+    if [[ -z "$serial_numbers" ]]; then
+        echo "$PROGRAM: no attached device with serial port $PORT found${family_filter:+ for family $FAMILY}" >&2
+        exit 1
+    fi
+    echo "$serial_numbers"
+    exit 0
+fi
+
+# The default traits filter jlink excludes USB-CDC-only devices (e.g.
+# dongles) that the J-Link-based program command cannot flash.
+device_output=$("$NRFUTIL" device list --traits "$TRAITS" --json-pretty --skip-overhead 2>/dev/null) || {
+    echo "$PROGRAM: failed to run \"$NRFUTIL device list\"" >&2
+    exit 1
+}
+
+# Extract serial numbers using jq (if available) or fall back to grep/sed
+if command -v jq >/dev/null 2>&1; then
+    serial_numbers=$(printf '%s\n' "$device_output" \
+        | jq -r --arg fam "$family_filter" \
+            '.devices[]? | select($fam == "" or (.devkit.deviceFamily // "") == $fam) | .serialNumber // empty' \
+            2>/dev/null | sort -u)
+else
+    # Family filtering must not silently degrade to listing all attached
+    # devices: a caller that asked for one family could then be handed a
+    # device of another.
+    if [[ -n "$family_filter" ]]; then
+        echo "$PROGRAM: family filtering requires jq" >&2
+        exit 1
+    fi
+    # Fallback without jq: extract "serialNumber": "<value>" pairs.
+    # Also matches serial numbers nested in serialPorts entries, but those
+    # duplicate the device serial number and are removed by sort -u.
+    serial_numbers=$(printf '%s\n' "$device_output" \
+        | grep -o '"serialNumber"[[:space:]]*:[[:space:]]*"[^"]*"' \
+        | sed 's/.*"serialNumber"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' \
+        | sort -u)
+fi
+
+if [[ -z "$serial_numbers" ]]; then
+    echo "$PROGRAM: no attached devices with traits $TRAITS found${family_filter:+ for family $FAMILY}" >&2
+    exit 1
+fi
+
+echo "$serial_numbers"

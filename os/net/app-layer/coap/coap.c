@@ -480,14 +480,27 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
   memset(coap_pkt->options, 0, sizeof(coap_pkt->options));
   current_option += coap_pkt->token_len;
 
-  unsigned int option_number = 0;
-  unsigned int option_delta = 0;
-  size_t option_length = 0;
+  /* Use uint32_t so overflow is detectable on 16-bit platforms where
+   * 'unsigned int' and 'size_t' are 16 bits (e.g., MSP430). The
+   * extended delta and length encodings can each produce values up to
+   * 65804 from a single option, and accumulated option numbers must be
+   * checked against the UINT16_MAX cap. */
+  uint32_t option_number = 0;
+  uint32_t option_delta = 0;
+  uint32_t option_length = 0;
 
   while(current_option < data + data_len) {
-    /* payload marker 0xFF, currently only checking for 0xF* because rest is reserved */
-    if((current_option[0] & 0xF0) == 0xF0) {
-      coap_pkt->payload = ++current_option;
+    /* Payload marker. Per RFC 7252 §3.1, the marker is exactly 0xFF;
+     * any other byte with delta or length nibble = 15 is reserved and
+     * MUST be processed as a message format error. The marker followed
+     * by a zero-length payload is also a message format error. */
+    if(current_option[0] == 0xFF) {
+      ++current_option;
+      if(current_option >= data + data_len) {
+        LOG_WARN("BAD REQUEST: payload marker with zero-length payload\n");
+        return BAD_REQUEST_4_00;
+      }
+      coap_pkt->payload = current_option;
       coap_pkt->payload_len = data_len - (coap_pkt->payload - data);
 
       /* also for receiving, the Erbium upper bound is COAP_MAX_CHUNK_SIZE */
@@ -504,6 +517,12 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
     option_length = current_option[0] & 0x0F;
     ++current_option;
 
+    if(option_delta == 15 || option_length == 15) {
+      /* Reserved nibble values per RFC 7252 §3.1. */
+      LOG_WARN("BAD REQUEST: reserved option delta/length nibble 15\n");
+      return BAD_REQUEST_4_00;
+    }
+
     if(option_delta == 13) {
       CHECK_OPTION_BOUNDARY(1);
       option_delta += current_option[0];
@@ -511,7 +530,7 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
     } else if(option_delta == 14) {
       CHECK_OPTION_BOUNDARY(2);
       option_delta += 255;
-      option_delta += current_option[0] << 8;
+      option_delta += (uint32_t)current_option[0] << 8;
       ++current_option;
       option_delta += current_option[0];
       ++current_option;
@@ -524,7 +543,7 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
     } else if(option_length == 14) {
       CHECK_OPTION_BOUNDARY(2);
       option_length += 255;
-      option_length += current_option[0] << 8;
+      option_length += (uint32_t)current_option[0] << 8;
       ++current_option;
       option_length += current_option[0];
       ++current_option;
@@ -533,14 +552,15 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
     CHECK_OPTION_BOUNDARY(option_length);
     option_number += option_delta;
 
-    if(option_number > COAP_OPTION_SIZE1) {
-      /* Malformed CoAP - out of bounds */
-      LOG_WARN("BAD REQUEST: option number too large: %u\n", option_number);
+    if(option_number > UINT16_MAX) {
+      /* Per RFC 7252, CoAP option numbers are 16-bit (0-UINT16_MAX). */
+      LOG_WARN("BAD REQUEST: option number out of range: %"PRIu32"\n",
+               option_number);
       return BAD_REQUEST_4_00;
     }
 
-    LOG_DBG("OPTION %u (delta %u, len %zu): ", option_number, option_delta,
-            option_length);
+    LOG_DBG("OPTION %"PRIu32" (delta %"PRIu32", len %"PRIu32"): ",
+            option_number, option_delta, option_length);
 
     coap_set_option(coap_pkt, option_number);
 
@@ -701,7 +721,7 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
       LOG_DBG_("Size1 [%"PRIu32"]\n", coap_pkt->size1);
       break;
     default:
-      LOG_DBG_("unknown (%u)\n", option_number);
+      LOG_DBG_("unknown (%"PRIu32")\n", option_number);
       /* check if critical (odd) */
       if(option_number & 1) {
 #if COAP_MESSAGE_ON_ERROR

@@ -35,33 +35,37 @@ jobs:
         # Always run all jobs in the matrix, even if one fails
         fail-fast: false
         matrix:
-            os: [ ubuntu-latest, macos-13 ]
-            test: [ documentation, compile-base, compile-arm-ports, rpl-lite, rpl-classic, renode-simulation, simulation-base, ipv6, ieee802154, tun-rpl-br, script-base, native-runs, ipv6-nbr, coap-lwm2m, packet-parsing ]
+            os: [ ubuntu-latest, macos-15-intel ]
+            test: [ documentation, compile-base, compile-arm-ports, rpl-lite, rpl-classic, renode-simulation, simulation-base, ipv6, ieee802154, tun-rpl-br, script-base, native-runs, ipv6-nbr, coap-lwm2m, packet-parsing, nat64-standalone, security-protocols ]
             exclude:
               # Renode tests done by Linux (more CI runners available).
-              - os: macos-13
+              - os: macos-15-intel
                 test: renode-simulation
               # Runs on x86, already have intermittent failures there.
-              - os: macos-13
+              - os: macos-15-intel
                 test: simulation-base
               # No arm-none-eabi-gcc installed.
-              - os: macos-13
+              - os: macos-15-intel
                 test: compile-arm-ports
               # Uses zoul as dummy target, fails on missing arm-none-eabi-gcc.
               # Tests/build system should be fixed.
-              - os: macos-13
+              - os: macos-15-intel
                 test: tun-rpl-br
               # tests/utils.sh: kill_bg contains ps --ppid (not portable).
-              - os: macos-13
+              - os: macos-15-intel
                 test: native-runs
-              - os: macos-13
+              # Native execution test; matches the native-runs treatment above
+              # to avoid x86 macOS surprises with the background echo server.
+              - os: macos-15-intel
+                test: nat64-standalone
+              - os: macos-15-intel
                 test: coap-lwm2m
               # Failed simulations for no obvious reason, Cooja issue?
-              - os: macos-13
+              - os: macos-15-intel
                 test: ieee802154
 
     # Default job name is too long to be visible in the "Checks" tab.
-    name: ${{ matrix.test }}/${{ matrix.os == 'macos-13' && 'macos-x64' || matrix.os }}
+    name: ${{ matrix.test }}/${{ matrix.os == 'macos-15-intel' && 'macos-x64' || matrix.os }}
     # The type of runner that the job will run on
     runs-on: ${{ matrix.os }}
     # Checks-out the contiki-ng $GITHUB_WORKSPACE, so your job can access it
@@ -69,7 +73,7 @@ jobs:
 
     # Checks out the repo with full history
     - name: Checkout github repo (+ download lfs dependencies)
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
           fetch-depth: 2
           submodules: 'recursive'
@@ -80,11 +84,11 @@ jobs:
 
     # Install sha256 command on macOS so print-dockerhash.sh can work.
     - name: install macOS software
-      if: matrix.os == 'macos-13'
+      if: matrix.os == 'macos-15-intel'
       run: |
-        brew install coreutils doxygen make mosquitto mtr rlwrap 
-        python3 -m pip -q install matplotlib
-        python3 -m pip -q install -r tools/docker/files/rtd_requirements.txt
+        brew install coreutils doxygen make mosquitto mtr rlwrap
+        python3 -m pip -q install --break-system-packages matplotlib
+        python3 -m pip -q install --break-system-packages -r tools/docker/files/rtd_requirements.txt
         wget -nv https://github.com/pjonsson/msp430gcc-binary/releases/download/v1.1/mspgcc-4.7.4-macos-x86_64.tar.bz2
         sudo tar xf mspgcc*.tar.bz2 -C /usr/local --strip-components=1 --no-same-owner
         # Homebrew prefix is different for x86-64 and aarch64.
@@ -96,7 +100,7 @@ jobs:
 
     # Valgrind takes a long time to build, so only install when required.
     - name: install macOS valgrind
-      if: matrix.os == 'macos-13' && matrix.test == 'native-runs'
+      if: matrix.os == 'macos-15-intel' && matrix.test == 'native-runs'
       run: |
         # 3 cores on CI runners, so use make -j6 for homebrew.
         export HOMEBREW_MAKE_JOBS=6
@@ -174,7 +178,7 @@ jobs:
     #
     # IMPORTANT: cache size must also be updated in the "Execute tests" section.
     - name: ccache
-      uses: hendrikmuhs/ccache-action@v1.2.18
+      uses: hendrikmuhs/ccache-action@v1.2.23
       with:
         key: compilation-${{ matrix.test }}
         max-size: 160M
@@ -182,7 +186,7 @@ jobs:
     # Keep a cache of the Cooja build files and gradle files. Keyed on Cooja
     # repo commit to ensure clean rebuild when updating Cooja submodule.
     - name: Cache Cooja Artifacts
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: |
           tools/cooja/build
@@ -205,16 +209,16 @@ jobs:
         # Check outcome of the test
         ./tests/check-test.sh `pwd`/tests/??-${{ matrix.test }}
 
-    # Pre-install a Java 21 on macOS to avoid 503 responses in Gradle.
-    - name: Setup Java 21
-      if: matrix.os == 'macos-13'
-      uses: actions/setup-java@v4
+    # Pre-install a Java 25 on macOS to avoid 503 responses in Gradle.
+    - name: Setup Java 25
+      if: matrix.os == 'macos-15-intel'
+      uses: actions/setup-java@v5
       with:
-        java-version: 21
+        java-version: 25
         distribution: 'zulu'
 
     - name: Execute tests
-      if: matrix.os == 'macos-13'
+      if: matrix.os == 'macos-15-intel'
       run: |
         # Silence Doxygen warnings (not compilied with -Duse_libclang=ON).
         perl -pi -e 's/^CLANG_ASSISTED_PARSING/# CLANG_ASSISTED_PARSING/g;' \

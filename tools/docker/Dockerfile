@@ -17,7 +17,7 @@ USER root
 # libcanberra-gtk-module: remove warning message from renode.
 # libcoap2-bin: used by regression tests.
 # libgl1-mesa-glx: required by Simplicity Commander
-# libxtst6: required for GraalVM/Java17 to run Cooja in GUI mode.
+# libxtst6: required for GraalVM/Java to run Cooja in GUI mode.
 # mosquitto: used by the regression tests.
 # mtr-tiny: used by the regression tests.
 # net-tools: used by the regression tests.
@@ -40,6 +40,7 @@ RUN apt-get -qq update && \
     git-lfs \
     gosu \
     iputils-ping \
+    jq \
     less \
     libcanberra-gtk-module \
     libcoap2-bin \
@@ -70,7 +71,7 @@ RUN apt-get -qq update && \
     > /dev/null && \
   apt-get -qq clean
 
-ARG JAVA_VERSION=21
+ARG JAVA_VERSION=25
 RUN wget -nv https://download.oracle.com/graalvm/${JAVA_VERSION}/latest/graalvm-jdk-${JAVA_VERSION}_linux-x64_bin.tar.gz && \
   tar xf graalvm-jdk-${JAVA_VERSION}_linux-x64_bin.tar.gz -C /usr/local --strip-components=1 --no-same-owner && \
   rm -f graalvm*gz
@@ -151,16 +152,18 @@ COPY --chown=root:root files/remap-user.sh /usr/local/bin/remap-user.sh
 # Remove the PDF manual and html directory to reduce image size.
 # Use the most recent version of ccache to ensure it supports the compiler
 # versions in the docker image.
-RUN wget -nv https://sourceforge.net/projects/doxygen/files/rel-1.10.0/doxygen-1.10.0.linux.bin.tar.gz/download -O doxygen.linux.bin.tar.gz && \
+RUN wget -nv https://sourceforge.net/projects/doxygen/files/rel-1.17.0/doxygen-1.17.0.linux.bin.tar.gz/download -O doxygen.linux.bin.tar.gz && \
     tar zxf doxygen.linux.bin.tar.gz -C ${HOME}/.local && \
-    rm -rf ${HOME}/.local/doxygen-1.10.0/html ${HOME}/.local/doxygen-1.10.0/*.pdf doxygen.linux.bin.tar.gz && \
-    (cd ${HOME}/.local/bin && ln -s ../doxygen-1.10.0/bin/doxygen .) && \
+    rm -rf ${HOME}/.local/doxygen-1.17.0/html ${HOME}/.local/doxygen-1.17.0/*.pdf doxygen.linux.bin.tar.gz && \
+    (cd ${HOME}/.local/bin && ln -s ../doxygen-1.17.0/bin/doxygen .) && \
     wget -nv https://github.com/ccache/ccache/releases/download/v4.10.2/ccache-4.10.2-linux-x86_64.tar.xz && \
     tar xf ccache-4.10.2-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.10.2-linux-x86_64/ccache && \
     rm ccache-*-linux-x86_64.tar.xz
 
-# Install additional tools for the nRF5 SDK.
-RUN nrfutil install nrf5sdk-tools
+# Install the nrfutil subcommands used for programming Nordic devices:
+# "device" for nrfutil device list/program and "nrf5sdk-tools" for the
+# dongle DFU package generation.
+RUN nrfutil install device nrf5sdk-tools
 
 # By default, we use a Docker bind mount to share the repo with the host,
 # with Docker run option:

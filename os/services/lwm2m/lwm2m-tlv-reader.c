@@ -89,7 +89,10 @@ read_float32fix(lwm2m_context_t *ctx, const uint8_t *inbuf, size_t len,
   size_t size;
   size = lwm2m_tlv_read(&tlv, inbuf, len);
   if(size > 0) {
-    lwm2m_tlv_float32_to_fix(&tlv, value, bits);
+    if(lwm2m_tlv_float32_to_fix(&tlv, value, bits) == 0) {
+      /* Malformed float value (wrong length) - reject. */
+      return 0;
+    }
     ctx->last_value_len = tlv.length;
   }
   return size;

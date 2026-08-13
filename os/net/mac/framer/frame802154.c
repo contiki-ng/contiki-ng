@@ -80,6 +80,7 @@ static uint16_t mac_pan_id = IEEE802154_PANID;
  *  in the 802.15.4 header.  This structure is used in \ref frame802154_create()
  */
 typedef struct {
+  uint8_t frame_ctrl_len;  /**<  Length (in bytes) of the frame control field */
   uint8_t seqno_len;       /**<  Length (in bytes) of sequence number field */
   uint8_t dest_pid_len;    /**<  Length (in bytes) of destination PAN ID field */
   uint8_t dest_addr_len;   /**<  Length (in bytes) of destination address field */
@@ -146,6 +147,12 @@ frame802154_has_panid(frame802154_fcf_t *fcf, int *has_src_pan_id, int *has_dest
   }
 
   if(fcf->frame_version == FRAME802154_IEEE802154_2015) {
+    if(fcf->frame_type == FRAME802154_MPFRAME) {
+      *has_src_pan_id = 0;
+      *has_dest_pan_id = !fcf->panid_compression;
+      return;
+    }
+
     /*
      * IEEE 802.15.4-2015
      * Table 7-2, PAN ID Compression value for frame version 0b10
@@ -255,7 +262,7 @@ frame802154_extract_linkaddr(frame802154_t *frame,
   } else {
     /* Unicast address */
     if(src_addr_len != LINKADDR_SIZE) {
-      /* Destination address has a size we can not handle */
+      /* Source address has a size we can not handle */
       return 0;
     }
     if(source_address != NULL) {
@@ -293,6 +300,11 @@ field_len(frame802154_t *p, field_length_t *flen)
 
   /* init flen to zeros */
   memset(flen, 0, sizeof(field_length_t));
+
+  flen->frame_ctrl_len =
+      (p->fcf.frame_type == FRAME802154_MPFRAME) && !p->fcf.long_frame_control
+      ? 1
+      : 2;
 
   /* Determine lengths of each field based on fcf and other args */
   if((p->fcf.sequence_number_suppression & 1) == 0) {
@@ -354,12 +366,38 @@ frame802154_hdrlen(frame802154_t *p)
 {
   field_length_t flen;
   field_len(p, &flen);
-  return 2 + flen.seqno_len + flen.dest_pid_len + flen.dest_addr_len +
-         flen.src_pid_len + flen.src_addr_len + flen.aux_sec_len;
+  return flen.frame_ctrl_len
+         + flen.seqno_len
+         + flen.dest_pid_len
+         + flen.dest_addr_len
+         + flen.src_pid_len
+         + flen.src_addr_len
+         + flen.aux_sec_len;
 }
-void
+/*----------------------------------------------------------------------------*/
+int
 frame802154_create_fcf(frame802154_fcf_t *fcf, uint8_t *buf)
 {
+#if FRAME802154_VERSION == FRAME802154_IEEE802154_2015
+  if(fcf->frame_type == FRAME802154_MPFRAME) {
+    /* create MP Frame Control field */
+    buf[0] = FRAME802154_MPFRAME
+             | ((fcf->long_frame_control) << 3)
+             | ((fcf->dest_addr_mode & 3) << 4)
+             | ((fcf->src_addr_mode & 3) << 6);
+    if(!fcf->long_frame_control) {
+      return 1;
+    }
+    buf[1] = ((!fcf->panid_compression) & 1)
+             | ((fcf->security_enabled & 1) << 1)
+             | ((fcf->sequence_number_suppression & 1) << 2)
+             | ((fcf->frame_pending & 1) << 3)
+             | ((fcf->ack_required & 1) << 6)
+             | ((fcf->ie_list_present & 1) << 7);
+    return 2;
+  }
+#endif /* FRAME802154_VERSION == FRAME802154_IEEE802154_2015 */
+  /* create Frame Control field */
   buf[0] = (fcf->frame_type & 7) |
     ((fcf->security_enabled & 1) << 3) |
     ((fcf->frame_pending & 1) << 4) |
@@ -370,6 +408,7 @@ frame802154_create_fcf(frame802154_fcf_t *fcf, uint8_t *buf)
     ((fcf->dest_addr_mode & 3) << 2) |
     ((fcf->frame_version & 3) << 4) |
     ((fcf->src_addr_mode & 3) << 6);
+  return 2;
 }
 /*----------------------------------------------------------------------------*/
 /**
@@ -396,8 +435,7 @@ frame802154_create(frame802154_t *p, uint8_t *buf)
 
   /* OK, now we have field lengths.  Time to actually construct */
   /* the outgoing frame, and store it in buf */
-  frame802154_create_fcf(&p->fcf, buf);
-  unsigned int pos = 2;
+  unsigned int pos = frame802154_create_fcf(&p->fcf, buf);
 
   /* Sequence number */
   if(flen.seqno_len == 1) {
@@ -458,28 +496,59 @@ frame802154_create(frame802154_t *p, uint8_t *buf)
 
   return (int)pos;
 }
-
-void
+/*----------------------------------------------------------------------------*/
+int
 frame802154_parse_fcf(const uint8_t *data, frame802154_fcf_t *pfcf)
 {
-  frame802154_fcf_t fcf;
+  /* parse Frame Type field */
+  pfcf->frame_type = data[0] & 7;
 
-  /* decode the FCF */
-  fcf.frame_type = data[0] & 7;
-  fcf.security_enabled = (data[0] >> 3) & 1;
-  fcf.frame_pending = (data[0] >> 4) & 1;
-  fcf.ack_required = (data[0] >> 5) & 1;
-  fcf.panid_compression = (data[0] >> 6) & 1;
+  switch(pfcf->frame_type) {
+  case FRAME802154_MPFRAME:
+    /* parse MP Frame Control field */
+    pfcf->long_frame_control = (data[0] >> 3) & 1;
+    pfcf->dest_addr_mode = (data[0] >> 4) & 3;
+    pfcf->src_addr_mode = (data[0] >> 6) & 3;
 
-  fcf.sequence_number_suppression = data[1] & 1;
-  fcf.ie_list_present = (data[1] >> 1) & 1;
-  fcf.dest_addr_mode = (data[1] >> 2) & 3;
-  fcf.frame_version = (data[1] >> 4) & 3;
-  fcf.src_addr_mode = (data[1] >> 6) & 3;
+    if(!pfcf->long_frame_control) {
+      return 1;
+    }
+    pfcf->panid_compression = !(data[1] & 1);
+    pfcf->security_enabled = (data[1] >> 1) & 1;
+    pfcf->sequence_number_suppression = (data[1] >> 2) & 1;
+    pfcf->frame_pending = (data[1] >> 3) & 1;
+    pfcf->frame_version = (data[1] >> 4) & 3;
+    pfcf->ack_required = (data[1] >> 6) & 1;
+    pfcf->ie_list_present = (data[1] >> 7) & 1;
+    return 2;
+  default:
+    /* parse Frame Control field */
+    pfcf->security_enabled = (data[0] >> 3) & 1;
+    pfcf->frame_pending = (data[0] >> 4) & 1;
+    pfcf->ack_required = (data[0] >> 5) & 1;
+    pfcf->panid_compression = (data[0] >> 6) & 1;
 
-  /* copy fcf */
-  memcpy(pfcf, &fcf, sizeof(frame802154_fcf_t));
+    pfcf->sequence_number_suppression = data[1] & 1;
+    pfcf->ie_list_present = (data[1] >> 1) & 1;
+    pfcf->dest_addr_mode = (data[1] >> 2) & 3;
+    pfcf->frame_version = (data[1] >> 4) & 3;
+    pfcf->src_addr_mode = (data[1] >> 6) & 3;
+    return 2;
+  }
 }
+/*----------------------------------------------------------------------------*/
+/*
+ * Ensure at least n more bytes remain in the input before reading them.
+ * Used throughout frame802154_parse() to bound every field access against
+ * the declared frame length, so a truncated frame whose FCF advertises a
+ * large header (addressing and/or auxiliary security) cannot cause reads
+ * past the end of the input buffer.
+ */
+#define REQUIRE_BYTES(n) do {       \
+    if((p - data) + (n) > len) {    \
+      return 0;                     \
+    }                               \
+  } while(0)
 /*----------------------------------------------------------------------------*/
 /**
  *   \brief Parses an input frame.  Scans the input frame to find each
@@ -494,7 +563,6 @@ int
 frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
 {
   uint8_t *p;
-  frame802154_fcf_t fcf;
   int c;
   int has_src_panid;
   int has_dest_panid;
@@ -509,21 +577,21 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
   p = data;
 
   /* decode the FCF */
-  frame802154_parse_fcf(p, &fcf);
-  memcpy(&pf->fcf, &fcf, sizeof(frame802154_fcf_t));
-  p += 2;                             /* Skip first two bytes */
+  p += frame802154_parse_fcf(p, &pf->fcf);
 
-  if(fcf.sequence_number_suppression == 0) {
+  if(pf->fcf.sequence_number_suppression == 0) {
+    REQUIRE_BYTES(1);
     pf->seq = p[0];
     p++;
   }
 
-  frame802154_has_panid(&fcf, &has_src_panid, &has_dest_panid);
+  frame802154_has_panid(&pf->fcf, &has_src_panid, &has_dest_panid);
 
   /* Destination address, if any */
-  if(fcf.dest_addr_mode) {
+  if(pf->fcf.dest_addr_mode) {
     if(has_dest_panid) {
       /* Destination PAN */
+      REQUIRE_BYTES(2);
       pf->dest_pid = p[0] + (p[1] << 8);
       p += 2;
     } else {
@@ -531,12 +599,14 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
     }
 
     /* Destination address */
-    if(fcf.dest_addr_mode == FRAME802154_SHORTADDRMODE) {
+    if(pf->fcf.dest_addr_mode == FRAME802154_SHORTADDRMODE) {
+      REQUIRE_BYTES(2);
       linkaddr_copy((linkaddr_t *)&(pf->dest_addr), &linkaddr_null);
       pf->dest_addr[0] = p[1];
       pf->dest_addr[1] = p[0];
       p += 2;
-    } else if(fcf.dest_addr_mode == FRAME802154_LONGADDRMODE) {
+    } else if(pf->fcf.dest_addr_mode == FRAME802154_LONGADDRMODE) {
+      REQUIRE_BYTES(8);
       for(c = 0; c < 8; c++) {
         pf->dest_addr[c] = p[7 - c];
       }
@@ -548,9 +618,10 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
   }
 
   /* Source address, if any */
-  if(fcf.src_addr_mode) {
+  if(pf->fcf.src_addr_mode) {
     /* Source PAN */
     if(has_src_panid) {
+      REQUIRE_BYTES(2);
       pf->src_pid = p[0] + (p[1] << 8);
       p += 2;
       if(!has_dest_panid) {
@@ -561,12 +632,14 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
     }
 
     /* Source address */
-    if(fcf.src_addr_mode == FRAME802154_SHORTADDRMODE) {
+    if(pf->fcf.src_addr_mode == FRAME802154_SHORTADDRMODE) {
+      REQUIRE_BYTES(2);
       linkaddr_copy((linkaddr_t *)&(pf->src_addr), &linkaddr_null);
       pf->src_addr[0] = p[1];
       pf->src_addr[1] = p[0];
       p += 2;
-    } else if(fcf.src_addr_mode == FRAME802154_LONGADDRMODE) {
+    } else if(pf->fcf.src_addr_mode == FRAME802154_LONGADDRMODE) {
+      REQUIRE_BYTES(8);
       for(c = 0; c < 8; c++) {
         pf->src_addr[c] = p[7 - c];
       }
@@ -578,19 +651,22 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
   }
 
 #if LLSEC802154_USES_AUX_HEADER
-  if(fcf.security_enabled) {
+  if(pf->fcf.security_enabled) {
+    REQUIRE_BYTES(1);
     pf->aux_hdr.security_control.security_level = p[0] & 7;
 #if LLSEC802154_USES_EXPLICIT_KEYS
     pf->aux_hdr.security_control.key_id_mode = (p[0] >> 3) & 3;
 #endif /* LLSEC802154_USES_EXPLICIT_KEYS */
-    pf->aux_hdr.security_control.frame_counter_suppression = p[0] >> 5;
-    pf->aux_hdr.security_control.frame_counter_size = p[0] >> 6;
+    pf->aux_hdr.security_control.frame_counter_suppression = (p[0] >> 5) & 1;
+    pf->aux_hdr.security_control.frame_counter_size = (p[0] >> 6) & 1;
     p += 1;
 
     if(pf->aux_hdr.security_control.frame_counter_suppression == 0) {
+      REQUIRE_BYTES(4);
       memcpy(pf->aux_hdr.frame_counter.u8, p, 4);
       p += 4;
       if(pf->aux_hdr.security_control.frame_counter_size == 1) {
+        REQUIRE_BYTES(1);
         p ++;
       }
     }
@@ -599,6 +675,7 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
     key_id_mode = pf->aux_hdr.security_control.key_id_mode;
     if(key_id_mode) {
       c = (key_id_mode - 1) * 4;
+      REQUIRE_BYTES(c + 1);
       memcpy(pf->aux_hdr.key_source.u8, p, c);
       p += c;
       pf->aux_hdr.key_index = p[0];
@@ -618,4 +695,5 @@ frame802154_parse(uint8_t *data, int len, frame802154_t *pf)
   /* return header length if successful */
   return c > len ? 0 : c;
 }
+#undef REQUIRE_BYTES
 /** \}   */

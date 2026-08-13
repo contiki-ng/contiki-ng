@@ -50,12 +50,15 @@
  * heapmem_realloc(), because the chunk structure immediately precedes
  * the memory of the chunk.
  *
- * \note If the HEAPMEM_CONF_ARENA_SIZE parameter is not set, the
- * heapmem implementation will not be compiled, which could lead to a
- * linking error if other modules call heapmem functions.
+ * HeapMem zones provide independent heaps with their own static memory
+ * buffers. Each zone has its own free list and usage tracking, so
+ * fragmentation in one zone cannot affect another. Use
+ * HEAPMEM_ZONE_DEFINE() to create a zone with a dedicated buffer.
  *
- * \note This module does not contain a corresponding function to the
- *       standard C function calloc().
+ * \note The HEAPMEM_CONF_ARENA_SIZE parameter enables the general
+ * zone and the convenience macros (heapmem_alloc, heapmem_free, etc.).
+ * Zone-specific functions (heapmem_zone_alloc, etc.) and the
+ * HEAPMEM_ZONE_DEFINE macro are always available.
  *
  * \note Dynamic memory should be used carefully on
  *       memory-constrained embedded systems, because fragmentation
@@ -77,6 +80,7 @@
 #define HEAPMEM_H
 
 #include "contiki.h"
+#include "sys/cc.h"
 
 #include <stdlib.h>
 /*****************************************************************************/
@@ -84,154 +88,189 @@
 #define HEAPMEM_DEBUG 0
 #endif
 /*****************************************************************************/
+/* Alignment configuration -- needed in the header for HEAPMEM_ZONE_DEFINE. */
+#if __STDC_VERSION__ >= 201112L
+#include <stdalign.h>
+#define HEAPMEM_DEFAULT_ALIGNMENT alignof(max_align_t)
+#else
+#define HEAPMEM_DEFAULT_ALIGNMENT sizeof(size_t)
+#endif
+
+#ifdef HEAPMEM_CONF_ALIGNMENT
+#define HEAPMEM_ALIGNMENT HEAPMEM_CONF_ALIGNMENT
+#else
+#define HEAPMEM_ALIGNMENT HEAPMEM_DEFAULT_ALIGNMENT
+#endif /* HEAPMEM_CONF_ALIGNMENT */
+/*****************************************************************************/
 typedef struct heapmem_stats {
   size_t allocated;
   size_t overhead;
   size_t available;
-  size_t footprint;
-  size_t max_footprint;
+  size_t heap_usage;
+  size_t max_heap_usage;
   size_t chunks;
 } heapmem_stats_t;
 /*****************************************************************************/
-typedef uint8_t heapmem_zone_t;
-
-#define HEAPMEM_ZONE_INVALID (heapmem_zone_t)-1
-#define HEAPMEM_ZONE_GENERAL 0
-/*****************************************************************************/
-
-/**
- * \brief      Register a zone with a reserved subdivision of the heap.
- * \param name A string containing the name of the zone.
- * \param zone_size The number of bytes to reserve for the zone.
- * \return     A zone ID if the allocation succeeds, or
- *             HEAPMEM_ZONE_INVALID if it fails.
+/*
+ * A heapmem zone is an independent heap with its own static memory
+ * buffer, free list, and usage tracking. Each zone provides true
+ * memory isolation: fragmentation in one zone cannot affect another,
+ * and each zone's memory is physically reserved.
+ *
+ * Use HEAPMEM_ZONE_DEFINE() to create a zone with its own static buffer.
+ * When HEAPMEM_CONF_ARENA_SIZE is set, a general zone is available
+ * internally and can be accessed by passing NULL as the zone parameter.
  */
-heapmem_zone_t heapmem_zone_register(const char *name, size_t zone_size);
-/*****************************************************************************/
 
-#if HEAPMEM_DEBUG
+/* Forward declaration for the free list pointer. */
+struct heapmem_chunk;
 
-#define heapmem_alloc(size) \
-  heapmem_zone_alloc_debug(HEAPMEM_ZONE_GENERAL, (size), __FILE__, __LINE__)
-#define heapmem_zone_alloc(zone, size) \
-  heapmem_zone_alloc_debug((zone), (size), __FILE__, __LINE__)
-#define heapmem_realloc(ptr, size) \
-  heapmem_realloc_debug((ptr), (size), __FILE__, __LINE__)
-#define heapmem_calloc(nmemb, size) \
-  heapmem_calloc_debug((nmemb), (size), __FILE__, __LINE__)
-#define heapmem_free(ptr) \
-  heapmem_free_debug((ptr), __FILE__, __LINE__)
-
-void *heapmem_alloc_debug(size_t size,
-			  const char *file, const unsigned line);
-void *heapmem_zone_alloc_debug(heapmem_zone_t zone, size_t size,
-			  const char *file, const unsigned line);
-void *heapmem_realloc_debug(void *ptr, size_t size,
-			    const char *file, const unsigned line);
-void *heapmem_calloc_debug(size_t nmemb, size_t size,
-			   const char *file, const unsigned line);
-bool heapmem_free_debug(void *ptr,
-			const char *file, const unsigned line);
-
-#else
+typedef struct heapmem_zone {
+  const char *name;
+  char *heap_base;
+  size_t arena_size;
+  size_t heap_usage;
+  size_t max_heap_usage;
+  struct heapmem_chunk *free_list;
+} heapmem_zone_t;
 
 /**
- * \brief      Allocate a chunk of memory in the general zone of the heap.
+ * \brief Define a zone with its own static memory buffer.
+ * \param varname The variable name for the zone.
+ * \param bufsize The size of the zone's memory buffer in bytes.
+ *
+ * This macro creates a file-scoped zone with a statically allocated
+ * buffer. The zone provides an independent heap that is isolated from
+ * all other zones.
+ *
+ * Example usage:
+ *   HEAPMEM_ZONE_DEFINE(packet_zone, 4096);
+ *   void *p = heapmem_zone_alloc(&packet_zone, 128);
+ *   heapmem_zone_free(&packet_zone, p);
+ */
+#define HEAPMEM_ZONE_DEFINE(varname, bufsize)                              \
+  static char varname##_buf_[bufsize] CC_ALIGN(HEAPMEM_ALIGNMENT);         \
+  static heapmem_zone_t varname = {                                        \
+    .name = #varname,                                                      \
+    .heap_base = varname##_buf_,                                           \
+    .arena_size = bufsize,                                                 \
+  }
+/*****************************************************************************/
+
+/**
+ * \brief      Allocate a chunk of memory in the specified zone.
+ * \param zone A pointer to the zone in which to allocate the memory,
+ *             or NULL to use the general zone.
  * \param size The number of bytes to allocate.
  * \return     A pointer to the allocated memory chunk,
  *             or NULL if the allocation failed.
  *
- * \sa         heapmem_realloc
- * \sa         heapmem_free
+ * \sa         heapmem_zone_realloc
+ * \sa         heapmem_zone_free
  */
-#define heapmem_alloc(size) heapmem_zone_alloc(HEAPMEM_ZONE_GENERAL, (size))
+void *heapmem_zone_alloc(heapmem_zone_t *zone, size_t size);
 
 /**
- * \brief      Allocate a chunk of memory in the heap.
- * \param zone The zone in which to allocate the memory.
- * \param size The number of bytes to allocate.
- * \return     A pointer to the allocated memory chunk,
- *             or NULL if the allocation failed.
- *
- * \sa         heapmem_realloc
- * \sa         heapmem_free
- */
-void *heapmem_zone_alloc(heapmem_zone_t zone, size_t size);
-
-/**
- * \brief      Reallocate a chunk of memory in the heap.
+ * \brief      Deallocate a chunk of memory in the specified zone.
+ * \param zone A pointer to the zone from which the memory was allocated,
+ *             or NULL to use the general zone.
  * \param ptr  A pointer to a chunk that has been allocated using
- *             heapmem_alloc(), heapmem_calloc(), or heapmem_realloc().
+ *             heapmem_zone_alloc() or heapmem_zone_realloc().
+ * \return     A boolean indicating whether the memory could be deallocated.
+ *
+ * \sa         heapmem_zone_alloc
+ * \sa         heapmem_zone_realloc
+ */
+bool heapmem_zone_free(heapmem_zone_t *zone, void *ptr);
+
+/**
+ * \brief      Reallocate a chunk of memory in the specified zone.
+ * \param zone A pointer to the zone in which to reallocate the memory,
+ *             or NULL to use the general zone.
+ * \param ptr  A pointer to a chunk that has been allocated using
+ *             heapmem_zone_alloc() or heapmem_zone_realloc().
  * \param size The number of bytes to allocate.
  * \return     A pointer to the allocated memory chunk,
  *             or NULL if the allocation failed.
  *
- * \note If ptr is NULL, this function behaves the same as heapmem_alloc.
+ * \note If ptr is NULL, this function behaves the same as heapmem_zone_alloc.
  * \note If ptr is not NULL and size is zero, the function deallocates
  *       the chunk and returns NULL.
  *
- * \sa         heapmem_alloc
- * \sa         heapmem_calloc
- * \sa         heapmem_free
+ * \sa         heapmem_zone_alloc
+ * \sa         heapmem_zone_free
  */
-void *heapmem_realloc(void *ptr, size_t size);
+void *heapmem_zone_realloc(heapmem_zone_t *zone, void *ptr, size_t size);
 
 /**
- * \brief       Allocate memory for a zero-initialized array.
+ * \brief       Allocate memory for a zero-initialized array in the
+ *              specified zone.
+ * \param zone  A pointer to the zone in which to allocate the memory,
+ *              or NULL to use the general zone.
  * \param nmemb The number of elements to allocate.
  * \param size  The size of each element.
  * \return      A pointer to the allocated memory,
  *              or NULL if the allocation failed.
  *
- * \sa         heapmem_alloc
- * \sa         heapmem_free
+ * \sa         heapmem_zone_alloc
+ * \sa         heapmem_zone_free
  */
-void *heapmem_calloc(size_t nmemb, size_t size);
+void *heapmem_zone_calloc(heapmem_zone_t *zone, size_t nmemb, size_t size);
 
-/**
- * \brief      Deallocate a chunk of memory.
- * \param ptr  A pointer to a chunk that has been allocated using
- *             heapmem_alloc(), heapmem_calloc(), or heapmem_realloc().
- * \return     A boolean indicating whether the memory could be deallocated.
- *
- * \note If ptr is NULL, this function will return immediately without
- *       performing any action.
- *
- * \sa         heapmem_alloc
- * \sa         heapmem_calloc
- * \sa         heapmem_realloc
- */
-bool heapmem_free(void *ptr);
-
+#if HEAPMEM_DEBUG
+void *heapmem_zone_alloc_debug(heapmem_zone_t *zone, size_t size,
+                                const char *file, unsigned line);
+bool heapmem_zone_free_debug(heapmem_zone_t *zone, void *ptr,
+                              const char *file, unsigned line);
+void *heapmem_zone_realloc_debug(heapmem_zone_t *zone, void *ptr, size_t size,
+                                  const char *file, unsigned line);
+void *heapmem_zone_calloc_debug(heapmem_zone_t *zone, size_t nmemb, size_t size,
+                                 const char *file, unsigned line);
+#define heapmem_zone_alloc(zone, size) \
+  heapmem_zone_alloc_debug((zone), (size), __FILE__, __LINE__)
+#define heapmem_zone_free(zone, ptr) \
+  heapmem_zone_free_debug((zone), (ptr), __FILE__, __LINE__)
+#define heapmem_zone_realloc(zone, ptr, size) \
+  heapmem_zone_realloc_debug((zone), (ptr), (size), __FILE__, __LINE__)
+#define heapmem_zone_calloc(zone, nmemb, size) \
+  heapmem_zone_calloc_debug((zone), (nmemb), (size), __FILE__, __LINE__)
 #endif /* HEAPMEM_DEBUG */
 
 /**
- * \brief       Obtain internal heapmem statistics regarding the
- *              allocated chunks.
+ * \brief       Obtain internal statistics for a heapmem zone.
+ * \param zone  A pointer to the zone to query.
  * \param stats A pointer to an object of type heapmem_stats_t, which
  *              will be filled when calling this function.
- *
- * This function makes it possible to gain visibility into the internal
- * structure of the heap. One can thus obtain information regarding
- * the amount of memory allocated, overhead used for memory management,
- * and the number of chunks allocated. By using this information, developers
- * can tune their software to use the heapmem allocator more efficiently.
  */
-void heapmem_stats(heapmem_stats_t *stats);
+void heapmem_zone_stats(heapmem_zone_t *zone, heapmem_stats_t *stats);
 
 /**
- * \brief              Print debugging information for the heap memory
- *                     management.
+ * \brief              Print debugging information for a heapmem zone.
+ * \param zone         A pointer to the zone to query.
  * \param print_chunks Determines whether to print information about
  *                     all allocated chunks.
  */
-void heapmem_print_debug_info(bool print_chunks);
+void heapmem_zone_print_debug_info(heapmem_zone_t *zone, bool print_chunks);
 
-/**
- * \brief       Obtain the minimum alignment of allocated addresses.
- * \return      The alignment value, which is a power of two.
- */
-size_t heapmem_alignment(void);
+/*****************************************************************************/
+/* Convenience macros for the general zone. These provide backward
+   compatibility with the non-zone API. */
+#ifdef HEAPMEM_CONF_ARENA_SIZE
+
+#define heapmem_alloc(size) \
+  heapmem_zone_alloc(NULL, (size))
+#define heapmem_free(ptr) \
+  heapmem_zone_free(NULL, (ptr))
+#define heapmem_realloc(ptr, size) \
+  heapmem_zone_realloc(NULL, (ptr), (size))
+#define heapmem_calloc(nmemb, size) \
+  heapmem_zone_calloc(NULL, (nmemb), (size))
+#define heapmem_stats(stats) \
+  heapmem_zone_stats(NULL, (stats))
+#define heapmem_print_debug_info(print_chunks) \
+  heapmem_zone_print_debug_info(NULL, (print_chunks))
+
+#endif /* HEAPMEM_CONF_ARENA_SIZE */
 
 #endif /* !HEAPMEM_H */
 

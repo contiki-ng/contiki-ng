@@ -37,6 +37,7 @@
 #include "contiki.h"
 #include "lib/cbor.h"
 #include "unit-test.h"
+#include "sys/cc.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -80,12 +81,12 @@ UNIT_TEST(test_write_read)
     cbor_write_data(&writer, foo, sizeof(foo));
     array_size++;
     /* unsigned values */
-    for(int i = 0; i < sizeof(unsigned_values) / sizeof(int64_t); i++) {
+    for(int i = 0; i < CC_ARRAY_LENGTH(unsigned_values); i++) {
       cbor_write_unsigned(&writer, unsigned_values[i]);
       array_size++;
     }
     /* signed values */
-    for(int i = 0; i < sizeof(signed_values) / sizeof(int64_t); i++) {
+    for(int i = 0; i < CC_ARRAY_LENGTH(signed_values); i++) {
       cbor_write_signed(&writer, signed_values[i]);
       array_size++;
     }
@@ -146,12 +147,12 @@ UNIT_TEST(test_write_read)
     UNIT_TEST_ASSERT(data_size == sizeof(foo));
     UNIT_TEST_ASSERT(!memcmp(foo, data, data_size));
     uint64_t value;
-    for(int i = 0; i < sizeof(unsigned_values) / sizeof(uint64_t); i++) {
+    for(int i = 0; i < CC_ARRAY_LENGTH(unsigned_values); i++) {
       UNIT_TEST_ASSERT(CBOR_SIZE_NONE != cbor_read_unsigned(&reader, &value));
       UNIT_TEST_ASSERT(unsigned_values[i] == value);
     }
     int64_t signed_value;
-    for(int i = 0; i < sizeof(signed_values) / sizeof(uint64_t); i++) {
+    for(int i = 0; i < CC_ARRAY_LENGTH(signed_values); i++) {
       UNIT_TEST_ASSERT(CBOR_SIZE_NONE != cbor_read_signed(&reader, &signed_value));
       UNIT_TEST_ASSERT(signed_values[i] == signed_value);
     }
@@ -177,6 +178,186 @@ UNIT_TEST(test_write_read)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+/*
+ * One CBOR-encoded data item per entry, covering every major type including
+ * encodings the writer API cannot produce (1-byte simple values and
+ * floating-point values). The float payloads are arbitrary: cbor_skip_next()
+ * must advance past them by length without interpreting them.
+ */
+static const uint8_t enc_uint_0[] = { 0x00 };
+static const uint8_t enc_uint_42[] = { 0x18, 0x2a };
+static const uint8_t enc_uint_2p32[] = { 0x1b, 0x00, 0x00, 0x00, 0x01,
+                                         0x00, 0x00, 0x00, 0x00 };
+static const uint8_t enc_neg_1[] = { 0x20 };
+static const uint8_t enc_neg_257[] = { 0x39, 0x01, 0x00 };
+static const uint8_t enc_bytes_3[] = { 0x43, 0x01, 0x02, 0x03 };
+static const uint8_t enc_text_4[] = { 0x64, 't', 'e', 's', 't' };
+static const uint8_t enc_false[] = { 0xf4 };
+static const uint8_t enc_true[] = { 0xf5 };
+static const uint8_t enc_null[] = { 0xf6 };
+static const uint8_t enc_undefined[] = { 0xf7 };
+static const uint8_t enc_simple_32[] = { 0xf8, 0x20 };
+static const uint8_t enc_float16[] = { 0xf9, 0x3c, 0x00 };
+static const uint8_t enc_float32[] = { 0xfa, 0x40, 0x49, 0x0f, 0xdb };
+static const uint8_t enc_float64[] = { 0xfb, 0x40, 0x09, 0x21, 0xfb,
+                                       0x54, 0x44, 0x2d, 0x18 };
+static const uint8_t enc_array_2[] = { 0x82, 0x01, 0x02 };
+static const uint8_t enc_map_1[] = { 0xa1, 0x01, 0x02 };
+/* [1, [2, 3], 4] */
+static const uint8_t enc_nested_array[] = { 0x83, 0x01, 0x82, 0x02, 0x03, 0x04 };
+/* {"name": "bob", 1: [1, 2, 3]} */
+static const uint8_t enc_nested_map[] = {
+  0xa2, 0x64, 'n', 'a', 'm', 'e', 0x63, 'b', 'o', 'b',
+  0x01, 0x83, 0x01, 0x02, 0x03
+};
+
+static const struct {
+  const uint8_t *enc;
+  size_t len;
+} skip_items[] = {
+  { enc_uint_0, sizeof(enc_uint_0) },
+  { enc_uint_42, sizeof(enc_uint_42) },
+  { enc_uint_2p32, sizeof(enc_uint_2p32) },
+  { enc_neg_1, sizeof(enc_neg_1) },
+  { enc_neg_257, sizeof(enc_neg_257) },
+  { enc_bytes_3, sizeof(enc_bytes_3) },
+  { enc_text_4, sizeof(enc_text_4) },
+  { enc_false, sizeof(enc_false) },
+  { enc_true, sizeof(enc_true) },
+  { enc_null, sizeof(enc_null) },
+  { enc_undefined, sizeof(enc_undefined) },
+  { enc_simple_32, sizeof(enc_simple_32) },
+  { enc_float16, sizeof(enc_float16) },
+  { enc_float32, sizeof(enc_float32) },
+  { enc_float64, sizeof(enc_float64) },
+  { enc_array_2, sizeof(enc_array_2) },
+  { enc_map_1, sizeof(enc_map_1) },
+  { enc_nested_array, sizeof(enc_nested_array) },
+  { enc_nested_map, sizeof(enc_nested_map) },
+};
+/*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(test_skip_and_accessors,
+                   "cbor_skip_next and reader position accessors");
+UNIT_TEST(test_skip_and_accessors)
+{
+  uint8_t buffer[256];
+  cbor_reader_state_t reader;
+  size_t total = 0;
+
+  UNIT_TEST_BEGIN();
+
+  /* Concatenate every encoding into a single buffer. */
+  for(int i = 0; i < CC_ARRAY_LENGTH(skip_items); i++) {
+    memcpy(buffer + total, skip_items[i].enc, skip_items[i].len);
+    total += skip_items[i].len;
+  }
+
+  cbor_init_reader(&reader, buffer, total);
+
+  /* Accessors reflect the initial state. */
+  UNIT_TEST_ASSERT(cbor_get_position(&reader) == buffer);
+  UNIT_TEST_ASSERT(cbor_get_remaining(&reader) == total);
+
+  /*
+   * Skipping each item must consume exactly its encoded length and keep the
+   * position and remaining-bytes accessors consistent.
+   */
+  for(int i = 0; i < CC_ARRAY_LENGTH(skip_items); i++) {
+    const uint8_t *position_before = cbor_get_position(&reader);
+    size_t remaining_before = cbor_get_remaining(&reader);
+
+    UNIT_TEST_ASSERT(cbor_skip_next(&reader));
+    UNIT_TEST_ASSERT(cbor_get_position(&reader)
+                     == position_before + skip_items[i].len);
+    UNIT_TEST_ASSERT(cbor_get_remaining(&reader)
+                     == remaining_before - skip_items[i].len);
+  }
+
+  UNIT_TEST_ASSERT(cbor_end_reader(&reader));
+  UNIT_TEST_ASSERT(cbor_get_remaining(&reader) == 0);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(test_skip_interior,
+                   "cbor_skip_next skips unknown fields within a structure");
+UNIT_TEST(test_skip_interior)
+{
+  /* [ "skip-me", h'0102', 7, {1: 2} ] -- read 7 after skipping the rest. */
+  static const uint8_t cbor_data[] = {
+    0x84,
+    0x67, 's', 'k', 'i', 'p', '-', 'm', 'e',
+    0x42, 0x01, 0x02,
+    0x07,
+    0xa1, 0x01, 0x02
+  };
+  cbor_reader_state_t reader;
+  uint64_t value;
+
+  UNIT_TEST_BEGIN();
+
+  cbor_init_reader(&reader, cbor_data, sizeof(cbor_data));
+  UNIT_TEST_ASSERT(4 == cbor_read_array(&reader));
+
+  /* Skip the leading text and byte strings. */
+  UNIT_TEST_ASSERT(cbor_skip_next(&reader));
+  UNIT_TEST_ASSERT(cbor_skip_next(&reader));
+
+  /* The third element is readable at the expected position. */
+  UNIT_TEST_ASSERT(CBOR_MAJOR_TYPE_UNSIGNED == cbor_peek_next(&reader));
+  UNIT_TEST_ASSERT(CBOR_SIZE_NONE != cbor_read_unsigned(&reader, &value));
+  UNIT_TEST_ASSERT(7 == value);
+
+  /* Skip the trailing map and land exactly at the end. */
+  UNIT_TEST_ASSERT(cbor_skip_next(&reader));
+  UNIT_TEST_ASSERT(cbor_end_reader(&reader));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(test_skip_errors,
+                   "cbor_skip_next rejects empty and truncated input");
+UNIT_TEST(test_skip_errors)
+{
+  cbor_reader_state_t reader;
+
+  UNIT_TEST_BEGIN();
+
+  /* Empty buffer. */
+  cbor_init_reader(&reader, NULL, 0);
+  UNIT_TEST_ASSERT(!cbor_skip_next(&reader));
+
+  /* Byte string that claims more payload than is present. */
+  {
+    static const uint8_t data[] = { 0x43, 0x01 }; /* len 3, only 1 present */
+    cbor_init_reader(&reader, data, sizeof(data));
+    UNIT_TEST_ASSERT(!cbor_skip_next(&reader));
+  }
+
+  /* Multi-byte integer with a truncated argument. */
+  {
+    static const uint8_t data[] = { 0x1a, 0x00 }; /* needs 4 argument bytes */
+    cbor_init_reader(&reader, data, sizeof(data));
+    UNIT_TEST_ASSERT(!cbor_skip_next(&reader));
+  }
+
+  /* Array that promises more elements than are encoded. */
+  {
+    static const uint8_t data[] = { 0x82, 0x01 }; /* 2 elements, only 1 */
+    cbor_init_reader(&reader, data, sizeof(data));
+    UNIT_TEST_ASSERT(!cbor_skip_next(&reader));
+  }
+
+  /* Reserved additional information / break stop code is not skippable. */
+  {
+    static const uint8_t data[] = { 0xff };
+    cbor_init_reader(&reader, data, sizeof(data));
+    UNIT_TEST_ASSERT(!cbor_skip_next(&reader));
+  }
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(test_process, ev, data)
 {
   PROCESS_BEGIN();
@@ -185,8 +366,14 @@ PROCESS_THREAD(test_process, ev, data)
   printf("---\n");
 
   UNIT_TEST_RUN(test_write_read);
+  UNIT_TEST_RUN(test_skip_and_accessors);
+  UNIT_TEST_RUN(test_skip_interior);
+  UNIT_TEST_RUN(test_skip_errors);
 
-  if(!UNIT_TEST_PASSED(test_write_read)) {
+  if(!UNIT_TEST_PASSED(test_write_read)
+     || !UNIT_TEST_PASSED(test_skip_and_accessors)
+     || !UNIT_TEST_PASSED(test_skip_interior)
+     || !UNIT_TEST_PASSED(test_skip_errors)) {
     printf("=check-me= FAILED\n");
     printf("---\n");
   }

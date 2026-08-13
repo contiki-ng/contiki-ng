@@ -53,11 +53,6 @@
 /*---------------------------------------------------------------------------*/
 #if NRF_HARDFAULT_HANDLER_EXTENDED
 /*---------------------------------------------------------------------------*/
-#include "sys/log.h"
-
-#define LOG_MODULE "NRF HARDFAULT"
-#define LOG_LEVEL LOG_LEVEL_INFO
-/*---------------------------------------------------------------------------*/
 typedef struct HardFault_stack { /**< HardFault Stack */
   uint32_t r0;    /**< R0 register. */
   uint32_t r1;    /**< R1 register. */
@@ -69,9 +64,122 @@ typedef struct HardFault_stack { /**< HardFault Stack */
   uint32_t psr;   /**< Program status register. */
 } HardFault_stack_t;
 /*---------------------------------------------------------------------------*/
+/*
+ * Crash info saved to .noinit RAM — survives NVIC_SystemReset().
+ * The startup code does not zero .noinit, so the magic value persists.
+ * At boot, the radio driver checks this and prints the crash dump.
+ */
+#define CRASH_MAGIC 0xDEADF007UL
+#define HF_CANARY_VALUE 0xFA17FA17UL
+
+typedef struct {
+  uint32_t magic;
+  uint32_t pc;
+  uint32_t lr;
+  uint32_t psr;
+  uint32_t cfsr;
+  uint32_t hfsr;
+  uint32_t r0;
+  uint32_t r1;
+  uint32_t r2;
+  uint32_t r3;
+  uint32_t r12;
+  uint32_t mmfar;
+  uint32_t bfar;
+} crash_info_t;
+
+__attribute__((section(".noinit"))) crash_info_t crash_info;
+/*---------------------------------------------------------------------------*/
+/**
+ * @brief Check and print any saved crash info from a previous fault.
+ *        Call this early in boot (after UART is initialized).
+ */
+void
+hardfault_print_saved_crash(void)
+{
+  extern int dbg_putchar(int c);
+  static const char hx[] = "0123456789abcdef";
+  extern volatile uint32_t hf_canary;
+
+  /* Stay quiet on normal boots: .noinit contains arbitrary stale RAM. */
+  if(hf_canary == HF_CANARY_VALUE) {
+    dbg_putchar('C');
+    dbg_putchar('=');
+    { uint32_t c = hf_canary;
+      for(int s = 28; s >= 0; s -= 4) dbg_putchar(hx[(c >> s) & 0xf]);
+    }
+    dbg_putchar(' ');
+    dbg_putchar('M');
+    dbg_putchar('=');
+    { uint32_t m = crash_info.magic;
+      for(int s = 28; s >= 0; s -= 4) dbg_putchar(hx[(m >> s) & 0xf]);
+    }
+    dbg_putchar('\n');
+    dbg_putchar('!'); dbg_putchar('H'); dbg_putchar('F'); dbg_putchar('\n');
+    hf_canary = 0; /* Clear canary */
+  } else if(crash_info.magic != CRASH_MAGIC) {
+    return;
+  } else {
+    dbg_putchar('C');
+    dbg_putchar('=');
+    { uint32_t c = hf_canary;
+      for(int s = 28; s >= 0; s -= 4) dbg_putchar(hx[(c >> s) & 0xf]);
+    }
+    dbg_putchar(' ');
+    dbg_putchar('M');
+    dbg_putchar('=');
+    { uint32_t m = crash_info.magic;
+      for(int s = 28; s >= 0; s -= 4) dbg_putchar(hx[(m >> s) & 0xf]);
+    }
+    dbg_putchar('\n');
+  }
+
+  /* Clear magic so we don't print again on next boot */
+  crash_info.magic = 0;
+
+  static const char hex[] = "0123456789abcdef";
+
+  /* Helper: print a 32-bit hex value using dbg_putchar */
+#define FAULT_PUTHEX(val) do { \
+    uint32_t _v = (val); \
+    for(int _s = 28; _s >= 0; _s -= 4) \
+      dbg_putchar(hex[(_v >> _s) & 0xf]); \
+  } while(0)
+#define FAULT_PUTS(s) do { \
+    const char *_p = (s); \
+    while(*_p) dbg_putchar(*_p++); \
+  } while(0)
+
+  FAULT_PUTS("\n*** PREVIOUS CRASH ***\n");
+  FAULT_PUTS("PC=");   FAULT_PUTHEX(crash_info.pc);
+  FAULT_PUTS(" LR=");  FAULT_PUTHEX(crash_info.lr);
+  FAULT_PUTS(" PSR="); FAULT_PUTHEX(crash_info.psr);
+  dbg_putchar('\n');
+  FAULT_PUTS("R0=");   FAULT_PUTHEX(crash_info.r0);
+  FAULT_PUTS(" R1=");  FAULT_PUTHEX(crash_info.r1);
+  FAULT_PUTS(" R2=");  FAULT_PUTHEX(crash_info.r2);
+  FAULT_PUTS(" R3=");  FAULT_PUTHEX(crash_info.r3);
+  dbg_putchar('\n');
+  FAULT_PUTS("R12=");  FAULT_PUTHEX(crash_info.r12);
+  FAULT_PUTS(" CFSR="); FAULT_PUTHEX(crash_info.cfsr);
+  FAULT_PUTS(" HFSR="); FAULT_PUTHEX(crash_info.hfsr);
+  dbg_putchar('\n');
+
+  if(crash_info.cfsr & (1 << 7)) {
+    FAULT_PUTS("MMFAR="); FAULT_PUTHEX(crash_info.mmfar); dbg_putchar('\n');
+  }
+  if(crash_info.cfsr & (1 << 15)) {
+    FAULT_PUTS("BFAR="); FAULT_PUTHEX(crash_info.bfar); dbg_putchar('\n');
+  }
+  FAULT_PUTS("*** END CRASH ***\n");
+
+#undef FAULT_PUTHEX
+#undef FAULT_PUTS
+}
+/*---------------------------------------------------------------------------*/
 /**
  * @brief Hard fault final handling
- * 
+ *
  */
 __WEAK void
 HardFault_process()
@@ -80,80 +188,75 @@ HardFault_process()
 }
 /*---------------------------------------------------------------------------*/
 /**
- * @brief Hard fault c handler
- * 
+ * @brief Hard fault c handler — saves crash info to .noinit RAM and resets.
+ *
  * @param p_stack_address Pointer to hard fault stack
  */
+/* Canary to detect if HardFault_c_handler ever runs */
+__attribute__((section(".noinit"))) volatile uint32_t hf_canary;
+
 void
 HardFault_c_handler(uint32_t *p_stack_address)
 {
-#ifndef CFSR_MMARVALID
-#define CFSR_MMARVALID (1 << (0 + 7))
-#endif
+  extern int dbg_putchar(int c);
+  static const char hex[] = "0123456789abcdef";
 
-#ifndef CFSR_BFARVALID
-#define CFSR_BFARVALID (1 << (8 + 7))
-#endif
+  /* Write canary FIRST */
+  hf_canary = HF_CANARY_VALUE;
+
+  /* Immediately print "HF!" via the platform debug putchar so this
+   * works on every nrf board, not just those with a uarte console. */
+  dbg_putchar('\n');
+  dbg_putchar('H');
+  dbg_putchar('F');
+  dbg_putchar('!');
+  dbg_putchar(' ');
 
   HardFault_stack_t *p_stack = (HardFault_stack_t *)p_stack_address;
-  static const char *cfsr_msgs[] = {
-    [0] = "The processor has attempted to execute an undefined instruction",
-    [1] = "The processor attempted a load or store at a location that does not permit the operation",
-    [2] = NULL,
-    [3] = "Unstack for an exception return has caused one or more access violations",
-    [4] = "Stacking for an exception entry has caused one or more access violations",
-    [5] = "A MemManage fault occurred during floating-point lazy state preservation",
-    [6] = NULL,
-    [7] = NULL,
-    [8] = "Instruction bus error",
-    [9] = "Data bus error (PC value stacked for the exception return points to the instruction that caused the fault)",
-    [10] = "Data bus error (return address in the stack frame is not related to the instruction that caused the error)",
-    [11] = "Unstack for an exception return has caused one or more BusFaults",
-    [12] = "Stacking for an exception entry has caused one or more BusFaults",
-    [13] = "A bus fault occurred during floating-point lazy state preservation",
-    [14] = NULL,
-    [15] = NULL,
-    [16] = "The processor has attempted to execute an undefined instruction",
-    [17] = "The processor has attempted to execute an instruction that makes illegal use of the EPSR",
-    [18] = "The processor has attempted an illegal load of EXC_RETURN to the PC, as a result of an invalid context, or an invalid EXC_RETURN value",
-    [19] = "The processor has attempted to access a coprocessor",
-    [20] = NULL,
-    [21] = NULL,
-    [22] = NULL,
-    [23] = NULL,
-    [24] = "The processor has made an unaligned memory access",
-    [25] = "The processor has executed an SDIV or UDIV instruction with a divisor of 0",
-  };
 
-  uint32_t cfsr = SCB->CFSR;
+  crash_info.cfsr = SCB->CFSR;
+  crash_info.hfsr = SCB->HFSR;
+  crash_info.mmfar = SCB->MMFAR;
+  crash_info.bfar = SCB->BFAR;
 
   if(p_stack != NULL) {
-    /* Print information about error. */
-    LOG_INFO("HARD FAULT at 0x%08lX\n", p_stack->pc);
-    LOG_INFO("  R0:  0x%08lX  R1:  0x%08lX  R2:  0x%08lX  R3:  0x%08lX\n",
-             p_stack->r0, p_stack->r1, p_stack->r2, p_stack->r3);
-    LOG_INFO("  R12: 0x%08lX  LR:  0x%08lX  PSR: 0x%08lX\n",
-             p_stack->r12, p_stack->lr, p_stack->psr);
-  } else {
-    LOG_INFO("Stack violation: stack pointer outside stack area.\n");
+    crash_info.pc  = p_stack->pc;
+    crash_info.lr  = p_stack->lr;
+    crash_info.psr = p_stack->psr;
+    crash_info.r0  = p_stack->r0;
+    crash_info.r1  = p_stack->r1;
+    crash_info.r2  = p_stack->r2;
+    crash_info.r3  = p_stack->r3;
+    crash_info.r12 = p_stack->r12;
   }
 
-  if(SCB->HFSR & SCB_HFSR_VECTTBL_Msk) {
-    LOG_INFO("Cause: BusFault on a vector table read during exception processing.\n");
-  }
+  /* Write magic last — signals that crash_info is valid */
+  crash_info.magic = CRASH_MAGIC;
 
-  for(uint32_t i = 0; i < sizeof(cfsr_msgs) / sizeof(cfsr_msgs[0]); i++) {
-    if(((cfsr & (1 << i)) != 0) && (cfsr_msgs[i] != NULL)) {
-      LOG_INFO("Cause: %s.\n", cfsr_msgs[i]);
-    }
-  }
-
-  if(cfsr & CFSR_MMARVALID) {
-    LOG_INFO("MemManage Fault Address: 0x%08lX\n", SCB->MMFAR);
-  }
-
-  if(cfsr & CFSR_BFARVALID) {
-    LOG_INFO("Bus Fault Address: 0x%08lX\n", SCB->BFAR);
+  /* Print crash info via dbg_putchar so this works on every nrf board. */
+  {
+#define HF_PUTHEX(val) do { \
+    uint32_t _v = (val); \
+    for(int _s = 28; _s >= 0; _s -= 4) { \
+      dbg_putchar(hex[(_v >> _s) & 0xf]); \
+    } \
+  } while(0)
+    dbg_putchar('P');
+    dbg_putchar('C');
+    dbg_putchar('=');
+    HF_PUTHEX(crash_info.pc);
+    dbg_putchar(' ');
+    dbg_putchar('L');
+    dbg_putchar('R');
+    dbg_putchar('=');
+    HF_PUTHEX(crash_info.lr);
+    dbg_putchar(' ');
+    dbg_putchar('C');
+    dbg_putchar('F');
+    dbg_putchar('=');
+    HF_PUTHEX(crash_info.cfsr);
+    dbg_putchar('\n');
+#undef HF_PUTHEX
   }
 
   HardFault_process();
@@ -227,6 +330,40 @@ HardFault_Handler(void)
   NVIC_SystemReset();
 }
 #endif /* NRF_HARDFAULT_HANDLER_EXTENDED */
+/*---------------------------------------------------------------------------*/
+/*
+ * Override default fault handlers that loop forever (b .) in the startup
+ * assembly.  Without these overrides, a BusFault/UsageFault/MemManage/
+ * SecureFault silently freezes the CPU.
+ *
+ * On Cortex-M33 these faults escalate to HardFault by default (unless
+ * individually enabled in SCB->SHCSR).  However, if any code enables them
+ * (or if TrustZone routing sends SecureFault directly), these handlers
+ * ensure the system resets with a diagnostic message instead of hanging.
+ */
+/*---------------------------------------------------------------------------*/
+static void
+fault_print_and_reset(char f1, char f2)
+{
+  extern int dbg_putchar(int c);
+  dbg_putchar('\n');
+  dbg_putchar(f1);
+  dbg_putchar(f2);
+  dbg_putchar('!');
+  dbg_putchar('\n');
+  /* Brief delay for the debug output to flush */
+  for(volatile int i = 0; i < 50000; i++) {
+  }
+  NVIC_SystemReset();
+}
+/*---------------------------------------------------------------------------*/
+void BusFault_Handler(void)       { fault_print_and_reset('B', 'F'); }
+void UsageFault_Handler(void)     { fault_print_and_reset('U', 'F'); }
+void MemoryManagement_Handler(void) { fault_print_and_reset('M', 'M'); }
+#ifndef TRUSTZONE_SECURE
+/* In a TrustZone secure build, tz-fault.c owns SecureFault_Handler. */
+void SecureFault_Handler(void)    { fault_print_and_reset('S', 'F'); }
+#endif
 /*---------------------------------------------------------------------------*/
 /**
  * @}

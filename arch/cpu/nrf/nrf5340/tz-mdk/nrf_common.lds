@@ -108,6 +108,8 @@ SECTIONS
     .data : AT (__etext)
     {
         __data_start__ = .;
+        __data_start = .;
+        __data_load_start = __etext;
         *(vtable)
         *(.data*)
 
@@ -136,8 +138,19 @@ SECTIONS
         . = ALIGN(4);
         /* All data end */
         __data_end__ = .;
+        __data_end = .;
 
     } > RAM
+
+    __sdata_load_start = __etext;
+    __sdata_start = __data_end__;
+    __sdata_end = __data_end__;
+    __tdata_load_start = __etext;
+    __tdata_start = __data_end__;
+    __tdata_end = __data_end__;
+    __fast_load_start = __etext;
+    __fast_start = __data_end__;
+    __fast_end = __data_end__;
 
     .bss :
     {
@@ -148,7 +161,12 @@ SECTIONS
         . = ALIGN(4);
         __bss_end__ = .;
     } > RAM
-    
+
+    .noinit (NOLOAD) :
+    {
+        *(.noinit*)
+    } > RAM
+
     .heap (COPY):
     {
         __HeapBase = .;

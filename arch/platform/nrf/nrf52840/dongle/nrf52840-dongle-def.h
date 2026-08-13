@@ -47,7 +47,7 @@
 #define PLATFORM_HAS_BUTTON             1
 #define PLATFORM_SUPPORTS_BUTTON_HAL    1
 /*---------------------------------------------------------------------------*/
-#define NRF_BUTTON1_PIN     16
+#define NRF_BUTTON1_PIN     6
 #define NRF_BUTTON1_PORT    1
 /*---------------------------------------------------------------------------*/
 #define NRF_LED1_PIN        6

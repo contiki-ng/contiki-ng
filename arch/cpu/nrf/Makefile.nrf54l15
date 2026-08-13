@@ -1,0 +1,1 @@
+include $(CONTIKI_CPU)/nrf54l15/Makefile.nrf54l15

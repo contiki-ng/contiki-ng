@@ -74,9 +74,24 @@ lwm2m_tlv_read(lwm2m_tlv_t *tlv, const uint8_t *buffer, size_t len)
   uint8_t len_pos = 1;
   size_t tlv_len;
 
+  /* A TLV needs at least the type byte and a single ID byte. */
+  if(len < 2) {
+    LOG_WARN("Truncated TLV header (%u bytes available).\n", (unsigned)len);
+    return 0;
+  }
+
   tlv->type = (buffer[0] >> 6) & 3;
   len_type = (buffer[0] >> 3) & 3;
   len_pos = 1 + (((buffer[0] & (1 << 5)) != 0) ? 2 : 1);
+
+  /* len_pos is the offset of the length field (== header size when there
+     is no separate length field). Ensure the ID bytes and any length
+     bytes are within the buffer before reading them. */
+  if(len < (size_t)len_pos + len_type) {
+    LOG_WARN("Truncated TLV header (need %u bytes, have %u).\n",
+             (unsigned)(len_pos + len_type), (unsigned)len);
+    return 0;
+  }
 
   tlv->id = buffer[1];
   /* if len_pos is larger than two it means that there is more ID to read */
@@ -94,6 +109,15 @@ lwm2m_tlv_read(lwm2m_tlv_t *tlv, const uint8_t *buffer, size_t len)
       len_type--;
     }
   }
+
+  /* Ensure the value fits within the remaining buffer. len_pos now points
+     to the first value byte and is guaranteed to be <= len. */
+  if(tlv_len > len - len_pos) {
+    LOG_WARN("Truncated TLV value (need %u bytes, have %u).\n",
+             (unsigned)tlv_len, (unsigned)(len - len_pos));
+    return 0;
+  }
+
   /* and read out the data??? */
   tlv->length = tlv_len;
   tlv->value = &buffer[len_pos];
@@ -182,6 +206,12 @@ lwm2m_tlv_get_int32(const lwm2m_tlv_t *tlv)
 {
   int i;
   int32_t value = 0;
+
+  /* A zero-length integer represents the value 0. Returning here also
+     avoids reading tlv->value[0] below when there is no value at all. */
+  if(tlv->length == 0) {
+    return 0;
+  }
 
   for(i = 0; i < tlv->length; i++) {
     value = (value << 8) | tlv->value[i];
@@ -289,7 +319,16 @@ lwm2m_tlv_float32_to_fix(const lwm2m_tlv_t *tlv, int32_t *value, int bits)
   /* TLV needs to be 4 bytes */
   int e, i;
   int32_t val;
-  int sign = (tlv->value[0] & 0x80) != 0;
+  int sign;
+
+  /* The IEEE 754 single-precision representation requires exactly 4 bytes.
+     Reject anything shorter to avoid reading past the value. */
+  if(tlv->length < 4) {
+    *value = 0;
+    return 0;
+  }
+
+  sign = (tlv->value[0] & 0x80) != 0;
   e = ((tlv->value[0] << 1) & 0xff) | (tlv->value[1] >> 7);
   val = (((long)tlv->value[1] & 0x7f) << 16) | (tlv->value[2] << 8) | tlv->value[3];
 

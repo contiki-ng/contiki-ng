@@ -1,7 +1,27 @@
 MODULES += os/services/slip-cmd
 MODULES += os/services/shell
+MODULES += os/services/nat64
+MODULES += os/services/nat64/native
+
+# Optional: drive an examples/serialradio node over the CBOR protocol instead
+# of the legacy ASCII slip-radio protocol.  Enable with BORDER_ROUTER_SERIAL_RADIO=1.
+ifeq ($(BORDER_ROUTER_SERIAL_RADIO),1)
+CFLAGS += -DBORDER_ROUTER_CONF_SERIAL_RADIO=1
+# CBOR encoder/decoder and CRC16 used by border-router-cbor.c
+MODULES += os/lib
+endif
 
 MODULES_SOURCES_EXCLUDES += serial-shell.c
+
+# NAT64 sessions need additional select callback slots.
+SELECT_CONF_MAX ?= 256
+CFLAGS += -DSELECT_CONF_MAX=$(SELECT_CONF_MAX)
+
+# Test-only escape hatch: allow NAT64 to forward to 127.0.0.0/8 so that
+# co-located echo servers on the BR's loopback can be exercised.  Off
+# by default; the 17-tun-rpl-br NAT64 test sets it to 1.
+NAT64_ALLOW_LOOPBACK ?= 0
+CFLAGS += -DNAT64_CONF_ALLOW_LOOPBACK=$(NAT64_ALLOW_LOOPBACK)
 
 MAKE_MAC = MAKE_MAC_OTHER
 MAKE_NET = MAKE_NET_IPV6

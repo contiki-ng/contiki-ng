@@ -56,6 +56,7 @@
 #include <net/ipv6/sicslowpan.h>
 #include <net/app-layer/coap/coap.h>
 #include <net/app-layer/coap/coap-engine.h>
+#include "sys/cc.h"
 
 /* Log configuration. */
 #include "sys/log.h"
@@ -192,7 +193,7 @@ select_protocol(const char *protocol_name)
     return NULL;
   }
 
-  for(i = 0; i < sizeof(map) / sizeof(map[0]); i++) {
+  for(i = 0; i < CC_ARRAY_LENGTH(map); i++) {
     if(strcasecmp(protocol_name, map[i].protocol_name) == 0) {
       return map[i].function;
     }

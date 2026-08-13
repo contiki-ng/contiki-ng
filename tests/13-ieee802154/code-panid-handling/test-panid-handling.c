@@ -32,7 +32,7 @@
 #include "contiki.h"
 #include "unit-test/unit-test.h"
 #include "net/mac/framer/frame802154.h"
-
+#include "sys/cc.h"
 #include <stdio.h>
 
 #define VERBOSE 0
@@ -258,14 +258,13 @@ panid_run_test(const panid_test_def table[], size_t table_size,
 UNIT_TEST(panid_frame_ver_0b00)
 {
   int index;
-  int num_of_tests = sizeof(panid_table_0b00_0b01) / sizeof(panid_test_def);
 
   UNIT_TEST_BEGIN();
 
   UNIT_TEST_ASSERT((index = panid_run_test(panid_table_0b00_0b01,
                                            sizeof(panid_table_0b00_0b01),
                                            setup_frame802154_2003_fcf)) ==
-                   num_of_tests);
+                   CC_ARRAY_LENGTH(panid_table_0b00_0b01));
 
   UNIT_TEST_END();
   unit_test_ptr->exit_line = index;
@@ -274,14 +273,13 @@ UNIT_TEST(panid_frame_ver_0b00)
 UNIT_TEST(panid_frame_ver_0b01)
 {
   int index;
-  int num_of_tests = sizeof(panid_table_0b00_0b01) / sizeof(panid_test_def);
 
   UNIT_TEST_BEGIN();
 
   UNIT_TEST_ASSERT((index = panid_run_test(panid_table_0b00_0b01,
                                            sizeof(panid_table_0b00_0b01),
                                            setup_frame802154_2006_fcf)) ==
-                   num_of_tests);
+                   CC_ARRAY_LENGTH(panid_table_0b00_0b01));
 
   UNIT_TEST_END();
   unit_test_ptr->exit_line = index;
@@ -290,14 +288,13 @@ UNIT_TEST(panid_frame_ver_0b01)
 UNIT_TEST(panid_frame_ver_0b10)
 {
   int index;
-  int num_of_tests = sizeof(panid_table_0b10) / sizeof(panid_test_def);
 
   UNIT_TEST_BEGIN();
 
   UNIT_TEST_ASSERT((index = panid_run_test(panid_table_0b10,
                                            sizeof(panid_table_0b10),
                                            setup_frame802154_2015_fcf)) ==
-                   num_of_tests);
+                   CC_ARRAY_LENGTH(panid_table_0b10));
 
   UNIT_TEST_END();
   unit_test_ptr->exit_line = index;

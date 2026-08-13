@@ -12,8 +12,11 @@ CONTIKI_CPU_SOURCEFILES += clock-arch.c
 CONTIKI_CPU_SOURCEFILES += dbg-arch.c
 CONTIKI_CPU_SOURCEFILES += gpio-hal-arch.c
 CONTIKI_CPU_SOURCEFILES += int-master-arch.c
-CONTIKI_CPU_SOURCEFILES += random-arch.c
 CONTIKI_CPU_SOURCEFILES += nrf-ieee-driver-arch.c
+ifneq ($(TRUSTZONE_SECURE_BUILD),0)
+  CONTIKI_CPU_SOURCEFILES += nrf-ipc.c
+  CONTIKI_CPU_SOURCEFILES += nrf-ipc-radio.c
+endif
 CONTIKI_CPU_SOURCEFILES += uarte-arch.c
 CONTIKI_CPU_SOURCEFILES += temp-arch.c
 CONTIKI_CPU_SOURCEFILES += linkaddr-arch.c
@@ -26,9 +29,6 @@ ifeq ($(TRUSTZONE_SECURE_BUILD),1)
 else ifeq ($(TRUSTZONE_SECURE_BUILD),0)
   CFLAGS += -DNRF_TRUSTZONE_NONSECURE=1
 endif
-
-# Overrides
-CONTIKI_CPU_SOURCEFILES += random.c
 
 # arm
 CONTIKI_CPU_DIRS += arm/
@@ -70,12 +70,16 @@ NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_ipc.c
 NRFX_C_SRCS += $(NRFX_ROOT)/soc/nrfx_atomic.c
 
 NRFX_C_SRCS += $(NRFX_ROOT)/helpers/nrfx_flag32_allocator.c
+NRFX_C_SRCS += $(NRFX_ROOT)/helpers/nrfx_gppi_ppi.c
+NRFX_C_SRCS += $(NRFX_ROOT)/helpers/nrfx_gppi_dppi.c
 
 #assembly files common to all targets
 NRFX_ASM_SRCS += 
 
 CONTIKI_SOURCEFILES += $(notdir $(NRFX_C_SRCS))
 CONTIKI_SOURCEFILES += $(notdir $(NRFX_ASM_SRCS))
+
+$(OBJECTDIR)/nrfx_uarte.o: CFLAGS += -Wno-error=unused-variable
 
 #includes common to all targets
 NRFX_INC_PATHS += .
@@ -102,6 +106,7 @@ ifeq ($(NRF_NATIVE_USB),1)
   TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/device/usbd.c
   TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/device/usbd_control.c
   TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/class/cdc/cdc_device.c
+  TINYUSB_C_SRCS += $(TINYUSB_ROOT)/src/class/dfu/dfu_rt_device.c
 
   #assembly files
   TINYUSB_ASM_SRCS += 
@@ -114,6 +119,7 @@ ifeq ($(NRF_NATIVE_USB),1)
   TINYUSB_INC_PATHS += src/common/
   TINYUSB_INC_PATHS += src/device/
   TINYUSB_INC_PATHS += src/class/cdc/
+  TINYUSB_INC_PATHS += src/class/dfu/
 
   EXTERNALDIRS += $(addprefix $(TINYUSB_ROOT)/, $(TINYUSB_INC_PATHS))
 
@@ -132,60 +138,113 @@ CONTIKI_CPU_DIRS += usb/
 
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
 
-# Upload via J-Link using nrfjprog 
+# Upload via J-Link using nrfutil
 
 .PHONY: nrf-upload-sequence
 
-NRFJPROG ?= nrfjprog
 NRFUTIL ?= nrfutil
 
-ifdef NRF_UPLOAD_SN
-  NRFJPROG_OPTIONS += --snr $(NRF_UPLOAD_SN)
+# Default serial port for the login/serialdump targets.
+PORT ?= /dev/ttyACM0
+
+# Fail at recipe run time (not makefile parse time) if nrfutil is missing.
+NRFUTIL_CHECK = @command -v $(NRFUTIL) >/dev/null 2>&1 || { echo 'ERROR: Could not find nrfutil "$(NRFUTIL)", please install it' >&2; exit 1; }
+
+# The device family, set by the SoC makefiles (nrf52, nrf53, ...). Used both
+# as a safety check when programming and to only consider attached devices
+# of the right family.
+NRFUTIL_FAMILY = $(if $(NRF_DEVICE_FAMILY),--family $(NRF_DEVICE_FAMILY))
+
+# Number of boards to program in parallel
+NUMPAR = 4
+
+# Boards that override the upload targets with a non-J-Link method
+# (e.g. the nRF52840 dongle) set this to 0 to skip the J-Link-based
+# upload rules and device enumeration below.
+NRF_JLINK_UPLOAD ?= 1
+
+ifeq ($(NRF_JLINK_UPLOAD),1)
+
+# When uploading without an explicit serial number, look up the device to
+# program: from a PORT given on the command line (as used by the login
+# target; the file-level default above must not select the device), or by
+# enumerating the attached devices of the right family. Skipped when
+# nrfutil is not installed - the upload recipe reports the missing tool
+# instead - and when the SoC makefile declares no device family
+# (e.g. nrf54l15, which overrides the upload rules with its own).
+ifneq ($(filter %.upload,$(MAKECMDGOALS)),)
+  ifeq ($(NRF_UPLOAD_SN),)
+    ifneq ($(NRF_DEVICE_FAMILY),)
+      ifeq ($(origin PORT),command line)
+        NRF_PORT_SN := $(shell command -v $(NRFUTIL) >/dev/null 2>&1 && NRFUTIL=$(NRFUTIL) $(CONTIKI)/tools/nrf/nrf-serials --port $(PORT) $(NRF_DEVICE_FAMILY))
+      else
+        NRF_ATTACHED_SNRS := $(shell command -v $(NRFUTIL) >/dev/null 2>&1 && NRFUTIL=$(NRFUTIL) $(CONTIKI)/tools/nrf/nrf-serials $(NRF_DEVICE_FAMILY))
+      endif
+    endif
+  endif
 endif
 
-%.upload: $(OUT_HEX)
-ifeq (, $(shell which $(NRFJPROG)))
-	$(error Could not find nrfjprog "$(NRFJPROG)", please install it)
-else
-	$(NRFJPROG) $(NRFJPROG_OPTIONS) $(NRFJPROG_FLAGS) --sectorerase --verify --program $<
-	$(NRFJPROG) $(NRFJPROG_OPTIONS) $(NRFJPROG_FLAGS) --reset
+# .upload-all programs every attached devkit of the target's device
+# family. Refuse when the SoC makefile declares no device family:
+# without the family filter, firmware could be programmed onto attached
+# devices of other families.
+ifneq ($(filter %.upload-all,$(MAKECMDGOALS)),)
+  ifeq ($(NRF_DEVICE_FAMILY),)
+    $(error .upload-all is not supported for this SoC (no NRF_DEVICE_FAMILY set) - use .upload with NRF_UPLOAD_SN to program a specific device)
+  endif
 endif
+
+# The device to program: NRF_UPLOAD_SN if given, otherwise the device with
+# serial port PORT, otherwise the only attached device of the right family.
+# Empty if no or several devices are attached.
+NRF_SELECTED_SN = $(or $(NRF_UPLOAD_SN),$(NRF_PORT_SN),$(if $(filter 1,$(words $(NRF_ATTACHED_SNRS))),$(strip $(NRF_ATTACHED_SNRS))))
+
+NRFUTIL_SELECT = --serial-number $(NRF_SELECTED_SN)
+
+# Fail the single-device upload target unless exactly one device is selected.
+NRF_SELECT_ERROR = $(if $(filter command line,$(origin PORT)),Could not find an attached device with serial port $(PORT),Cannot select the device to program (attached: $(if $(NRF_ATTACHED_SNRS),$(NRF_ATTACHED_SNRS),none)))
+NRFUTIL_DEVICE_CHECK = $(if $(NRF_SELECTED_SN),,@{ echo 'ERROR: $(NRF_SELECT_ERROR).'; echo 'Specify the device with NRF_UPLOAD_SN=<serial number> or program all attached devices with the .upload-all target.'; echo 'Diagnose the device enumeration with: $(CONTIKI)/tools/nrf/nrf-serials $(NRF_DEVICE_FAMILY)'; } >&2; exit 1)
+
+# Same semantics as the old nrfjprog invocation:
+# --sectorerase --verify --program followed by a system reset.
+NRFUTIL_PROGRAM_OPTIONS = --options chip_erase_mode=ERASE_RANGES_TOUCHED_BY_FIRMWARE,verify=VERIFY_READ,reset=RESET_SYSTEM
+
+# Opt-in device recovery. NRF_RECOVER=1 runs "nrfutil device recover"
+# (FULL CHIP ERASE of the selected core, unlocks a protected device)
+# immediately before programming.
+nrfutil-recover = $(if $(filter 1,$(NRF_RECOVER)),$(NRFUTIL) device recover $(NRFUTIL_FAMILY) $(NRFUTIL_CORE) $(1))
+
+%.upload: $(OUT_HEX)
+	$(NRFUTIL_CHECK)
+	$(NRFUTIL_DEVICE_CHECK)
+	$(call nrfutil-recover,$(NRFUTIL_SELECT))
+	$(NRFUTIL) device program $(NRFUTIL_PROGRAM_OPTIONS) $(NRFUTIL_FAMILY) $(NRFUTIL_CORE) $(NRFUTIL_SELECT) --firmware $<
 
 # Upload to all attached boards
 # This approach is similar to the sky platform
 
-# Number of boards to program in parallel
-NUMPAR=4
-
-# Only get serial numbers if nrfjprog is installed
+# Only enumerate serial numbers when actually running the upload sequence.
+# Only devices of the right family are programmed. Fail when the
+# enumeration returns nothing (the shell function discards its exit
+# status): a silently empty list would make the upload sequence a
+# falsely successful no-op. The nrf-serials stderr diagnostic explains
+# the reason and is passed through to the terminal.
 ifneq ($(filter nrf-upload-sequence,$(MAKECMDGOALS)),)
-  ifneq (, $(shell which $(NRFJPROG)))
-    NRF_SNRS := $(shell $(NRFJPROG) -i)
+  NRF_SNRS := $(shell NRFUTIL=$(NRFUTIL) $(CONTIKI)/tools/nrf/nrf-serials $(NRF_DEVICE_FAMILY))
+  ifeq ($(NRF_SNRS),)
+    $(error No devices to program)
   endif
 endif
 
 nrf-upload-snr.%:
-	$(NRFJPROG) $(NRFJPROG_OPTIONS) --snr $* --sectorerase --verify --program $(HEX_FILE)
-	$(NRFJPROG) $(NRFJPROG_OPTIONS) --snr $* --reset
+	$(call nrfutil-recover,--serial-number $*)
+	$(NRFUTIL) device program $(NRFUTIL_PROGRAM_OPTIONS) $(NRFUTIL_FAMILY) $(NRFUTIL_CORE) --serial-number $* --firmware $(HEX_FILE)
 
 nrf-upload-sequence: $(foreach SNR, $(NRF_SNRS), nrf-upload-snr.$(SNR))
 	@echo Done
 
 %.upload-all: $(OUT_HEX)
-ifeq (, $(shell which $(NRFJPROG)))
-	$(error Could not find nrfjprog "$(NRFJPROG)", please install it)
-else
+	$(NRFUTIL_CHECK)
 	$(MAKE) HEX_FILE=$< -j $(NUMPAR) nrf-upload-sequence
-endif
 
-# DFU Upload for dongles
-PORT ?= /dev/ttyACM0
-DFU_FLAGS = -p $(PORT)
-
-%.dfu-upload: $(OUT_HEX)
-ifeq (, $(shell which $(NRFUTIL)))
-	$(error Could not find nrfutil "$(NRFUTIL)", please install it first)
-else
-	$(NRFUTIL) pkg generate --hw-version 52 --sd-req 0x00 --debug-mode --application $< $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip
-	$(NRFUTIL) dfu usb-serial $(DFU_FLAGS) -pkg $(BUILD_DIR_BOARD)/nrf52840_dfu_image.zip
-endif
+endif  # NRF_JLINK_UPLOAD

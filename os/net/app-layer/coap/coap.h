@@ -128,6 +128,16 @@ typedef struct {
   uint8_t *payload;
 } coap_message_t;
 
+/*
+ * The bitmap currently spans 0..COAP_OPTION_SIZE1 (60). The parser
+ * accepts option numbers up to UINT16_MAX, so options beyond
+ * COAP_OPTION_SIZE1 (e.g., Echo=252, No-Response=258, Request-Tag=292)
+ * are parsed but not tracked here, and coap_is_option() will return 0
+ * for them. This is harmless for options handled solely via the
+ * default switch case in coap_parse_message(); extend the bitmap
+ * (and adjust the message->options array size) when adding accessor
+ * APIs for high-numbered options that need presence tracking.
+ */
 static inline int
 coap_set_option(coap_message_t *message, unsigned int opt)
 {

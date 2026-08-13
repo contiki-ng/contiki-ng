@@ -70,6 +70,7 @@
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uipbuf.h"
 #include "net/ipv6/sicslowpan.h"
+#include "net/mac/framer/frame802154.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
@@ -318,6 +319,16 @@ store_fragment(uint8_t index, uint8_t offset)
     return -1;
   }
 
+  /* Reject duplicates: a fragment at this offset is already stored for
+     this reassembly context. Counting duplicates toward reassembled_len
+     would let the completion check fire with zero-filled gaps. */
+  for(i = 0; i < SICSLOWPAN_FRAGMENT_BUFFERS; i++) {
+    if(frag_buf[i].len > 0 && frag_buf[i].index == index &&
+       frag_buf[i].offset == offset) {
+      return 0;
+    }
+  }
+
   for(i = 0; i < SICSLOWPAN_FRAGMENT_BUFFERS; i++) {
     if(frag_buf[i].len == 0) {
       /* copy over the data from packetbuf into the fragment buffer,
@@ -350,6 +361,16 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
         clear_fragments(i);
       }
 
+      /* Reuse any existing context for this (sender, tag) so duplicate
+         FRAG1 packets cannot exhaust the reassembly table. */
+      if(frag_info[i].len > 0 && frag_info[i].tag == tag &&
+         linkaddr_cmp(&frag_info[i].sender,
+                      packetbuf_addr(PACKETBUF_ADDR_SENDER))) {
+        clear_fragments(i);
+        found = i;
+        continue;
+      }
+
       /* We use len as indication on used or not used */
       if(found < 0 && frag_info[i].len == 0) {
         /* We remember the first free fragment info but must continue
@@ -363,8 +384,13 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
       return -1;
     }
 
-    /* Found a free fragment info to store data in */
+    /* Found a free fragment info to store data in. Reset the running
+       reassembly state so that stale values from a previous session on
+       a reused context cannot survive if this FRAG1 later fails to
+       decompress and is never overwritten. */
     frag_info[found].len = frag_size;
+    frag_info[found].reassembled_len = 0;
+    frag_info[found].first_frag_len = 0;
     frag_info[found].tag = tag;
     linkaddr_copy(&frag_info[found].sender,
                   packetbuf_addr(PACKETBUF_ADDR_SENDER));
@@ -397,6 +423,9 @@ add_fragment(uint16_t tag, uint16_t frag_size, uint8_t offset)
   }
   if(len > 0) {
     frag_info[i].reassembled_len += len;
+    return i;
+  } else if(len == 0) {
+    /* Duplicate fragment: already stored and accounted for. */
     return i;
   } else {
     /* should we also clear all fragments since we failed to store
@@ -1100,6 +1129,9 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
 
   /* another if the CID flag is set */
   if(iphc1 & SICSLOWPAN_IPHC_CID) {
+    if(cmpr_len < packetbuf_hdr_len + 3) {
+      return false;
+    }
     LOG_DBG("uncompression: CID flag set - increase header with one\n");
     iphc_ptr++;
   }
@@ -1313,12 +1345,12 @@ uncompress_hdr_iphc(uint8_t *buf, uint16_t buf_size, uint16_t ip_len)
 
     /* uncompress the extension header */
     exthdr = (struct uip_ext_hdr *)ip_payload;
-    exthdr->len = (UIP_EXT_HDR_LEN + len) / 8;
-    if(exthdr->len == 0) {
-      LOG_WARN("Extension header length is below 8\n");
+    if((UIP_EXT_HDR_LEN + len) < 8 || (UIP_EXT_HDR_LEN + len) % 8 != 0) {
+      LOG_WARN("Extension header length %u is not a valid multiple of 8\n",
+               (unsigned)(UIP_EXT_HDR_LEN + len));
       return false;
     }
-    exthdr->len--;
+    exthdr->len = (UIP_EXT_HDR_LEN + len) / 8 - 1;
     exthdr->next = next;
     last_nextheader = &exthdr->next;
 

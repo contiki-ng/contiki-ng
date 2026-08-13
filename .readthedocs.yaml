@@ -5,13 +5,13 @@
 version: 2
 
 build:
-  os: ubuntu-20.04
+  os: ubuntu-24.04
   tools:
-    python: "3.8"
+    python: "3.12"
   jobs:
     post_install:
-      - wget -nv https://sourceforge.net/projects/doxygen/files/rel-1.10.0/doxygen-1.10.0.linux.bin.tar.gz/download -O doxygen.linux.bin.tar.gz
-      - tar xf doxygen.linux.bin.tar.gz doxygen-1.10.0/bin/doxygen --strip-components 2 --one-top-level=tools/doxygen
+      - wget -nv https://sourceforge.net/projects/doxygen/files/rel-1.17.0/doxygen-1.17.0.linux.bin.tar.gz/download -O doxygen.linux.bin.tar.gz
+      - tar xf doxygen.linux.bin.tar.gz doxygen-1.17.0/bin/doxygen --strip-components 2 --one-top-level=tools/doxygen
       - rm doxygen.linux.bin.tar.gz
 
 python:

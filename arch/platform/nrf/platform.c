@@ -44,8 +44,8 @@
 #include "dev/button-hal.h"
 #include "dev/leds.h"
 #include "dev/serial-line.h"
+#include "lib/csprng.h"
 
-#include "random.h"
 #include "int-master.h"
 #include "sensors.h"
 #include "uarte-arch.h"
@@ -53,6 +53,7 @@
 #include "reset-arch.h"
 
 #include "lpm.h"
+#include "nrfx_config.h"
 #include "usb.h"
 
 /*---------------------------------------------------------------------------*/
@@ -61,26 +62,70 @@
 #define LOG_MODULE "NRF"
 #define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
+#if NRF_HARDFAULT_HANDLER_EXTENDED
+void hardfault_print_saved_crash(void);
+#endif
+/*---------------------------------------------------------------------------*/
+__attribute__((weak)) void
+platform_init_board(void)
+{
+}
+/*---------------------------------------------------------------------------*/
+__attribute__((weak)) void
+platform_init_board_stage_two(void)
+{
+}
+/*---------------------------------------------------------------------------*/
 void
 platform_init_stage_one(void)
 {
   gpio_hal_init();
+  platform_init_board();
   leds_init();
+}
+/*---------------------------------------------------------------------------*/
+static void
+feed_csprng(void)
+{
+#if defined(NRF_RNG) && CSPRNG_ENABLED
+  struct csprng_seed seed;
+
+  NRF_RNG->TASKS_START = 1;
+  for(size_t i = 0; i < sizeof(seed); i++) {
+    NRF_RNG->EVENTS_VALRDY = 0;
+    while(!NRF_RNG->EVENTS_VALRDY);
+    ((uint8_t *)&seed)[i] = NRF_RNG->VALUE;
+  }
+  NRF_RNG->TASKS_STOP = 1;
+  csprng_feed(&seed);
+#endif /* defined(NRF_RNG) && CSPRNG_ENABLED */
 }
 /*---------------------------------------------------------------------------*/
 void
 platform_init_stage_two(void)
 {
-  button_hal_init();
+  platform_init_board_stage_two();
 
-  /* Seed value is ignored since hardware RNG is used. */
-  random_init(0x5678);
+  /*
+   * There are two images of everything when building with TrustZone, and the
+   * normal world is the one that owns the buttons, through the non-secure
+   * GPIOTE instance. Initializing button-hal in the secure image as well would
+   * arm the secure instance on the same pins, and a button press would then
+   * raise a secure interrupt that nothing services, because the secure image
+   * has handed over to the normal world and no longer runs a scheduler.
+   */
+#if !defined(NRF_TRUSTZONE_SECURE)
+  button_hal_init();
+#endif
 
   /* There are two images of everything when building with
    * TrustZone, and uarte can only be initialized once,
    * so initialize in the secure mode. */
 #if NRF_HAS_UARTE && !defined(NRF_TRUSTZONE_NONSECURE)
   uarte_init();
+#if NRF_HARDFAULT_HANDLER_EXTENDED
+  hardfault_print_saved_crash();
+#endif
 #endif /* NRF_HAS_UARTE */
 
 #if NRF_HAS_USB && defined(NRF_NATIVE_USB) && NRF_NATIVE_USB == 1
@@ -98,6 +143,8 @@ platform_init_stage_two(void)
 #endif /* BUILD_WITH_SHELL */
 
   populate_link_address();
+
+  feed_csprng();
 
   reset_debug();
 }

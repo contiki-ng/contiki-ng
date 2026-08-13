@@ -37,6 +37,7 @@
 #include "dev/radio/cc1200/cc1200-arch.h"
 #include "dev/radio/cc1200/cc1200-rf-cfg.h"
 
+#include "net/mac/framer/frame802154.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "dev/watchdog.h"
@@ -90,6 +91,26 @@ static rtimer_clock_t sfd_timestamp = 0;
  * chain. This, however, restircts the payload length to the Tx FIFO size.
  */
 #define CC1200_WITH_TX_BUF (!MAC_CONF_WITH_TSCH)
+/*
+ * Minimum spacing between two SPI reads of the RX FIFO byte count in
+ * pending_packet(). Tight pollers (e.g. CSMA's RTIMER_BUSYWAIT_UNTIL after a
+ * unicast TX) would otherwise hammer the SPI bus and starve the RX IRQ chain
+ * that needs the same bus to drain the incoming ACK. The threshold was
+ * originally measured between 200 and 300 us on the CC2538 SoC at 32 MHz, but
+ * 300 us is that measured minimum with no margin, and has since been observed
+ * to fail on Zolertia Firefly: nodes receive broadcast DIOs, but no unicast is
+ * ever acknowledged, so they never join a RPL DAG. Default to 500 us, which
+ * restores convergence on the same hardware. A larger window costs no
+ * latency: a delivered packet is reported from rx_pkt_len on every call, and
+ * only the fallback SPI peek at the FIFO byte count is rate-limited. Other
+ * host SoCs / SPI clocks may need a different value; override with
+ * CC1200_CONF_PENDING_POLL_THROTTLE_US.
+ */
+#ifdef CC1200_CONF_PENDING_POLL_THROTTLE_US
+#define CC1200_PENDING_POLL_THROTTLE_US CC1200_CONF_PENDING_POLL_THROTTLE_US
+#else
+#define CC1200_PENDING_POLL_THROTTLE_US 500
+#endif
 /*
  * Set this parameter to 1 in order to use the MARC_STATE register when
  * polling the chips's status. Else use the status byte returned when sending
@@ -928,7 +949,8 @@ read(void *buf, unsigned short buf_len)
 
   if(rx_pkt_len > 0) {
 
-    rssi = (int8_t)rx_pkt[rx_pkt_len - 2] + (int)CC1200_RF_CFG.rssi_offset;
+    /* RSSI offset already applied by hardware via AGC_GAIN_ADJUST register */
+    rssi = (int8_t)rx_pkt[rx_pkt_len - 2];
     /* CRC is already checked */
     uint8_t crc_lqi = rx_pkt[rx_pkt_len - 1];
 
@@ -1076,12 +1098,30 @@ receiving_packet(void)
 static int
 pending_packet(void)
 {
+  /* Timestamp of the last SPI read of the RX FIFO byte count. Tight pollers
+   * such as CSMA's RTIMER_BUSYWAIT_UNTIL after a unicast TX call this in a
+   * tight loop; doing LOCK_SPI/single_read every iteration starves the RX IRQ
+   * chain that needs the same SPI bus to drain the incoming ACK from the
+   * radio's RX FIFO into rx_pkt[]. Rate-limiting the SPI read (rather than
+   * inserting an unconditional delay) leaves the bus free for the IRQ between
+   * closely-spaced calls, while isolated calls still read immediately and no
+   * caller pays any added latency. */
+  static rtimer_clock_t last_spi_poll;
   int ret;
+
   ret = ((rx_pkt_len != 0) ? 1 : 0);
+  /* rx_pkt_len is set by the RX IRQ, so a delivered ACK is reported above with
+   * no SPI access and no delay. Only fall back to polling the FIFO over SPI,
+   * and only when the previous poll is at least the throttle window old. */
   if(ret == 0 && !SPI_IS_LOCKED()) {
-    LOCK_SPI();
-    ret = (single_read(CC1200_NUM_RXBYTES) > 0);
-    RELEASE_SPI();
+    rtimer_clock_t now = RTIMER_NOW();
+    if(!RTIMER_CLOCK_LT(now, last_spi_poll
+                        + US_TO_RTIMERTICKS(CC1200_PENDING_POLL_THROTTLE_US))) {
+      last_spi_poll = now;
+      LOCK_SPI();
+      ret = (single_read(CC1200_NUM_RXBYTES) > 0);
+      RELEASE_SPI();
+    }
   }
 
   INFO("RF: Pending (%d)\n", ret);
@@ -1153,8 +1193,6 @@ off(void)
 
     LOCK_SPI();
 
-    idle();
-
     if(single_read(CC1200_NUM_RXBYTES) > 0) {
       RELEASE_SPI();
       /* In case there is something in the Rx FIFO, read it */
@@ -1164,6 +1202,8 @@ off(void)
       }
       LOCK_SPI();
     }
+
+    idle();
 
     /*
      * As we use GPIO as CHIP_RDYn signal on wake-up / on(),
@@ -1215,7 +1255,8 @@ get_rssi(void)
                 & CC1200_CARRIER_SENSE_VALID),
                 RTIMER_SECOND / 100);
   RF_ASSERT(rssi0 & CC1200_CARRIER_SENSE_VALID);
-  rssi1 = (int8_t)single_read(CC1200_RSSI1) + (int)CC1200_RF_CFG.rssi_offset;
+  /* RSSI offset already applied by hardware via AGC_GAIN_ADJUST register */
+  rssi1 = (int8_t)single_read(CC1200_RSSI1);
 
   /* If we were off, turn back off */
   if(was_off) {
@@ -1957,9 +1998,36 @@ idle_tx_rx(const uint8_t *payload, uint16_t payload_len)
   single_write(CC1200_IOCFG0, CC1200_IOCFG_MARC_2PIN_STATUS_0);
 
 #if CC1200_WITH_TX_BUF
-  /* Prepare and write header */
+  /* Prepare and write header (issues the SFTX flush) */
   copy_header_to_tx_fifo(payload_len);
+#endif /* CC1200_WITH_TX_BUF */
 
+#if USE_SFSTXON
+  /*
+   * Pre-arm the synthesizer now, before streaming the payload into
+   * the FIFO (when CC1200_WITH_TX_BUF is set), so it settles
+   * concurrently with the burst_write below rather than stalling the
+   * subsequent STX. Under CC1200_AUTOCAL this strobe triggers
+   * calibration; otherwise it just locks the (already-calibrated)
+   * synth. The STX then transitions FSTXON->TX in ~25 us instead of
+   * the ~150-700 us cal+settle from IDLE.
+   *
+   * This is gated on USE_SFSTXON only (not CC1200_WITH_TX_BUF) so the
+   * strobe is never dropped if the two options are configured
+   * independently. The SFTX it must follow has already been issued by
+   * this point in both configurations: copy_header_to_tx_fifo() above
+   * for CC1200_WITH_TX_BUF, or earlier in prepare() otherwise. SFSTXON
+   * before SFTX leaves the synth in an undefined state.
+   *
+   * The strobe was inadvertently dropped in b5e12154c (2018) while
+   * the wait below was left in place, turning the wait into a
+   * RTIMER_SECOND/100 (~10 ms) dead timeout on every TX in non-TSCH
+   * builds. TSCH builds set USE_SFSTXON=0 and skip this block.
+   */
+  strobe(CC1200_SFSTXON);
+#endif
+
+#if CC1200_WITH_TX_BUF
   /*
    * Fill FIFO with data. If SPI is slow it might make sense
    * to divide this process into several chunks.
@@ -1978,7 +2046,7 @@ idle_tx_rx(const uint8_t *payload, uint16_t payload_len)
 #endif /* CC1200_WITH_TX_BUF */
 
 #if USE_SFSTXON
-  /* Wait for synthesizer to be ready */
+  /* Wait for the synthesizer (pre-armed above) to reach FSTXON */
   RTIMER_BUSYWAIT_UNTIL_STATE(STATE_FSTXON, RTIMER_SECOND / 100);
 #endif
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Hasso-Plattner-Institut..
+ * Copyright (c) 2017, Hasso-Plattner-Institut.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,6 @@ PROCESS_THREAD(example_process, ev, data)
 {
   static struct etimer periodic_timer;
   uint8_t buf[32];
-  uint8_t i;
 
   PROCESS_BEGIN();
 
@@ -51,11 +50,11 @@ PROCESS_THREAD(example_process, ev, data)
     etimer_reset(&periodic_timer);
 
     /* fills buf with cryptographic random numbers */
-    if(!csprng_rand(buf, 32)) {
+    if(!csprng_rand(buf, sizeof(buf))) {
       printf("CSPRNG error\n");
       PROCESS_EXIT();
     }
-    for(i = 0; i < 32; i++) {
+    for(size_t i = 0; i < sizeof(buf); i++) {
       printf("%02x", buf[i]);
     }
     printf("\n");

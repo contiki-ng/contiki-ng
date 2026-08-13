@@ -44,7 +44,24 @@
 #ifndef NRF5340_APPLICATION_DEF_H_
 #define NRF5340_APPLICATION_DEF_H_
 /*---------------------------------------------------------------------------*/
+#ifndef NETSTACK_CONF_RADIO
+#if NRF_TRUSTZONE_NONSECURE
+#define NETSTACK_CONF_RADIO        tz_radio_driver
+#elif NRF_TRUSTZONE_SECURE
+/*
+ * The secure world uses nullradio as its NETSTACK_RADIO because the
+ * IPC radio is initialized later via the tz_radio_init() NSC call
+ * from the normal world.  Initializing the IPC radio during the
+ * secure world boot (before SPU configuration) causes SRAM bus
+ * stalls that hang the system.  The tz-radio.c NSC entry points
+ * call ipc_radio_driver functions directly, so filtering still
+ * works regardless of what NETSTACK_CONF_RADIO is set to here.
+ */
 #define NETSTACK_CONF_RADIO        nullradio_driver
+#else
+#define NETSTACK_CONF_RADIO        ipc_radio_driver
+#endif
+#endif
 /*---------------------------------------------------------------------------*/
 #define NRF_HAS_USB     1
 #define NRF_HAS_UARTE   1

@@ -1,0 +1,13 @@
+ifndef CONTIKI
+  $(error CONTIKI not defined! You must specify where CONTIKI resides!)
+endif
+
+CONTIKI_TARGET_DIRS += .
+CONTIKI_TARGET_SOURCEFILES += platform.c
+
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+
+CLEAN += *.nrf-vpr
+
+CONTIKI_CPU = $(CONTIKI_NG_RELOC_CPU_DIR)/nrf-vpr
+include $(CONTIKI_CPU)/Makefile.nrf-vpr

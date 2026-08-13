@@ -37,10 +37,12 @@
 
 #include "sdk_config.h"
 #include "nrfx_gpiote.h"
+#include <nrfx_rng.h>
 #include "nrf.h"
 
 #include "contiki-net.h"
 #include "leds.h"
+#include "lib/csprng.h"
 #include "lib/sensors.h"
 #include "dev/button-hal.h"
 
@@ -93,15 +95,29 @@ platform_init_stage_one(void)
   leds_init();
 }
 /*---------------------------------------------------------------------------*/
+static void
+feed_csprng(void)
+{
+#if CSPRNG_ENABLED
+  struct csprng_seed seed;
+
+  NRF_RNG->TASKS_START = 1;
+  for(size_t i = 0; i < sizeof(seed.u8); i++) {
+    NRF_RNG->EVENTS_VALRDY = 0;
+    while(!NRF_RNG->EVENTS_VALRDY);
+    seed.u8[i] = NRF_RNG->VALUE;
+  }
+  NRF_RNG->TASKS_STOP = 1;
+  csprng_feed(&seed);
+#endif /* CSPRNG_ENABLED */
+}
+/*---------------------------------------------------------------------------*/
 void
 platform_init_stage_two(void)
 {
 #ifdef PLATFORM_HAS_BUTTON
   button_hal_init();
 #endif
-
-  /* Seed value is ignored since hardware RNG is used. */
-  random_init(0);
 
 #if UART0_ENABLED
   uart0_init();
@@ -124,6 +140,8 @@ platform_init_stage_two(void)
 #endif
 
   populate_link_address();
+
+  feed_csprng();
 }
 /*---------------------------------------------------------------------------*/
 void

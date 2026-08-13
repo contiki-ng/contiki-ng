@@ -189,7 +189,6 @@ CONTIKI_CPU_SOURCEFILES += linkaddr-arch.c
 
 ### os
 CONTIKI_CPU_SOURCEFILES += dbg-arch.c
-CONTIKI_CPU_SOURCEFILES += random-arch.c
 
 ### storage
 CONTIKI_CPU_SOURCEFILES += cfs-coffee-arch.c

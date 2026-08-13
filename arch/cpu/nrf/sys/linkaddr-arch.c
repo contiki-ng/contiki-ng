@@ -52,6 +52,10 @@
 
 #include "linkaddr-arch.h"
 
+#ifdef NRF_TRUSTZONE_NONSECURE
+#include "trustzone/tz-radio.h"
+#endif
+
 #include <string.h>
 #include <stdint.h>
 
@@ -77,11 +81,27 @@ populate_link_address(void)
   device_address[3] = nrf_ficr_deviceid_get(NRF_FICR, 1) & 0xFF;
   device_address_low = nrf_ficr_deviceid_get(NRF_FICR, 0);
 #elif defined(NRF_FICR_S)
-  /* Secure TrustZone builds are handled by the previous branch, this
-   * branch puts in a dummy value for the non-secure TrustZone builds
-   * since NRF_FICR is not available. */
-  device_address[3] = 0;
-  device_address_low = 0;
+  /*
+   * nRF5340 only defines NRF_FICR_S, not NRF_FICR. The secure FICR
+   * alias is accessible in non-TZ mode and TZ-secure mode. In TZ
+   * non-secure mode, FICR access is blocked by the SPU; the secure
+   * world must read it on behalf of the normal world.
+   */
+#ifndef NRF_TRUSTZONE_NONSECURE
+  device_address[3] = nrf_ficr_deviceid_get(NRF_FICR_S, 1) & 0xFF;
+  device_address_low = nrf_ficr_deviceid_get(NRF_FICR_S, 0);
+#else
+  {
+    uint32_t id0, id1;
+    if(tz_radio_get_device_id(&id0, &id1)) {
+      device_address[3] = id1 & 0xFF;
+      device_address_low = id0;
+    } else {
+      device_address[3] = 0;
+      device_address_low = 0;
+    }
+  }
+#endif
 #endif
 
   memcpy(&device_address[4], &device_address_low, sizeof(device_address_low));

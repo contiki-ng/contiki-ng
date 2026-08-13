@@ -64,7 +64,7 @@
 #define MEMB_H_
 
 #include <stdbool.h>
-#include <stdlib.h>
+#include <stddef.h>
 #include "sys/cc.h"
 
 /**

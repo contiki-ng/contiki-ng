@@ -41,6 +41,7 @@
 
 #include "aql.h"
 #include "lvm.h"
+#include "sys/cc.h"
 
 #define DEBUG DEBUG_NONE
 #include "debug.h"
@@ -782,7 +783,7 @@ print_operator(lvm_instance_t *p, lvm_ip_t index)
 
   memcpy(&operator, p->code + index, sizeof(operator));
 
-  for(i = 0; i < sizeof(operator_map) / sizeof(operator_map[0]); i++) {
+  for(i = 0; i < CC_ARRAY_LENGTH(operator_map); i++) {
     if(operator_map[i].op == operator) {
       PRINTF("%s ", operator_map[i].representation);
       break;

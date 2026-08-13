@@ -34,22 +34,6 @@
  */
 
 /**
- * \brief TFM error codes.
- */
-enum tfm_plat_err_t {
-  TFM_PLAT_ERR_SUCCESS = 0,
-  TFM_PLAT_ERR_SYSTEM_ERR = 0x3A5C,
-  TFM_PLAT_ERR_MAX_VALUE = 0x55A3,
-  TFM_PLAT_ERR_INVALID_INPUT = 0xA3C5,
-  TFM_PLAT_ERR_UNSUPPORTED = 0xC35A,
-  /* Following entry is only to ensure the error code of int size */
-  /* TFM_PLAT_ERR_FORCE_INT_SIZE = INT_MAX */
-};
-
-#define TFM_DRIVER_STDIO    Driver_USART1
-#define NS_DRIVER_STDIO     Driver_USART0
-
-/**
  * \brief A convenient struct to include all required Non-Secure state configuration.
  */
 typedef struct tz_nonsecure_setup_conf {
@@ -92,23 +76,14 @@ struct platform_data_t {
 };
 
 /**
- * \brief Configures memory permissions via the System Protection Unit.
- *
- * \return Returns values as specified by the \ref tfm_plat_err_t
- */
-enum tfm_plat_err_t spu_init_cfg(void);
-
-/**
  * \brief Configures peripheral permissions via the System Protection Unit.
  *
  * The function does the following:
  * - grants Non-Secure access to nRF peripherals that are not Secure-only
  * - grants Non-Secure access to DDPI channels
  * - grants Non-Secure access to GPIO pins
- *
- * \return Returns values as specified by the \ref tfm_plat_err_t
  */
-enum tfm_plat_err_t spu_periph_init_cfg(void);
+void spu_periph_init_cfg(void);
 
 /**
  * \brief Setup nonsecure state
@@ -131,11 +106,6 @@ void spu_periph_configure_to_non_secure(uint32_t periph_num);
 void spu_periph_config_uarte(void);
 
 /**
- * \brief Clears SPU interrupt.
- */
-void spu_clear_irq(void);
-
-/**
  * \brief Configures SAU and IDAU.
  */
 void sau_and_idau_cfg(void);
@@ -146,57 +116,34 @@ void sau_and_idau_cfg(void);
 void non_secure_configuration(void);
 
 /**
- * \brief Get non-secure vector table.
- */
-uint32_t tfm_spm_hal_get_ns_VTOR(void);
-
-/**
- * \brief Get non-secure MSP location.
- */
-uint32_t tfm_spm_hal_get_ns_MSP(void);
-
-/**
- * \brief Get entry point location.
- */
-uint32_t tfm_spm_hal_get_ns_entry_point(void);
-
-/**
  * \brief Enables the fault handlers and sets priorities.
- *
- * \return Returns values as specified by the \ref tfm_plat_err_t
  */
-enum tfm_plat_err_t enable_fault_handlers(void);
+void enable_fault_handlers(void);
 
 /**
  * \brief Configures the system reset request properties
- *
- * \return Returns values as specified by the \ref tfm_plat_err_t
  */
-enum tfm_plat_err_t system_reset_cfg(void);
-
-/**
- * \brief Configures the system debug properties.
- *
- * \return Returns values as specified by the \ref tfm_plat_err_t
- */
-enum tfm_plat_err_t init_debug(void);
+void system_reset_cfg(void);
 
 /**
  * \brief Configures all external interrupts to target the
  *        NS state, apart for the ones associated to secure
  *        peripherals (plus SPU)
- *
- * \return Returns values as specified by the \ref tfm_plat_err_t
  */
-enum tfm_plat_err_t nvic_interrupt_target_state_cfg(void);
+void nvic_interrupt_target_state_cfg(void);
 
 /**
  * \brief This function enable the interrupts associated
  *        to the secure peripherals (plus the isolation boundary violation
  *        interrupts)
- *
- * \return Returns values as specified by the \ref tfm_plat_err_t
  */
-enum tfm_plat_err_t nvic_interrupt_enable(void);
+void nvic_interrupt_enable(void);
 
-#endif /* __TARGET_CFG_H__ */
+/**
+ * \brief Report and clear any SPU violation captured by the previous
+ *        boot's SPU_IRQHandler. Should be called early in secure
+ *        initialization to surface the cause of an unexpected reset.
+ */
+void spu_report_violation(void);
+
+#endif /* __TZ_TARGET_CFG_H__ */

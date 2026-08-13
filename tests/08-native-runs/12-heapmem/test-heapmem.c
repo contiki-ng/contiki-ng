@@ -79,7 +79,7 @@ UNIT_TEST(do_many_allocations)
   unsigned failed_allocations = 0;
   unsigned failed_deallocations = 0;
   unsigned misalignments = 0;
-  unsigned min_alignment = heapmem_alignment();
+  unsigned min_alignment = HEAPMEM_ALIGNMENT;
 
   /* The minimum alignment value must be a power of two */
   UNIT_TEST_ASSERT(min_alignment != 0);
@@ -168,7 +168,7 @@ UNIT_TEST(max_alloc)
 
   heapmem_stats_t stats_before;
   heapmem_stats(&stats_before);
-  printf("Old max footprint: %zu\n", stats_before.max_footprint);
+  printf("Old max heap usage: %zu\n", stats_before.max_heap_usage);
 
   /* The test uses a much smaller size than the theoretical maximum because
      the heapmem module is not yet supporting such large allocations. */
@@ -181,15 +181,15 @@ UNIT_TEST(max_alloc)
 
   heapmem_stats_t stats_after;
   heapmem_stats(&stats_after);
-  printf("New max footprint: %zu\n", stats_after.max_footprint);
+  printf("New max heap usage: %zu\n", stats_after.max_heap_usage);
 
   UNIT_TEST_ASSERT(stats_before.allocated == stats_after.allocated);
   UNIT_TEST_ASSERT(stats_before.overhead == stats_after.overhead);
   UNIT_TEST_ASSERT(stats_before.available == stats_after.available);
-  UNIT_TEST_ASSERT(stats_before.footprint == stats_after.footprint);
-  UNIT_TEST_ASSERT(stats_before.max_footprint < stats_after.max_footprint);
+  UNIT_TEST_ASSERT(stats_before.heap_usage == stats_after.heap_usage);
+  UNIT_TEST_ASSERT(stats_before.max_heap_usage < stats_after.max_heap_usage);
   UNIT_TEST_ASSERT(stats_before.chunks == stats_after.chunks);
-  UNIT_TEST_ASSERT(stats_after.max_footprint >= test_alloc_size);
+  UNIT_TEST_ASSERT(stats_after.max_heap_usage >= test_alloc_size);
 
   UNIT_TEST_END();
 }
@@ -278,41 +278,141 @@ UNIT_TEST(stats_check)
   heapmem_stats(&stats);
 
   printf("* allocated %zu\n* overhead %zu\n* available %zu\n"
-	 "* footprint %zu\n* max footprint %zu\n* chunks %zu\n",
+	 "* heap usage %zu\n* max heap usage %zu\n* chunks %zu\n",
          stats.allocated, stats.overhead, stats.available,
-         stats.footprint, stats.max_footprint, stats.chunks);
+         stats.heap_usage, stats.max_heap_usage, stats.chunks);
 
   UNIT_TEST_ASSERT(stats.allocated == 0);
   UNIT_TEST_ASSERT(stats.overhead == 0);
   UNIT_TEST_ASSERT(stats.available == HEAPMEM_CONF_ARENA_SIZE);
-  UNIT_TEST_ASSERT(stats.footprint == 0);
-  UNIT_TEST_ASSERT(stats.max_footprint > stats.available / 2);
+  UNIT_TEST_ASSERT(stats.heap_usage == 0);
+  UNIT_TEST_ASSERT(stats.max_heap_usage > stats.available / 2);
   UNIT_TEST_ASSERT(stats.chunks == 0);
 
   UNIT_TEST_END();
 }
 /*****************************************************************************/
+HEAPMEM_ZONE_DEFINE(test_zone, 1000);
+
 UNIT_TEST_REGISTER(zones, "Zone allocations");
 UNIT_TEST(zones)
 {
   UNIT_TEST_BEGIN();
 
-  UNIT_TEST_ASSERT(heapmem_zone_register(NULL, 10) == HEAPMEM_ZONE_INVALID);
-  UNIT_TEST_ASSERT(heapmem_zone_register("A", 0) == HEAPMEM_ZONE_INVALID);
-
-  heapmem_zone_t zone = heapmem_zone_register("Test", 1000);
-  UNIT_TEST_ASSERT(zone != HEAPMEM_ZONE_INVALID);
-  UNIT_TEST_ASSERT(zone != HEAPMEM_ZONE_GENERAL);
-  UNIT_TEST_ASSERT(heapmem_zone_register("Test", 10) == HEAPMEM_ZONE_INVALID);
-
-  void *ptr = heapmem_zone_alloc(zone, 100);
+  /* Basic allocation and free in a zone. */
+  void *ptr = heapmem_zone_alloc(&test_zone, 100);
   UNIT_TEST_ASSERT(ptr != NULL);
-  UNIT_TEST_ASSERT(heapmem_free(ptr) != false);
+  UNIT_TEST_ASSERT(heapmem_zone_free(&test_zone, ptr) == true);
 
-  UNIT_TEST_ASSERT(heapmem_zone_alloc(zone, 1001) == NULL);
+  /* Allocation exceeding zone size should fail. */
+  UNIT_TEST_ASSERT(heapmem_zone_alloc(&test_zone, 1001) == NULL);
+
+  /* General zone should still work independently. */
   ptr = heapmem_alloc(1001);
   UNIT_TEST_ASSERT(ptr != NULL);
-  UNIT_TEST_ASSERT(heapmem_free(ptr) != false);
+  UNIT_TEST_ASSERT(heapmem_free(ptr) == true);
+
+  /* Freeing a general-zone pointer with a different zone should fail. */
+  ptr = heapmem_alloc(10);
+  UNIT_TEST_ASSERT(ptr != NULL);
+  UNIT_TEST_ASSERT(heapmem_zone_free(&test_zone, ptr) == false);
+  UNIT_TEST_ASSERT(heapmem_free(ptr) == true);
+
+  UNIT_TEST_END();
+}
+/*****************************************************************************/
+HEAPMEM_ZONE_DEFINE(zone_a, 4096);
+HEAPMEM_ZONE_DEFINE(zone_b, 4096);
+
+UNIT_TEST_REGISTER(zone_isolation, "Zone isolation");
+UNIT_TEST(zone_isolation)
+{
+  UNIT_TEST_BEGIN();
+
+  /* Fill zone A with interleaved alloc/free to create fragmentation. */
+  void *a_ptrs[20];
+  for(int i = 0; i < 20; i++) {
+    a_ptrs[i] = heapmem_zone_alloc(&zone_a, 100);
+    UNIT_TEST_ASSERT(a_ptrs[i] != NULL);
+  }
+  /* Free every other to fragment zone A. */
+  for(int i = 0; i < 20; i += 2) {
+    UNIT_TEST_ASSERT(heapmem_zone_free(&zone_a, a_ptrs[i]) == true);
+  }
+
+  /* Zone B should be completely unaffected -- allocate a large chunk. */
+  void *big = heapmem_zone_alloc(&zone_b, 3000);
+  UNIT_TEST_ASSERT(big != NULL);
+
+  /* Verify zone B stats are independent of zone A's fragmentation.
+     Use >= because the allocator rounds up to HEAPMEM_ALIGNMENT. */
+  heapmem_stats_t stats_b;
+  heapmem_zone_stats(&zone_b, &stats_b);
+  UNIT_TEST_ASSERT(stats_b.allocated >= 3000);
+  UNIT_TEST_ASSERT(stats_b.chunks == 1);
+
+  /* Verify zone A stats reflect its own state. */
+  heapmem_stats_t stats_a;
+  heapmem_zone_stats(&zone_a, &stats_a);
+  UNIT_TEST_ASSERT(stats_a.chunks == 10);
+
+  /* Clean up. */
+  UNIT_TEST_ASSERT(heapmem_zone_free(&zone_b, big) == true);
+  for(int i = 1; i < 20; i += 2) {
+    UNIT_TEST_ASSERT(heapmem_zone_free(&zone_a, a_ptrs[i]) == true);
+  }
+
+  /* Both zones should have no allocated memory. Note: heap_usage may
+     not be zero because wilderness reclamation only happens when the
+     last chunk in the heap is freed. */
+  heapmem_zone_stats(&zone_a, &stats_a);
+  heapmem_zone_stats(&zone_b, &stats_b);
+  UNIT_TEST_ASSERT(stats_a.allocated == 0);
+  UNIT_TEST_ASSERT(stats_b.allocated == 0);
+
+  UNIT_TEST_END();
+}
+/*****************************************************************************/
+HEAPMEM_ZONE_DEFINE(realloc_zone, 2000);
+
+UNIT_TEST_REGISTER(zone_realloc, "Zone realloc");
+UNIT_TEST(zone_realloc)
+{
+  UNIT_TEST_BEGIN();
+
+  /* Realloc with NULL ptr in a zone should allocate. */
+  uint8_t *ptr = heapmem_zone_realloc(&realloc_zone, NULL, 100);
+  UNIT_TEST_ASSERT(ptr != NULL);
+
+  for(int i = 0; i < 100; i++) {
+    ptr[i] = i + 1;
+  }
+
+  /* Grow the allocation. */
+  uint8_t *ptr2 = heapmem_zone_realloc(&realloc_zone, ptr, 200);
+  UNIT_TEST_ASSERT(ptr2 != NULL);
+
+  /* Verify original data preserved. */
+  for(int i = 0; i < 100; i++) {
+    UNIT_TEST_ASSERT(ptr2[i] == (uint8_t)(i + 1));
+  }
+
+  /* Shrink. */
+  uint8_t *ptr3 = heapmem_zone_realloc(&realloc_zone, ptr2, 50);
+  UNIT_TEST_ASSERT(ptr3 != NULL);
+
+  for(int i = 0; i < 50; i++) {
+    UNIT_TEST_ASSERT(ptr3[i] == (uint8_t)(i + 1));
+  }
+
+  /* Free via realloc(ptr, 0). */
+  UNIT_TEST_ASSERT(heapmem_zone_realloc(&realloc_zone, ptr3, 0) == NULL);
+
+  /* Zone should be fully reclaimed. */
+  heapmem_stats_t stats;
+  heapmem_zone_stats(&realloc_zone, &stats);
+  UNIT_TEST_ASSERT(stats.allocated == 0);
+  UNIT_TEST_ASSERT(stats.heap_usage == 0);
 
   UNIT_TEST_END();
 }
@@ -335,6 +435,8 @@ PROCESS_THREAD(test_heapmem_process, ev, data)
   UNIT_TEST_RUN(zero_init_alloc);
   UNIT_TEST_RUN(stats_check);
   UNIT_TEST_RUN(zones);
+  UNIT_TEST_RUN(zone_isolation);
+  UNIT_TEST_RUN(zone_realloc);
 
   if(!UNIT_TEST_PASSED(do_many_allocations) ||
      !UNIT_TEST_PASSED(max_alloc) ||
@@ -342,7 +444,9 @@ PROCESS_THREAD(test_heapmem_process, ev, data)
      !UNIT_TEST_PASSED(reallocations) ||
      !UNIT_TEST_PASSED(zero_init_alloc) ||
      !UNIT_TEST_PASSED(stats_check) ||
-     !UNIT_TEST_PASSED(zones)) {
+     !UNIT_TEST_PASSED(zones) ||
+     !UNIT_TEST_PASSED(zone_isolation) ||
+     !UNIT_TEST_PASSED(zone_realloc)) {
     printf("=check-me= FAILED\n");
     printf("---\n");
   }

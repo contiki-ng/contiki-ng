@@ -23,7 +23,7 @@ Also feel free to download our [cheat sheet](https://contiki-ng.github.io/resour
 * [Vagrant image](/doc/getting-started/Vagrant.md)
 * [Native toolchain installation (Linux)](/doc/getting-started/Toolchain-installation-on-Linux.md)
 * [Native toolchain installation (macOS)](/doc/getting-started/Toolchain-installation-on-macOS.md)
-* [IP64 setup with Jool](/doc/getting-started/NAT64-for-Contiki-NG.md)
+* [NAT64 setup](/doc/getting-started/NAT64-for-Contiki-NG.md)
 * [The Contiki-NG build system](/doc/getting-started/The-Contiki-NG-build-system.md)
 * [The Contiki-NG configuration system](/doc/getting-started/The-Contiki-NG-configuration-system.md)
 * [The Contiki-NG logging system](/doc/getting-started/The-Contiki-NG-logging-system.md)

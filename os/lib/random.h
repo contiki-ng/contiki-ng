@@ -29,24 +29,73 @@
  * This file is part of the Contiki operating system.
  *
  */
+
+/**
+ * \addtogroup lib
+ * @{
+ *
+ * \defgroup random Generation of non-cryptographic random numbers
+ * @{
+ *
+ * \file
+ *         Header file for generating non-cryptographic random numbers.
+ * \author
+ *         Konrad Krentz <konrad.krentz@gmail.com>
+ */
+
 #ifndef RANDOM_H_
 #define RANDOM_H_
 
-/*
- * Initialize the pseudo-random generator.
- *
+#include "contiki.h"
+#include <stdint.h>
+
+#ifdef RANDOM_CONF_PRNG
+#define RANDOM_PRNG RANDOM_CONF_PRNG
+#else /* RANDOM_CONF_PRNG */
+#define RANDOM_PRNG sfc32_prng
+#endif /* RANDOM_CONF_PRNG */
+
+/**
+ *  Structure of PRNG drivers.
  */
-void random_init(unsigned short seed);
+struct random_prng {
+
+  /**
+   * \brief      Seeds the PRNG with a seed.
+   * \param seed The seed.
+   */
+  void (* seed)(uint64_t seed);
+
+  /**
+   * \brief  Generates a 16-bit pseudo-random number.
+   * \return The 16-bit pseudo-random number.
+   */
+  uint_fast16_t (* rand)(void);
+};
+
+extern const struct random_prng RANDOM_PRNG;
+
+/*
+ * Seeds RANDOM_PRNG using the CSPRNG if enabled and else with the MAC address.
+ */
+void random_init(void);
 
 /*
  * Calculate a pseudo random number between 0 and 65535.
  *
  * \return A pseudo-random number between 0 and 65535.
  */
-unsigned short random_rand(void);
+static inline unsigned short
+random_rand(void)
+{
+  return RANDOM_PRNG.rand();
+}
 
 /* In gcc int rand() uses RAND_MAX and long random() uses RANDOM_MAX */
 /* Since random_rand casts to unsigned short, we'll use this maxmimum */
 #define RANDOM_RAND_MAX 65535U
 
 #endif /* RANDOM_H_ */
+
+/** @} */
+/** @} */

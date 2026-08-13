@@ -1,0 +1,86 @@
+### RISC-V toolchain for the nRF VPR (RV32E coprocessor).
+###
+### The toolchain MUST provide an rv32emc/ilp32e multilib and freestanding+hosted
+### headers (e.g. newlib; the kernel pulls in <inttypes.h>). The FLPR has the M
+### extension (hardware 32-bit mul/div), but libgcc is still needed for 64-bit
+### division (__udivdi3 in clock_time()). Known-good options: the prebuilt SDK at
+### the default path below, or xPack riscv-none-elf (set RISCV_PREFIX=riscv-none-elf).
+### A plain compiler-only GCC (e.g. Homebrew riscv64-elf-gcc, no newlib / no
+### rv32e* multilib) will NOT link this.
+###
+### Override RISCV_PATH (install dir) and RISCV_PREFIX (tool prefix), or set
+### TOOLCHAIN_BIN directly. ZSDK_RISCV is still honored as the path for
+### backward compatibility.
+RISCV_PATH    ?= $(or $(ZSDK_RISCV),$(HOME)/zephyr-toolchain-riscv)
+RISCV_PREFIX  ?= riscv64-zephyr-elf
+TOOLCHAIN_BIN ?= $(RISCV_PATH)/bin/$(RISCV_PREFIX)-
+
+CC      = $(TOOLCHAIN_BIN)gcc
+LD      = $(TOOLCHAIN_BIN)gcc
+AS      = $(TOOLCHAIN_BIN)gcc
+AR      = $(TOOLCHAIN_BIN)ar
+NM      = $(TOOLCHAIN_BIN)nm
+OBJCOPY = $(TOOLCHAIN_BIN)objcopy
+OBJDUMP = $(TOOLCHAIN_BIN)objdump
+SIZE    = $(TOOLCHAIN_BIN)size
+
+# Matches the nRF54L15 FLPR ISA (RV32E + M + C + Zicsr). M gives hardware
+# 32-bit mul/div; C gives compressed (smaller) code.
+VPR_MARCH = rv32emc_zicsr
+VPR_MABI  = ilp32e
+
+CFLAGS  += -march=$(VPR_MARCH) -mabi=$(VPR_MABI)
+
+CFLAGS  += -ffunction-sections -fdata-sections
+CFLAGS  += -fshort-enums -fomit-frame-pointer
+CFLAGS  += -Os -g
+CFLAGS  += -DNRF54L15_XXAA
+CFLAGS  += -DNRF_FLPR                  # picks GRTC_IRQ_GROUP=0 → SYSCOUNTER[0]
+CFLAGS  += -D__STARTUP_CLEAR_BSS
+
+# Override the stock nrfx FLPR template's GRTC channel allowlist (0xF0 = 4..7,
+# which collides with M33's 5,6 and the zero-latency 7, and omits 3).
+# Restrict FLPR to GRTC CC channels 3 and 4 per the Nordic partition.
+CFLAGS  += -DNRFX_GRTC_CONFIG_ALLOWED_CC_CHANNELS_MASK=0x00000018
+CFLAGS  += -DNRFX_GRTC_CONFIG_NUM_OF_CC_CHANNELS=2
+CFLAGS  += -DNRFX_GRTC_CONFIG_AUTOSTART=0
+
+ASFLAGS += $(CFLAGS) -c
+
+LDFLAGS += -march=$(VPR_MARCH) -mabi=$(VPR_MABI)
+LDFLAGS += -nostartfiles -nostdlib
+LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
+LDFLAGS += -Wl,--no-warn-rwx-segments
+LDFLAGS += -Wl,-eReset_Handler
+LDFLAGS += -Wl,--defsym=_stack=__StackTop
+LDFLAGS += -Wl,--defsym=_stack_origin=__StackTop
+
+NRFX_ROOT = $(CONTIKI)/arch/cpu/nrf/lib/nrfx
+CFLAGS   += -I$(NRFX_ROOT)/mdk -I$(NRFX_ROOT)
+LDFLAGS  += -L$(NRFX_ROOT)/mdk
+
+# FLPR<->M33 shared memory map (flpr-shared.h), also used by the M33 loader.
+CFLAGS   += -I$(CONTIKI_CPU)/shared
+
+LDSCRIPT ?= $(CONTIKI_CPU)/nrf-vpr-sram.ld
+LDFLAGS  += -T$(LDSCRIPT)
+CFLAGS   += -mcmodel=medany
+
+TARGET_LIBFILES += -lgcc
+
+CONTIKI_CPU_DIRS += . ../nrf/lib/nrfx/mdk
+CONTIKI_CPU_SOURCEFILES += startup-stubs.c clock-arch.c int-master-arch.c rtimer-arch.c
+CONTIKI_CPU_SOURCEFILES += gcc_startup_nrf54l15_flpr.S
+
+CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
+
+OUT_HEX = $(BUILD_DIR_BOARD)/$(CONTIKI_PROJECT).hex
+OUT_BIN = $(BUILD_DIR_BOARD)/$(CONTIKI_PROJECT).bin
+
+%.hex: $(BUILD_DIR_BOARD)/%.$(TARGET)
+	$(Q)$(OBJCOPY) -O ihex $< $(BUILD_DIR_BOARD)/$@
+	@echo "Generated hex: $(BUILD_DIR_BOARD)/$@"
+
+%.bin: $(BUILD_DIR_BOARD)/%.$(TARGET)
+	$(Q)$(OBJCOPY) -O binary $< $(BUILD_DIR_BOARD)/$@
+	@echo "Generated bin: $(BUILD_DIR_BOARD)/$@"

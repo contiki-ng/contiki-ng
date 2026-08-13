@@ -41,6 +41,7 @@
 
 #include "net/mac/csma/csma.h"
 #include "net/mac/csma/csma-security.h"
+#include "net/mac/framer/frame802154.h"
 #include "net/mac/mac-sequence.h"
 #include "net/packetbuf.h"
 #include "net/queuebuf.h"
@@ -208,6 +209,8 @@ send_one_packet(struct neighbor_queue *n, struct packet_queue *q)
       case RADIO_TX_OK:
         if(is_broadcast) {
           ret = MAC_TX_OK;
+        } else if(CSMA_USE_RADIO_ACK) {
+          ret = MAC_TX_OK;
         } else {
           /* Check for ack */
 
@@ -236,6 +239,9 @@ send_one_packet(struct neighbor_queue *n, struct packet_queue *q)
             }
           }
         }
+        break;
+      case RADIO_TX_NOACK:
+        ret = MAC_TX_NOACK;
         break;
       case RADIO_TX_COLLISION:
         ret = MAC_TX_COLLISION;

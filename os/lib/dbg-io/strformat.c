@@ -132,7 +132,7 @@ typedef uint32_t FormatFlags;
 #define FLOAT_HEX       (((uint32_t)0x0003) << FLOAT_SHIFT)
 #define FLOAT_MASK      MAKE_MASK(FLOAT_SHIFT, FLOAT_SIZE)
 /*---------------------------------------------------------------------------*/
-#define CHECKCB(res) { if((res) != STRFORMAT_OK) { va_end(ap); return -1; } }
+#define CHECKCB(res) { if((res) != STRFORMAT_OK) { return -1; } }
 /*---------------------------------------------------------------------------*/
 #define MAXCHARS_HEX ((sizeof(LARGEST_UNSIGNED) * 8) / 4)
 
@@ -315,14 +315,12 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
     }
 
     if(*pos == '\0') {
-      va_end(ap);
       return written;
     }
 
     pos++;
 
     if(*pos == '\0') {
-      va_end(ap);
       return written;
     }
 
@@ -336,7 +334,7 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 
       if(w < 0) {
         flags |= JUSTIFY_LEFT;
-        minwidth = w;
+        minwidth = -w;
       } else {
         minwidth = w;
       }
@@ -353,6 +351,9 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       } else if(*pos == '*') {
         pos++;
         precision = va_arg(ap, int);
+        if(precision < 0) {
+          precision = -1; /* Treat as if precision was omitted (C99) */
+        }
       }
     }
 
@@ -407,28 +408,14 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       break;
 #ifdef HAVE_DOUBLE
     case 'f':
-      flags |= CONV_FLOAT | FLOAT_NORMAL;
-      break;
     case 'F':
-      flags |= CONV_FLOAT | FLOAT_NORMAL | CAPS_YES;
-      break;
     case 'e':
-      flags |= CONV_FLOAT | FLOAT_EXPONENT;
-      break;
     case 'E':
-      flags |= CONV_FLOAT | FLOAT_EXPONENT | CAPS_YES;
-      break;
     case 'g':
-      flags |= CONV_FLOAT | FLOAT_DEPENDANT;
-      break;
     case 'G':
-      flags |= CONV_FLOAT | FLOAT_DEPENDANT | CAPS_YES;
-      break;
     case 'a':
-      flags |= CONV_FLOAT | FLOAT_HEX;
-      break;
     case 'A':
-      flags |= CONV_FLOAT | FLOAT_HEX | CAPS_YES;
+      flags |= CONV_FLOAT;
       break;
 #endif
     case 'c':
@@ -447,7 +434,6 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       flags |= CONV_PERCENT;
       break;
     case '\0':
-      va_end(ap);
       return written;
     }
     pos++;
@@ -653,8 +639,8 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
     {
       LARGEST_UNSIGNED uvalue =
         (LARGEST_UNSIGNED)(POINTER_INT)va_arg(ap, void *);
-      char buffer[MAXCHARS_HEX + 3];
-      char *conv_pos = buffer + MAXCHARS_HEX + 3;
+      char buffer[MAXCHARS_HEX + 2];
+      char *conv_pos = buffer + MAXCHARS_HEX + 2;
       unsigned int conv_len;
       unsigned int field_fill;
 
@@ -667,8 +653,7 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 
       *--conv_pos = 'x';
       *--conv_pos = '0';
-      *--conv_pos = '#';
-      conv_len += 3;
+      conv_len += 2;
 
       field_fill = (minwidth > conv_len) ? minwidth - conv_len : 0;
 
@@ -693,7 +678,6 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 
       if((flags & JUSTIFY_MASK) == JUSTIFY_RIGHT) {
         CHECKCB(fill_space(ctxt, field_fill));
-        written += field_fill;
       }
 
       CHECKCB(ctxt->write_str(ctxt->user_data, &ch, 1));
@@ -706,11 +690,18 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
     }
     break;
     case CONV_WRITTEN:
-    {
-      int *p = va_arg(ap, int *);
-      *p = written;
-    }
-    break;
+      /* %n is disabled for security reasons. Consume the pointer argument
+         to keep the va_list aligned for subsequent arguments, but never
+         write through it. */
+      (void)va_arg(ap, int *);
+      break;
+#ifdef HAVE_DOUBLE
+    case CONV_FLOAT:
+      /* Float formatting is not implemented, but consume the argument
+         to keep the va_list aligned for subsequent arguments. */
+      (void)va_arg(ap, double);
+      break;
+#endif
     }
   }
 

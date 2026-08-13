@@ -46,6 +46,7 @@
 #include "net/ipv6/uip-sr.h"
 #include "net/nbr-table.h"
 #include "net/link-stats.h"
+#include "sys/cc.h"
 
 /* Log configuration */
 #include "sys/log.h"
@@ -177,7 +178,7 @@ static rpl_of_t *
 find_objective_function(rpl_ocp_t ocp)
 {
   unsigned int i;
-  for(i = 0; i < sizeof(objective_functions) / sizeof(objective_functions[0]); i++) {
+  for(i = 0; i < CC_ARRAY_LENGTH(objective_functions); i++) {
     if(objective_functions[i]->ocp == ocp) {
       return objective_functions[i];
     }

@@ -1,0 +1,11 @@
+# Standalone native NAT64 translator: lets a lone node translate its own NAT64
+# traffic over host sockets, with no border router or tun device. Pulls in the
+# NAT64 service and its native backend; module-macros.h wires
+# UIP_FALLBACK_INTERFACE to the standalone interface, so building the module is
+# all an example needs.
+MODULES += os/services/nat64 os/services/nat64/native
+
+# One host socket (hence one select callback slot) per NAT64 session, plus a
+# margin for the platform's own slots (stdin, etc.). NAT64_MAX_SESSIONS is 128.
+SELECT_CONF_MAX ?= 256
+CFLAGS += -DSELECT_CONF_MAX=$(SELECT_CONF_MAX)

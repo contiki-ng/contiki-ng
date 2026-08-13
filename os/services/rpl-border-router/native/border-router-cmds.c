@@ -39,6 +39,8 @@
 #include "cmd.h"
 #include "border-router.h"
 #include "border-router-cmds.h"
+#include "border-router-cbor.h"
+#include "dev/radio.h"
 #include "dev/serial-line.h"
 #include "net/routing/routing.h"
 #include "net/ipv6/uiplib.h"
@@ -124,20 +126,26 @@ border_router_cmd_handler(const uint8_t *data, int len)
         NETSTACK_ROUTING.global_repair("Command");
         return 1;
       case 'C': {
-        /* send on a set-param thing! */
-        uint8_t set_param[] = {'!', 'V', 0, RADIO_PARAM_CHANNEL, 0, 0 };
         int channel = dectoi(&data[2], len - 2);
+#if BORDER_ROUTER_SERIAL_RADIO
+        br_cbor_send_set_param(0, RADIO_PARAM_CHANNEL, channel);
+#else
+        uint8_t set_param[] = {'!', 'V', 0, RADIO_PARAM_CHANNEL, 0, 0 };
         set_param[5] = channel & 0xff;
         write_to_slip(set_param, sizeof(set_param));
+#endif
         return 1;
       }
       case 'P': {
-        /* send on a set-param thing! */
-        uint8_t set_param[] = {'!', 'V', 0, RADIO_PARAM_PAN_ID, 0, 0 };
         int pan_id = dectoi(&data[2], len - 2);
+#if BORDER_ROUTER_SERIAL_RADIO
+        br_cbor_send_set_param(0, RADIO_PARAM_PAN_ID, pan_id);
+#else
+        uint8_t set_param[] = {'!', 'V', 0, RADIO_PARAM_PAN_ID, 0, 0 };
         set_param[4] = (pan_id >> 8) & 0xff;
         set_param[5] = pan_id & 0xff;
         write_to_slip(set_param, sizeof(set_param));
+#endif
         return 1;
       }
       default:

@@ -54,8 +54,12 @@
 /*---------------------------------------------------------------------------*/
 static int (*input_handler)(unsigned char c) = NULL;
 static unsigned char usb_buffer[BULK_PACKET_SIZE];
-static char manufacturer[] = "Contiki-NG";
-static char product[] = "Contiki-NG USB";
+/* Match the strings the OLD arch/platform/nrf52840 USB stack used so
+ * the dongle keeps the same iManufacturer / iProduct across firmware
+ * versions. The iManufacturer string should also match the owner of
+ * the iVendor VID (0x1915 = Nordic Semiconductor) per the USB IF. */
+static char manufacturer[] = "Nordic Semiconductor";
+static char product[] = "nRF52 USB CDC on Contiki-NG";
 static char cdc_interface[] = "Contiki-NG CDC";
 /*---------------------------------------------------------------------------*/
 PROCESS(usb_arch_process, "USB Arch");

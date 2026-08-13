@@ -3,23 +3,23 @@
 #include "tools-utils.h"
 
 #include <stdio.h>
+#include <ctype.h>
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
 #include <errno.h>
-#include <sys/time.h>
+#include <sys/select.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <signal.h>
 /*---------------------------------------------------------------------------*/
 #define BAUDRATE B115200
-#define BAUDRATE_S "115200"
 
-speed_t b_rate = BAUDRATE;
+static speed_t b_rate = BAUDRATE;
 /*---------------------------------------------------------------------------*/
 #ifdef linux
-#define MODEMDEVICE "/dev/ttyS0"
+#define MODEMDEVICE "/dev/ttyUSB0"
 #else
 #define MODEMDEVICE "/dev/com1"
 #endif /* linux */
@@ -29,21 +29,21 @@ speed_t b_rate = BAUDRATE;
 #define SLIP_ESC_END  0334
 #define SLIP_ESC_ESC  0335
 
-#define CSNA_INIT     0x01
-
 #define BUFSIZE         40
 #define HCOLS           20
 #define ICOLS           18
 
-#define MODE_START_DATE  0
-#define MODE_DATE        1
-#define MODE_START_TEXT  2
-#define MODE_TEXT        3
-#define MODE_INT         4
-#define MODE_HEX         5
-#define MODE_SLIP_AUTO   6
-#define MODE_SLIP        7
-#define MODE_SLIP_HIDE   8
+enum mode {
+  MODE_START_DATE,
+  MODE_DATE,
+  MODE_START_TEXT,
+  MODE_TEXT,
+  MODE_INT,
+  MODE_HEX,
+  MODE_SLIP_AUTO,
+  MODE_SLIP,
+  MODE_SLIP_HIDE
+};
 /*---------------------------------------------------------------------------*/
 #ifndef O_SYNC
 #define O_SYNC 0
@@ -56,14 +56,17 @@ static unsigned char rxbuf[2048];
 static int
 usage(int result)
 {
-  printf("Usage: serialdump [-x] [-s[on]] [-i] [-bSPEED] T[format] [SERIALDEVICE]\n");
-  printf("       -x for hexadecimal output\n");
-  printf("       -i for decimal output\n");
-  printf("       -s for automatic SLIP mode\n");
-  printf("       -so for SLIP only mode (all data is SLIP packets)\n");
-  printf("       -sn to hide SLIP packages\n");
-  printf("       -T[format] to add time for each text line\n");
-  printf("         (see man page for strftime() for format description)\n");
+  /* Send the usage to stdout when explicitly requested (-h), but to stderr
+     when it accompanies an error so it does not pollute piped serial output. */
+  FILE *out = result == 0 ? stdout : stderr;
+  fprintf(out, "Usage: serialdump [-x] [-s[on]] [-i] [-bSPEED] [-T[format]] [SERIALDEVICE]\n");
+  fprintf(out, "       -x for hexadecimal output\n");
+  fprintf(out, "       -i for decimal output\n");
+  fprintf(out, "       -s for automatic SLIP mode\n");
+  fprintf(out, "       -so for SLIP only mode (all data is SLIP packets)\n");
+  fprintf(out, "       -sn to hide SLIP packages\n");
+  fprintf(out, "       -T[format] to add time for each text line\n");
+  fprintf(out, "         (see man page for strftime() for format description)\n");
   return result;
 }
 /*---------------------------------------------------------------------------*/
@@ -87,7 +90,7 @@ print_hex_line(char *prefix, unsigned char *outbuf, int index)
     printf("  ");
   }
   for(i = 0; i < index; i++) {
-    if(outbuf[i] < 30 || outbuf[i] > 126) {
+    if(!isprint(outbuf[i])) {
       printf(".");
     } else {
       printf("%c", outbuf[i]);
@@ -95,16 +98,22 @@ print_hex_line(char *prefix, unsigned char *outbuf, int index)
   }
 }
 /*---------------------------------------------------------------------------*/
+static volatile sig_atomic_t should_exit = 0;
+/*---------------------------------------------------------------------------*/
 static void
-intHandler(int sig)
+sigint_handler(int sig)
 {
-  exit(0);
+  should_exit = 1;
 }
 /*---------------------------------------------------------------------------*/
 int
 main(int argc, char **argv)
 {
-  signal(SIGINT, intHandler);
+  struct sigaction sa;
+  sa.sa_handler = sigint_handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0; /* no SA_RESTART: let select() return EINTR so we can exit */
+  sigaction(SIGINT, &sa, NULL);
 
   struct termios options;
   fd_set mask, smask;
@@ -113,8 +122,8 @@ main(int argc, char **argv)
   char *device = MODEMDEVICE;
   char *timeformat = NULL;
   unsigned char buf[BUFSIZE];
-  char outbuf[HCOLS];
-  unsigned char mode = MODE_START_TEXT;
+  char timebuf[64];
+  enum mode mode = MODE_START_TEXT;
   int nfound, flags = 0;
   unsigned char lastc = '\0';
 
@@ -153,17 +162,17 @@ main(int argc, char **argv)
         mode = MODE_START_DATE;
         break;
       case 'h':
-        return usage(0);
+        return usage(EXIT_SUCCESS);
       default:
         fprintf(stderr, "unknown option '%c'\n", argv[index][1]);
-        return usage(1);
+        return usage(EXIT_FAILURE);
       }
       index++;
     } else {
       device = argv[index++];
       if(index < argc) {
         fprintf(stderr, "too many arguments\n");
-        return usage(1);
+        return usage(EXIT_FAILURE);
       }
     }
   }
@@ -172,7 +181,7 @@ main(int argc, char **argv)
     b_rate = select_baudrate(baudrate);
     if(b_rate == 0) {
       fprintf(stderr, "unknown baudrate %d\n", baudrate);
-      exit(-1);
+      exit(EXIT_FAILURE);
     }
   }
 
@@ -183,18 +192,18 @@ main(int argc, char **argv)
   if(fd < 0) {
     fprintf(stderr, "\n");
     perror("open");
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
   fprintf(stderr, " [OK]\n");
 
   if(fcntl(fd, F_SETFL, 0) < 0) {
     perror("could not set fcntl");
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
   if(tcgetattr(fd, &options) < 0) {
     perror("could not get options");
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
   cfsetispeed(&options, b_rate);
@@ -216,25 +225,35 @@ main(int argc, char **argv)
 
   if(tcsetattr(fd, TCSANOW, &options) < 0) {
     perror("could not set options");
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
   FD_ZERO(&mask);
   FD_SET(fd, &mask);
-  FD_SET(fileno(stdin), &mask);
+  /* Only watch stdin if it is a valid, open descriptor. A pre-closed fd 0
+     would otherwise make select() fail with EBADF on every iteration. */
+  if(fcntl(fileno(stdin), F_GETFD) != -1) {
+    FD_SET(fileno(stdin), &mask);
+  }
 
   index = 0;
   for(;;) {
+    if(should_exit) {
+      break;
+    }
     smask = mask;
     nfound = select(FD_SETSIZE, &smask, (fd_set *)0, (fd_set *)0, (struct timeval *)0);
     if(nfound < 0) {
       if(errno == EINTR) {
+        if(should_exit) {
+          break;
+        }
         fprintf(stderr, "interrupted system call\n");
         continue;
       }
       /* something is very wrong! */
       perror("select");
-      exit(1);
+      exit(EXIT_FAILURE);
     }
 
     if(FD_ISSET(fileno(stdin), &smask)) {
@@ -242,30 +261,24 @@ main(int argc, char **argv)
       int n = read(fileno(stdin), buf, sizeof(buf));
       if(n < 0) {
         perror("could not read");
-        exit(-1);
+        exit(EXIT_FAILURE);
       } else if(n > 0) {
-        /* because commands might need parameters, lines needs to be
-           separated which means the terminating LF must be sent */
-        /*   while(n > 0 && buf[n - 1] < 32) { */
-        /*     n--; */
-        /*   } */
-        if(n > 0) {
-          int i;
-          /*    fprintf(stderr, "SEND %d bytes\n", n);*/
-          /* write slowly */
-          for(i = 0; i < n; i++) {
-            if(write(fd, &buf[i], 1) <= 0) {
-              perror("write");
-              exit(1);
-            } else {
-              fflush(NULL);
-              usleep(6000);
-            }
+        int i;
+        /* Write slowly, one byte at a time. The whole input is forwarded
+           verbatim (including any terminating LF, which commands may need),
+           and the per-byte delay gives slow serial devices time to keep up. */
+        for(i = 0; i < n; i++) {
+          if(write(fd, &buf[i], 1) <= 0) {
+            perror("write");
+            exit(EXIT_FAILURE);
           }
+          fflush(NULL);
+          usleep(6000);
         }
       } else {
-        /* End of input, exit. */
-        exit(0);
+        /* stdin reached EOF: stop watching it, but keep dumping the serial
+           port so that, e.g., responses to piped-in commands are still shown. */
+        FD_CLR(fileno(stdin), &mask);
       }
     }
 
@@ -273,12 +286,12 @@ main(int argc, char **argv)
       int i, n = read(fd, buf, sizeof(buf));
       if(n < 0) {
         perror("could not read");
-        exit(-1);
+        exit(EXIT_FAILURE);
       }
       if(n == 0) {
         errno = EBADF;
         perror("serial device disconnected");
-        exit(-1);
+        exit(EXIT_FAILURE);
       }
 
       for(i = 0; i < n; i++) {
@@ -290,11 +303,11 @@ main(int argc, char **argv)
         case MODE_START_DATE: {
           time_t t;
           t = time(&t);
-          strftime(outbuf, HCOLS, timeformat, localtime(&t));
-          printf("[%s] ", outbuf);
+          strftime(timebuf, sizeof(timebuf), timeformat, localtime(&t));
+          printf("[%s] ", timebuf);
           mode = MODE_DATE;
         }
-        /* continue into the MODE_DATE */
+        /* fall through into MODE_DATE */
         case MODE_DATE:
           printf("%c", buf[i]);
           if(buf[i] == '\n') {
@@ -324,7 +337,7 @@ main(int argc, char **argv)
             printf("%c", buf[i]);
             break;
           }
-        /* continue to slip only mode */
+        /* fall through to SLIP-only mode */
         case MODE_SLIP:
           switch(buf[i]) {
           case SLIP_ESC:
@@ -363,7 +376,7 @@ main(int argc, char **argv)
             }
 
             rxbuf[index++] = buf[i];
-            if(index >= sizeof(rxbuf)) {
+            if(index >= (int)sizeof(rxbuf)) {
               fprintf(stderr, "**** slip overflow\n");
               index = 0;
               flags = 2;
@@ -374,15 +387,14 @@ main(int argc, char **argv)
         }
       }
 
-      /* after processing for some output modes */
-      if(index > 0) {
-        switch(mode) {
-        case MODE_HEX:
-          print_hex_line("", rxbuf, index);
-          break;
-        }
+      /* after processing, refresh the partial line for the hex output mode */
+      if(index > 0 && mode == MODE_HEX) {
+        print_hex_line("", rxbuf, index);
       }
       fflush(stdout);
     }
   }
+
+  fflush(stdout);
+  return EXIT_SUCCESS;
 }

@@ -46,7 +46,7 @@
 
 static struct tz_api tz_api;
 static bool initialized;
-static volatile unsigned poll_wait_counter;
+static volatile bool ns_poll_pending;
 
 /*---------------------------------------------------------------------------*/
 #include "sys/log.h"
@@ -62,26 +62,24 @@ tz_api_init(struct tz_api *apip)
     return false;
   }
 
-  trustzone_init_event = process_alloc_event();
-
   apip = cmse_check_address_range(apip, sizeof(*apip), CMSE_NONSECURE);
   if(apip == NULL || apip->request_poll == NULL) {
     return false;
   }
 
-  if(cmse_check_address_range(apip->request_poll, sizeof(apip->request_poll),
-                              CMSE_NONSECURE) == NULL) {
+  ns_poll_t poll_fn = cmse_nsfptr_create(apip->request_poll);
+  if(!cmse_is_nsfptr(poll_fn)) {
     return false;
   }
 
-  memcpy(&tz_api, apip, sizeof(tz_api));
+  trustzone_init_event = process_alloc_event();
+  tz_api.request_poll = poll_fn;
 
   initialized = true;
 
   for(size_t i = 0; autostart_processes[i] != NULL; i++) {
     process_post(autostart_processes[i], trustzone_init_event, NULL);
   }
-  tz_api_poll();
 
   return true;
 }
@@ -91,16 +89,35 @@ tz_api_poll(void)
 {
   static bool is_poll_running;
 
+  /*
+   * tz_api_poll() runs process_run() and is not reentrant. Per the
+   * contract in tz-api.h it must be called only from NS thread mode.
+   * Reject handler-mode callers (NS interrupt or, defensively, a
+   * secure ISR) up front so the API fails closed instead of
+   * corrupting the event loop. IPSR is preserved across the SG
+   * transition, so it reflects the NS caller's mode.
+   */
+  if(__get_IPSR() != 0) {
+    return false;
+  }
   if(!initialized || is_poll_running) {
     return false;
   }
   is_poll_running = true;
 
+  /*
+   * Clear ns_poll_pending before draining the queue so that any
+   * secure ISR that fires during or after the loop is captured by
+   * the final read below. The NS caller reschedules itself when we
+   * return true, so no cross-boundary callback is needed here.
+   */
+  ns_poll_pending = false;
+
   process_num_events_t event_count = process_nevents();
 
   if(event_count > 0) {
-    LOG_DBG("Processing %u event%s at %lu\n", event_count,
-	    event_count == 1 ? "" : "s", (unsigned long)clock_time());
+    LOG_DBG("Processing %u event%s at %" CLOCK_PRI "\n", event_count,
+            event_count == 1 ? "" : "s", clock_time());
   }
 
   while(event_count-- > 0) {
@@ -109,29 +126,39 @@ tz_api_poll(void)
   }
 
   is_poll_running = false;
-  poll_wait_counter = 0;
 
-  return process_nevents() > 0;
+  return ns_poll_pending || process_nevents() > 0;
 }
 /*---------------------------------------------------------------------------*/
+#define TZ_API_PRINTLN_MAX_LEN 256
+
 CC_TRUSTZONE_SECURE_CALL void
-tz_api_println(const char *text)
+tz_api_println(const char *text, size_t len)
 {
-  printf("n> %s\n", text);
+  if(len > TZ_API_PRINTLN_MAX_LEN) {
+    len = TZ_API_PRINTLN_MAX_LEN;
+  }
+  if(text == NULL || len == 0 ||
+     cmse_check_address_range((void *)text, len,
+                              CMSE_NONSECURE) == NULL) {
+    return;
+  }
+  printf("n> %.*s\n", (int)len, text);
+}
+/*---------------------------------------------------------------------------*/
+__attribute__((weak)) void
+tz_arch_signal_ns(void)
+{
 }
 /*---------------------------------------------------------------------------*/
 bool
-tz_api_request_poll_from_ns(void)
+tz_api_request_ns_poll(void)
 {
   if(!initialized) {
     return false;
   }
-  if(poll_wait_counter > 0) {
-    poll_wait_counter--;
-    return false;
-  }
-  /* Wait some time for the poll before timeout and request again */
-  poll_wait_counter = 128;
-  return tz_api.request_poll();
+  ns_poll_pending = true;
+  tz_arch_signal_ns();
+  return true;
 }
 /*---------------------------------------------------------------------------*/

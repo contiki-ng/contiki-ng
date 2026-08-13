@@ -1,0 +1,271 @@
+# nRF54L15 Cortex-M33 application core support (minimal bring-up)
+
+include $(CONTIKI_CPU)/Makefile.libs
+
+CPU_ARCH     = arm
+CPU_CORE     = cortex-m/cm33
+
+NRF54L15_MDK_DIR := $(NRFX_ROOT)/mdk
+
+CFLAGS += -DNRF54L15_XXAA
+CFLAGS += -DNRF_APPLICATION
+CFLAGS += -DCPU_CONF_PATH=\"nrf54l15-conf.h\"
+CFLAGS += -DCPU_DEF_PATH=\"nrf54l15-def.h\"
+CFLAGS += -I$(CONTIKI_CPU)
+CFLAGS += -I$(NRF54L15_MDK_DIR)
+CFLAGS += -I$(CONTIKI_CPU)/nrf54l15
+# Suppress warnings from nrfx v3.x HAL layer and nrf_802154 library for nRF54L15
+CFLAGS += -Wno-unused-variable
+CFLAGS += -Wno-unused-function
+CFLAGS += -Wno-unused-but-set-variable
+# Compatibility defines: nrfx v3 HAL uses TIMER_CC_NUM but nRF54L15 MDK
+# defines TIMER_CC_NUM_SIZE instead. Add aliases needed by nrfx drivers.
+CFLAGS += -DTIMER10_CC_NUM=TIMER10_CC_NUM_SIZE
+CFLAGS += -DTIMER00_CC_NUM=TIMER00_CC_NUM_SIZE
+CFLAGS += -DTIMER20_CC_NUM=TIMER20_CC_NUM_SIZE
+# Override nrf_802154 assert handling to use the platform-specific implementation
+# in nrf_802154_platform_assert.h instead of abort(), which loops forever on
+# bare-metal newlib-nano. The override reports the assert over UART and resets.
+CFLAGS += -DNRF_802154_PLATFORM_ASSERT_INCLUDE=\"nrf_802154_platform_assert.h\"
+
+NRF54L15_MDK_ASM_SRCS += $(NRF54L15_MDK_DIR)/gcc_startup_nrf54l15_application.S
+
+CONTIKI_CPU_DIRS += nrf54l15
+
+EXTERNALDIRS += $(NRFX_ROOT)/mdk
+
+NRFX_C_SRCS += $(NRF54L15_MDK_DIR)/system_nrf54l.c
+NRFX_ASM_SRCS += $(NRF54L15_MDK_ASM_SRCS)
+
+LDSCRIPT ?= $(NRF54L15_MDK_DIR)/nrf54l15_xxaa_application.ld
+LDFLAGS += -L$(NRF54L15_MDK_DIR)
+
+include $(CONTIKI)/$(CONTIKI_NG_CM33_DIR)/Makefile.cm33
+
+include $(CONTIKI_CPU)/Makefile.nrf
+
+CONTIKI_CPU_SOURCEFILES := $(filter-out watchdog-arch.c,$(CONTIKI_CPU_SOURCEFILES))
+CONTIKI_SOURCEFILES := $(filter-out watchdog-arch.c,$(CONTIKI_SOURCEFILES))
+NRFX_C_SRCS := $(filter-out $(NRFX_ROOT)/drivers/src/nrfx_wdt.c,$(NRFX_C_SRCS))
+CONTIKI_SOURCEFILES := $(filter-out nrfx_wdt.c,$(CONTIKI_SOURCEFILES))
+CFLAGS := $(filter-out -DNRFX_WDT_ENABLED,$(CFLAGS))
+CFLAGS := $(filter-out -DNRFX_WDT0_ENABLED,$(CFLAGS))
+CONTIKI_CPU_SOURCEFILES += watchdog-arch-stub.c
+CONTIKI_SOURCEFILES += watchdog-arch-stub.c
+
+ifeq ($(TRUSTZONE_SECURE_BUILD),1)
+CONTIKI_CPU_DIRS += nrf54l15/partition
+CONTIKI_CPU_SOURCEFILES := $(filter-out spu.c,$(CONTIKI_CPU_SOURCEFILES))
+CONTIKI_SOURCEFILES := $(filter-out spu.c,$(CONTIKI_SOURCEFILES))
+CONTIKI_CPU_SOURCEFILES += tz-target-cfg.c tz-spu.c
+CONTIKI_SOURCEFILES += tz-target-cfg.c tz-spu.c
+else ifeq ($(TRUSTZONE_SECURE_BUILD),0)
+ifdef TZ_MINIMAL_NONSECURE_PLATFORM
+CONTIKI_TARGET_SOURCEFILES := $(filter-out platform.c,$(CONTIKI_TARGET_SOURCEFILES))
+CONTIKI_SOURCEFILES := $(filter-out platform.c,$(CONTIKI_SOURCEFILES))
+CONTIKI_CPU_SOURCEFILES := $(filter-out hardfault-handler.c,$(CONTIKI_CPU_SOURCEFILES))
+CONTIKI_SOURCEFILES := $(filter-out hardfault-handler.c,$(CONTIKI_SOURCEFILES))
+CONTIKI_CPU_SOURCEFILES := $(filter-out uarte-arch.c,$(CONTIKI_CPU_SOURCEFILES))
+CONTIKI_SOURCEFILES := $(filter-out uarte-arch.c,$(CONTIKI_SOURCEFILES))
+NRFX_C_SRCS := $(filter-out $(NRFX_ROOT)/drivers/src/nrfx_uarte.c,$(NRFX_C_SRCS))
+NRFX_C_SRCS := $(filter-out $(NRFX_ROOT)/drivers/src/nrfx_power.c,$(NRFX_C_SRCS))
+CONTIKI_SOURCEFILES := $(filter-out nrfx_uarte.c,$(CONTIKI_SOURCEFILES))
+CONTIKI_SOURCEFILES := $(filter-out nrfx_power.c,$(CONTIKI_SOURCEFILES))
+CONTIKI_CPU_SOURCEFILES += tz-minimal-platform.c
+CONTIKI_SOURCEFILES += tz-minimal-platform.c
+endif
+endif
+
+# Override upload/flash targets from Makefile.nrf for nRF54L15.
+# Boards can optionally provide an OpenOCD config; otherwise default to J-Link.
+NRFJPROG ?= nrfjprog
+JLINKEXE ?= JLinkExe
+NRFUTIL ?= nrfutil
+NRFUTIL_SERIAL ?=
+NRF54L15_JLINK_DEVICE ?= nRF54L15_M33
+NRF54L15_JLINK_IF ?= SWD
+NRF54L15_JLINK_SPEED ?= 4000
+NRFJPROG_OPTIONS += -f NRF54L
+NRF54L15_CAN_USE_OPENOCD := $(if $(NRF54L15_OPENOCD_CFG),$(shell which openocd))
+
+# Generate hex and flash for nRF54L15
+# Usage: make TARGET=nrf BOARD=nrf54l15/xiao hello-world.flash
+%.flash %.upload: $(OUT_HEX)
+ifneq ($(NRF54L15_CAN_USE_OPENOCD),)
+	@echo "Flashing with OpenOCD..."
+	openocd -f $(NRF54L15_OPENOCD_CFG) \
+		-c "init; reset halt; nrf54l-load $<; verify_image $<; reset run; shutdown"
+else ifneq (, $(shell which $(NRFUTIL)))
+	@echo "Flashing with nrfutil..."
+	$(NRFUTIL) device program --firmware $< \
+		$(if $(NRFUTIL_SERIAL),--serial-number $(NRFUTIL_SERIAL),--traits jlink) \
+		--family nrf54l \
+		--core application \
+		--options chip_erase_mode=ERASE_ALL,verify=VERIFY_READ,reset=RESET_SYSTEM
+else ifneq (, $(shell which $(JLINKEXE)))
+	@echo "Flashing with J-Link (JLinkExe)..."
+	@echo "erase\nloadfile $<\nr\ng\nexit\n" | $(JLINKEXE) -device $(NRF54L15_JLINK_DEVICE) -if $(NRF54L15_JLINK_IF) -speed $(NRF54L15_JLINK_SPEED) -autoconnect 1
+else ifneq (, $(shell which $(NRFJPROG)))
+	@echo "Flashing with J-Link (nrfjprog) for debugging support..."
+	$(NRFJPROG) $(NRFJPROG_OPTIONS) --program $< --chiperase --verify --reset
+else
+	@echo "Error: No flashing tool found. Please install one of:"
+	@echo "  - openocd: brew install openocd (macOS) or apt-get install openocd (Linux)"
+	@echo "  - JLinkExe: Install J-Link Software Pack"
+	@echo "  - nrfjprog: Install nRF Command Line Tools"
+	@echo "  - nrfutil: pip install nrfutil"
+	@false
+endif
+
+# Generate hex file from elf
+$(OUT_HEX): $(BUILD_DIR_BOARD)/%.$(TARGET)
+	$(Q)mkdir -p $(dir $@)
+	$(Q)$(OBJCOPY) -O ihex $< $@
+	@echo "Generated hex file: $@"
+
+# Replace RTC-based clock driver with the GRTC implementation.
+CONTIKI_CPU_SOURCEFILES := $(filter-out clock-arch.c,$(CONTIKI_CPU_SOURCEFILES))
+CONTIKI_SOURCEFILES := $(filter-out clock-arch.c,$(CONTIKI_SOURCEFILES))
+CONTIKI_CPU_SOURCEFILES += clock-arch.c
+CONTIKI_SOURCEFILES += clock-arch.c
+
+# Replace default rtimer implementation with the GRTC version.
+CONTIKI_CPU_SOURCEFILES := $(filter-out rtimer-arch.c,$(CONTIKI_CPU_SOURCEFILES))
+CONTIKI_SOURCEFILES := $(filter-out rtimer-arch.c,$(CONTIKI_SOURCEFILES))
+CONTIKI_CPU_SOURCEFILES += rtimer-arch.c
+CONTIKI_SOURCEFILES += rtimer-arch.c
+
+# Swap NRFX RTC driver for GRTC.
+NRFX_C_SRCS := $(filter-out $(NRFX_ROOT)/drivers/src/nrfx_rtc.c,$(NRFX_C_SRCS))
+CONTIKI_SOURCEFILES := $(filter-out nrfx_rtc.c,$(CONTIKI_SOURCEFILES))
+NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_grtc.c
+CONTIKI_SOURCEFILES += nrfx_grtc.c
+
+CFLAGS := $(filter-out -DNRFX_RTC_ENABLED,$(CFLAGS))
+CFLAGS := $(filter-out -DNRFX_RTC0_ENABLED,$(CFLAGS))
+CFLAGS += -DNRFX_GRTC_ENABLED=1
+
+# ==========================================================================
+# nrf_802154 Radio Driver Integration
+# ==========================================================================
+# Replace the generic nrf radio driver (nrf52/53) and the stub with
+# the nrf_802154 library wrapper for the nRF54L15.
+
+NRF_802154_ROOT := $(CONTIKI_CPU)/lib/sdk-nrfxlib/nrf_802154
+
+# Remove the generic nRF radio driver (doesn't work for nRF54L15).
+CONTIKI_CPU_SOURCEFILES := $(filter-out nrf-ieee-driver-arch.c,$(CONTIKI_CPU_SOURCEFILES))
+CONTIKI_SOURCEFILES := $(filter-out nrf-ieee-driver-arch.c,$(CONTIKI_SOURCEFILES))
+
+# -- nrf_802154 project configuration --
+CFLAGS += -DNRF_802154_PROJECT_CONFIG=\"nrf_802154_project_config.h\"
+
+# -- Include paths for the nrf_802154 library --
+CFLAGS += -I$(NRF_802154_ROOT)/common/include
+CFLAGS += -I$(NRF_802154_ROOT)/driver/include
+CFLAGS += -I$(NRF_802154_ROOT)/driver/include/platform
+CFLAGS += -I$(NRF_802154_ROOT)/driver/src
+CFLAGS += -I$(NRF_802154_ROOT)/driver/src/mac_features
+CFLAGS += -I$(NRF_802154_ROOT)/driver/src/mac_features/ack_generator
+CFLAGS += -I$(NRF_802154_ROOT)/sl/include
+CFLAGS += -I$(NRF_802154_ROOT)/sl/include/platform
+CFLAGS += -I$(NRF_802154_ROOT)/sl/include/rsch
+CFLAGS += -I$(NRF_802154_ROOT)/sl/include/timer
+CFLAGS += -I$(NRF_802154_ROOT)/sl/sl_opensource/include
+
+# -- The nrf_802154 library uses HAL functions directly for DPPI, TIMER, EGU.
+# -- No nrfx drivers needed; just enable the HAL defines.
+CFLAGS += -DNRFX_DPPI_ENABLED=1
+
+# -- EXTERNALDIRS for nrf_802154 library source directories --
+EXTERNALDIRS += $(NRF_802154_ROOT)/common/include
+EXTERNALDIRS += $(NRF_802154_ROOT)/common/src
+EXTERNALDIRS += $(NRF_802154_ROOT)/driver/include
+EXTERNALDIRS += $(NRF_802154_ROOT)/driver/include/platform
+EXTERNALDIRS += $(NRF_802154_ROOT)/driver/src
+EXTERNALDIRS += $(NRF_802154_ROOT)/driver/src/mac_features
+EXTERNALDIRS += $(NRF_802154_ROOT)/driver/src/mac_features/ack_generator
+EXTERNALDIRS += $(NRF_802154_ROOT)/sl/include
+EXTERNALDIRS += $(NRF_802154_ROOT)/sl/include/platform
+EXTERNALDIRS += $(NRF_802154_ROOT)/sl/include/rsch
+EXTERNALDIRS += $(NRF_802154_ROOT)/sl/include/timer
+EXTERNALDIRS += $(NRF_802154_ROOT)/sl/sl_opensource/include
+EXTERNALDIRS += $(NRF_802154_ROOT)/sl/sl_opensource/src
+
+ifneq ($(TRUSTZONE_SECURE_BUILD),0)
+# -- Contiki-NG wrapper + platform abstraction files --
+CONTIKI_CPU_SOURCEFILES += nrf-ieee-driver-nrf54l15.c
+CONTIKI_CPU_SOURCEFILES += nrf_802154_platform_clock.c
+CONTIKI_CPU_SOURCEFILES += nrf_802154_platform_irq.c
+CONTIKI_CPU_SOURCEFILES += nrf_802154_platform_random.c
+CONTIKI_CPU_SOURCEFILES += nrf_802154_platform_temperature.c
+CONTIKI_CPU_SOURCEFILES += nrf_802154_platform_hp_timer.c
+CONTIKI_CPU_SOURCEFILES += nrf_802154_platform_sl_lptimer.c
+CONTIKI_CPU_SOURCEFILES += nrf_802154_platform_timestamper.c
+CONTIKI_CPU_SOURCEFILES += nrf_802154_platform_misc.c
+CONTIKI_SOURCEFILES += nrf-ieee-driver-nrf54l15.c
+CONTIKI_SOURCEFILES += nrf_802154_platform_clock.c
+CONTIKI_SOURCEFILES += nrf_802154_platform_irq.c
+CONTIKI_SOURCEFILES += nrf_802154_platform_random.c
+CONTIKI_SOURCEFILES += nrf_802154_platform_temperature.c
+CONTIKI_SOURCEFILES += nrf_802154_platform_hp_timer.c
+CONTIKI_SOURCEFILES += nrf_802154_platform_sl_lptimer.c
+CONTIKI_SOURCEFILES += nrf_802154_platform_timestamper.c
+CONTIKI_SOURCEFILES += nrf_802154_platform_misc.c
+endif
+
+# -- nrf_802154 driver core sources (from driver/src/) --
+NRF_802154_DRV_SRC := $(NRF_802154_ROOT)/driver/src
+ifneq ($(TRUSTZONE_SECURE_BUILD),0)
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_core.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_core_hooks.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_critical_section.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_co.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_trx.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_trx_dppi.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_swi.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_notification_direct.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_notification_swi.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_request_direct.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_request_swi.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_swi_callouts_weak.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_pib.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_rx_buffer.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_tx_work_buffer.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_queue.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_rssi.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_tx_power.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_stats.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_debug.c
+NRF_802154_C_SRCS += $(NRF_802154_DRV_SRC)/nrf_802154_debug_gpio.c
+
+# -- nrf_802154 MAC features (from driver/src/mac_features/) --
+NRF_802154_MAC_SRC := $(NRF_802154_DRV_SRC)/mac_features
+NRF_802154_C_SRCS += $(NRF_802154_MAC_SRC)/nrf_802154_filter.c
+NRF_802154_C_SRCS += $(NRF_802154_MAC_SRC)/nrf_802154_frame_parser.c
+NRF_802154_C_SRCS += $(NRF_802154_MAC_SRC)/nrf_802154_precise_ack_timeout.c
+NRF_802154_C_SRCS += $(NRF_802154_MAC_SRC)/nrf_802154_security_pib_ram.c
+NRF_802154_C_SRCS += $(NRF_802154_MAC_SRC)/nrf_802154_imm_tx.c
+NRF_802154_C_SRCS += $(NRF_802154_MAC_SRC)/nrf_802154_tx_timestamp_provider.c
+NRF_802154_C_SRCS += $(NRF_802154_MAC_SRC)/ack_generator/nrf_802154_ack_data.c
+NRF_802154_C_SRCS += $(NRF_802154_MAC_SRC)/ack_generator/nrf_802154_ack_generator.c
+NRF_802154_C_SRCS += $(NRF_802154_MAC_SRC)/ack_generator/nrf_802154_imm_ack_generator.c
+NRF_802154_C_SRCS += $(NRF_802154_MAC_SRC)/ack_generator/nrf_802154_enh_ack_generator.c
+
+# -- nrf_802154 open-source SL (skip nrf_802154_sl_timer.c -- we replace it) --
+NRF_802154_SL_SRC := $(NRF_802154_ROOT)/sl/sl_opensource/src
+NRF_802154_C_SRCS += $(NRF_802154_SL_SRC)/nrf_802154_sl_ant_div.c
+NRF_802154_C_SRCS += $(NRF_802154_SL_SRC)/nrf_802154_sl_capabilities.c
+NRF_802154_C_SRCS += $(NRF_802154_SL_SRC)/nrf_802154_sl_coex.c
+NRF_802154_C_SRCS += $(NRF_802154_SL_SRC)/nrf_802154_sl_crit_sect_if.c
+NRF_802154_C_SRCS += $(NRF_802154_SL_SRC)/nrf_802154_sl_fem.c
+NRF_802154_C_SRCS += $(NRF_802154_SL_SRC)/nrf_802154_sl_log.c
+NRF_802154_C_SRCS += $(NRF_802154_SL_SRC)/nrf_802154_sl_rsch.c
+
+# -- nrf_802154 common utilities --
+NRF_802154_C_SRCS += $(NRF_802154_ROOT)/common/src/nrf_802154_common_utils.c
+endif
+
+# Add all nrf_802154 sources to the build
+CONTIKI_SOURCEFILES += $(notdir $(NRF_802154_C_SRCS))

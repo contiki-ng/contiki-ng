@@ -27,7 +27,7 @@ for TARGET in .well-known/core test/push; do
   cat coap.log >> $BASENAME.log
   # Fetch coap status code (not $? because this is piped)
   SUCCESS=`grep -c '2.05' coap.log`
-  if [ $SUCCESS > 0 ]; then
+  if [ "${SUCCESS:-0}" -gt 0 ]; then
     printf "> OK\n"
     OKCOUNT+=1
   else

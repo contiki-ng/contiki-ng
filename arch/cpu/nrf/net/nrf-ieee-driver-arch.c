@@ -785,6 +785,19 @@ static int
 pending_packet(void)
 {
   /*
+   * In poll mode, handle CRC errors by restarting RX.
+   * Without interrupts, nobody else will clear the error and re-enter RX,
+   * so the radio would be stuck in RXIDLE after a CRC error.
+   */
+  if(rf_config.poll_mode &&
+     nrf_radio_event_check(NRF_RADIO, NRF_RADIO_EVENT_CRCERROR)) {
+    nrf_radio_event_clear(NRF_RADIO, NRF_RADIO_EVENT_CRCERROR);
+    rx_buf_clear();
+    enter_rx();
+    return NRF_PENDING_NO;
+  }
+
+  /*
    * First check if we have received a PHR. When we enter RX the value of the
    * PHR in our RX buffer is zero so we can return early.
    */

@@ -37,6 +37,7 @@
 #include "contiki.h"
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
+#include "net/mac/framer/frame802154.h"
 #include "dev/slip.h"
 #include <string.h>
 #include "net/netstack.h"

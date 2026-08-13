@@ -52,9 +52,18 @@
 /*---------------------------------------------------------------------------*/
 /**
  * @brief Initializa the UARTE driver
- * 
+ *
  */
 void uarte_init(void);
+/*---------------------------------------------------------------------------*/
+/**
+ * @brief Tear down the UARTE driver, releasing the peripheral.
+ *
+ *        Used during TrustZone handoff so the secure world can release
+ *        UART ownership before the SPU re-targets the peripheral to the
+ *        normal world.
+ */
+void uarte_uninit(void);
 /*---------------------------------------------------------------------------*/
 /**
  * @brief Writes to the UARTE driver

@@ -36,6 +36,19 @@
 
 
 /**
+ * \brief Construct a NAT64 IPv6 address from four IPv4 octets.
+ *
+ * Uses the well-known prefix 64:ff9b::/96 (RFC 6052).
+ *
+ * Example: uip_nat64addr(&addr, 8, 8, 8, 8) sets addr to 64:ff9b::8.8.8.8
+ *
+ * \hideinitializer
+ */
+#define uip_nat64addr(addr, a, b, c, d)                     \
+  uip_ip6addr(addr, 0x0064, 0xff9b, 0, 0, 0, 0,            \
+              ((a) << 8) | (b), ((c) << 8) | (d))
+
+/**
  * \brief Is IPv4-mapped Address
  *
  * See https://tools.ietf.org/html/rfc6890#page-14

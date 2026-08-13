@@ -1,0 +1,13 @@
+### Set CPU_FAMILY before it's used by Makefile.nrf
+CPU_FAMILY = nrf54l15
+
+BOARD_SOURCEFILES += board-sensors.c board-buttons.c board-leds.c board-rf-switch.c
+MODULES += $(CONTIKI_NG_SERVICES_DIR)/shell
+
+CFLAGS += -DBOARD_CONF_PATH=\"xiao-nrf54l15-conf.h\"
+CFLAGS += -DBOARD_DEF_PATH=\"xiao-nrf54l15-def.h\"
+NRF54L15_OPENOCD_CFG := $(PLATFORM_ROOT_DIR)/nrf54l15/xiao/support/openocd.cfg
+
+include $(PLATFORM_ROOT_DIR)/nrf54l15/Makefile.nrf54l15
+
+CONTIKI_TARGET_DIRS += nrf54l15/xiao

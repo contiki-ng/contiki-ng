@@ -62,12 +62,14 @@ uiplib_ip6addrconv(const char *addrstr, uip_ip6addr_t *ipaddr)
   uint16_t value;
   int tmp, zero;
   unsigned int len;
+  const char *group_start;
   char c = 0;  //gcc warning if not initialized
 
   value = 0;
   zero = -1;
   if(*addrstr == '[') addrstr++;
 
+  group_start = addrstr;
   for(len = 0; len < sizeof(uip_ip6addr_t) - 1; addrstr++) {
     c = *addrstr;
     if(c == ':' || c == '\0' || c == ']' || c == '/') {
@@ -87,6 +89,20 @@ uiplib_ip6addrconv(const char *addrstr, uip_ip6addr_t *ipaddr)
         }
         addrstr++;
       }
+      group_start = addrstr + 1;
+    } else if(c == '.') {
+      /* RFC 4291 mixed notation: trailing IPv4 dotted-decimal. */
+      uip_ip4addr_t v4;
+      if(uiplib_ip4addrconv(group_start, &v4) == 0) {
+        return 0;
+      }
+      ipaddr->u8[len] = v4.u8[0];
+      ipaddr->u8[len + 1] = v4.u8[1];
+      ipaddr->u8[len + 2] = v4.u8[2];
+      ipaddr->u8[len + 3] = v4.u8[3];
+      len += 4;
+      c = '\0';
+      break;
     } else {
       if(c >= '0' && c <= '9') {
         tmp = c - '0';
@@ -189,6 +205,15 @@ uiplib_ipaddr_snprint(char *buf, size_t size, const uip_ipaddr_t *addr)
      * [1] https://tools.ietf.org/html/rfc4291#page-4
      */
     return snprintf(buf, size, "::FFFF:%u.%u.%u.%u", addr->u8[12],
+                    addr->u8[13], addr->u8[14], addr->u8[15]);
+  } else if(ip64_addr_is_ip64(addr)) {
+    /*
+     * NAT64 well-known prefix (64:ff9b::/96) per RFC 6052 [1].
+     * Print with a trailing dotted-decimal suffix per RFC 4291.
+     *
+     * [1] https://tools.ietf.org/html/rfc6052#section-2.1
+     */
+    return snprintf(buf, size, "64:ff9b::%u.%u.%u.%u", addr->u8[12],
                     addr->u8[13], addr->u8[14], addr->u8[15]);
   } else {
     int f = 0;

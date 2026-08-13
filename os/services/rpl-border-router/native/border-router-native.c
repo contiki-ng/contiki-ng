@@ -46,7 +46,15 @@
 #include "cmd.h"
 #include "border-router.h"
 #include "border-router-cmds.h"
+#include "border-router-cbor.h"
 #include "tun6-net.h"
+#include "dev/radio.h"
+#include "net/mac/mac.h"
+#include "net/mac/framer/frame802154.h"
+
+#if BUILD_WITH_NAT64
+#include "nat64-platform.h"
+#endif /* BUILD_WITH_NAT64 */
 
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
@@ -73,7 +81,13 @@ PROCESS(border_router_process, "Border router process");
 static void
 request_mac(void)
 {
+#if BORDER_ROUTER_SERIAL_RADIO
+  /* serialradio: ask the radio to report its EUI-64 so we can adopt it as our
+     own link-layer address (see border_router_set_mac()). */
+  br_cbor_send_get_addr64(0);
+#else
   write_to_slip((uint8_t *)"?M", 2);
+#endif
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -124,11 +138,29 @@ PROCESS_THREAD(border_router_process, ev, data)
   /* tun init is also responsible for setting up the SLIP connection */
   tun_init();
 
+#if BUILD_WITH_NAT64
+  if(nat64_is_enabled()) {
+    if(!nat64_platform_init()) {
+      LOG_ERR("Failed to initialize NAT64\n");
+    }
+  }
+#endif /* BUILD_WITH_NAT64 */
+
   while(!is_mac_set) {
     etimer_set(&et, CLOCK_SECOND);
     request_mac();
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
   }
+
+#if BORDER_ROUTER_SERIAL_RADIO
+  /* The radio's EUI-64 is now adopted as our link-layer address.  Configure
+     the serial radio for border-router operation: matching PAN ID and
+     channel, then enable address-filtered, auto-ACKing router mode so that
+     unicast traffic to this node is received and acknowledged in hardware. */
+  br_cbor_send_set_param(0, RADIO_PARAM_PAN_ID, IEEE802154_PANID);
+  br_cbor_send_set_param(0, RADIO_PARAM_CHANNEL, IEEE802154_DEFAULT_CHANNEL);
+  br_cbor_send_router_mode(0, true);
+#endif /* BORDER_ROUTER_SERIAL_RADIO */
 
   const char *config_ipaddr = tun6_net_get_prefix();
   if(config_ipaddr != NULL) {
