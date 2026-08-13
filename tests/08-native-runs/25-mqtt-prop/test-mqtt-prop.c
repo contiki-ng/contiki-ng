@@ -37,6 +37,10 @@
  *         must be rejected rather than used to read past the input, so each
  *         decoder is fed both a well-formed property and a property whose
  *         declared length overruns the input.
+ *
+ *         The Variable Byte Integer decoder that reads those lengths is
+ *         tested directly as well, both for the bounds it places on the input
+ *         and for the range of the values it accepts.
  * \author
  *         Nicolas Tsiftes <nicolas.tsiftes@ri.se>
  */
@@ -244,6 +248,88 @@ UNIT_TEST(test_vbi)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(test_vbi_decoder_bounds,
+                   "Variable Byte Integer decoder input bounds");
+UNIT_TEST(test_vbi_decoder_bounds)
+{
+  /* Four continuation bytes, so that the decoder reads as far as it may */
+  static const uint8_t input[] = { 0x80, 0x80, 0x80, 0x80, 0x01 };
+  uint32_t input_pos;
+  uint16_t dest;
+
+  UNIT_TEST_BEGIN();
+
+  /*
+   * A caller that subtracts the bytes it has already parsed from a length
+   * that does not cover them arrives at a negative number of bytes. Nothing
+   * may be read in that case: comparing the parse position against such a
+   * length in the unsigned domain would turn it into a bound of four billion
+   * bytes.
+   */
+  input_pos = 0;
+  UNIT_TEST_ASSERT(mqtt_decode_var_byte_int(input, -1, &input_pos, NULL,
+                                            &dest) == 0);
+  UNIT_TEST_ASSERT(input_pos == 0);
+  UNIT_TEST_ASSERT(dest == 0);
+
+  input_pos = 0;
+  UNIT_TEST_ASSERT(mqtt_decode_var_byte_int(input, 0, &input_pos, NULL,
+                                            &dest) == 0);
+  UNIT_TEST_ASSERT(input_pos == 0);
+
+  /* An integer that continues past the received input is incomplete */
+  input_pos = 0;
+  UNIT_TEST_ASSERT(mqtt_decode_var_byte_int(input, 2, &input_pos, NULL,
+                                            &dest) == 0);
+
+  /*
+   * An encoding using more than the four bytes that MQTT allows is rejected
+   * without consuming the fifth byte, which belongs to whatever follows.
+   */
+  input_pos = 0;
+  UNIT_TEST_ASSERT(mqtt_decode_var_byte_int(input, sizeof(input), &input_pos,
+                                            NULL, &dest) == 0);
+  UNIT_TEST_ASSERT(input_pos == 4);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(test_vbi_decoder_range,
+                   "Variable Byte Integer decoder value range");
+UNIT_TEST(test_vbi_decoder_range)
+{
+  /* The largest value that fits the destination, encoded in three bytes */
+  static const uint8_t max_value[] = { 0xFF, 0xFF, 0x03 };
+  /* One more than that */
+  static const uint8_t too_large[] = { 0x80, 0x80, 0x04 };
+  /* A four-byte encoding of 65538, whose low 16 bits are 2 */
+  static const uint8_t wrapping[] = { 0x82, 0x80, 0x04, 0x00 };
+  uint16_t dest;
+
+  UNIT_TEST_BEGIN();
+
+  UNIT_TEST_ASSERT(mqtt_decode_var_byte_int(max_value, sizeof(max_value),
+                                            NULL, NULL, &dest) ==
+                   sizeof(max_value));
+  UNIT_TEST_ASSERT(dest == 65535);
+
+  /*
+   * A Variable Byte Integer holds values that the 16-bit destination does
+   * not. Truncating one would make a peer that declared a packet of 65538
+   * bytes appear to have sent 2, leaving the rest of it to be parsed as
+   * further packets.
+   */
+  UNIT_TEST_ASSERT(mqtt_decode_var_byte_int(too_large, sizeof(too_large),
+                                            NULL, NULL, &dest) == 0);
+  UNIT_TEST_ASSERT(dest == 0);
+
+  UNIT_TEST_ASSERT(mqtt_decode_var_byte_int(wrapping, sizeof(wrapping),
+                                            NULL, NULL, &dest) == 0);
+  UNIT_TEST_ASSERT(dest == 0);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(test_process, ev, data)
 {
   PROCESS_BEGIN();
@@ -256,12 +342,16 @@ PROCESS_THREAD(test_process, ev, data)
   UNIT_TEST_RUN(test_binary_data);
   UNIT_TEST_RUN(test_utf8_pair);
   UNIT_TEST_RUN(test_vbi);
+  UNIT_TEST_RUN(test_vbi_decoder_bounds);
+  UNIT_TEST_RUN(test_vbi_decoder_range);
 
   if(!UNIT_TEST_PASSED(test_utf8) ||
      !UNIT_TEST_PASSED(test_fixed_len_int) ||
      !UNIT_TEST_PASSED(test_binary_data) ||
      !UNIT_TEST_PASSED(test_utf8_pair) ||
-     !UNIT_TEST_PASSED(test_vbi)) {
+     !UNIT_TEST_PASSED(test_vbi) ||
+     !UNIT_TEST_PASSED(test_vbi_decoder_bounds) ||
+     !UNIT_TEST_PASSED(test_vbi_decoder_range)) {
     printf("=check-me= FAILED\n");
     printf("---\n");
   }
