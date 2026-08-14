@@ -55,7 +55,9 @@
 #define LOG_LEVEL  LOG_LEVEL_APP
 
 /* FIXME: This server address is hard-coded for Cooja and link-local for unconnected border router. */
-#define SERVER_EP "coap://[fe80::212:7402:0002:0202]"
+/* Cooja mote 2: arch/platform/cooja/platform.c repeats the mote ID across the
+   link-layer address, giving 0002.0002.0002.0002 for mote 2. */
+#define SERVER_EP "coap://[fe80::202:2:2:2]"
 
 #define TOGGLE_INTERVAL 10
 
