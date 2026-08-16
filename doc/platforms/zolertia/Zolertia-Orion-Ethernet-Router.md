@@ -26,7 +26,7 @@ In a nutshell the Orion Router packs the following features:
 * Indoor enclosure
 * Layout 40.29 x 73.75 mm
 
-There are ready-to-use examples at `examples/zolertia/zoul/orion`, showing how to deploy an IP64 border router, and connect to services such as [IFTTT (If This Then That)](https://ifttt.com).
+There are ready-to-use examples at `examples/platform-specific/zoul/orion`, showing how to deploy an IP64 border router, and connect to services such as [IFTTT (If This Then That)](https://ifttt.com).
 
 ## Orion Technical documentation
 
