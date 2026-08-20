@@ -67,6 +67,45 @@ NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_uarte.c
 NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_usbreg.c
 NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_ipc.c
 
+# Opt-in SPI (SPIM) support. Set NRF_WITH_SPI=1 in the example or board
+# makefile. NRF_SPI_INSTANCES lists the nRF SPIM instance ids to enable, in
+# logical controller order, so the first entry becomes controller 0. The id
+# is the number in the peripheral name: SPIM00 is 00, SPIM22 is 22.
+#
+# Ids may be separated by spaces or commas. Commas are what let the list be
+# passed as a single make argument, e.g. NRF_SPI_INSTANCES=00,22.
+ifeq ($(NRF_WITH_SPI),1)
+  NRF_SPI_INSTANCES ?= 00
+
+  # Normalize into a private variable rather than reassigning
+  # NRF_SPI_INSTANCES: a value given on the make command line overrides any
+  # assignment made here, which would leave the commas in place.
+  NRF_SPI_COMMA := ,
+  NRF_SPI_IDS := $(subst $(NRF_SPI_COMMA), ,$(NRF_SPI_INSTANCES))
+
+  ifeq ($(words $(NRF_SPI_IDS)),0)
+    $(error NRF_WITH_SPI=1 but NRF_SPI_INSTANCES is empty)
+  endif
+  ifgt3 := $(filter-out 1 2 3,$(words $(NRF_SPI_IDS)))
+  ifneq ($(ifgt3),)
+    $(error NRF_SPI_INSTANCES supports at most 3 instances, got $(NRF_SPI_IDS))
+  endif
+
+  CONTIKI_CPU_SOURCEFILES += spi-arch.c
+  NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_spim.c
+
+  CFLAGS += -DNRFX_SPIM_ENABLED=1
+  CFLAGS += $(foreach i,$(NRF_SPI_IDS),-DNRFX_SPIM$(i)_ENABLED=1)
+  CFLAGS += -DNRF_SPI_CONF_CONTROLLER_COUNT=$(words $(NRF_SPI_IDS))
+  CFLAGS += -DNRF_SPI_CONF_CONTROLLER0_ID=$(word 1,$(NRF_SPI_IDS))
+  ifneq ($(word 2,$(NRF_SPI_IDS)),)
+    CFLAGS += -DNRF_SPI_CONF_CONTROLLER1_ID=$(word 2,$(NRF_SPI_IDS))
+  endif
+  ifneq ($(word 3,$(NRF_SPI_IDS)),)
+    CFLAGS += -DNRF_SPI_CONF_CONTROLLER2_ID=$(word 3,$(NRF_SPI_IDS))
+  endif
+endif
+
 NRFX_C_SRCS += $(NRFX_ROOT)/soc/nrfx_atomic.c
 
 NRFX_C_SRCS += $(NRFX_ROOT)/helpers/nrfx_flag32_allocator.c
@@ -80,6 +119,7 @@ CONTIKI_SOURCEFILES += $(notdir $(NRFX_C_SRCS))
 CONTIKI_SOURCEFILES += $(notdir $(NRFX_ASM_SRCS))
 
 $(OBJECTDIR)/nrfx_uarte.o: CFLAGS += -Wno-error=unused-variable
+$(OBJECTDIR)/nrfx_spim.o: CFLAGS += -Wno-error=unused-variable
 
 #includes common to all targets
 NRFX_INC_PATHS += .
