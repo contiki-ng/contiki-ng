@@ -60,9 +60,6 @@ jobs:
                 test: nat64-standalone
               - os: macos-15-intel
                 test: coap-lwm2m
-              # Failed simulations for no obvious reason, Cooja issue?
-              - os: macos-15-intel
-                test: ieee802154
 
     # Default job name is too long to be visible in the "Checks" tab.
     name: ${{ matrix.test }}/${{ matrix.os == 'macos-15-intel' && 'macos-x64' || matrix.os }}
