@@ -23,6 +23,7 @@ software on the host that knows nothing about NAT64, see
 | `dns64_rewrite` | `ip64_dns64_6to4` (AAAA to A) and `ip64_dns64_4to6` (A to AAAA) |
 | `icmp_echo` | ICMP translation in both directions: an IPv4 ping reaches the local IPv6 host and its reply is translated back |
 | `inbound_ports` | Inbound port handling: delivery to the local host below `EPHEMERAL_PORTRANGE`, and the drop of ephemeral-port traffic that matches no mapping |
+| `dns64_copies_later_records` | `ip64_dns64_4to6` on a reply with two answers, where the first grows and moves the second along with it |
 | `dns64_rejects_oversized_record` | `ip64_dns64_4to6` against an A record claiming more data than the packet holds |
 | `dns64_rejects_unterminated_name` | `ip64_dns64_4to6` against a question name that runs past the end of the packet |
 

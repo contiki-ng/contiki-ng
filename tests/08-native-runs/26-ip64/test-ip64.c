@@ -155,6 +155,32 @@ static const uint8_t dns_response[] = {
   93, 184, 216, 34
 };
 
+/* The same response with a second answer record, whose name is spelled out
+   rather than compressed. The first record grows by 12 bytes when its A
+   record becomes AAAA, which moves the second one along with it. */
+static const uint8_t dns_response_two[] = {
+  0x12, 0x34, 0x81, 0x80, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00,
+  7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0,
+  0x00, 0x01, 0x00, 0x01,
+  /* First answer: name as a compression pointer, address 93.184.216.34. */
+  0xc0, 0x0c,
+  0x00, 0x01, 0x00, 0x01,
+  0x00, 0x00, 0x0e, 0x10,
+  0x00, 0x04,
+  93, 184, 216, 34,
+  /* Second answer: name spelled out, address 93.184.216.35. */
+  7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0,
+  0x00, 0x01, 0x00, 0x01,
+  0x00, 0x00, 0x0e, 0x10,
+  0x00, 0x04,
+  93, 184, 216, 35
+};
+
+/* Where the second answer starts once the first has grown: the 12-byte
+   header, the 17-byte question, and a first record of a 2-byte name, a
+   2-byte type, 8 bytes of class, TTL and length, and a 16-byte address. */
+#define SECOND_ANSWER_OFFSET (12 + 17 + 2 + 2 + 8 + 16)
+
 struct eth_hdr {
   uint8_t dest[6];
   uint8_t src[6];
@@ -229,6 +255,8 @@ UNIT_TEST_REGISTER(dns64_rewrite,
                    "DNS64 rewrites AAAA to A and the A answer back to AAAA");
 UNIT_TEST_REGISTER(icmp_echo,
                    "An IPv4 ping is answered by the local IPv6 host");
+UNIT_TEST_REGISTER(dns64_copies_later_records,
+                   "DNS64 keeps the name of a record that follows a rewrite");
 UNIT_TEST_REGISTER(dns64_rejects_oversized_record,
                    "DNS64 leaves a record that claims more data than it has");
 UNIT_TEST_REGISTER(dns64_rejects_unterminated_name,
@@ -306,6 +334,16 @@ dns_received(struct simple_udp_connection *c, const uip_ipaddr_t *sender_addr,
   if(datalen != sizeof(dns_response) + 12) {
     printf("DNS response has length %u, expected %u\n",
            datalen, (unsigned)sizeof(dns_response) + 12);
+    return;
+  }
+
+  /* The query went out as AAAA and was rewritten to A on the way, so the
+     reply has to come back carrying the question that was asked. */
+  if((data[DNS_QUESTION_TYPE_OFFSET] << 8) +
+     data[DNS_QUESTION_TYPE_OFFSET + 1] != DNS_TYPE_AAAA) {
+    printf("DNS reply has question type %u, expected %u\n",
+           (data[DNS_QUESTION_TYPE_OFFSET] << 8) +
+           data[DNS_QUESTION_TYPE_OFFSET + 1], DNS_TYPE_AAAA);
     return;
   }
 
@@ -818,6 +856,36 @@ canary_intact(const uint8_t *buf, uint16_t capacity, uint16_t len)
   return true;
 }
 /*---------------------------------------------------------------------------*/
+UNIT_TEST(dns64_copies_later_records)
+{
+  static const uint8_t name[] = {
+    7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0
+  };
+  static uint8_t out[PARSE_CAPACITY + CANARY_LEN];
+  int len;
+
+  UNIT_TEST_BEGIN();
+
+  /* The module is handed the copy that ip64_4to6() makes before calling it,
+     which is why a record it does not rewrite still comes out right. */
+  canary_fill(out, sizeof(out));
+  memcpy(out, dns_response_two, sizeof(dns_response_two));
+
+  len = ip64_dns64_4to6(dns_response_two, sizeof(dns_response_two), out,
+                        PARSE_CAPACITY);
+
+  /* Both A records become AAAA records, so the message grows by 24 bytes. */
+  UNIT_TEST_ASSERT(len == sizeof(dns_response_two) + 24);
+
+  /* The second record moved 12 bytes along when the first one grew, so its
+     name had to be written rather than left where the copy put it. */
+  UNIT_TEST_ASSERT(memcmp(&out[SECOND_ANSWER_OFFSET], name,
+                          sizeof(name)) == 0);
+  UNIT_TEST_ASSERT(canary_intact(out, PARSE_CAPACITY, sizeof(out)));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 UNIT_TEST(dns64_rejects_oversized_record)
 {
   static uint8_t answer[sizeof(dns_response)];
@@ -909,6 +977,7 @@ PROCESS_THREAD(test_ip64_process, ev, data)
   UNIT_TEST_RUN(dns64_rewrite);
   UNIT_TEST_RUN(icmp_echo);
   UNIT_TEST_RUN(inbound_ports);
+  UNIT_TEST_RUN(dns64_copies_later_records);
   UNIT_TEST_RUN(dns64_rejects_oversized_record);
   UNIT_TEST_RUN(dns64_rejects_unterminated_name);
 
@@ -918,6 +987,7 @@ PROCESS_THREAD(test_ip64_process, ev, data)
      !UNIT_TEST_PASSED(dns64_rewrite) ||
      !UNIT_TEST_PASSED(icmp_echo) ||
      !UNIT_TEST_PASSED(inbound_ports) ||
+     !UNIT_TEST_PASSED(dns64_copies_later_records) ||
      !UNIT_TEST_PASSED(dns64_rejects_oversized_record) ||
      !UNIT_TEST_PASSED(dns64_rejects_unterminated_name)) {
     printf("=check-me= FAILED\n");
