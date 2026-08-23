@@ -9,6 +9,10 @@ The build mirrors the module's only supported hardware deployment,
 `-DUIP_FALLBACK_INTERFACE=ip64_uip_fallback_interface` that
 `Makefile.orion` sets.
 
+For a test that puts ip64 on a real IPv4 network instead, and drives it from
+software on the host that knows nothing about NAT64, see
+`tests/08-native-runs/27-ip64-tap`.
+
 ## What the test covers
 
 | Test | Path exercised |

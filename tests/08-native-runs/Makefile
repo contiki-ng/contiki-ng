@@ -30,5 +30,7 @@ tests/08-native-runs/23-uiplib/native:./23-uiplib.sh \
 tests/08-native-runs/21-dbg-io/native:./21-dbg-io.sh \
 tests/08-native-runs/25-mqtt-prop/native:./25-mqtt-prop.sh \
 tests/08-native-runs/26-ip64/native:./26-ip64.sh \
+tests/08-native-runs/27-ip64-tap/native:./27-ip64-tap.sh \
+tests/08-native-runs/27-ip64-tap/native:./27-ip64-tap.sh:DEFINES=IP64_CONF_DHCP=1 \
 
 include ../Makefile.compile-test
