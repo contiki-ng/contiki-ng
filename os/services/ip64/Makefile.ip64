@@ -1,0 +1,5 @@
+# ip64-slip-interface.c calls into a platform SLIP driver that not every
+# platform has. The native platform is one: Makefile.native excludes slip.c,
+# so an ip64 build for native fails to link on slip_write() and friends even
+# when it uses the Ethernet interface and never reaches the SLIP code.
+MODULES_SOURCES_EXCLUDES_NATIVE += ip64-slip-interface.c
