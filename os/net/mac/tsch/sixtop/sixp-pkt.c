@@ -84,11 +84,11 @@ static int32_t
 get_cell_options_offset(sixp_pkt_type_t type, sixp_pkt_code_t code)
 {
   if(type == SIXP_PKT_TYPE_REQUEST &&
-     (code.cmd == SIXP_PKT_CMD_ADD ||
-      code.cmd == SIXP_PKT_CMD_DELETE ||
-      code.cmd == SIXP_PKT_CMD_RELOCATE ||
-      code.cmd == SIXP_PKT_CMD_COUNT ||
-      code.cmd == SIXP_PKT_CMD_LIST)) {
+     (code.value == SIXP_PKT_CMD_ADD ||
+      code.value == SIXP_PKT_CMD_DELETE ||
+      code.value == SIXP_PKT_CMD_RELOCATE ||
+      code.value == SIXP_PKT_CMD_COUNT ||
+      code.value == SIXP_PKT_CMD_LIST)) {
     return sizeof(sixp_pkt_metadata_t);
   }
   return -1;
@@ -1126,7 +1126,14 @@ sixp_pkt_create(sixp_pkt_type_t type, sixp_pkt_code_t code,
   /* copy information of a sending packet into pkt if necessary */
   if(pkt != NULL) {
     pkt->type = type;
-    pkt->code = code;
+    /*
+     * sixp_pkt_code_t is a union of an enum and a uint8_t; callers commonly
+     * build it with (sixp_pkt_code_t)(uint8_t)x, which only defines the
+     * first byte. Copy only the defined byte and zero the rest so that
+     * reading pkt->code.cmd/.rc afterwards is well defined.
+     */
+    memset(&pkt->code, 0, sizeof(pkt->code));
+    pkt->code.value = code.value;
     pkt->sfid = sfid;
     pkt->seqno = seqno;
     pkt->body = body;

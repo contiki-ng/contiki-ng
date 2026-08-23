@@ -502,7 +502,7 @@ sixp_output(sixp_pkt_type_t type, sixp_pkt_code_t code, uint8_t sfid,
        * handled mistakenly for the next request when the previous
        * transaction is expired.
        */
-      if(code.cmd == SIXP_PKT_CMD_CLEAR) {
+      if(code.value == SIXP_PKT_CMD_CLEAR) {
         LOG_INFO("6P: sixp_output() reset nbr's next_seqno by CLEAR Request\n");
         sixp_nbr_reset_next_seqno(nbr);
       } else {

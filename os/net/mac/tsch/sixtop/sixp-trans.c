@@ -208,8 +208,8 @@ determine_trans_mode(const sixp_pkt_t *req)
    * either Add or Delete AND its cell_list is empty. Otherwise, 2-step.
    */
   if(req->type == SIXP_PKT_TYPE_REQUEST &&
-     (req->code.cmd == SIXP_PKT_CMD_ADD ||
-      req->code.cmd == SIXP_PKT_CMD_DELETE) &&
+     (req->code.value == SIXP_PKT_CMD_ADD ||
+      req->code.value == SIXP_PKT_CMD_DELETE) &&
      sixp_pkt_get_cell_list(req->type, (sixp_pkt_code_t)req->code.value,
                             NULL, &cell_list_len,
                             req->body, req->body_len) == 0 &&
