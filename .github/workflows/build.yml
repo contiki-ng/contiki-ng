@@ -47,8 +47,9 @@ jobs:
               # No arm-none-eabi-gcc installed.
               - os: macos-15-intel
                 test: compile-arm-ports
-              # Uses zoul as dummy target, fails on missing arm-none-eabi-gcc.
-              # Tests/build system should be fixed.
+              # 07-native-border-router is flaky on the hosted runners:
+              # intermittent 100% ping loss, correlated with slow runs
+              # (~1s event cadence instead of ~150ms mesh RTT).
               - os: macos-15-intel
                 test: tun-rpl-br
               # tests/utils.sh: kill_bg contains ps --ppid (not portable).

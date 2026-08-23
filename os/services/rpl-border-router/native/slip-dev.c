@@ -53,6 +53,7 @@
 
 #include "net/netstack.h"
 #include "net/packetbuf.h"
+#include "sys/rtimer.h"
 #include "cmd.h"
 #include "border-router.h"
 #include "border-router-cmds.h"
@@ -486,12 +487,39 @@ stty_telos(int fd)
   }
 }
 /*---------------------------------------------------------------------------*/
+static struct rtimer send_delay_wakeup;
+/*---------------------------------------------------------------------------*/
+static void
+send_delay_wakeup_callback(struct rtimer *t, void *ptr)
+{
+  /*
+   * Nothing to do: the SIGALRM that delivered this interrupted select() in
+   * platform_main_loop(), which re-evaluates set_fd() and now finds the
+   * send-delay timer expired.
+   */
+}
+/*---------------------------------------------------------------------------*/
 static int
 set_fd(fd_set *rset, fd_set *wset)
 {
   /* Anything to flush? */
-  if(!slip_empty() && (send_delay == 0 || timer_expired(&send_delay_timer))) {
-    FD_SET(slipfd, wset);
+  if(!slip_empty()) {
+    if(send_delay == 0 || timer_expired(&send_delay_timer)) {
+      FD_SET(slipfd, wset);
+    } else {
+      /*
+       * send_delay_timer is a passive struct timer: nothing wakes the
+       * select() in platform_main_loop() when it expires, so with no other
+       * fd activity the next SLIP packet waits for the full SELECT_TIMEOUT
+       * (1 s) instead of SEND_DELAY (31 ms). Under load (6LoWPAN
+       * fragments from the TUN) that overflows slip_buf and kills the
+       * router. Arm an rtimer for the remaining delay; its SIGALRM
+       * interrupts select() so we come back here on time.
+       */
+      rtimer_set(&send_delay_wakeup,
+                 RTIMER_NOW() + timer_remaining(&send_delay_timer) + 1, 1,
+                 send_delay_wakeup_callback, NULL);
+    }
   }
 
   FD_SET(slipfd, rset);	/* Read from slip ASAP! */
