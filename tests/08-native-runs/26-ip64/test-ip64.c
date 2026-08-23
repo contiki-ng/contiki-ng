@@ -42,7 +42,8 @@
  *   IPv4-to-IPv6 header translation, forwarding of a flow from a node behind
  *   the router, address-mapping allocation and reverse lookup, DNS64
  *   rewriting in both directions, ICMP echo translation, the inbound port
- *   handling, and the length checks 6to4 makes against malformed input.
+ *   handling, the length checks 6to4 makes against malformed input, and
+ *   the bounds of the DNS64 parser.
  *   Not covered: the ENC28J60 driver itself, the DHCPv4 client, and TCP.
  *
  */
@@ -56,6 +57,7 @@
 
 #include "ip64/ip64.h"
 #include "ip64/ip64-addrmap.h"
+#include "ip64/ip64-dns64.h"
 #include "ip64/ip64-eth.h"
 #include "ip64/ip64-eth-interface.h"
 
@@ -90,9 +92,9 @@
 #define ECHO_ID         0xbeef
 #define ECHO_SEQNO      7
 
-/* Room the malformed-input test hands to a translation, followed by bytes
-   that nothing is allowed to touch. A write past the capacity shows up as a
-   changed canary, with no sanitiser needed. */
+/* Room the malformed-input tests hand to a translation or a parser, followed
+   by bytes that nothing is allowed to touch. A write past the capacity shows
+   up as a changed canary, with no sanitiser needed. */
 #define PARSE_CAPACITY  128
 #define CANARY_LEN      32
 #define CANARY_BYTE     0x5a
@@ -153,6 +155,33 @@ static const uint8_t dns_response[] = {
   0x00, 0x04,
   93, 184, 216, 34
 };
+
+/* The same response with a second answer record, whose name is spelled out
+   rather than compressed. The first record grows by 12 bytes when its A
+   record becomes AAAA, which moves the second one along with it. */
+static const uint8_t dns_response_two[] = {
+  0x12, 0x34, 0x81, 0x80, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00,
+  7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0,
+  0x00, 0x01, 0x00, 0x01,
+  /* First answer: name as a compression pointer, address 93.184.216.34. */
+  0xc0, 0x0c,
+  0x00, 0x01, 0x00, 0x01,
+  0x00, 0x00, 0x0e, 0x10,
+  0x00, 0x04,
+  93, 184, 216, 34,
+  /* Second answer: name spelled out, address 93.184.216.35. */
+  7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0,
+  0x00, 0x01, 0x00, 0x01,
+  0x00, 0x00, 0x0e, 0x10,
+  0x00, 0x04,
+  93, 184, 216, 35
+};
+
+/* Where the record that follows the first answer starts once that answer has
+   grown: the 12-byte header, the 17-byte question, and a record of a 2-byte
+   name, a 2-byte type, 8 bytes of class, TTL and length, and a 16-byte
+   address. */
+#define SECOND_RECORD_OFFSET (12 + 17 + 2 + 2 + 8 + 16)
 
 struct eth_hdr {
   uint8_t dest[6];
@@ -230,6 +259,8 @@ UNIT_TEST_REGISTER(icmp_echo,
                    "An IPv4 ping is answered by the local IPv6 host");
 UNIT_TEST_REGISTER(sixto4_rejects_bad_length,
                    "6to4 drops a packet whose payload length field lies");
+UNIT_TEST_REGISTER(dns64_copies_later_records,
+                   "DNS64 keeps the name of a record that follows a rewrite");
 UNIT_TEST_REGISTER(inbound_ports,
                    "Inbound packets reach the local host only below the "
                    "ephemeral port range");
@@ -303,6 +334,16 @@ dns_received(struct simple_udp_connection *c, const uip_ipaddr_t *sender_addr,
   if(datalen != sizeof(dns_response) + 12) {
     printf("DNS response has length %u, expected %u\n",
            datalen, (unsigned)sizeof(dns_response) + 12);
+    return;
+  }
+
+  /* The query went out as AAAA and was rewritten to A on the way, so the
+     reply has to come back carrying the question that was asked. */
+  if((data[DNS_QUESTION_TYPE_OFFSET] << 8) +
+     data[DNS_QUESTION_TYPE_OFFSET + 1] != DNS_TYPE_AAAA) {
+    printf("DNS reply has question type %u, expected %u\n",
+           (data[DNS_QUESTION_TYPE_OFFSET] << 8) +
+           data[DNS_QUESTION_TYPE_OFFSET + 1], DNS_TYPE_AAAA);
     return;
   }
 
@@ -815,6 +856,16 @@ canary_intact(const uint8_t *buf, uint16_t capacity, uint16_t len)
   return true;
 }
 /*---------------------------------------------------------------------------*/
+/* Set an output buffer up the way ip64_4to6() leaves it before it calls the
+   DNS64 parser: the message that came in at the start of it, and the canary
+   pattern past the capacity the parser is given. */
+static void
+parse_setup(uint8_t *buf, uint16_t len, const uint8_t *msg, uint16_t msglen)
+{
+  canary_fill(buf, len);
+  memcpy(buf, msg, msglen);
+}
+/*---------------------------------------------------------------------------*/
 UNIT_TEST(sixto4_rejects_bad_length)
 {
   static uint8_t packet[IPV6_HDRLEN + UDP_HDRLEN];
@@ -845,6 +896,33 @@ UNIT_TEST(sixto4_rejects_bad_length)
   ip->len[1] = 0;
   UNIT_TEST_ASSERT(ip64_6to4(packet, IPV6_HDRLEN - 1, out) == 0);
   UNIT_TEST_ASSERT(canary_intact(out, 0, sizeof(out)));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST(dns64_copies_later_records)
+{
+  static const uint8_t name[] = {
+    7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0
+  };
+  static uint8_t out[PARSE_CAPACITY + CANARY_LEN];
+  int len;
+
+  UNIT_TEST_BEGIN();
+
+  parse_setup(out, sizeof(out), dns_response_two, sizeof(dns_response_two));
+
+  len = ip64_dns64_4to6(dns_response_two, sizeof(dns_response_two), out,
+                        PARSE_CAPACITY);
+
+  /* Both A records become AAAA records, so the message grows by 24 bytes. */
+  UNIT_TEST_ASSERT(len == sizeof(dns_response_two) + 24);
+
+  /* The second record moved 12 bytes along when the first one grew, so its
+     name had to be written rather than left where the copy put it. */
+  UNIT_TEST_ASSERT(memcmp(&out[SECOND_RECORD_OFFSET], name,
+                          sizeof(name)) == 0);
+  UNIT_TEST_ASSERT(canary_intact(out, PARSE_CAPACITY, sizeof(out)));
 
   UNIT_TEST_END();
 }
@@ -894,6 +972,7 @@ PROCESS_THREAD(test_ip64_process, ev, data)
   UNIT_TEST_RUN(icmp_echo);
   UNIT_TEST_RUN(inbound_ports);
   UNIT_TEST_RUN(sixto4_rejects_bad_length);
+  UNIT_TEST_RUN(dns64_copies_later_records);
 
   if(!UNIT_TEST_PASSED(arp_resolution) ||
      !UNIT_TEST_PASSED(udp_round_trip) ||
@@ -901,7 +980,8 @@ PROCESS_THREAD(test_ip64_process, ev, data)
      !UNIT_TEST_PASSED(dns64_rewrite) ||
      !UNIT_TEST_PASSED(icmp_echo) ||
      !UNIT_TEST_PASSED(inbound_ports) ||
-     !UNIT_TEST_PASSED(sixto4_rejects_bad_length)) {
+     !UNIT_TEST_PASSED(sixto4_rejects_bad_length) ||
+     !UNIT_TEST_PASSED(dns64_copies_later_records)) {
     printf("=check-me= FAILED\n");
     printf("---\n");
   }

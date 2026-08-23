@@ -199,8 +199,11 @@ ip64_dns64_4to6(const uint8_t *ipv4data, int ipv4datalen,
       LOG_WARN("ip64_dns64_6to4: packet ended while parsing\n");
       return ipv6datalen;
     }
+    /* The question is the one that went out, which ip64_dns64_6to4() rewrote
+       from AAAA to A. Put it back, so that the reply carries the question
+       that was asked. */
     if(q[DNS_QUESTION_CLASS0] == 0 && q[DNS_QUESTION_CLASS1] == DNS_CLASS_IN &&
-       q[DNS_QUESTION_TYPE0] == 0 && q[DNS_QUESTION_TYPE1] == DNS_TYPE_AAAA) {
+       q[DNS_QUESTION_TYPE0] == 0 && q[DNS_QUESTION_TYPE1] == DNS_TYPE_A) {
       q[DNS_QUESTION_TYPE1] = DNS_TYPE_AAAA;
     }
 
@@ -240,6 +243,16 @@ ip64_dns64_4to6(const uint8_t *ipv4data, int ipv4datalen,
           return ipv6datalen;
         }
         n = *adata;
+
+        /* The two cursors part company as soon as a record grows, so from
+           the second record onwards the byte already at acopy belongs to
+           another part of the message and the length has to be written. */
+        if(acopy >= ipv6data + ipv6capacity) {
+          LOG_WARN("ip64_dns64_4to6: packet ended while parsing (out)\n");
+          return ipv6datalen;
+        }
+        *acopy = n;
+
         adata++;
         acopy++;
 
