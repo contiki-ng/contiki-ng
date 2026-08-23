@@ -32,9 +32,15 @@
 #ifndef IP64_DNS64_H_
 #define IP64_DNS64_H_
 
+/* Rewrites a DNS question in place. ipv4datalen is the length of the
+   message in ipv4data, which the rewrite does not change. */
 void ip64_dns64_6to4(const uint8_t *ipv6data, int ipv6datalen,
                      uint8_t *ipv4data, int ipv4datalen);
+
+/* Rewrites a DNS answer while copying it, growing it by 12 bytes for every A
+   record turned into a AAAA record. ipv6capacity is the room available in
+   ipv6data, not the length of the message; the new length is returned. */
 int ip64_dns64_4to6(const uint8_t *ipv4data, int ipv4datalen,
-                    uint8_t *ipv6data, int ipv6datalen);
+                    uint8_t *ipv6data, int ipv6capacity);
 
 #endif /* IP64_DNS64_H_ */
