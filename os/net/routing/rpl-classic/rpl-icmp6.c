@@ -279,6 +279,24 @@ dis_output(uip_ipaddr_t *addr)
   uip_icmp6_send(addr, ICMP6_RPL, RPL_CODE_DIS, 2);
 }
 /*---------------------------------------------------------------------------*/
+/*
+ * Check that a DIO interval received in a DAG Configuration option can be
+ * used as a shift count without invoking undefined behavior, and that the
+ * resulting number of milliseconds can be converted to clock ticks with the
+ * 32-bit arithmetic used by the Trickle timer and the DAG lifetime.
+ */
+static int
+dio_interval_is_valid(uint8_t intmin, uint8_t intdoubl)
+{
+  unsigned interval = (unsigned)intmin + intdoubl;
+
+  if(interval >= sizeof(unsigned long) * CHAR_BIT) {
+    return 0;
+  }
+
+  return (1UL << interval) <= UINT32_MAX / MAX(CLOCK_SECOND, RPL_DAG_LIFETIME);
+}
+/*---------------------------------------------------------------------------*/
 static void
 dio_input(void)
 {
@@ -457,6 +475,28 @@ dio_input(void)
       /* buffer + 12 is reserved */
       dio.default_lifetime = buffer[i + 13];
       dio.lifetime_unit = get16(buffer, i + 14);
+
+      /*
+       * The DAG Configuration values are used in arithmetic that is
+       * undefined or unbounded for parts of their encoded range, so they
+       * must be rejected here rather than after they have been copied into
+       * the instance state. A MinHopRankIncrease of zero would make
+       * DAG_RANK() divide by zero, and an excessive DIO interval would be
+       * used as an out-of-range shift count.
+       */
+      if(dio.dag_min_hoprankinc == 0) {
+        LOG_WARN("Invalid DAG configuration option, MinHopRankIncrease is 0\n");
+        RPL_STAT(rpl_stats.malformed_msgs++);
+        goto discard;
+      }
+
+      if(!dio_interval_is_valid(dio.dag_intmin, dio.dag_intdoubl)) {
+        LOG_WARN("Invalid DAG configuration option, DIO interval %u is too large\n",
+                 (unsigned)dio.dag_intmin + dio.dag_intdoubl);
+        RPL_STAT(rpl_stats.malformed_msgs++);
+        goto discard;
+      }
+
       LOG_INFO("DAG conf:dbl=%d, min=%d red=%d maxinc=%d mininc=%d ocp=%d d_l=%u l_u=%u\n",
                dio.dag_intdoubl, dio.dag_intmin, dio.dag_redund,
                dio.dag_max_rankinc, dio.dag_min_hoprankinc, dio.ocp,
