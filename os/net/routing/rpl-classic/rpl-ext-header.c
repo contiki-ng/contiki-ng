@@ -192,6 +192,14 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
   rh_header = (struct uip_routing_hdr *)uipbuf_search_header(uip_buf, uip_len, UIP_PROTO_ROUTING);
 
   dag = rpl_get_dag(&UIP_IP_BUF->destipaddr);
+  if(dag == NULL) {
+    /*
+     * The destination is not in a DAG that we have joined, so there is
+     * no source routing graph to consult.
+     */
+    return 0;
+  }
+
   root_node = uip_sr_get_node(dag, &dag->dag_id);
   dest_node = uip_sr_get_node(dag, &UIP_IP_BUF->destipaddr);
 
