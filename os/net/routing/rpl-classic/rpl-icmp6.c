@@ -820,14 +820,23 @@ dao_input_storing(void)
         return;
       }
       len = 2 + buffer[i + 1];
+      /*
+       * Every field of an option must be validated against the extent
+       * declared by the option itself, so that a short option cannot
+       * consume bytes belonging to the options that follow it.
+       */
+      if(i + len > buffer_length) {
+        LOG_WARN("Dropping DAO with an option extending past the message (%d > %" PRIu16 ")\n",
+                 i + len, buffer_length);
+        return;
+      }
     }
 
     switch(subopt_type) {
     case RPL_OPTION_TARGET:
       /* Handle the target option. */
-      if(last_valid_pos < i + 3) {
-        LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
-                 last_valid_pos, i + 3);
+      if(len < RPL_DAO_TARGET_OPTION_MIN_LEN) {
+        LOG_WARN("Dropping DAO with a too short target option (%d)\n", len);
         return;
       }
       prefixlen = buffer[i + 3];
@@ -845,7 +854,7 @@ dao_input_storing(void)
         LOG_ERR("Too large target prefix length %d\n", prefixlen);
         return;
       }
-      if(i + 4 + ((prefixlen + 7) / CHAR_BIT) > buffer_length) {
+      if(RPL_DAO_TARGET_OPTION_MIN_LEN + ((prefixlen + 7) / CHAR_BIT) > len) {
         LOG_ERR("Incomplete DAO target option with prefix length of %d bits\n",
                 prefixlen);
         return;
@@ -856,9 +865,8 @@ dao_input_storing(void)
       break;
     case RPL_OPTION_TRANSIT:
       /* The path sequence and control are ignored. */
-      if(last_valid_pos < i + 5) {
-        LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
-                 last_valid_pos, i + 5);
+      if(len < RPL_DAO_TRANSIT_OPTION_MIN_LEN) {
+        LOG_WARN("Dropping DAO with a too short transit option (%d)\n", len);
         return;
       }
       lifetime = buffer[i + 5];
@@ -1115,14 +1123,23 @@ dao_input_nonstoring(void)
         return;
       }
       len = 2 + buffer[i + 1];
+      /*
+       * Every field of an option must be validated against the extent
+       * declared by the option itself, so that a short option cannot
+       * consume bytes belonging to the options that follow it.
+       */
+      if(i + len > buffer_length) {
+        LOG_WARN("Dropping DAO with an option extending past the message (%d > %" PRIu16 ")\n",
+                 i + len, buffer_length);
+        return;
+      }
     }
 
     switch(subopt_type) {
     case RPL_OPTION_TARGET:
       /* Handle the target option. */
-      if(last_valid_pos < i + 3) {
-        LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
-                 last_valid_pos, i + 3);
+      if(len < RPL_DAO_TARGET_OPTION_MIN_LEN) {
+        LOG_WARN("Dropping DAO with a too short target option (%d)\n", len);
         return;
       }
       prefixlen = buffer[i + 3];
@@ -1140,7 +1157,7 @@ dao_input_nonstoring(void)
         LOG_ERR("Too large target prefix length %d\n", prefixlen);
         return;
       }
-      if(i + 4 + ((prefixlen + 7) / CHAR_BIT) > buffer_length) {
+      if(RPL_DAO_TARGET_OPTION_MIN_LEN + ((prefixlen + 7) / CHAR_BIT) > len) {
         LOG_ERR("Incomplete DAO target option with prefix length of %d bits\n",
                 prefixlen);
         return;
@@ -1152,14 +1169,18 @@ dao_input_nonstoring(void)
       break;
     case RPL_OPTION_TRANSIT:
       /* The path sequence and control are ignored. */
-      if(i + 6 + 16 > buffer_length) {
-        LOG_WARN("Incomplete DAO transit option (%d > %" PRIu16 ")\n",
-                 i + 6 + 16, buffer_length);
+      if(len < RPL_DAO_TRANSIT_OPTION_MIN_LEN) {
+        LOG_WARN("Dropping DAO with a too short transit option (%d)\n", len);
         return;
       }
       lifetime = buffer[i + 5];
-      if(len >= 20) {
-        memcpy(&dao_parent_addr, buffer + i + 6, 16);
+      /*
+       * RFC 6550, Section 6.7.8: the option length is used to determine
+       * whether or not the parent address is present.
+       */
+      if(len >= RPL_DAO_TRANSIT_OPTION_MIN_LEN + (int)sizeof(dao_parent_addr)) {
+        memcpy(&dao_parent_addr, buffer + i + RPL_DAO_TRANSIT_OPTION_MIN_LEN,
+               sizeof(dao_parent_addr));
       }
       break;
     }
