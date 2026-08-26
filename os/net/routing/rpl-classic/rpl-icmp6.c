@@ -1316,6 +1316,20 @@ handle_dao_retransmission(void *ptr)
 }
 #endif /* RPL_WITH_DAO_ACK */
 /*---------------------------------------------------------------------------*/
+/*
+ * Return the address that a DAO is sent to: the preferred parent when
+ * storing routes, and the root of the DAG when not.
+ */
+static uip_ipaddr_t *
+dao_destination(rpl_parent_t *parent)
+{
+  if(parent->dag->instance->mop != RPL_MOP_NON_STORING) {
+    return rpl_parent_get_ipaddr(parent);
+  }
+
+  return &parent->dag->dag_id;
+}
+/*---------------------------------------------------------------------------*/
 void
 dao_output(rpl_parent_t *parent, uint8_t lifetime)
 {
@@ -1341,10 +1355,25 @@ dao_output(rpl_parent_t *parent, uint8_t lifetime)
    */
   if(lifetime != RPL_ZERO_LIFETIME) {
     rpl_instance_t *instance;
+    const uip_ipaddr_t *dest_ipaddr;
+
     instance = parent->dag->instance;
+    dest_ipaddr = dao_destination(parent);
 
     instance->my_dao_seqno = dao_sequence;
     instance->my_dao_transmissions = 1;
+
+    /*
+     * Remember where the DAO is sent, so that no other node can
+     * acknowledge it. An unspecified address matches no sender, and thus
+     * rejects every acknowledgment.
+     */
+    if(dest_ipaddr == NULL) {
+      memset(&instance->my_dao_dest, 0, sizeof(instance->my_dao_dest));
+    } else {
+      uip_ipaddr_copy(&instance->my_dao_dest, dest_ipaddr);
+    }
+
     ctimer_set(&instance->dao_retransmit_timer, RPL_DAO_RETRANSMISSION_TIMEOUT,
                handle_dao_retransmission, parent);
   }
@@ -1454,19 +1483,16 @@ dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
   buffer[pos++] = 0; /* path seq - ignored */
   buffer[pos++] = lifetime;
 
-  if(instance->mop != RPL_MOP_NON_STORING) {
-    /* Send DAO to the parent. */
-    dest_ipaddr = parent_ipaddr;
-  } else {
+  if(instance->mop == RPL_MOP_NON_STORING) {
     /* Include the parent's global IP address. */
     memcpy(buffer + pos, &parent->dag->dag_id, 8); /* Prefix */
     pos += 8;
     /* Interface identifier. */
     memcpy(buffer + pos, ((const unsigned char *)parent_ipaddr) + 8, 8);
     pos += 8;
-    /* Send DAO to root */
-    dest_ipaddr = &parent->dag->dag_id;
   }
+
+  dest_ipaddr = dao_destination(parent);
 
   LOG_INFO("Sending a %sDAO with sequence number %u, lifetime %u, prefix ",
            lifetime == RPL_ZERO_LIFETIME ? "No-Path " : "", seq_no, lifetime);
@@ -1494,6 +1520,14 @@ dao_ack_input(void)
   uint8_t status;
   rpl_instance_t *instance;
   rpl_parent_t *parent;
+
+  if(uip_len < uip_l3_icmp_hdr_len + RPL_DAO_ACK_LEN) {
+    LOG_WARN("Dropping incomplete DAO ACK (%u < %u)\n",
+             (unsigned)uip_len,
+             (unsigned)(uip_l3_icmp_hdr_len + RPL_DAO_ACK_LEN));
+    uipbuf_clear();
+    return;
+  }
 
   buffer = UIP_ICMP_PAYLOAD;
 
@@ -1531,6 +1565,22 @@ dao_ack_input(void)
   LOG_INFO_("\n");
 
   if(sequence == instance->my_dao_seqno) {
+    /*
+     * RFC 6550, Section 6.5: a DAO ACK is sent by a DAO recipient, that
+     * is a DAO parent or the DODAG root, in response to a unicast DAO.
+     * Only the node that the DAO was sent to can therefore acknowledge
+     * it.
+     */
+    if(!uip_ipaddr_cmp(&UIP_IP_BUF->srcipaddr, &instance->my_dao_dest)) {
+      LOG_WARN("Dropping a DAO ACK from an unexpected source ");
+      LOG_WARN_6ADDR(&UIP_IP_BUF->srcipaddr);
+      LOG_WARN_(", expected ");
+      LOG_WARN_6ADDR(&instance->my_dao_dest);
+      LOG_WARN_("\n");
+      uipbuf_clear();
+      return;
+    }
+
     instance->has_downward_route = status < 128;
 
     /* Always stop the retransmit timer when the ACK arrived. */
@@ -1567,7 +1617,7 @@ dao_ack_input(void)
         LOG_INFO_6ADDR(nexthop);
         LOG_INFO_("\n");
         buffer[2] = re->state.dao_seqno_in;
-        uip_icmp6_send(nexthop, ICMP6_RPL, RPL_CODE_DAO_ACK, 4);
+        uip_icmp6_send(nexthop, ICMP6_RPL, RPL_CODE_DAO_ACK, RPL_DAO_ACK_LEN);
       }
 
       if(status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT) {
@@ -1602,7 +1652,7 @@ dao_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequence,
   buffer[2] = sequence;
   buffer[3] = status;
 
-  uip_icmp6_send(dest, ICMP6_RPL, RPL_CODE_DAO_ACK, 4);
+  uip_icmp6_send(dest, ICMP6_RPL, RPL_CODE_DAO_ACK, RPL_DAO_ACK_LEN);
 #endif /* RPL_WITH_DAO_ACK */
 }
 /*---------------------------------------------------------------------------*/

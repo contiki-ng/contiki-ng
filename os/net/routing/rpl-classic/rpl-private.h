@@ -97,6 +97,9 @@
 #define RPL_DAO_TARGET_OPTION_MIN_LEN    4
 #define RPL_DAO_TRANSIT_OPTION_MIN_LEN   6
 
+/* Size, in bytes, of the DAO ACK base object. */
+#define RPL_DAO_ACK_LEN                  4
+
 #define RPL_DAO_K_FLAG                   0x80 /* DAO ACK requested */
 #define RPL_DAO_D_FLAG                   0x40 /* DODAG ID present */
 
