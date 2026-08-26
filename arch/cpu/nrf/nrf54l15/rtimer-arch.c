@@ -23,6 +23,7 @@
 #include <stdbool.h>
 
 #define GRTC_IRQ_PRIORITY 6
+#define GRTC_TICK_FREQUENCY_HZ 1000000UL
 
 static nrfx_grtc_channel_t rtimer_channel;
 static bool rtimer_channel_active;
@@ -74,6 +75,7 @@ rtimer_arch_now(void)
 {
   uint64_t counter;
   nrfx_grtc_syscounter_get(&counter);
+  counter /= (GRTC_TICK_FREQUENCY_HZ / RTIMER_ARCH_SECOND);
   return (rtimer_clock_t)counter;
 }
 /*---------------------------------------------------------------------------*/
@@ -84,7 +86,7 @@ rtimer_arch_schedule(rtimer_clock_t t)
     return;
   }
 
-  uint64_t target = (uint64_t)t;
+  uint64_t target = (uint64_t)t * (GRTC_TICK_FREQUENCY_HZ / RTIMER_ARCH_SECOND);
   uint64_t now;
   nrfx_grtc_syscounter_get(&now);
 
