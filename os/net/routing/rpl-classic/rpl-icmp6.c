@@ -722,9 +722,11 @@ dao_input_storing(void)
   rpl_parent_t *parent;
   uip_ds6_nbr_t *nbr;
   int is_root;
+  int target_received;
 
   prefixlen = 0;
   parent = NULL;
+  target_received = 0;
   memset(&prefix, 0, sizeof(prefix));
 
   uip_ipaddr_copy(&dao_sender_addr, &UIP_IP_BUF->srcipaddr);
@@ -830,8 +832,14 @@ dao_input_storing(void)
       }
       prefixlen = buffer[i + 3];
       if(prefixlen == 0) {
-        /* Ignore option targets with a prefix length of 0. */
-        break;
+        /*
+         * A zero-length prefix matches every destination, so it is not
+         * accepted as a target here. Rejecting it rather than ignoring it
+         * also keeps it from resetting the length of a target that was
+         * already accepted.
+         */
+        LOG_WARN("Dropping DAO with a zero-length target prefix\n");
+        return;
       }
       if(prefixlen > 128) {
         LOG_ERR("Too large target prefix length %d\n", prefixlen);
@@ -844,6 +852,7 @@ dao_input_storing(void)
       }
       memset(&prefix, 0, sizeof(prefix));
       memcpy(&prefix, buffer + i + 4, (prefixlen + 7) / CHAR_BIT);
+      target_received = 1;
       break;
     case RPL_OPTION_TRANSIT:
       /* The path sequence and control are ignored. */
@@ -856,6 +865,15 @@ dao_input_storing(void)
       /* The parent address is also ignored. */
       break;
     }
+  }
+
+  /*
+   * A DAO must carry a target. Continuing without one would install a
+   * route for the zero-length prefix, which matches every destination.
+   */
+  if(!target_received) {
+    LOG_WARN("Dropping DAO without a valid target option\n");
+    return;
   }
 
   LOG_INFO("DAO lifetime: %u, prefix length: %u prefix: ",
@@ -1036,6 +1054,7 @@ dao_input_nonstoring(void)
   int pos;
   int len;
   int i;
+  int target_received;
 
   /* Destination Advertisement Object */
   LOG_INFO("Received a DAO from ");
@@ -1043,8 +1062,10 @@ dao_input_nonstoring(void)
   LOG_INFO_("\n");
 
   prefixlen = 0;
+  target_received = 0;
 
   uip_ipaddr_copy(&dao_sender_addr, &UIP_IP_BUF->srcipaddr);
+  memset(&prefix, 0, sizeof(prefix));
   memset(&dao_parent_addr, 0, 16);
 
   buffer = UIP_ICMP_PAYLOAD;
@@ -1106,8 +1127,14 @@ dao_input_nonstoring(void)
       }
       prefixlen = buffer[i + 3];
       if(prefixlen == 0) {
-        /* Ignore option targets with a prefix length of 0. */
-        break;
+        /*
+         * A zero-length prefix matches every destination, so it is not
+         * accepted as a target here. Rejecting it rather than ignoring it
+         * also keeps it from resetting the length of a target that was
+         * already accepted.
+         */
+        LOG_WARN("Dropping DAO with a zero-length target prefix\n");
+        return;
       }
       if(prefixlen > 128) {
         LOG_ERR("Too large target prefix length %d\n", prefixlen);
@@ -1121,6 +1148,7 @@ dao_input_nonstoring(void)
 
       memset(&prefix, 0, sizeof(prefix));
       memcpy(&prefix, buffer + i + 4, (prefixlen + 7) / CHAR_BIT);
+      target_received = 1;
       break;
     case RPL_OPTION_TRANSIT:
       /* The path sequence and control are ignored. */
@@ -1135,6 +1163,16 @@ dao_input_nonstoring(void)
       }
       break;
     }
+  }
+
+  /*
+   * A DAO must carry a target. The prefix is zero-initialized above so
+   * that it can never be used uninitialized, but the unspecified address
+   * must not enter the source routing graph either.
+   */
+  if(!target_received) {
+    LOG_WARN("Dropping DAO without a valid target option\n");
+    return;
   }
 
   LOG_INFO("DAO lifetime: %u, prefix length: %u prefix: ",
