@@ -192,6 +192,14 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
   rh_header = (struct uip_routing_hdr *)uipbuf_search_header(uip_buf, uip_len, UIP_PROTO_ROUTING);
 
   dag = rpl_get_dag(&UIP_IP_BUF->destipaddr);
+  if(dag == NULL) {
+    /*
+     * The destination is not in a DAG that we have joined, so there is
+     * no source routing graph to consult.
+     */
+    return 0;
+  }
+
   root_node = uip_sr_get_node(dag, &dag->dag_id);
   dest_node = uip_sr_get_node(dag, &UIP_IP_BUF->destipaddr);
 
@@ -409,13 +417,30 @@ rpl_ext_header_srh_update(void)
       uint8_t *addr_ptr = srh_addr(rh_header, &srh,
                                    srh.path_len - srh.segments_left, &cmpr);
       uip_ipaddr_t current_dest_addr;
+      uip_ipaddr_t next_hop;
+
+      /*
+       * The elided bytes of a compressed address are those of the
+       * current destination, which is our own address.
+       */
+      uip_ipaddr_copy(&next_hop, &UIP_IP_BUF->destipaddr);
+      memcpy((uint8_t *)&next_hop + cmpr, addr_ptr, 16 - cmpr);
+
+      /*
+       * The header is rewritten below, so the next hop has to be shown
+       * to belong to a DAG that we have joined before that happens.
+       */
+      if(rpl_get_dag(&next_hop) == NULL) {
+        LOG_ERR("SRH next hop is outside the DAGs that we have joined\n");
+        return 0;
+      }
 
       /* As per RFC6554: swap the IPv6 destination address and address[i]. */
 
       /* First, copy the current IPv6 destination address. */
       uip_ipaddr_copy(&current_dest_addr, &UIP_IP_BUF->destipaddr);
       /* Second, update the IPv6 destination address with addresses[i]. */
-      memcpy(((uint8_t *)&UIP_IP_BUF->destipaddr) + cmpr, addr_ptr, 16 - cmpr);
+      uip_ipaddr_copy(&UIP_IP_BUF->destipaddr, &next_hop);
       /* Third, write current_dest_addr to addresses[i]. */
       memcpy(addr_ptr, ((uint8_t *)&current_dest_addr) + cmpr, 16 - cmpr);
 
