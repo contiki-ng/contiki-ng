@@ -1063,14 +1063,29 @@ dao_input_nonstoring(void)
   int len;
   int i;
   int target_received;
+  int parent_addr_received;
 
   /* Destination Advertisement Object */
   LOG_INFO("Received a DAO from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
   LOG_INFO_("\n");
 
+  /*
+   * A multicast advertisement belongs to the mode of operation that stores
+   * routes and carries multicast groups, and this parser serves the one that
+   * does not store them. Declining it here also keeps the requirement below,
+   * which RFC 6550, Section 9.4, states for a unicast advertisement, from
+   * being applied to a message that the same section forbids to carry a
+   * parent address.
+   */
+  if(uip_is_addr_mcast(&UIP_IP_BUF->destipaddr)) {
+    LOG_WARN("Dropping a multicast DAO received in non-storing mode\n");
+    return;
+  }
+
   prefixlen = 0;
   target_received = 0;
+  parent_addr_received = 0;
 
   uip_ipaddr_copy(&dao_sender_addr, &UIP_IP_BUF->srcipaddr);
   memset(&prefix, 0, sizeof(prefix));
@@ -1181,6 +1196,7 @@ dao_input_nonstoring(void)
       if(len >= RPL_DAO_TRANSIT_OPTION_MIN_LEN + (int)sizeof(dao_parent_addr)) {
         memcpy(&dao_parent_addr, buffer + i + RPL_DAO_TRANSIT_OPTION_MIN_LEN,
                sizeof(dao_parent_addr));
+        parent_addr_received = 1;
       }
       break;
     }
@@ -1193,6 +1209,18 @@ dao_input_nonstoring(void)
    */
   if(!target_received) {
     LOG_WARN("Dropping DAO without a valid target option\n");
+    return;
+  }
+
+  /*
+   * The parent address is what links the target into the source routing
+   * graph, so a DAO whose transit option does not carry one has nothing
+   * to record. Accepting it would make the unspecified address the parent
+   * of the target. RFC 6550, Section 9.4, asks for the transit option in a
+   * unicast advertisement, and a multicast one has already been declined.
+   */
+  if(!parent_addr_received) {
+    LOG_WARN("Dropping DAO without a transit option carrying a parent address\n");
     return;
   }
 
