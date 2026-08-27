@@ -123,6 +123,14 @@
 #define RPL_DAO_TRANSIT_OPTION_PARENT_LEN \
   (RPL_DAO_TRANSIT_OPTION_MIN_LEN + (int)sizeof(uip_ipaddr_t))
 
+/*
+ * Largest DIO interval, as the base-2 logarithm of its length in
+ * milliseconds, that the Trickle timer supports. It bounds the sum of the
+ * minimum interval and the number of doublings, both of which are received
+ * in the DAG Configuration option.
+ */
+#define RPL_DIO_INTERVAL_MAX_EXP         30
+
 #define RPL_DAO_K_FLAG                   0x80 /* DAO-ACK requested */
 #define RPL_DAO_D_FLAG                   0x40 /* DODAG ID present */
 

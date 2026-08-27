@@ -169,6 +169,22 @@ rpl_icmp6_dis_output(uip_ipaddr_t *addr)
   uip_icmp6_send(addr, ICMP6_RPL, RPL_CODE_DIS, 2);
 }
 /*---------------------------------------------------------------------------*/
+/*
+ * Check that a DIO interval received in a DAG Configuration option is within
+ * the range that the Trickle timer supports. The bound is the same on every
+ * platform, so that nodes agree on which DAGs they can join.
+ *
+ * The bound also keeps the sum of the two fields within reach of the
+ * eight-bit counter that is compared against it while the interval grows.
+ * A larger sum would leave that counter wrapping instead of stopping, and
+ * passing an invalid shift count on every cycle.
+ */
+static bool
+dio_interval_is_valid(uint8_t intmin, uint8_t intdoubl)
+{
+  return (unsigned)intmin + intdoubl <= RPL_DIO_INTERVAL_MAX_EXP;
+}
+/*---------------------------------------------------------------------------*/
 static void
 dio_input(void)
 {
@@ -312,6 +328,21 @@ dio_input(void)
         /* buffer + 12 is reserved */
         dio.default_lifetime = buffer[i + 13];
         dio.lifetime_unit = get16(buffer, i + 14);
+
+        /*
+         * Reject these before they are copied into the instance. A
+         * MinHopRankIncrease of zero would divide by zero in DAG_RANK().
+         */
+        if(dio.dag_min_hoprankinc == 0) {
+          LOG_WARN("dio_input: MinHopRankIncrease is 0, discard\n");
+          goto discard;
+        }
+
+        if(!dio_interval_is_valid(dio.dag_intmin, dio.dag_intdoubl)) {
+          LOG_WARN("dio_input: DIO interval %u is out of range, discard\n",
+                   (unsigned)dio.dag_intmin + dio.dag_intdoubl);
+          goto discard;
+        }
         break;
       case RPL_OPTION_PREFIX_INFO:
         if(len != 32) {
