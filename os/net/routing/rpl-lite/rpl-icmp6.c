@@ -480,9 +480,13 @@ dao_input(void)
   int pos;
   int len;
   int i;
+  int target_received;
+  int parent_received;
   uip_ipaddr_t from;
 
   memset(&dao, 0, sizeof(dao));
+  target_received = 0;
+  parent_received = 0;
 
   buffer = UIP_ICMP_PAYLOAD;
   buffer_length = uip_len - uip_l3_icmp_hdr_len;
@@ -496,6 +500,19 @@ dao_input(void)
   dao.instance_id = buffer[0];
   if(!curr_instance.used || curr_instance.instance_id != dao.instance_id) {
     LOG_ERR("dao_input: unknown RPL instance %u, discard\n", dao.instance_id);
+    goto discard;
+  }
+
+  /*
+   * A multicast advertisement belongs to the mode of operation that stores
+   * routes and carries multicast groups, which this implementation neither
+   * runs nor joins, so it has nothing to do with one. Declining it here also
+   * keeps the requirements below, which RFC 6550, Section 9.4, states for a
+   * unicast advertisement, from being applied to a message that the same
+   * section forbids to carry a parent address.
+   */
+  if(uip_is_addr_mcast(&UIP_IP_BUF->destipaddr)) {
+    LOG_WARN("dao_input: multicast DAO, discard\n");
     goto discard;
   }
 
@@ -564,6 +581,7 @@ dao_input(void)
         }
         memset(&dao.prefix, 0, sizeof(dao.prefix));
         memcpy(&dao.prefix, buffer + i + 4, (dao.prefixlen + 7) / CHAR_BIT);
+        target_received = 1;
         break;
       case RPL_OPTION_TRANSIT:
         /* The path sequence and control are ignored. */
@@ -581,12 +599,47 @@ dao_input(void)
         if(len >= RPL_DAO_TRANSIT_OPTION_PARENT_LEN) {
           memcpy(&dao.parent_addr, buffer + i + RPL_DAO_TRANSIT_OPTION_MIN_LEN,
                  sizeof(dao.parent_addr));
+          parent_received = 1;
         }
         break;
     }
   }
 
   /* Destination Advertisement Object */
+  /*
+   * RFC 6550, Section 9.4: a unicast DAO carries one or more target options
+   * followed by one or more transit information options, and in this mode of
+   * operation the transit option names the parent. Both are needed here, and
+   * both must name an address, or the unspecified address would enter the
+   * source routing graph as a parent that never expires. A multicast
+   * advertisement, which that section exempts, is declined above.
+   *
+   * The advertised target is not used as the child. The graph is keyed by the
+   * source address of the advertisement instead, which a node cannot choose
+   * freely, so it can only ever advertise itself.
+   */
+  if(!target_received) {
+    LOG_WARN("dao_input: no target option, discard\n");
+    goto discard;
+  }
+
+  if(dao.prefixlen != 8 * sizeof(dao.prefix)) {
+    LOG_WARN("dao_input: target prefix length %u is not a full address, discard\n",
+             dao.prefixlen);
+    goto discard;
+  }
+
+  if(!parent_received) {
+    LOG_WARN("dao_input: no transit option carrying a parent, discard\n");
+    goto discard;
+  }
+
+  if(uip_is_addr_unspecified(&dao.parent_addr) ||
+     uip_is_addr_unspecified(&from)) {
+    LOG_WARN("dao_input: unspecified parent or child address, discard\n");
+    goto discard;
+  }
+
   LOG_INFO("received a %sDAO from ", dao.lifetime == 0 ? "No-path " : "");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
   LOG_INFO_(", seqno %u, lifetime %u, prefix ", dao.sequence, dao.lifetime);
