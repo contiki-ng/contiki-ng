@@ -118,6 +118,9 @@
  * including the two-byte option header, and of a transit information option
  * that carries the parent address that non-storing mode needs.
  */
+/* Size, in bytes, of the DAO ACK base object. */
+#define RPL_DAO_ACK_LEN                  4
+
 #define RPL_DAO_TARGET_OPTION_MIN_LEN    4
 #define RPL_DAO_TRANSIT_OPTION_MIN_LEN   6
 #define RPL_DAO_TRANSIT_OPTION_PARENT_LEN \

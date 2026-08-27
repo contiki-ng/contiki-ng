@@ -781,6 +781,12 @@ dao_ack_input(void)
   uint8_t sequence;
   uint8_t status;
 
+  if(uip_len < uip_l3_icmp_hdr_len + RPL_DAO_ACK_LEN) {
+    LOG_WARN("dao_ack_input: invalid DAO ACK header, len %u, discard\n",
+             (unsigned)uip_len);
+    goto discard;
+  }
+
   buffer = UIP_ICMP_PAYLOAD;
 
   instance_id = buffer[0];
@@ -789,6 +795,18 @@ dao_ack_input(void)
 
   if(!curr_instance.used || curr_instance.instance_id != instance_id) {
     LOG_ERR("dao_ack_input: unknown instance, discard\n");
+    goto discard;
+  }
+
+  /*
+   * RFC 6550, Section 6.5: a DAO ACK is sent by the node that received the
+   * DAO, which here is always the root, because a DAO is only ever sent to
+   * the DAG identifier. Only that node can therefore acknowledge it.
+   */
+  if(!uip_ipaddr_cmp(&UIP_IP_BUF->srcipaddr, &curr_instance.dag.dag_id)) {
+    LOG_WARN("dao_ack_input: not from the root ");
+    LOG_WARN_6ADDR(&UIP_IP_BUF->srcipaddr);
+    LOG_WARN_(", discard\n");
     goto discard;
   }
 
