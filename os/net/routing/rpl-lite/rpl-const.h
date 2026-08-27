@@ -123,6 +123,9 @@
 #define RPL_DAO_TRANSIT_OPTION_PARENT_LEN \
   (RPL_DAO_TRANSIT_OPTION_MIN_LEN + (int)sizeof(uip_ipaddr_t))
 
+/* Size, in bytes, of the DAO ACK base object. */
+#define RPL_DAO_ACK_LEN                  4
+
 /*
  * Largest DIO interval, as the base-2 logarithm of its length in
  * milliseconds, that the Trickle timer supports. It bounds the sum of the

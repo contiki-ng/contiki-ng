@@ -767,6 +767,12 @@ dao_ack_input(void)
   uint8_t sequence;
   uint8_t status;
 
+  if(uip_len < uip_l3_icmp_hdr_len + RPL_DAO_ACK_LEN) {
+    LOG_WARN("dao_ack_input: invalid DAO ACK header, len %u, discard\n",
+             (unsigned)uip_len);
+    goto discard;
+  }
+
   buffer = UIP_ICMP_PAYLOAD;
 
   instance_id = buffer[0];
