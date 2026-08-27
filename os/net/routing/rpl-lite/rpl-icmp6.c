@@ -484,15 +484,6 @@ dao_input(void)
 
   memset(&dao, 0, sizeof(dao));
 
-  dao.instance_id = UIP_ICMP_PAYLOAD[0];
-  if(!curr_instance.used || curr_instance.instance_id != dao.instance_id) {
-    LOG_ERR("dao_input: unknown RPL instance %u, discard\n", dao.instance_id);
-    goto discard;
-  }
-
-  uip_ipaddr_copy(&from, &UIP_IP_BUF->srcipaddr);
-  memset(&dao.parent_addr, 0, 16);
-
   buffer = UIP_ICMP_PAYLOAD;
   buffer_length = uip_len - uip_l3_icmp_hdr_len;
 
@@ -501,6 +492,15 @@ dao_input(void)
              buffer_length);
     goto discard;
   }
+
+  dao.instance_id = buffer[0];
+  if(!curr_instance.used || curr_instance.instance_id != dao.instance_id) {
+    LOG_ERR("dao_input: unknown RPL instance %u, discard\n", dao.instance_id);
+    goto discard;
+  }
+
+  uip_ipaddr_copy(&from, &UIP_IP_BUF->srcipaddr);
+  memset(&dao.parent_addr, 0, 16);
 
   pos = 0;
   pos++; /* instance ID */
