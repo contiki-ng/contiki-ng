@@ -279,6 +279,24 @@ dis_output(uip_ipaddr_t *addr)
   uip_icmp6_send(addr, ICMP6_RPL, RPL_CODE_DIS, 2);
 }
 /*---------------------------------------------------------------------------*/
+/*
+ * Check that a DIO interval received in a DAG Configuration option can be
+ * used as a shift count without invoking undefined behavior, and that the
+ * resulting number of milliseconds can be converted to clock ticks with the
+ * 32-bit arithmetic used by the Trickle timer and the DAG lifetime.
+ */
+static int
+dio_interval_is_valid(uint8_t intmin, uint8_t intdoubl)
+{
+  unsigned interval = (unsigned)intmin + intdoubl;
+
+  if(interval >= sizeof(unsigned long) * CHAR_BIT) {
+    return 0;
+  }
+
+  return (1UL << interval) <= UINT32_MAX / MAX(CLOCK_SECOND, RPL_DAG_LIFETIME);
+}
+/*---------------------------------------------------------------------------*/
 static void
 dio_input(void)
 {
@@ -457,6 +475,28 @@ dio_input(void)
       /* buffer + 12 is reserved */
       dio.default_lifetime = buffer[i + 13];
       dio.lifetime_unit = get16(buffer, i + 14);
+
+      /*
+       * The DAG Configuration values are used in arithmetic that is
+       * undefined or unbounded for parts of their encoded range, so they
+       * must be rejected here rather than after they have been copied into
+       * the instance state. A MinHopRankIncrease of zero would make
+       * DAG_RANK() divide by zero, and an excessive DIO interval would be
+       * used as an out-of-range shift count.
+       */
+      if(dio.dag_min_hoprankinc == 0) {
+        LOG_WARN("Invalid DAG configuration option, MinHopRankIncrease is 0\n");
+        RPL_STAT(rpl_stats.malformed_msgs++);
+        goto discard;
+      }
+
+      if(!dio_interval_is_valid(dio.dag_intmin, dio.dag_intdoubl)) {
+        LOG_WARN("Invalid DAG configuration option, DIO interval %u is too large\n",
+                 (unsigned)dio.dag_intmin + dio.dag_intdoubl);
+        RPL_STAT(rpl_stats.malformed_msgs++);
+        goto discard;
+      }
+
       LOG_INFO("DAG conf:dbl=%d, min=%d red=%d maxinc=%d mininc=%d ocp=%d d_l=%u l_u=%u\n",
                dio.dag_intdoubl, dio.dag_intmin, dio.dag_redund,
                dio.dag_max_rankinc, dio.dag_min_hoprankinc, dio.ocp,
@@ -682,9 +722,11 @@ dao_input_storing(void)
   rpl_parent_t *parent;
   uip_ds6_nbr_t *nbr;
   int is_root;
+  int target_received;
 
   prefixlen = 0;
   parent = NULL;
+  target_received = 0;
   memset(&prefix, 0, sizeof(prefix));
 
   uip_ipaddr_copy(&dao_sender_addr, &UIP_IP_BUF->srcipaddr);
@@ -778,44 +820,68 @@ dao_input_storing(void)
         return;
       }
       len = 2 + buffer[i + 1];
+      /*
+       * Every field of an option must be validated against the extent
+       * declared by the option itself, so that a short option cannot
+       * consume bytes belonging to the options that follow it.
+       */
+      if(i + len > buffer_length) {
+        LOG_WARN("Dropping DAO with an option extending past the message (%d > %" PRIu16 ")\n",
+                 i + len, buffer_length);
+        return;
+      }
     }
 
     switch(subopt_type) {
     case RPL_OPTION_TARGET:
       /* Handle the target option. */
-      if(last_valid_pos < i + 3) {
-        LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
-                 last_valid_pos, i + 3);
+      if(len < RPL_DAO_TARGET_OPTION_MIN_LEN) {
+        LOG_WARN("Dropping DAO with a too short target option (%d)\n", len);
         return;
       }
       prefixlen = buffer[i + 3];
       if(prefixlen == 0) {
-        /* Ignore option targets with a prefix length of 0. */
-        break;
+        /*
+         * A zero-length prefix matches every destination, so it is not
+         * accepted as a target here. Rejecting it rather than ignoring it
+         * also keeps it from resetting the length of a target that was
+         * already accepted.
+         */
+        LOG_WARN("Dropping DAO with a zero-length target prefix\n");
+        return;
       }
       if(prefixlen > 128) {
         LOG_ERR("Too large target prefix length %d\n", prefixlen);
         return;
       }
-      if(i + 4 + ((prefixlen + 7) / CHAR_BIT) > buffer_length) {
+      if(RPL_DAO_TARGET_OPTION_MIN_LEN + ((prefixlen + 7) / CHAR_BIT) > len) {
         LOG_ERR("Incomplete DAO target option with prefix length of %d bits\n",
                 prefixlen);
         return;
       }
       memset(&prefix, 0, sizeof(prefix));
       memcpy(&prefix, buffer + i + 4, (prefixlen + 7) / CHAR_BIT);
+      target_received = 1;
       break;
     case RPL_OPTION_TRANSIT:
       /* The path sequence and control are ignored. */
-      if(last_valid_pos < i + 5) {
-        LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
-                 last_valid_pos, i + 5);
+      if(len < RPL_DAO_TRANSIT_OPTION_MIN_LEN) {
+        LOG_WARN("Dropping DAO with a too short transit option (%d)\n", len);
         return;
       }
       lifetime = buffer[i + 5];
       /* The parent address is also ignored. */
       break;
     }
+  }
+
+  /*
+   * A DAO must carry a target. Continuing without one would install a
+   * route for the zero-length prefix, which matches every destination.
+   */
+  if(!target_received) {
+    LOG_WARN("Dropping DAO without a valid target option\n");
+    return;
   }
 
   LOG_INFO("DAO lifetime: %u, prefix length: %u prefix: ",
@@ -996,15 +1062,33 @@ dao_input_nonstoring(void)
   int pos;
   int len;
   int i;
+  int target_received;
+  int parent_addr_received;
 
   /* Destination Advertisement Object */
   LOG_INFO("Received a DAO from ");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
   LOG_INFO_("\n");
 
+  /*
+   * A multicast advertisement belongs to the mode of operation that stores
+   * routes and carries multicast groups, and this parser serves the one that
+   * does not store them. Declining it here also keeps the requirement below,
+   * which RFC 6550, Section 9.4, states for a unicast advertisement, from
+   * being applied to a message that the same section forbids to carry a
+   * parent address.
+   */
+  if(uip_is_addr_mcast(&UIP_IP_BUF->destipaddr)) {
+    LOG_WARN("Dropping a multicast DAO received in non-storing mode\n");
+    return;
+  }
+
   prefixlen = 0;
+  target_received = 0;
+  parent_addr_received = 0;
 
   uip_ipaddr_copy(&dao_sender_addr, &UIP_IP_BUF->srcipaddr);
+  memset(&prefix, 0, sizeof(prefix));
   memset(&dao_parent_addr, 0, 16);
 
   buffer = UIP_ICMP_PAYLOAD;
@@ -1054,26 +1138,41 @@ dao_input_nonstoring(void)
         return;
       }
       len = 2 + buffer[i + 1];
+      /*
+       * Every field of an option must be validated against the extent
+       * declared by the option itself, so that a short option cannot
+       * consume bytes belonging to the options that follow it.
+       */
+      if(i + len > buffer_length) {
+        LOG_WARN("Dropping DAO with an option extending past the message (%d > %" PRIu16 ")\n",
+                 i + len, buffer_length);
+        return;
+      }
     }
 
     switch(subopt_type) {
     case RPL_OPTION_TARGET:
       /* Handle the target option. */
-      if(last_valid_pos < i + 3) {
-        LOG_WARN("Dropping incomplete DAO (%" PRIu16 " < %d)\n",
-                 last_valid_pos, i + 3);
+      if(len < RPL_DAO_TARGET_OPTION_MIN_LEN) {
+        LOG_WARN("Dropping DAO with a too short target option (%d)\n", len);
         return;
       }
       prefixlen = buffer[i + 3];
       if(prefixlen == 0) {
-        /* Ignore option targets with a prefix length of 0. */
-        break;
+        /*
+         * A zero-length prefix matches every destination, so it is not
+         * accepted as a target here. Rejecting it rather than ignoring it
+         * also keeps it from resetting the length of a target that was
+         * already accepted.
+         */
+        LOG_WARN("Dropping DAO with a zero-length target prefix\n");
+        return;
       }
       if(prefixlen > 128) {
         LOG_ERR("Too large target prefix length %d\n", prefixlen);
         return;
       }
-      if(i + 4 + ((prefixlen + 7) / CHAR_BIT) > buffer_length) {
+      if(RPL_DAO_TARGET_OPTION_MIN_LEN + ((prefixlen + 7) / CHAR_BIT) > len) {
         LOG_ERR("Incomplete DAO target option with prefix length of %d bits\n",
                 prefixlen);
         return;
@@ -1081,20 +1180,48 @@ dao_input_nonstoring(void)
 
       memset(&prefix, 0, sizeof(prefix));
       memcpy(&prefix, buffer + i + 4, (prefixlen + 7) / CHAR_BIT);
+      target_received = 1;
       break;
     case RPL_OPTION_TRANSIT:
       /* The path sequence and control are ignored. */
-      if(i + 6 + 16 > buffer_length) {
-        LOG_WARN("Incomplete DAO transit option (%d > %" PRIu16 ")\n",
-                 i + 6 + 16, buffer_length);
+      if(len < RPL_DAO_TRANSIT_OPTION_MIN_LEN) {
+        LOG_WARN("Dropping DAO with a too short transit option (%d)\n", len);
         return;
       }
       lifetime = buffer[i + 5];
-      if(len >= 20) {
-        memcpy(&dao_parent_addr, buffer + i + 6, 16);
+      /*
+       * RFC 6550, Section 6.7.8: the option length is used to determine
+       * whether or not the parent address is present.
+       */
+      if(len >= RPL_DAO_TRANSIT_OPTION_MIN_LEN + (int)sizeof(dao_parent_addr)) {
+        memcpy(&dao_parent_addr, buffer + i + RPL_DAO_TRANSIT_OPTION_MIN_LEN,
+               sizeof(dao_parent_addr));
+        parent_addr_received = 1;
       }
       break;
     }
+  }
+
+  /*
+   * A DAO must carry a target. The prefix is zero-initialized above so
+   * that it can never be used uninitialized, but the unspecified address
+   * must not enter the source routing graph either.
+   */
+  if(!target_received) {
+    LOG_WARN("Dropping DAO without a valid target option\n");
+    return;
+  }
+
+  /*
+   * The parent address is what links the target into the source routing
+   * graph, so a DAO whose transit option does not carry one has nothing
+   * to record. Accepting it would make the unspecified address the parent
+   * of the target. RFC 6550, Section 9.4, asks for the transit option in a
+   * unicast advertisement, and a multicast one has already been declined.
+   */
+  if(!parent_addr_received) {
+    LOG_WARN("Dropping DAO without a transit option carrying a parent address\n");
+    return;
   }
 
   LOG_INFO("DAO lifetime: %u, prefix length: %u prefix: ",
@@ -1217,6 +1344,20 @@ handle_dao_retransmission(void *ptr)
 }
 #endif /* RPL_WITH_DAO_ACK */
 /*---------------------------------------------------------------------------*/
+/*
+ * Return the address that a DAO is sent to: the preferred parent when
+ * storing routes, and the root of the DAG when not.
+ */
+static uip_ipaddr_t *
+dao_destination(rpl_parent_t *parent)
+{
+  if(parent->dag->instance->mop != RPL_MOP_NON_STORING) {
+    return rpl_parent_get_ipaddr(parent);
+  }
+
+  return &parent->dag->dag_id;
+}
+/*---------------------------------------------------------------------------*/
 void
 dao_output(rpl_parent_t *parent, uint8_t lifetime)
 {
@@ -1242,10 +1383,25 @@ dao_output(rpl_parent_t *parent, uint8_t lifetime)
    */
   if(lifetime != RPL_ZERO_LIFETIME) {
     rpl_instance_t *instance;
+    const uip_ipaddr_t *dest_ipaddr;
+
     instance = parent->dag->instance;
+    dest_ipaddr = dao_destination(parent);
 
     instance->my_dao_seqno = dao_sequence;
     instance->my_dao_transmissions = 1;
+
+    /*
+     * Remember where the DAO is sent, so that no other node can
+     * acknowledge it. An unspecified address matches no sender, and thus
+     * rejects every acknowledgment.
+     */
+    if(dest_ipaddr == NULL) {
+      memset(&instance->my_dao_dest, 0, sizeof(instance->my_dao_dest));
+    } else {
+      uip_ipaddr_copy(&instance->my_dao_dest, dest_ipaddr);
+    }
+
     ctimer_set(&instance->dao_retransmit_timer, RPL_DAO_RETRANSMISSION_TIMEOUT,
                handle_dao_retransmission, parent);
   }
@@ -1355,19 +1511,16 @@ dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
   buffer[pos++] = 0; /* path seq - ignored */
   buffer[pos++] = lifetime;
 
-  if(instance->mop != RPL_MOP_NON_STORING) {
-    /* Send DAO to the parent. */
-    dest_ipaddr = parent_ipaddr;
-  } else {
+  if(instance->mop == RPL_MOP_NON_STORING) {
     /* Include the parent's global IP address. */
     memcpy(buffer + pos, &parent->dag->dag_id, 8); /* Prefix */
     pos += 8;
     /* Interface identifier. */
     memcpy(buffer + pos, ((const unsigned char *)parent_ipaddr) + 8, 8);
     pos += 8;
-    /* Send DAO to root */
-    dest_ipaddr = &parent->dag->dag_id;
   }
+
+  dest_ipaddr = dao_destination(parent);
 
   LOG_INFO("Sending a %sDAO with sequence number %u, lifetime %u, prefix ",
            lifetime == RPL_ZERO_LIFETIME ? "No-Path " : "", seq_no, lifetime);
@@ -1395,6 +1548,14 @@ dao_ack_input(void)
   uint8_t status;
   rpl_instance_t *instance;
   rpl_parent_t *parent;
+
+  if(uip_len < uip_l3_icmp_hdr_len + RPL_DAO_ACK_LEN) {
+    LOG_WARN("Dropping incomplete DAO ACK (%u < %u)\n",
+             (unsigned)uip_len,
+             (unsigned)(uip_l3_icmp_hdr_len + RPL_DAO_ACK_LEN));
+    uipbuf_clear();
+    return;
+  }
 
   buffer = UIP_ICMP_PAYLOAD;
 
@@ -1432,6 +1593,22 @@ dao_ack_input(void)
   LOG_INFO_("\n");
 
   if(sequence == instance->my_dao_seqno) {
+    /*
+     * RFC 6550, Section 6.5: a DAO ACK is sent by a DAO recipient, that
+     * is a DAO parent or the DODAG root, in response to a unicast DAO.
+     * Only the node that the DAO was sent to can therefore acknowledge
+     * it.
+     */
+    if(!uip_ipaddr_cmp(&UIP_IP_BUF->srcipaddr, &instance->my_dao_dest)) {
+      LOG_WARN("Dropping a DAO ACK from an unexpected source ");
+      LOG_WARN_6ADDR(&UIP_IP_BUF->srcipaddr);
+      LOG_WARN_(", expected ");
+      LOG_WARN_6ADDR(&instance->my_dao_dest);
+      LOG_WARN_("\n");
+      uipbuf_clear();
+      return;
+    }
+
     instance->has_downward_route = status < 128;
 
     /* Always stop the retransmit timer when the ACK arrived. */
@@ -1468,7 +1645,7 @@ dao_ack_input(void)
         LOG_INFO_6ADDR(nexthop);
         LOG_INFO_("\n");
         buffer[2] = re->state.dao_seqno_in;
-        uip_icmp6_send(nexthop, ICMP6_RPL, RPL_CODE_DAO_ACK, 4);
+        uip_icmp6_send(nexthop, ICMP6_RPL, RPL_CODE_DAO_ACK, RPL_DAO_ACK_LEN);
       }
 
       if(status >= RPL_DAO_ACK_UNABLE_TO_ACCEPT) {
@@ -1503,7 +1680,7 @@ dao_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequence,
   buffer[2] = sequence;
   buffer[3] = status;
 
-  uip_icmp6_send(dest, ICMP6_RPL, RPL_CODE_DAO_ACK, 4);
+  uip_icmp6_send(dest, ICMP6_RPL, RPL_CODE_DAO_ACK, RPL_DAO_ACK_LEN);
 #endif /* RPL_WITH_DAO_ACK */
 }
 /*---------------------------------------------------------------------------*/
