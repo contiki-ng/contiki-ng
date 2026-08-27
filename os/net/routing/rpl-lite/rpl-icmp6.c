@@ -567,14 +567,20 @@ dao_input(void)
         break;
       case RPL_OPTION_TRANSIT:
         /* The path sequence and control are ignored. */
-        if(len < 6) {
+        if(len < RPL_DAO_TRANSIT_OPTION_MIN_LEN) {
           LOG_WARN("dao_input: invalid transit option, len %"PRIu16", discard\n",
                    buffer_length);
           goto discard;
         }
         dao.lifetime = buffer[i + 5];
-        if(len >= 20) {
-          memcpy(&dao.parent_addr, buffer + i + 6, 16);
+        /*
+         * RFC 6550, Section 6.7.8: the option length is used to determine
+         * whether or not the parent address is present, and the whole of it
+         * must be within the option to be read from its offset.
+         */
+        if(len >= RPL_DAO_TRANSIT_OPTION_PARENT_LEN) {
+          memcpy(&dao.parent_addr, buffer + i + RPL_DAO_TRANSIT_OPTION_MIN_LEN,
+                 sizeof(dao.parent_addr));
         }
         break;
     }
