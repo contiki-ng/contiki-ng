@@ -364,8 +364,20 @@ rpl_set_root(uint8_t instance_id, uip_ipaddr_t *dag_id)
 {
   rpl_dag_t *dag;
   rpl_instance_t *instance;
+  rpl_of_t *of;
   uint8_t version;
   int i;
+
+  /*
+   * Look the objective function up before anything is allocated or
+   * dropped, so that an unsupported one cannot leave a half-built
+   * instance behind.
+   */
+  of = rpl_find_of(RPL_OF_OCP);
+  if(of == NULL) {
+    LOG_WARN("OF with OCP %u not supported\n", RPL_OF_OCP);
+    return NULL;
+  }
 
   version = RPL_LOLLIPOP_INIT;
   instance = rpl_get_instance(instance_id);
@@ -403,11 +415,7 @@ rpl_set_root(uint8_t instance_id, uip_ipaddr_t *dag_id)
   dag->grounded = RPL_GROUNDED;
   dag->preference = RPL_PREFERENCE;
   instance->mop = RPL_MOP_DEFAULT;
-  instance->of = rpl_find_of(RPL_OF_OCP);
-  if(instance->of == NULL) {
-    LOG_WARN("OF with OCP %u not supported\n", RPL_OF_OCP);
-    return NULL;
-  }
+  instance->of = of;
 
   rpl_set_preferred_parent(dag, NULL);
 
