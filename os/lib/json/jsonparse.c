@@ -87,26 +87,39 @@ atomic(struct jsonparse_state *state, char type)
   int len;
 
   state->vstart = state->pos;
+  /* Cleared here so that an error return below cannot leave the length of
+     the previous value behind. */
+  state->vlen = 0;
   if(type == JSON_TYPE_STRING || type == JSON_TYPE_PAIR_NAME) {
-    while((c = state->json[state->pos++]) && c != '"') {
+    c = 0;
+    while(state->pos < state->len) {
+      c = state->json[state->pos++];
+      if(c == '\0' || c == '"') {
+        break;
+      }
       if(c == '\\') {
-        state->pos++;           /* skip current char */
+        if(state->pos == state->len) {
+          /* Nothing left for the escape to consume: the string is
+             unterminated. */
+          c = 0;
+          break;
+        }
+        state->pos++;           /* skip the escaped char */
       }
     }
-    if (c != '"') {
+    if(c != '"') {
       state->error = JSON_ERROR_SYNTAX;
       return JSON_TYPE_ERROR;
     }
     state->vlen = state->pos - state->vstart - 1;
   } else if(type == JSON_TYPE_NUMBER) {
-    do {
+    while(state->pos < state->len) {
       c = state->json[state->pos];
       if((c < '0' || c > '9') && c != '.') {
-        c = 0;
-      } else {
-        state->pos++;
+        break;
       }
-    } while(c);
+      state->pos++;
+    }
     /* need to back one step since first char is already gone */
     state->vstart--;
     state->vlen = state->pos - state->vstart;
@@ -119,16 +132,23 @@ atomic(struct jsonparse_state *state, char type)
     default:              str = "";      break;
     }
 
-    while((c = state->json[state->pos]) && !is_whitespace(c) &&
-          c != ',' && c != ']' && c != '}') {
+    while(state->pos < state->len) {
+      c = state->json[state->pos];
+      if(c == '\0' || is_whitespace(c) ||
+         c == ',' || c == ']' || c == '}') {
+        break;
+      }
       state->pos++;
     }
 
     state->vlen = state->pos - state->vstart;
     len = strlen(str);
-    len = state->vlen > len ? state->vlen : len;
 
-    if (strncmp(str, &state->json[state->vstart], len) != 0) {
+    /* Require an exact-length match. Comparing over the longer of the two
+       lengths, as was done before, reads past the end of the input when the
+       input holds a truncated literal. */
+    if(state->vlen != len ||
+       strncmp(str, &state->json[state->vstart], len) != 0) {
       state->error = JSON_ERROR_SYNTAX;
       return JSON_TYPE_ERROR;
     }
@@ -163,6 +183,8 @@ jsonparse_setup(struct jsonparse_state *state, const char *json, int len)
   state->depth = 0;
   state->error = 0;
   state->vtype = 0;
+  state->vstart = 0;
+  state->vlen = 0;
   state->stack[0] = 0;
 }
 /*--------------------------------------------------------------------*/
@@ -175,10 +197,17 @@ jsonparse_next(struct jsonparse_state *state)
   bool ret;
 
   skip_ws(state);
-  c = state->json[state->pos];
   s = jsonparse_get_type(state);
   v = state->vtype;
-  state->pos++;
+
+  /* Treat the end of the input like the NUL terminator handled below,
+     rather than reading, and stepping over, the byte just past it. */
+  if(state->pos < state->len) {
+    c = state->json[state->pos];
+    state->pos++;
+  } else {
+    c = 0;
+  }
 
   switch(c) {
   case '{':
@@ -291,6 +320,9 @@ jsonparse_copy_value(struct jsonparse_state *state, char *str, int size)
   for(i = 0, o = 0; i < state->vlen && o < size - 1; i++) {
     c = state->json[state->vstart + i];
     if(c == '\\') {
+      if(i + 1 >= state->vlen) {
+        break;
+      }
       i++;
       switch(state->json[state->vstart + i]) {
       case '"':  str[o++] = '"';  break;
@@ -310,22 +342,43 @@ jsonparse_copy_value(struct jsonparse_state *state, char *str, int size)
   return state->vtype;
 }
 /*--------------------------------------------------------------------*/
+/* Copy the current number into a NUL-terminated buffer. The input is not
+   required to be NUL-terminated, so atoi() and atol() must not be pointed
+   into it directly.
+*/
+/*--------------------------------------------------------------------*/
+static bool
+copy_number(struct jsonparse_state *state, char *buf, int size)
+{
+  if(state->vtype != JSON_TYPE_NUMBER ||
+     state->vlen < 0 || state->vlen >= size) {
+    return false;
+  }
+  memcpy(buf, &state->json[state->vstart], state->vlen);
+  buf[state->vlen] = '\0';
+  return true;
+}
+/*--------------------------------------------------------------------*/
 int
 jsonparse_get_value_as_int(struct jsonparse_state *state)
 {
-  if(state->vtype != JSON_TYPE_NUMBER) {
+  char buf[JSONPARSE_NUMBER_MAX_LEN + 1];
+
+  if(!copy_number(state, buf, sizeof(buf))) {
     return 0;
   }
-  return atoi(&state->json[state->vstart]);
+  return atoi(buf);
 }
 /*--------------------------------------------------------------------*/
 long
 jsonparse_get_value_as_long(struct jsonparse_state *state)
 {
-  if(state->vtype != JSON_TYPE_NUMBER) {
+  char buf[JSONPARSE_NUMBER_MAX_LEN + 1];
+
+  if(!copy_number(state, buf, sizeof(buf))) {
     return 0;
   }
-  return atol(&state->json[state->vstart]);
+  return atol(buf);
 }
 /*--------------------------------------------------------------------*/
 /* strcmp - assume no strange chars that needs to be stuffed in string... */
