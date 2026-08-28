@@ -338,6 +338,20 @@ lwm2m_tlv_float32_to_fix(const lwm2m_tlv_t *tlv, int32_t *value, int bits)
   }
   LOG_DBG("\nExp:%d => %d\n", e, e - 127);
 
+  if(e == 0xff) {
+    /* Infinity and NaN have no fixpoint representation; reject rather than
+       hand the caller a number it cannot tell apart from a measurement. */
+    *value = 0;
+    return 0;
+  }
+
+  if(e == 0) {
+    /* Zero and the subnormals, which carry no implicit significand bit. Every
+       subnormal is far below the resolution of the fixpoint format. */
+    *value = 0;
+    return 4;
+  }
+
   e = e - 127 + bits;
 
   /* e corresponds to the number of times we need to roll the number */
@@ -346,8 +360,23 @@ lwm2m_tlv_float32_to_fix(const lwm2m_tlv_t *tlv, int32_t *value, int bits)
   e = e - 23;
   LOG_DBG("E after sub %d\n", e);
   val = val | 1L << 23;
-  if(e > 0) {
-    val = val << e;
+  /*
+   * The exponent is taken from the packet, so e spans [bits - 150, bits + 105]
+   * and neither shift can be taken at face value: a shift count of 32 or more
+   * is undefined, and even a small left shift can push the 24-bit magnitude
+   * out of the range of int32_t. Saturate at both ends instead.
+   */
+  if(e >= 32) {
+    val = INT32_MAX;
+  } else if(e > 0) {
+    if(val > (INT32_MAX >> e)) {
+      val = INT32_MAX;
+    } else {
+      val = val << e;
+    }
+  } else if(e <= -32) {
+    /* Every significant bit would have been shifted out. */
+    val = 0;
   } else {
     val = val >> -e;
   }
