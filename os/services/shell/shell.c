@@ -85,7 +85,7 @@ output_prompt(shell_output_func output)
   SHELL_OUTPUT(output, "> ");
 }
 /*---------------------------------------------------------------------------*/
-PT_THREAD(shell_input(struct pt *pt, shell_output_func output, const char *cmd))
+PT_THREAD(shell_input(struct pt *pt, shell_output_func output, char *cmd))
 {
   static char *args;
   static const struct shell_command_t *cmd_descr = NULL;

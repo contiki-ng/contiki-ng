@@ -91,8 +91,11 @@ void shell_init(void);
 
 /**
  * \brief A protothread that is spawned by a Shell driver when receiving a new line.
+ *
+ * The command line is written to while it is split into a command and its
+ * arguments, so the buffer the driver passes must be writable.
  */
-PT_THREAD(shell_input(struct pt *pt, shell_output_func output, const char *cmd));
+PT_THREAD(shell_input(struct pt *pt, shell_output_func output, char *cmd));
 
 /**
  * Prints an IPv6 address
