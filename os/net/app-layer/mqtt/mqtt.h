@@ -766,6 +766,22 @@ void mqtt_encode_var_byte_int(uint8_t *vbi_out,
                               uint8_t *vbi_bytes,
                               uint32_t val);
 /*---------------------------------------------------------------------------*/
+/**
+ * \brief Decode a Variable Byte Integer from received input.
+ * \param input_data_ptr The received input.
+ * \param input_data_len The number of bytes received. A value of zero or
+ *        less denotes that there is nothing to decode.
+ * \param input_pos Position to start decoding at, advanced past the bytes
+ *        that were decoded. NULL to decode from the start of the input.
+ * \param pkt_byte_count Incremented once per decoded byte, or NULL.
+ * \param dest The decoded value, set to zero unless the decoding succeeds.
+ * \return The number of bytes the integer was encoded in, or zero on error.
+ *
+ * The decoding fails if the input ends before the integer does, if the
+ * encoding exceeds the four bytes that MQTT allows, or if the encoded value
+ * exceeds the range of the destination. The parse position is never advanced
+ * past the bytes that the integer was encoded in.
+ */
 uint8_t mqtt_decode_var_byte_int(const uint8_t *input_data_ptr,
                                  int input_data_len,
                                  uint32_t *input_pos,
