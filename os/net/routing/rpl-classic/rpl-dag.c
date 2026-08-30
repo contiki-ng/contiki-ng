@@ -688,6 +688,10 @@ rpl_free_dag(rpl_dag_t *dag)
     ctimer_stop(&dag->instance->dao_retransmit_timer);
 #endif /* RPL_WITH_DAO_ACK */
 
+    /*Stop the DCO retransmit timer */
+#if RPL_WITH_DCO_ACK
+    ctimer_stop(&dag->instance->dco_retransmit_timer);
+#endif /*RPL_WITH_DCO_ACK*/
     /* Remove autoconfigured address. */
     if((dag->prefix_info.flags & UIP_ND6_RA_FLAG_AUTONOMOUS)) {
       check_prefix(&dag->prefix_info, NULL);
@@ -861,8 +865,13 @@ rpl_select_dag(rpl_instance_t *instance, rpl_parent_t *p)
     }
     /* The DAO parent set changed -- schedule a DAO transmission. If
        MOP = MOP0, we do not want downward routes. */
-    if(instance->mop != RPL_MOP_NO_DOWNWARD_ROUTES) {
-      rpl_schedule_dao(instance);
+    if (instance->mop != RPL_MOP_NO_DOWNWARD_ROUTES)
+    {
+      #if RPL_WITH_DCO_ROUTE_INVALIDATION
+        rpl_schedule_dao_immediately(instance);
+      #else
+        rpl_schedule_dao(instance);
+      #endif /* RPL_WITH_DCO_ROUTE_INVALIDATION */
     }
 
     rpl_reset_dio_timer(instance);

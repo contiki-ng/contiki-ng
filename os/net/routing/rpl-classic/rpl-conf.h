@@ -41,6 +41,17 @@
 #include "contiki.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 
+/*
+ * Enable Efficient route invalidation
+ * RFC9009 Destination Cleanup Object message is sent downwards
+ * by an ancestor in case there is a route change detected
+ */
+#ifdef RPL_CONF_WITH_DCO_ROUTE_INVALIDATION
+#define RPL_WITH_DCO_ROUTE_INVALIDATION          RPL_CONF_WITH_DCO_ROUTE_INVALIDATION
+#else
+#define RPL_WITH_DCO_ROUTE_INVALIDATION          0
+#endif
+
 /* DAG Mode of Operation */
 #define RPL_MOP_NO_DOWNWARD_ROUTES      0
 #define RPL_MOP_NON_STORING             1
@@ -222,6 +233,19 @@
 #endif /* RPL_CONF_DAO_SPECIFY_DAG */
 
 /*
+ *
+ */
+#ifndef RPL_CONF_DCO_SPECIFY_DAG
+  #if RPL_MAX_DAG_PER_INSTANCE > 1
+    #define RPL_DCO_SPECIFY_DAG 1
+  #else
+    #define RPL_DCO_SPECIFY_DAG 0
+  #endif /* RPL_MAX_DAG_PER_INSTANCE > 1 */
+#else
+  #define RPL_DCO_SPECIFY_DAG RPL_CONF_DCO_SPECIFY_DAG
+#endif /* RPL_CONF_DAO_SPECIFY_DAG */
+
+/*
  * The DIO interval (n) represents 2^n ms.
  *
  * According to the specification, the default value is 3, which
@@ -299,6 +323,19 @@
 #else
 #define RPL_WITH_DAO_ACK 0
 #endif /* RPL_CONF_WITH_DAO_ACK */
+
+/*
+ * RFC9009: RPL DCO-ACK support. When enabled, DCO-ACKs will be sent.
+ * This will also enable retransmission of DCO when no ack
+ * has been received.
+ */
+#if RPL_WITH_DCO_ROUTE_INVALIDATION
+#ifdef RPL_CONF_WITH_DCO_ACK
+#define RPL_WITH_DCO_ACK RPL_CONF_WITH_DCO_ACK
+#else
+#define RPL_WITH_DCO_ACK 0
+#endif /* RPL_CONF_WITH_DAO_ACK */
+#endif
 
 /*
  * RPL REPAIR ON DAO NACK. When enabled, DAO NACK will trigger a local
