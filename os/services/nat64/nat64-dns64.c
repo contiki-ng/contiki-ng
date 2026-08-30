@@ -226,10 +226,15 @@ nat64_dns64_4to6(const uint8_t *ipv4data, uint16_t ipv4len,
       dst += 10;
       src += 10;
 
-      /* Synthesize IPv6 address from the IPv4 address. */
+      /*
+       * A name of odd length leaves dst unaligned, whereas uip_ip6addr_t is
+       * written through as 16-bit words. Synthesize locally and copy.
+       */
       uip_ip4addr_t a4;
+      uip_ip6addr_t a6;
       memcpy(&a4, src, 4);
-      ip64_addr_4to6(&a4, (uip_ip6addr_t *)dst);
+      ip64_addr_4to6(&a4, &a6);
+      memcpy(dst, &a6, sizeof(a6));
 
       src += 4;
       dst += 16;
