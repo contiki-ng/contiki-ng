@@ -447,6 +447,21 @@ UNIT_TEST(sha_256_hkdf)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(sha_256_hkdf_max, "SHA-256 HKDF max");
+UNIT_TEST(sha_256_hkdf_max)
+{
+  UNIT_TEST_BEGIN();
+
+  uint8_t prk[128];
+  uint8_t okm[255 * SHA_256_DIGEST_LENGTH];
+  /* ensure that this does not cause an infinite loop */
+  UNIT_TEST_ASSERT(sha_256_hkdf_expand(prk, sizeof(prk),
+                                       NULL, 0,
+                                       okm, sizeof(okm)));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(test_process, ev, data)
 {
   PROCESS_BEGIN();
@@ -459,12 +474,14 @@ PROCESS_THREAD(test_process, ev, data)
   UNIT_TEST_RUN(sha_256_hash_shorthand);
   UNIT_TEST_RUN(sha_256_hmac);
   UNIT_TEST_RUN(sha_256_hkdf);
+  UNIT_TEST_RUN(sha_256_hkdf_max);
 
   if(!UNIT_TEST_PASSED(sha_256_hash_stepwise)
      || !UNIT_TEST_PASSED(sha_256_hash_with_checkpoint)
      || !UNIT_TEST_PASSED(sha_256_hash_shorthand)
      || !UNIT_TEST_PASSED(sha_256_hmac)
-     || !UNIT_TEST_PASSED(sha_256_hkdf)) {
+     || !UNIT_TEST_PASSED(sha_256_hkdf)
+     || !UNIT_TEST_PASSED(sha_256_hkdf_max)) {
     printf("=check-me= FAILED\n");
     printf("---\n");
   }
