@@ -79,7 +79,7 @@ struct log_module all_modules[] = {
   {"framer", &curr_log_level_framer, LOG_CONF_LEVEL_FRAMER},
   {"6top", &curr_log_level_6top, LOG_CONF_LEVEL_6TOP},
   {"coap", &curr_log_level_coap, LOG_CONF_LEVEL_COAP},
-  {"dtls", &curr_log_level_coap, LOG_CONF_LEVEL_DTLS},
+  {"dtls", &curr_log_level_dtls, LOG_CONF_LEVEL_DTLS},
   {"snmp", &curr_log_level_snmp, LOG_CONF_LEVEL_SNMP},
   {"lwm2m", &curr_log_level_lwm2m, LOG_CONF_LEVEL_LWM2M},
   {"sys", &curr_log_level_sys, LOG_CONF_LEVEL_SYS},
