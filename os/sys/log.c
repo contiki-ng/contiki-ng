@@ -56,6 +56,7 @@
 int curr_log_level_rpl = LOG_CONF_LEVEL_RPL;
 int curr_log_level_tcpip = LOG_CONF_LEVEL_TCPIP;
 int curr_log_level_ipv6 = LOG_CONF_LEVEL_IPV6;
+int curr_log_level_nat64 = LOG_CONF_LEVEL_NAT64;
 int curr_log_level_6lowpan = LOG_CONF_LEVEL_6LOWPAN;
 int curr_log_level_nullnet = LOG_CONF_LEVEL_NULLNET;
 int curr_log_level_mac = LOG_CONF_LEVEL_MAC;
@@ -73,6 +74,7 @@ struct log_module all_modules[] = {
   {"rpl", &curr_log_level_rpl, LOG_CONF_LEVEL_RPL},
   {"tcpip", &curr_log_level_tcpip, LOG_CONF_LEVEL_TCPIP},
   {"ipv6", &curr_log_level_ipv6, LOG_CONF_LEVEL_IPV6},
+  {"nat64", &curr_log_level_nat64, LOG_CONF_LEVEL_NAT64},
   {"6lowpan", &curr_log_level_6lowpan, LOG_CONF_LEVEL_6LOWPAN},
   {"nullnet", &curr_log_level_nullnet, LOG_CONF_LEVEL_NULLNET},
   {"mac", &curr_log_level_mac, LOG_CONF_LEVEL_MAC},

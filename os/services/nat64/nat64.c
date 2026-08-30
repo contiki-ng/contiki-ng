@@ -54,7 +54,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "NAT64"
-#define LOG_LEVEL LOG_LEVEL_INFO
+#define LOG_LEVEL LOG_LEVEL_NAT64
 
 #define IPV6_HDRLEN     40
 #define IP_PROTO_TCP    6
