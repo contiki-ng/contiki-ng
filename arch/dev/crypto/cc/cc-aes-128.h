@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Swedish Institute of Computer Science.
+ * Copyright (c) 2015, Hasso-Plattner-Institut.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,36 +26,33 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ * This file is part of the Contiki operating system.
  */
 
-#include "dev/moteid.h"
-#include "lib/simEnvChange.h"
-#include "lib/random.h"
-#include "lib/csprng.h"
-#include "lib/sha-256.h"
-#include <string.h>
+/**
+ * \addtogroup cc-crypto
+ * @{
+ *
+ * \file
+ *         Header file of the AES-128 driver for CCXXXX MCUs.
+ * \author
+ *         Konrad Krentz <konrad.krentz@gmail.com>
+ */
 
-// COOJA variables
-int simMoteID;
-char simMoteIDChanged;
-int simRandomSeed;
+#ifndef CC_AES_128_H_
+#define CC_AES_128_H_
 
-/*-----------------------------------------------------------------------------------*/
-static void
-doInterfaceActionsBeforeTick(void)
-{
-  if (simMoteIDChanged) {
-    struct csprng_seed csprng_seed;
+#include "contiki.h"
+#include "lib/aes-128.h"
 
-    simMoteIDChanged = 0;
+#ifdef CC_AES_128_CONF_KEY_AREA
+#define CC_AES_128_KEY_AREA CC_AES_128_CONF_KEY_AREA
+#else /* CC_AES_128_CONF_KEY_AREA */
+#define CC_AES_128_KEY_AREA 0
+#endif /* CC_AES_128_CONF_KEY_AREA */
 
-    if(sha_256_hkdf(NULL, 0,
-                    (const uint8_t *)&simRandomSeed, sizeof(simRandomSeed),
-                    NULL, 0,
-                    csprng_seed.u8, sizeof(csprng_seed.u8))) {
-      csprng_feed(&csprng_seed);
-    }
-  }
-}
-/*-----------------------------------------------------------------------------------*/
-COOJA_PRE_TICK_ACTION(COOJA_MOTEID_INIT_PRIO, doInterfaceActionsBeforeTick);
+extern const struct aes_128_driver cc_aes_128_driver;
+
+#endif /* CC_AES_128_H_ */
+
+/** @} */

@@ -43,6 +43,7 @@
 #define SHA_256_H_
 
 #include "contiki.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -61,6 +62,7 @@ typedef struct {
   uint8_t buf[SHA_256_BLOCK_SIZE];
   size_t buf_len;
   uint8_t opad[SHA_256_BLOCK_SIZE]; /* HMAC's outer padding */
+  bool is_error_free;
 } sha_256_checkpoint_t;
 
 /**
@@ -81,10 +83,16 @@ struct sha_256_driver {
   void (* update)(const uint8_t *data, size_t len);
 
   /**
+   * \brief Aborts the current hash session (if any).
+   */
+  void (* cancel)(void);
+
+  /**
    * \brief Terminates the hash session and produces the digest.
    * \param digest pointer to the hash value
+   * \return       \c true on success and \c false otherwise.
    */
-  void (* finalize)(uint8_t digest[static SHA_256_DIGEST_LENGTH]);
+  bool (* finalize)(uint8_t digest[static SHA_256_DIGEST_LENGTH]);
 
   /**
    * \brief Saves the hash session, e.g., before pausing a protothread.
@@ -101,17 +109,20 @@ struct sha_256_driver {
    * \param data   pointer to the data to hash
    * \param len    length of the data to hash in bytes
    * \param digest pointer to the hash value
+   * \return       \c true on success and \c false otherwise.
    */
-  void (* hash)(const uint8_t *data, size_t len,
+  bool (* hash)(const uint8_t *data, size_t len,
                 uint8_t digest[static SHA_256_DIGEST_LENGTH]);
 };
 
 extern const struct sha_256_driver SHA_256;
+extern sha_256_checkpoint_t sha_256_checkpoint;
 
 /**
  * \brief Generic implementation of sha_256_driver#hash.
+ * \return \c true on success and \c false otherwise.
  */
-void sha_256_hash(const uint8_t *data, size_t len,
+bool sha_256_hash(const uint8_t *data, size_t len,
                   uint8_t digest[static SHA_256_DIGEST_LENGTH]);
 
 /**
@@ -131,8 +142,9 @@ void sha_256_hmac_update(const uint8_t *data, size_t data_len);
 /**
  * \brief Finishes the computation of an HMAC-SHA-256.
  * \param hmac pointer to where the resulting HMAC shall be stored
+ * \return     \c true on success and \c false otherwise.
  */
-void sha_256_hmac_finish(uint8_t hmac[static SHA_256_DIGEST_LENGTH]);
+bool sha_256_hmac_finish(uint8_t hmac[static SHA_256_DIGEST_LENGTH]);
 
 /**
  * \brief Computes HMAC-SHA-256 as per RFC 2104.
@@ -141,8 +153,9 @@ void sha_256_hmac_finish(uint8_t hmac[static SHA_256_DIGEST_LENGTH]);
  * \param data     the data to authenticate
  * \param data_len length of data in bytes
  * \param hmac     pointer to where the resulting HMAC shall be stored
+ * \return         \c true on success and \c false otherwise.
  */
-void sha_256_hmac(const uint8_t *key, size_t key_len,
+bool sha_256_hmac(const uint8_t *key, size_t key_len,
                   const uint8_t *data, size_t data_len,
                   uint8_t hmac[static SHA_256_DIGEST_LENGTH]);
 
@@ -153,8 +166,9 @@ void sha_256_hmac(const uint8_t *key, size_t key_len,
  * \param ikm      input keying material
  * \param ikm_len  length of ikm in bytes
  * \param prk      pointer to where the extracted key shall be stored
+ * \return         \c true on success and \c false otherwise.
  */
-void sha_256_hkdf_extract(const uint8_t *salt, size_t salt_len,
+bool sha_256_hkdf_extract(const uint8_t *salt, size_t salt_len,
                           const uint8_t *ikm, size_t ikm_len,
                           uint8_t prk[static SHA_256_DIGEST_LENGTH]);
 
@@ -166,8 +180,9 @@ void sha_256_hkdf_extract(const uint8_t *salt, size_t salt_len,
  * \param info_len length of info in bytes
  * \param okm      output keying material
  * \param okm_len  length of okm in bytes (<= 255 * SHA_256_DIGEST_LENGTH)
+ * \return         \c true on success and \c false otherwise.
  */
-void sha_256_hkdf_expand(const uint8_t *prk, size_t prk_len,
+bool sha_256_hkdf_expand(const uint8_t *prk, size_t prk_len,
                          const uint8_t *info, size_t info_len,
                          uint8_t *okm, uint_fast16_t okm_len);
 
@@ -181,8 +196,9 @@ void sha_256_hkdf_expand(const uint8_t *prk, size_t prk_len,
  * \param info_len length of info in bytes
  * \param okm      output keying material
  * \param okm_len  length of okm in bytes (<= 255 * SHA_256_DIGEST_LENGTH)
+ * \return         \c true on success and \c false otherwise.
  */
-void sha_256_hkdf(const uint8_t *salt, size_t salt_len,
+bool sha_256_hkdf(const uint8_t *salt, size_t salt_len,
                   const uint8_t *ikm, size_t ikm_len,
                   const uint8_t *info, size_t info_len,
                   uint8_t *okm, uint_fast16_t okm_len);
