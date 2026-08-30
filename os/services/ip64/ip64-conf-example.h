@@ -32,13 +32,28 @@
 #ifndef IP64_CONF_H
 #define IP64_CONF_H
 
-#include "ip64/ip64-tap-driver.h"
 #include "ip64/ip64-eth-interface.h"
+
+/*
+ * The Ethernet driver. Two are available in the tree:
+ *
+ *   enc28j60_ip64_driver  - Microchip ENC28J60 over SPI, from
+ *                           arch/dev/ethernet/enc28j60. Add that directory to
+ *                           MODULES and include enc28j60-ip64-driver.h.
+ *   ip64_null_driver      - discards everything, from ip64-null-driver.h.
+ *                           Useful to get a build going before the hardware
+ *                           driver is ready.
+ *
+ * For a complete, working configuration see
+ * examples/platform-specific/nrf/ip64-router or
+ * arch/platform/zoul/orion/ip64-conf.h.
+ */
+#include "enc28j60-ip64-driver.h"
 
 #define IP64_CONF_UIP_FALLBACK_INTERFACE    ip64_eth_interface
 #define IP64_CONF_INPUT                     ip64_eth_interface_input
 
-#define IP64_CONF_ETH_DRIVER                ip64_tap_driver
+#define IP64_CONF_ETH_DRIVER                enc28j60_ip64_driver
 
 /* 
  * In contrast to the mandatory parameters above, IP64_CONF_DHCP is an 
