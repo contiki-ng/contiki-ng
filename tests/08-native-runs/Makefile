@@ -37,5 +37,6 @@ tests/08-native-runs/28-coap-parse/native:./28-coap-parse.sh \
 tests/08-native-runs/29-jsonparse/native:./29-jsonparse.sh \
 tests/08-native-runs/30-cycles/native:./30-cycles.sh \
 tests/08-native-runs/31-coap-link-format/native:./31-coap-link-format.sh \
+tests/08-native-runs/32-lwm2m-tlv/native:./32-lwm2m-tlv.sh \
 
 include ../Makefile.compile-test
