@@ -29,5 +29,6 @@ tests/08-native-runs/21-coffee-validation/native:./21-coffee-validation.sh \
 tests/08-native-runs/23-uiplib/native:./23-uiplib.sh \
 tests/08-native-runs/21-dbg-io/native:./21-dbg-io.sh \
 tests/08-native-runs/25-mqtt-prop/native:./25-mqtt-prop.sh \
+tests/08-native-runs/27-lwm2m-tlv/native:./27-lwm2m-tlv.sh \
 
 include ../Makefile.compile-test

@@ -313,47 +313,128 @@ lwm2m_tlv_write_float32(uint8_t type, int16_t id, int32_t value, int bits,
 }
 /*---------------------------------------------------------------------------*/
 /* convert float to fixpoint */
-size_t
-lwm2m_tlv_float32_to_fix(const lwm2m_tlv_t *tlv, int32_t *value, int bits)
+/* Both widths normalise their significand to a leading bit at this position,
+   which is the widest that keeps the scaled result inside int32_t. */
+#define SIGNIFICAND_BIT 30
+/*---------------------------------------------------------------------------*/
+/*
+ * Scale a significand held with its leading bit at SIGNIFICAND_BIT by 2^e and
+ * apply the sign. Both widths normalise to this form, so the saturating shift
+ * below is written once.
+ */
+static void
+significand_to_fix(int sign, int e, uint32_t val, int32_t *value)
 {
-  /* TLV needs to be 4 bytes */
-  int e, i;
-  int32_t val;
-  int sign;
+  /*
+   * e is derived from an exponent taken off the wire, so neither shift can be
+   * taken at face value: a shift count of 32 or more is undefined, and even a
+   * small left shift can push the significand out of the range of int32_t.
+   * Saturate at both ends instead.
+   */
+  if(e >= 32) {
+    val = INT32_MAX;
+  } else if(e > 0) {
+    if(val > ((uint32_t)INT32_MAX >> e)) {
+      val = INT32_MAX;
+    } else {
+      val <<= e;
+    }
+  } else if(e <= -32) {
+    /* Every significant bit would have been shifted out. */
+    val = 0;
+  } else {
+    val >>= -e;
+  }
 
-  /* The IEEE 754 single-precision representation requires exactly 4 bytes.
-     Reject anything shorter to avoid reading past the value. */
-  if(tlv->length < 4) {
+  *value = sign ? -(int32_t)val : (int32_t)val;
+}
+/*---------------------------------------------------------------------------*/
+/* Convert an IEEE 754 binary32 value, 8 bits of exponent and 23 of
+   significand, to the fixpoint representation. */
+static size_t
+binary32_to_fix(const uint8_t *v, int32_t *value, int bits)
+{
+  int sign = (v[0] & 0x80) != 0;
+  int e = ((v[0] << 1) & 0xff) | (v[1] >> 7);
+  /* 23 significand bits, left-aligned to SIGNIFICAND_BIT. */
+  uint32_t val = ((((uint32_t)v[1] & 0x7f) << 16) | (v[2] << 8) | v[3])
+    << (SIGNIFICAND_BIT - 23);
+
+  LOG_DBG("binary32 sign %d exp %d significand %06"PRIx32"\n", sign, e,
+          (uint32_t)val);
+
+  if(e == 0xff) {
+    /* Infinity and NaN have no fixpoint representation; reject rather than
+       hand the caller a number it cannot tell apart from a measurement. */
     *value = 0;
     return 0;
   }
 
-  sign = (tlv->value[0] & 0x80) != 0;
-  e = ((tlv->value[0] << 1) & 0xff) | (tlv->value[1] >> 7);
-  val = (((long)tlv->value[1] & 0x7f) << 16) | (tlv->value[2] << 8) | tlv->value[3];
-
-  LOG_DBG("Sign: %d, Fraction: %06"PRIx32"  0b", val < 0, val);
-  for(i = 0; i < 23; i++) {
-    LOG_DBG_("%"PRId32"", ((val >> (22 - i)) & 1));
-  }
-  LOG_DBG("\nExp:%d => %d\n", e, e - 127);
-
-  e = e - 127 + bits;
-
-  /* e corresponds to the number of times we need to roll the number */
-
-  LOG_DBG("Actual e=%d\n", e);
-  e = e - 23;
-  LOG_DBG("E after sub %d\n", e);
-  val = val | 1L << 23;
-  if(e > 0) {
-    val = val << e;
-  } else {
-    val = val >> -e;
+  if(e == 0) {
+    /* Zero and the subnormals, which carry no implicit significand bit. Every
+       subnormal is far below the resolution of the fixpoint format. */
+    *value = 0;
+    return 4;
   }
 
-  *value = sign ? -val : val;
+  significand_to_fix(sign, e - 127 + bits - SIGNIFICAND_BIT,
+                     val | (UINT32_C(1) << SIGNIFICAND_BIT), value);
   return 4;
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * Convert an IEEE 754 binary64 value, 11 bits of exponent and 52 of
+ * significand, to the fixpoint representation. Only the top 30 significand
+ * bits are read. That is not an approximation: the result is an int32_t and
+ * so holds at most 31 significant bits, and truncating the bits that the
+ * scaling below would discard anyway gives the same answer as carrying all
+ * 52 in a 64-bit intermediate, which no target then has to pay for.
+ */
+static size_t
+binary64_to_fix(const uint8_t *v, int32_t *value, int bits)
+{
+  int sign = (v[0] & 0x80) != 0;
+  int e = (((int)v[0] & 0x7f) << 4) | (v[1] >> 4);
+  /* Top 30 significand bits, left-aligned to SIGNIFICAND_BIT. */
+  uint32_t val = (((uint32_t)v[1] & 0x0f) << 26) | ((uint32_t)v[2] << 18)
+    | ((uint32_t)v[3] << 10) | ((uint32_t)v[4] << 2) | (v[5] >> 6);
+
+  LOG_DBG("binary64 sign %d exp %d significand %06"PRIx32"\n", sign, e,
+          (uint32_t)val);
+
+  if(e == 0x7ff) {
+    *value = 0;
+    return 0;
+  }
+
+  if(e == 0) {
+    *value = 0;
+    return 8;
+  }
+
+  significand_to_fix(sign, e - 1023 + bits - SIGNIFICAND_BIT,
+                     val | (UINT32_C(1) << SIGNIFICAND_BIT), value);
+  return 8;
+}
+/*---------------------------------------------------------------------------*/
+size_t
+lwm2m_tlv_float32_to_fix(const lwm2m_tlv_t *tlv, int32_t *value, int bits)
+{
+  /*
+   * A Float resource is carried as either binary32 or binary64, whichever the
+   * sender chose, and the length field says which (Appendix C of the LwM2M
+   * specification). Any other length is malformed.
+   */
+  if(tlv->length == 4) {
+    return binary32_to_fix(tlv->value, value, bits);
+  }
+
+  if(tlv->length == 8) {
+    return binary64_to_fix(tlv->value, value, bits);
+  }
+
+  *value = 0;
+  return 0;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
