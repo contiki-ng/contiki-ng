@@ -21,7 +21,7 @@ More documentation on:
 
 ## Getting started
 
-* [TSCH tutorial in Contiki-NG](/doc/tutorials/TSCH-and-6TiSCH)
+* [TSCH tutorial in Contiki-NG](/doc/tutorials/TSCH-and-6TiSCH.md)
 * [Switching Contiki-NG applications to TSCH](/doc/tutorials/Switching-to-TSCH)
 * [Contiki-NG TSCH example applications](/doc/programming/TSCH-example-applications)
 
