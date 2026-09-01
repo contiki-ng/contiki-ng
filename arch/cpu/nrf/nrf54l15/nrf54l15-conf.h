@@ -38,6 +38,10 @@
 #define LOG_CONF_LEVEL_RADIO LOG_LEVEL_NONE
 #endif
 
+#if !defined(NRF_TRUSTZONE_NONSECURE) && !defined(CSPRNG_CONF_ENABLED)
+#define CSPRNG_CONF_ENABLED 1
+#endif
+
 /* Disable watchdog until properly tested on nRF54L15 */
 #ifndef WATCHDOG_CONF_ENABLE
 #define WATCHDOG_CONF_ENABLE 0
