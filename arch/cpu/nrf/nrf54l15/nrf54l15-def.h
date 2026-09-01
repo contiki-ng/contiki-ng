@@ -15,4 +15,10 @@
 #define NRF_HAS_UARTE   1
 #define NRF_HAS_USB     0
 
+/* nrf_802154 acknowledges received frames in hardware within the
+ * turnaround time; a software ACK from CSMA would only follow late. */
+#ifndef CSMA_CONF_SEND_SOFT_ACK
+#define CSMA_CONF_SEND_SOFT_ACK 0
+#endif
+
 #endif /* NRF54L15_DEF_H_ */
