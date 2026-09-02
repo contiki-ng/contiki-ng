@@ -352,6 +352,9 @@ PT_THREAD(handle_dhcp(process_event_t ev, void *data))
 #define MAX_TICKS (~((clock_time_t)0) / 2)
 #define MAX_TICKS32 (~((uint32_t)0))
 #define IMIN(a, b) ((a) < (b) ? (a) : (b))
+/* Longest interval accepted by a single etimer_set() call: at most half the
+   clock_time_t range, but never more than the remaining time can hold. */
+#define MAX_INTERVAL ((uint32_t)IMIN(MAX_TICKS, (clock_time_t)MAX_TICKS32))
 
   if((uip_ntohs(s.lease_time[0])*65536ul + uip_ntohs(s.lease_time[1]))*CLOCK_SECOND/2
      <= MAX_TICKS32) {
@@ -362,7 +365,7 @@ PT_THREAD(handle_dhcp(process_event_t ev, void *data))
   }
 
   while(s.ticks > 0) {
-    ticks = IMIN(s.ticks, MAX_TICKS);
+    ticks = IMIN(s.ticks, MAX_INTERVAL);
     s.ticks -= ticks;
     etimer_set(&s.etimer, ticks);
     PT_YIELD_UNTIL(&s.pt, etimer_expired(&s.etimer));
@@ -383,7 +386,7 @@ PT_THREAD(handle_dhcp(process_event_t ev, void *data))
       PT_YIELD(&s.pt);
     }
     send_request();
-    ticks = IMIN(s.ticks / 2, MAX_TICKS);
+    ticks = IMIN(s.ticks / 2, MAX_INTERVAL);
     s.ticks -= ticks;
     etimer_set(&s.etimer, ticks);
     do {
