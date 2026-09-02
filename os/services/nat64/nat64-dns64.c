@@ -55,7 +55,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "NAT64"
-#define LOG_LEVEL LOG_LEVEL_INFO
+#define LOG_LEVEL LOG_LEVEL_NAT64
 
 /* DNS record types per RFC 1035 / RFC 3596. */
 #define DNS_TYPE_A      1
