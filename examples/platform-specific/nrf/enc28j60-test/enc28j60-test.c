@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 Joakim Eriksson
+ * Copyright (c) 2026, RISE Research Institutes of Sweden AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,8 @@
  *         Once initialised it reports every frame the chip receives, so a
  *         cable into a live switch is enough to show the RX path working
  *         end to end.
+ * \author
+ *         Joakim Eriksson <joakim.eriksson@ri.se>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"

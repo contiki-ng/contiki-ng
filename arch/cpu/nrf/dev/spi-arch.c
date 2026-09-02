@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 Joakim Eriksson
+ * Copyright (c) 2026, RISE Research Institutes of Sweden AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,8 @@
  *         not handed to SPIM: os/dev/spi.c drives it as a GPIO through
  *         spi_select()/spi_deselect(), so ss_pin is left unconnected here
  *         and the pin is configured as a GPIO output instead.
+ * \author
+ *         Joakim Eriksson <joakim.eriksson@ri.se>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"

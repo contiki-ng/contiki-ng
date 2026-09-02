@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 Joakim Eriksson
+ * Copyright (c) 2026, RISE Research Institutes of Sweden AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,8 @@
  *         already prove the translator with its own traffic, but only a real
  *         node exercises the parts unique to forwarding: the RPL hop into the
  *         router, and a per-source entry in ip64's address map.
+ * \author
+ *         Joakim Eriksson <joakim.eriksson@ri.se>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"

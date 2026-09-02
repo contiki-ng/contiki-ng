@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 Joakim Eriksson
+ * Copyright (c) 2026, RISE Research Institutes of Sweden AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,6 +60,8 @@
  *   (UARTE20), and SPIM21 would collide with UARTE21.
  * - nRF5340 application core: SPIM1 and up. SPIM0 collides with UARTE0.
  * - nRF52840: no such grouping; SPIM0 coexists with UARTE0.
+ * \author
+ *         Joakim Eriksson <joakim.eriksson@ri.se>
  */
 /*---------------------------------------------------------------------------*/
 #ifndef SPI_ARCH_H_

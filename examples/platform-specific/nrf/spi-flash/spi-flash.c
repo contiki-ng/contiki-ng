@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 Joakim Eriksson
+ * Copyright (c) 2026, RISE Research Institutes of Sweden AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,8 @@
  *         The point of testing against this device rather than a loopback
  *         is that it is already wired on the board: a wrong answer is the
  *         driver's fault, not the bench's.
+ * \author
+ *         Joakim Eriksson <joakim.eriksson@ri.se>
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
