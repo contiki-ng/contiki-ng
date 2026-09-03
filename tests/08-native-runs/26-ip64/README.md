@@ -23,6 +23,13 @@ software on the host that knows nothing about NAT64, see
 | `dns64_rewrite` | `ip64_dns64_6to4` (AAAA to A) and `ip64_dns64_4to6` (A to AAAA) |
 | `icmp_echo` | ICMP translation in both directions: an IPv4 ping reaches the local IPv6 host and its reply is translated back |
 | `inbound_ports` | Inbound port handling: delivery to the local host below `EPHEMERAL_PORTRANGE`, and the drop of ephemeral-port traffic that matches no mapping |
+| `dns64_rejects_oversized_record` | `ip64_dns64_4to6` against an A record claiming more data than the packet holds |
+| `dns64_rejects_unterminated_name` | `ip64_dns64_4to6` against a question name that runs past the end of the packet |
+
+The last two call `ip64_dns64_4to6()` directly with malformed input and check
+the return value, and that a canary past the buffer the parser was given is
+untouched, so an out-of-bounds write shows up without a sanitiser. Both fail
+against the code as it stood before the fixes in this pull request.
 
 Outbound packets come from ordinary `simple_udp` sockets and are collected
 through the fallback interface. Inbound packets are handed to

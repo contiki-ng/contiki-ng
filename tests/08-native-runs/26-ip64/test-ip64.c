@@ -41,9 +41,9 @@
  *   Covered: uIP fallback dispatch, ARP resolution, IPv6-to-IPv4 and
  *   IPv4-to-IPv6 header translation, forwarding of a flow from a node behind
  *   the router, address-mapping allocation and reverse lookup, DNS64
- *   rewriting in both directions, ICMP echo translation, and the inbound
- *   port handling. Not covered: the ENC28J60 driver itself, the
- *   DHCPv4 client, and TCP.
+ *   rewriting in both directions, ICMP echo translation, the inbound port
+ *   handling, and the bounds of the DNS64 parser against malformed input.
+ *   Not covered: the ENC28J60 driver itself, the DHCPv4 client, and TCP.
  *
  */
 
@@ -56,6 +56,7 @@
 
 #include "ip64/ip64.h"
 #include "ip64/ip64-addrmap.h"
+#include "ip64/ip64-dns64.h"
 #include "ip64/ip64-eth.h"
 #include "ip64/ip64-eth-interface.h"
 
@@ -89,6 +90,13 @@
 
 #define ECHO_ID         0xbeef
 #define ECHO_SEQNO      7
+
+/* Room the malformed-input tests hand to a parser, followed by bytes that
+   nothing is allowed to touch. A write past the capacity shows up as a
+   changed canary, with no sanitiser needed. */
+#define PARSE_CAPACITY  128
+#define CANARY_LEN      32
+#define CANARY_BYTE     0x5a
 
 #define ARP_REQUEST     1
 #define ARP_REPLY       2
@@ -221,6 +229,10 @@ UNIT_TEST_REGISTER(dns64_rewrite,
                    "DNS64 rewrites AAAA to A and the A answer back to AAAA");
 UNIT_TEST_REGISTER(icmp_echo,
                    "An IPv4 ping is answered by the local IPv6 host");
+UNIT_TEST_REGISTER(dns64_rejects_oversized_record,
+                   "DNS64 leaves a record that claims more data than it has");
+UNIT_TEST_REGISTER(dns64_rejects_unterminated_name,
+                   "DNS64 stops at the end of a packet whose name runs on");
 UNIT_TEST_REGISTER(inbound_ports,
                    "Inbound packets reach the local host only below the "
                    "ephemeral port range");
@@ -784,6 +796,75 @@ UNIT_TEST(inbound_ports)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+/* Fill a buffer with the canary pattern, and report whether the bytes past
+   the capacity a parser was given are still untouched. */
+static void
+canary_fill(uint8_t *buf, uint16_t len)
+{
+  memset(buf, CANARY_BYTE, len);
+}
+/*---------------------------------------------------------------------------*/
+static bool
+canary_intact(const uint8_t *buf, uint16_t capacity, uint16_t len)
+{
+  uint16_t i;
+
+  for(i = capacity; i < len; i++) {
+    if(buf[i] != CANARY_BYTE) {
+      return false;
+    }
+  }
+
+  return true;
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST(dns64_rejects_oversized_record)
+{
+  static uint8_t answer[sizeof(dns_response)];
+  static uint8_t out[PARSE_CAPACITY + CANARY_LEN];
+  int len;
+
+  UNIT_TEST_BEGIN();
+
+  /* The A record now claims 65535 bytes of address, where the packet holds
+     four. A parser that trusts the field copies far past both buffers. */
+  memcpy(answer, dns_response, sizeof(answer));
+  answer[sizeof(answer) - 6] = 0xff;
+  answer[sizeof(answer) - 5] = 0xff;
+
+  canary_fill(out, sizeof(out));
+  len = ip64_dns64_4to6(answer, sizeof(answer), out, PARSE_CAPACITY);
+
+  /* Nothing can be rewritten, so the message keeps the length it came with,
+     and nothing may be written beyond the room the parser was given. */
+  UNIT_TEST_ASSERT(len == sizeof(answer));
+  UNIT_TEST_ASSERT(canary_intact(out, PARSE_CAPACITY, sizeof(out)));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST(dns64_rejects_unterminated_name)
+{
+  static uint8_t answer[sizeof(dns_response)];
+  static uint8_t out[PARSE_CAPACITY + CANARY_LEN];
+  int len;
+
+  UNIT_TEST_BEGIN();
+
+  /* The first label of the question name claims 63 bytes, so the name runs
+     past the end of the packet and the walk never meets its terminator. */
+  memcpy(answer, dns_response, sizeof(answer));
+  answer[12] = 63;
+
+  canary_fill(out, sizeof(out));
+  len = ip64_dns64_4to6(answer, sizeof(answer), out, PARSE_CAPACITY);
+
+  UNIT_TEST_ASSERT(len == sizeof(answer));
+  UNIT_TEST_ASSERT(canary_intact(out, PARSE_CAPACITY, sizeof(out)));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(test_ip64_process, ev, data)
 {
   static struct etimer startup_timer;
@@ -828,13 +909,17 @@ PROCESS_THREAD(test_ip64_process, ev, data)
   UNIT_TEST_RUN(dns64_rewrite);
   UNIT_TEST_RUN(icmp_echo);
   UNIT_TEST_RUN(inbound_ports);
+  UNIT_TEST_RUN(dns64_rejects_oversized_record);
+  UNIT_TEST_RUN(dns64_rejects_unterminated_name);
 
   if(!UNIT_TEST_PASSED(arp_resolution) ||
      !UNIT_TEST_PASSED(udp_round_trip) ||
      !UNIT_TEST_PASSED(forwarded_flow) ||
      !UNIT_TEST_PASSED(dns64_rewrite) ||
      !UNIT_TEST_PASSED(icmp_echo) ||
-     !UNIT_TEST_PASSED(inbound_ports)) {
+     !UNIT_TEST_PASSED(inbound_ports) ||
+     !UNIT_TEST_PASSED(dns64_rejects_oversized_record) ||
+     !UNIT_TEST_PASSED(dns64_rejects_unterminated_name)) {
     printf("=check-me= FAILED\n");
     printf("---\n");
   }
