@@ -84,6 +84,14 @@ static struct source_map source_map[AQL_ATTRIBUTE_LIMIT];
 static unsigned char row[DB_MAX_ATTRIBUTES_PER_RELATION * DB_MAX_ELEMENT_SIZE];
 static unsigned char extra_row[DB_MAX_ATTRIBUTES_PER_RELATION * DB_MAX_ELEMENT_SIZE];
 static unsigned char result_row[AQL_ATTRIBUTE_LIMIT * DB_MAX_ELEMENT_SIZE];
+
+/* State for the aggregates that cannot be computed incrementally into a
+   single accumulator. aggregate_matches counts the tuples that matched the
+   current aggregation query (used by MEAN), while median_values buffers the
+   matching values of the (single) MEDIAN aggregate of the query. */
+static tuple_id_t aggregate_matches;
+static long median_values[DB_MEDIAN_POOL_SIZE];
+static uint16_t median_count;
 static unsigned char * const left_row = row;
 static unsigned char * const right_row = extra_row;
 static unsigned char * const join_row = result_row;
@@ -240,7 +248,14 @@ relation_load(char *name)
   }
 
   if(DB_ERROR(storage_get_relation(rel, name))) {
-    memb_free(&relations_memb, rel);
+    /*
+     * storage_get_relation() adds attributes incrementally and may fail
+     * after some have already been linked into rel (e.g. a truncated or
+     * corrupt catalog). Use relation_free() to release those attributes
+     * too, not just the relation_t. rel is not yet on the relation list,
+     * so the list_remove() in relation_free() is a harmless no-op.
+     */
+    relation_free(rel);
     return NULL;
   }
 
@@ -277,6 +292,7 @@ relation_create(char *name, db_direction_t dir)
 {
   relation_t old_rel;
   relation_t *rel;
+  attribute_t *attr;
 
   if(*name != '\0') {
     relation_clear(&old_rel);
@@ -285,6 +301,15 @@ relation_create(char *name, db_direction_t dir)
       /* Reject a creation request if the relation already exists. */
       PRINTF("DB: Attempted to create a relation that already exists (%s)\n",
              name);
+      /*
+       * storage_get_relation() allocated an attribute_t for each attribute
+       * of the existing relation into the stack-local old_rel. Free them
+       * before returning; otherwise those pool slots leak permanently,
+       * because old_rel is never reachable from the relation list.
+       */
+      while((attr = list_pop(old_rel.attributes)) != NULL) {
+        attribute_free(&old_rel, attr);
+      }
       return NULL;
     }
 
@@ -369,7 +394,16 @@ relation_attribute_add(relation_t *rel, db_direction_t dir, char *name,
   if(dir == DB_STORAGE) {
     if(DB_ERROR(storage_put_attribute(rel, attribute))) {
        PRINTF("DB: Failed to store attribute %s\n", attribute->name);
-       memb_free(&attributes_memb, attribute);
+       /*
+        * Fully roll back the changes made above before freeing the
+        * attribute. Freeing it while it is still linked into
+        * rel->attributes would leave a dangling pointer in the list and
+        * a stale attribute_count/row_length, leading to a later
+        * double-free when the relation is torn down.
+        */
+       list_remove(rel->attributes, attribute);
+       rel->row_length -= element_size;
+       attribute_free(rel, attribute);
        return NULL;
     }
   } else {
@@ -464,6 +498,8 @@ relation_remove(char *name, int remove_tuples)
   }
 
   if(rel->references > 1) {
+    /* Undo the reference taken by relation_load() above. */
+    relation_release(rel);
     return DB_BUSY_ERROR;
   }
 
@@ -571,8 +607,12 @@ aggregate(attribute_t *attr, attribute_value_t *value)
     attr->aggregation_value += long_value;
     break;
   case AQL_MEAN:
+    /* The sum is accumulated here and divided by the number of matching
+       tuples once the aggregation has finished (see finalize_aggregate). */
+    attr->aggregation_value += long_value;
     break;
   case AQL_MEDIAN:
+    /* MEDIAN is handled separately, since it needs to buffer all values. */
     break;
   case AQL_MAX:
     if(long_value > attr->aggregation_value) {
@@ -586,6 +626,56 @@ aggregate(attribute_t *attr, attribute_value_t *value)
     break;
   default:
     break;
+  }
+}
+
+/* Compute the median of the values buffered in median_values. */
+static long
+compute_median(void)
+{
+  int i;
+  int j;
+  long key;
+
+  if(median_count == 0) {
+    return 0;
+  }
+
+  /* Insertion sort. The number of values is small, bounded by
+     DB_MEDIAN_POOL_SIZE. */
+  for(i = 1; i < median_count; i++) {
+    key = median_values[i];
+    for(j = i - 1; j >= 0 && median_values[j] > key; j--) {
+      median_values[j + 1] = median_values[j];
+    }
+    median_values[j + 1] = key;
+  }
+
+  if(median_count & 1) {
+    return median_values[median_count / 2];
+  }
+
+  /* An even number of values: use the mean of the two middle values. */
+  return (median_values[median_count / 2 - 1] +
+          median_values[median_count / 2]) / 2;
+}
+
+/* Compute the final value of an aggregate once all matching tuples have been
+   processed. COUNT, SUM, MAX and MIN are accumulated directly into the
+   attribute; MEAN and MEDIAN are derived here. */
+static long
+finalize_aggregate(attribute_t *attr)
+{
+  switch(attr->aggregator) {
+  case AQL_MEAN:
+    if(aggregate_matches == 0) {
+      return 0;
+    }
+    return attr->aggregation_value / (long)aggregate_matches;
+  case AQL_MEDIAN:
+    return compute_median();
+  default:
+    return attr->aggregation_value;
   }
 }
 
@@ -680,6 +770,10 @@ generate_selection_result(db_handle_t *handle, relation_t *rel, aql_adt_t *adt)
 
   result_rel = handle->result_rel;
 
+  /* Reset the aggregation state that is accumulated across matching tuples. */
+  aggregate_matches = 0;
+  median_count = 0;
+
   handle->current_row = 0;
   handle->ncolumns = 0;
   handle->tuple_id = 0;
@@ -743,7 +837,6 @@ relation_process_select(void *handle_ptr)
   unsigned char *from_ptr;
   unsigned char *to_ptr;
   operand_value_t operand_value;
-  uint8_t intbuf[2];
   attribute_value_t value;
   lvm_status_t wanted_result;
 
@@ -788,11 +881,13 @@ relation_process_select(void *handle_ptr)
     from_ptr = row + attr_map_ptr->from_offset;
     result_attr = attr_map_ptr->to_attr;
 
-    /* Update the internal state of the PLE. */
-    if(result_attr->domain == DOMAIN_INT) {
+    /* Update the internal state of the PLE. The stored bytes are interpreted
+       using the domain of the source attribute, which may differ from the
+       result attribute's domain (e.g. for aggregates). */
+    if(attr_map_ptr->from_attr->domain == DOMAIN_INT) {
       operand_value.l = from_ptr[0] << 8 | from_ptr[1];
       lvm_set_variable_value(result_attr->name, operand_value);
-    } else if(result_attr->domain == DOMAIN_LONG) {
+    } else if(attr_map_ptr->from_attr->domain == DOMAIN_LONG) {
       operand_value.l = (uint32_t)from_ptr[0] << 24 |
                         (uint32_t)from_ptr[1] << 16 |
                         (uint32_t)from_ptr[2] << 8 |
@@ -822,13 +917,26 @@ relation_process_select(void *handle_ptr)
   if(adt->lvm_instance == NULL ||
      lvm_execute(adt->lvm_instance) == wanted_result) {
     if(AQL_GET_FLAGS(adt) & AQL_FLAG_AGGREGATE) {
+      aggregate_matches++;
       for(attr_map_ptr = attr_map; attr_map_ptr < attr_map_end; attr_map_ptr++) {
         from_ptr = row + attr_map_ptr->from_offset;
-        result = db_phy_to_value(&value, attr_map_ptr->to_attr, from_ptr);
+        /* Read the source value with the source attribute's domain, so that
+           the full value is aggregated (e.g. all 4 bytes of a LONG). */
+        result = db_phy_to_value(&value, attr_map_ptr->from_attr, from_ptr);
         if(DB_ERROR(result)) {
 	  return result;
         }
-        aggregate(attr_map_ptr->to_attr, &value);
+        if(attr_map_ptr->to_attr->aggregator == AQL_MEDIAN) {
+          /* Buffer the value; the median is computed once all matching
+             tuples have been seen. */
+          if(median_count >= DB_MEDIAN_POOL_SIZE) {
+            PRINTF("DB: The MEDIAN value buffer is full\n");
+            return DB_LIMIT_ERROR;
+          }
+          median_values[median_count++] = db_value_to_long(&value);
+        } else {
+          aggregate(attr_map_ptr->to_attr, &value);
+        }
       }
     } else {
       if(AQL_GET_FLAGS(adt) & AQL_FLAG_ASSIGN) {
@@ -847,13 +955,25 @@ relation_process_select(void *handle_ptr)
 end_aggregation:
   /* Generate aggregated result if requested. */
   for(attr_map_ptr = attr_map; attr_map_ptr < attr_map_end; attr_map_ptr++) {
+    long aggregated_value;
+
     result_attr = attr_map_ptr->to_attr;
     to_ptr = result_row + attr_map_ptr->to_offset;
 
-    intbuf[0] = result_attr->aggregation_value >> 8;
-    intbuf[1] = result_attr->aggregation_value & 0xff;
-    from_ptr = intbuf;
-    memcpy(to_ptr, from_ptr, result_attr->element_size);
+    aggregated_value = finalize_aggregate(result_attr);
+
+    /* Store the aggregated value using the result attribute's domain, which
+       is wide enough to hold it (see the aggregate handling in
+       relation_select). */
+    value.domain = result_attr->domain;
+    if(result_attr->domain == DOMAIN_INT) {
+      VALUE_INT(&value) = (int)aggregated_value;
+    } else {
+      VALUE_LONG(&value) = aggregated_value;
+    }
+    if(DB_ERROR(db_value_to_phy(to_ptr, result_attr, &value))) {
+      return DB_TYPE_ERROR;
+    }
   }
 
   if(AQL_GET_FLAGS(adt) & AQL_FLAG_ASSIGN) {
@@ -880,6 +1000,7 @@ relation_select(void *handle_ptr, relation_t *rel, void *adt_ptr)
   attribute_t *attr;
   int i;
   int normal_attributes;
+  int median_aggregates;
 
   adt = (aql_adt_t *)adt_ptr;
 
@@ -903,7 +1024,8 @@ relation_select(void *handle_ptr, relation_t *rel, void *adt_ptr)
     return DB_ALLOCATION_ERROR;
   }
 
-  for(i = normal_attributes = 0; i < AQL_ATTRIBUTE_COUNT(adt); i++) {
+  for(i = normal_attributes = median_aggregates = 0;
+      i < AQL_ATTRIBUTE_COUNT(adt); i++) {
     attribute_name = adt->attributes[i].name;
 
     attr = relation_attribute_get(rel, attribute_name);
@@ -916,13 +1038,21 @@ relation_select(void *handle_ptr, relation_t *rel, void *adt_ptr)
     PRINTF("DB: Found attribute %s in relation %s\n",
 	attribute_name, rel->name);
 
-    attr = relation_attribute_add(handle->result_rel, dir,
-				  attribute_name, 
-				  adt->aggregators[i] ? DOMAIN_INT : attr->domain,
-				  attr->element_size);
+    /* Aggregation results are accumulated as long integers, so the result
+       attribute is stored as a LONG regardless of the source domain. */
+    if(adt->aggregators[i]) {
+      attr = relation_attribute_add(handle->result_rel, dir,
+				    attribute_name, DOMAIN_LONG, 4);
+    } else {
+      attr = relation_attribute_add(handle->result_rel, dir,
+				    attribute_name, attr->domain,
+				    attr->element_size);
+    }
     if(attr == NULL) {
       PRINTF("DB: Failed to add a result attribute\n");
       relation_release(handle->result_rel);
+      /* Cleared so db_free() does not release it again. */
+      handle->result_rel = NULL;
       return DB_ALLOCATION_ERROR;
     }
 
@@ -939,6 +1069,16 @@ relation_select(void *handle_ptr, relation_t *rel, void *adt_ptr)
       break;
     case AQL_MIN:
       attr->aggregation_value = LONG_MAX;
+      break;
+    case AQL_MEDIAN:
+      attr->aggregation_value = 0;
+      /* The median is computed from a single shared value buffer, so only
+         one MEDIAN aggregate is supported per query. */
+      if(++median_aggregates > 1) {
+        PRINTF("DB: At most one MEDIAN aggregate is supported per query\n");
+        relation_release(handle->result_rel);
+        return DB_RELATIONAL_ERROR;
+      }
       break;
     default:
       attr->aggregation_value = 0;

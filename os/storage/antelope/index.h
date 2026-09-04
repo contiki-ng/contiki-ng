@@ -41,7 +41,6 @@
 typedef enum {
   INDEX_NONE = 0,
   INDEX_INLINE = 1,
-  INDEX_MEMHASH = 2,
   INDEX_MAXHEAP = 3
 } index_type_t;
 
@@ -89,13 +88,15 @@ struct index_api {
   db_result_t (*insert)(index_t *, attribute_value_t *, tuple_id_t);
   db_result_t (*delete)(index_t *, attribute_value_t *);
   tuple_id_t (*get_next)(index_iterator_t *);
+  /* Optional: reset the component's internal state. Called from
+     index_init(), which in turn runs when the database is (re)initialized. */
+  void (*init)(void);
 };
 
 typedef struct index_api index_api_t;
 
 extern index_api_t index_inline;
 extern index_api_t index_maxheap;
-extern index_api_t index_memhash;
 
 void index_init(void);
 db_result_t index_create(index_type_t, relation_t *, attribute_t *);

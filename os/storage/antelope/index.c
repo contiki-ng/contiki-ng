@@ -75,8 +75,19 @@ find_index_api(index_type_t index_type)
 void
 index_init(void)
 {
+  int i;
+
   list_init(indices);
   memb_init(&index_memb);
+
+  /* Reset the internal state of each index component, so that indexes
+     allocated before a re-initialization do not remain reserved. */
+  for(i = 0; i < CC_ARRAY_LENGTH(index_components); i++) {
+    if(index_components[i]->init != NULL) {
+      index_components[i]->init();
+    }
+  }
+
   process_start(&db_indexer, NULL);
 }
 
@@ -160,8 +171,15 @@ index_create(index_type_t index_type, relation_t *rel, attribute_t *attr)
 db_result_t
 index_destroy(index_t *index)
 {
-  if(DB_ERROR(index_release(index)) ||
-     DB_ERROR(index->api->destroy(index))) {
+  /*
+   * Remove the backend's on-disk state first, while the in-memory
+   * representation is still valid, and only then release the in-memory
+   * representation and the pool slot. Calling index_release() first would
+   * free the index object and leave index->api->destroy() operating on
+   * freed memory.
+   */
+  if(DB_ERROR(index->api->destroy(index)) ||
+     DB_ERROR(index_release(index))) {
     return DB_INDEX_ERROR;
   }
 
@@ -195,6 +213,7 @@ index_load(relation_t *rel, attribute_t *attr)
   api = find_index_api(index->type);
   if(api == NULL) {
     PRINTF("DB: No API for index type %d\n", index->type);
+    memb_free(&index_memb, index);
     return DB_INDEX_ERROR;
   }
 
@@ -202,6 +221,7 @@ index_load(relation_t *rel, attribute_t *attr)
 
   if(DB_ERROR(api->load(index))) {
     PRINTF("DB: Index-specific load failed\n");
+    memb_free(&index_memb, index);
     return DB_INDEX_ERROR;
   }
 

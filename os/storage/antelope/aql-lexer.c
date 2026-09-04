@@ -104,7 +104,6 @@ static const struct keyword keywords[] = {
 
   {"PROJECT", PROJECT},
   {"MAXHEAP", MAXHEAP},
-  {"MEMHASH", MEMHASH},
 
   {"RELATION", RELATION},
 
@@ -112,7 +111,7 @@ static const struct keyword keywords[] = {
 };
 
 /* Provides a pointer to the first keyword of a specific length. */
-static const int8_t skip_hint[] = {0, 13, 21, 27, 33, 36, 44, 47, 48};
+static const int8_t skip_hint[] = {0, 13, 21, 27, 33, 36, 44, 46, 47};
 
 static char separators[] = "#.;,() \t\n";
 
@@ -195,7 +194,7 @@ next_real(lexer_t *lexer, const char *s)
 static int
 next_string(lexer_t *lexer, const char *s)
 {
-  char *end;
+  const char *end;
   size_t length;
 
   end = strchr(s, '\'');

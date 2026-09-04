@@ -121,6 +121,7 @@ MEMB(heaps, heap_t, DB_HEAP_INDEX_LIMIT);
 static struct bucket_cache *get_cache(heap_t *, int);
 static struct bucket_cache *get_cache_free(void);
 static void invalidate_cache(void);
+static void invalidate_heap_cache(heap_t *);
 static maxheap_key_t transform_key(maxheap_key_t);
 static int heap_read(heap_t *, int, heap_node_t *);
 static int heap_write(heap_t *, int, heap_node_t *);
@@ -134,6 +135,7 @@ static struct bucket_cache *bucket_load(heap_t *, int);
 static int bucket_append(heap_t *, int, struct key_value_pair *);
 static int bucket_split(heap_t *, int);
 
+static void init(void);
 static db_result_t create(index_t *);
 static db_result_t destroy(index_t *);
 static db_result_t load(index_t *);
@@ -151,8 +153,27 @@ index_api_t index_maxheap = {
   release,
   insert,
   delete,
-  get_next
+  get_next,
+  init
 };
+
+/*
+ * Reset the module's internal state. This releases any heap objects that
+ * were reserved by earlier indexes and invalidates the bucket cache, so that
+ * re-initializing the database (db_init) does not leave the single heap slot
+ * permanently occupied.
+ */
+static void
+init(void)
+{
+  int i;
+
+  memb_init(&heaps);
+
+  for(i = 0; i < DB_HEAP_CACHE_LIMIT; i++) {
+    bucket_cache[i].heap = NULL;
+  }
+}
 
 static struct bucket_cache *
 get_cache(heap_t *heap, int bucket_id)
@@ -189,6 +210,19 @@ invalidate_cache(void)
     if(bucket_cache[i].heap != NULL) {
       bucket_cache[i].heap = NULL;
       break;
+    }
+  }
+}
+
+static void
+invalidate_heap_cache(heap_t *heap)
+{
+  int i;
+
+  /* Drop every cached bucket that belongs to this heap. */
+  for(i = 0; i < DB_HEAP_CACHE_LIMIT; i++) {
+    if(bucket_cache[i].heap == heap) {
+      bucket_cache[i].heap = NULL;
     }
   }
 }
@@ -586,8 +620,32 @@ create(index_t *index)
 static db_result_t
 destroy(index_t *index)
 {
-  release(index);
-  return DB_INDEX_ERROR;
+  heap_t *heap;
+  char bucket_file[DB_MAX_FILENAME_LENGTH];
+  int have_bucket_file;
+
+  heap = index->opaque_data;
+
+  /*
+   * The bucket filename is stored at the start of the heap file. Read it
+   * before the descriptors are closed so that both backing files can be
+   * removed. The in-memory heap itself is freed afterwards by release(),
+   * which index_destroy() invokes right after this function.
+   */
+  have_bucket_file = DB_SUCCESS(storage_read(heap->heap_storage, bucket_file,
+                                             0, sizeof(bucket_file)));
+
+  storage_close(heap->heap_storage);
+  storage_close(heap->bucket_storage);
+  heap->heap_storage = -1;
+  heap->bucket_storage = -1;
+
+  cfs_remove(index->descriptor_file);
+  if(have_bucket_file) {
+    cfs_remove(bucket_file);
+  }
+
+  return DB_OK;
 }
 
 static db_result_t
@@ -605,12 +663,14 @@ load(index_t *index)
 
   fd = storage_open(index->descriptor_file);
   if(fd < 0) {
+    memb_free(&heaps, heap);
     return DB_STORAGE_ERROR;
   }
 
   if(storage_read(fd, bucket_file, 0, sizeof(bucket_file)) !=
      sizeof(bucket_file)) {
     storage_close(fd);
+    memb_free(&heaps, heap);
     return DB_STORAGE_ERROR;
   }
 
@@ -634,10 +694,11 @@ release(index_t *index)
 
   heap = index->opaque_data;
 
+  invalidate_heap_cache(heap);
   storage_close(heap->bucket_storage);
   storage_close(heap->heap_storage);
   memb_free(&heaps, index->opaque_data);
-  return DB_INDEX_ERROR;
+  return DB_OK;
 }
 
 static db_result_t
