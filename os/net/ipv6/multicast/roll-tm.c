@@ -1092,6 +1092,7 @@ icmp_input()
   uint16_t *seq_ptr;
   uint16_t *end_ptr;
   uint16_t val;
+  const uint8_t *payload_end;
 
 #if UIP_CONF_IPV6_CHECKS
   if(!uip_is_addr_linklocal(&UIP_IP_BUF->srcipaddr)) {
@@ -1143,14 +1144,15 @@ icmp_input()
   }
 
   locslhptr = (struct sequence_list_header *)UIP_ICMP_PAYLOAD;
+  payload_end =
+    (const uint8_t *)UIP_ICMP_PAYLOAD + uip_len - uip_l3_icmp_hdr_len;
 
   VERBOSE_PRINTF("ROLL TM: ICMPv6 In, parse from %p to %p\n",
-                 UIP_ICMP_PAYLOAD,
-                 (uint8_t *)UIP_ICMP_PAYLOAD + uip_len -
-                 uip_l3_icmp_hdr_len);
-  while(locslhptr <
-        (struct sequence_list_header *)((uint8_t *)UIP_ICMP_PAYLOAD +
-                                        uip_len - uip_l3_icmp_hdr_len)) {
+                 UIP_ICMP_PAYLOAD, payload_end);
+  /* Distances are compared rather than pointers, so that a message shorter
+     than the headers cannot make the loop run at all. */
+  while(payload_end - (const uint8_t *)locslhptr >=
+        (int)sizeof(struct sequence_list_header)) {
     VERBOSE_PRINTF("ROLL TM: ICMPv6 In, seq hdr @ %p\n", locslhptr);
 
     if((locslhptr->flags & SEQUENCE_LIST_RES) != 0) {
@@ -1175,6 +1177,15 @@ icmp_input()
     PRINT_SEED(&locslhptr->seed_id);
     PRINTF(" M=%u, S=%u, Len=%u\n", SEQUENCE_LIST_GET_M(locslhptr),
            SEQUENCE_LIST_GET_S(locslhptr), locslhptr->seq_len);
+
+    /* The sequence values the header announces have to be in the message
+       too, and not only the header that announces them. */
+    if((size_t)(payload_end - (const uint8_t *)locslhptr) <
+       sizeof(struct sequence_list_header) + 2 * (size_t)locslhptr->seq_len) {
+      PRINTF("ROLL TM: ICMPv6 In, sequence list runs past the message\n");
+      ROLL_TM_STATS_ADD(icmp_bad);
+      goto drop;
+    }
 
     seq_ptr = (uint16_t *)((uint8_t *)locslhptr
                            + sizeof(struct sequence_list_header));
