@@ -41,9 +41,9 @@
  *   Covered: uIP fallback dispatch, ARP resolution, IPv6-to-IPv4 and
  *   IPv4-to-IPv6 header translation, forwarding of a flow from a node behind
  *   the router, address-mapping allocation and reverse lookup, DNS64
- *   rewriting in both directions, ICMP echo translation, and the inbound
- *   port handling. Not covered: the ENC28J60 driver itself, the
- *   DHCPv4 client, and TCP.
+ *   rewriting in both directions, ICMP echo translation, the inbound port
+ *   handling, and the length checks 6to4 makes against malformed input.
+ *   Not covered: the ENC28J60 driver itself, the DHCPv4 client, and TCP.
  *
  */
 
@@ -89,6 +89,13 @@
 
 #define ECHO_ID         0xbeef
 #define ECHO_SEQNO      7
+
+/* Room the malformed-input test hands to a translation, followed by bytes
+   that nothing is allowed to touch. A write past the capacity shows up as a
+   changed canary, with no sanitiser needed. */
+#define PARSE_CAPACITY  128
+#define CANARY_LEN      32
+#define CANARY_BYTE     0x5a
 
 #define ARP_REQUEST     1
 #define ARP_REPLY       2
@@ -221,6 +228,8 @@ UNIT_TEST_REGISTER(dns64_rewrite,
                    "DNS64 rewrites AAAA to A and the A answer back to AAAA");
 UNIT_TEST_REGISTER(icmp_echo,
                    "An IPv4 ping is answered by the local IPv6 host");
+UNIT_TEST_REGISTER(sixto4_rejects_bad_length,
+                   "6to4 drops a packet whose payload length field lies");
 UNIT_TEST_REGISTER(inbound_ports,
                    "Inbound packets reach the local host only below the "
                    "ephemeral port range");
@@ -784,6 +793,62 @@ UNIT_TEST(inbound_ports)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+/* Fill a buffer with the canary pattern, and report whether the bytes past
+   the capacity a translation was given are still untouched. */
+static void
+canary_fill(uint8_t *buf, uint16_t len)
+{
+  memset(buf, CANARY_BYTE, len);
+}
+/*---------------------------------------------------------------------------*/
+static bool
+canary_intact(const uint8_t *buf, uint16_t capacity, uint16_t len)
+{
+  uint16_t i;
+
+  for(i = capacity; i < len; i++) {
+    if(buf[i] != CANARY_BYTE) {
+      return false;
+    }
+  }
+
+  return true;
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST(sixto4_rejects_bad_length)
+{
+  static uint8_t packet[IPV6_HDRLEN + UDP_HDRLEN];
+  static uint8_t out[PARSE_CAPACITY + CANARY_LEN];
+  struct ipv6_hdr *ip = (struct ipv6_hdr *)packet;
+
+  UNIT_TEST_BEGIN();
+
+  memset(packet, 0, sizeof(packet));
+  ip->vtc = 0x60;
+  ip->nxthdr = UIP_PROTO_UDP;
+  ip->hoplim = 64;
+
+  /* The length field counts the bytes after the header, so claiming the
+     whole received length overstates the payload by exactly one header.
+     That is the value the old guard let through, and the copy it sized
+     from ran past both the source packet and the destination buffer. */
+  ip->len[0] = sizeof(packet) >> 8;
+  ip->len[1] = sizeof(packet) & 0xff;
+
+  canary_fill(out, sizeof(out));
+  UNIT_TEST_ASSERT(ip64_6to4(packet, sizeof(packet), out) == 0);
+  UNIT_TEST_ASSERT(canary_intact(out, 0, sizeof(out)));
+
+  /* A packet too short to hold an IPv6 header at all, with a length field
+     that says nothing follows it. */
+  ip->len[0] = 0;
+  ip->len[1] = 0;
+  UNIT_TEST_ASSERT(ip64_6to4(packet, IPV6_HDRLEN - 1, out) == 0);
+  UNIT_TEST_ASSERT(canary_intact(out, 0, sizeof(out)));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(test_ip64_process, ev, data)
 {
   static struct etimer startup_timer;
@@ -828,13 +893,15 @@ PROCESS_THREAD(test_ip64_process, ev, data)
   UNIT_TEST_RUN(dns64_rewrite);
   UNIT_TEST_RUN(icmp_echo);
   UNIT_TEST_RUN(inbound_ports);
+  UNIT_TEST_RUN(sixto4_rejects_bad_length);
 
   if(!UNIT_TEST_PASSED(arp_resolution) ||
      !UNIT_TEST_PASSED(udp_round_trip) ||
      !UNIT_TEST_PASSED(forwarded_flow) ||
      !UNIT_TEST_PASSED(dns64_rewrite) ||
      !UNIT_TEST_PASSED(icmp_echo) ||
-     !UNIT_TEST_PASSED(inbound_ports)) {
+     !UNIT_TEST_PASSED(inbound_ports) ||
+     !UNIT_TEST_PASSED(sixto4_rejects_bad_length)) {
     printf("=check-me= FAILED\n");
     printf("---\n");
   }

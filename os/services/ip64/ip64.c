@@ -370,11 +370,26 @@ ip64_6to4(const uint8_t *ipv6packet, const uint16_t ipv6packet_len,
   v6hdr = (struct ipv6_hdr *)ipv6packet;
   v4hdr = (struct ipv4_hdr *)resultpacket;
 
-  if((v6hdr->len[0] << 8) + v6hdr->len[1] <= ipv6packet_len) {
+  if(ipv6packet_len < IPV6_HDRLEN) {
+    LOG_WARN("6to4: Packet shorter (%u) than an IPv6 header, dropping\n",
+        ipv6packet_len);
+    return 0;
+  }
+
+  /* The length field counts the bytes after the header, so it has to fit in
+     what was received after the header, not in the whole packet. */
+  if((v6hdr->len[0] << 8) + v6hdr->len[1] <= ipv6packet_len - IPV6_HDRLEN) {
     ipv6len = (v6hdr->len[0] << 8) + v6hdr->len[1] + IPV6_HDRLEN;
   } else {
     LOG_WARN("6to4: Packet smaller (%u) than in IPv6 header (%u), dropping\n",
         ipv6packet_len, (v6hdr->len[0] << 8) + v6hdr->len[1]);
+    return 0;
+  }
+
+  /* Make sure that the resulting packet fits in the ip64 packet buffer. If
+     not, we drop it, as ip64_4to6() does for the other direction. */
+  if(ipv6len - IPV6_HDRLEN + IPV4_HDRLEN > BUFSIZE) {
+    LOG_WARN("6to4: Packet too big, dropping\n");
     return 0;
   }
 
