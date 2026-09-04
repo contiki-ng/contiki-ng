@@ -131,6 +131,10 @@ set on the compilation command line:
 * `NRF_NATIVE_USB=<0,1>`  
   Enables or disables the native USB support on boards that have USB support. 
   This will automatically change the debug and the slip from UART to USB.
+
+* `MAKE_WITH_XMEM=<0,1>` and `XMEM_CONF_SIZE=<bytes>`
+  nRF54L15 only: provides the xmem API over a region of the internal RRAM.
+  See [nRF54L15](#nrf54l15) below.
  
 ## Compilation Targets
 
@@ -295,6 +299,18 @@ two nRF54L15 boards are flashed with the `.flash` target:
   RRAM with `load_image` and never invokes an OpenOCD flash driver. The
   board-specific `openocd.cfg` is selected automatically by the Makefile.
 * `nrf54l15/dk` — over its onboard SEGGER J-Link.
+
+**Persistent storage.** Build with `MAKE_WITH_XMEM=1` to get the xmem API
+(`os/dev/xmem.h`) over a region of the internal RRAM, so that storage such as
+Coffee needs no external flash. The linker script reserves `XMEM_CONF_SIZE`
+bytes (default 64 kB; any multiple of 4 kB, 0 allowed) at the top of the code
+memory and the platform initializes the driver at boot, so an application can
+call `xmem_pread()`, `xmem_pwrite()` and `xmem_erase()` directly. Offsets are
+relative to the start of the region, and `xmem_erase()` takes multiples of the
+4 kB erase unit. Without the flag nothing is reserved and the build is
+unchanged.
+
+    make TARGET=nrf BOARD=nrf54l15/xiao MAKE_WITH_XMEM=1 XMEM_CONF_SIZE=131072 hello-world.flash
 
 **Current limitations.** TSCH is not supported on the nRF54L15. The
 `nrf_802154`-based radio driver does not implement
