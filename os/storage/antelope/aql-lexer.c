@@ -194,7 +194,7 @@ next_real(lexer_t *lexer, const char *s)
 static int
 next_string(lexer_t *lexer, const char *s)
 {
-  char *end;
+  const char *end;
   size_t length;
 
   end = strchr(s, '\'');
