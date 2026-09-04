@@ -89,17 +89,17 @@ notification_callback(coap_observee_t *obs, void *notification,
   }
   switch(flag) {
   case NOTIFICATION_OK:
-    printf("NOTIFICATION OK: %*s\n", len, (char *)payload);
+    printf("NOTIFICATION OK: %.*s\n", len, (char *)payload);
     break;
   case OBSERVE_OK: /* server accepeted observation request */
-    printf("OBSERVE_OK: %*s\n", len, (char *)payload);
+    printf("OBSERVE_OK: %.*s\n", len, (char *)payload);
     break;
   case OBSERVE_NOT_SUPPORTED:
-    printf("OBSERVE_NOT_SUPPORTED: %*s\n", len, (char *)payload);
+    printf("OBSERVE_NOT_SUPPORTED: %.*s\n", len, (char *)payload);
     obs = NULL;
     break;
   case ERROR_RESPONSE_CODE:
-    printf("ERROR_RESPONSE_CODE: %*s\n", len, (char *)payload);
+    printf("ERROR_RESPONSE_CODE: %.*s\n", len, (char *)payload);
     obs = NULL;
     break;
   case NO_REPLY_FROM_SERVER:
