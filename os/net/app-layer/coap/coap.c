@@ -986,7 +986,7 @@ coap_get_header_location_path(const coap_message_t *coap_pkt,
 int
 coap_set_header_location_path(coap_message_t *coap_pkt, const char *path)
 {
-  char *query;
+  const char *query;
 
   while(path[0] == '/') {
     ++path;
