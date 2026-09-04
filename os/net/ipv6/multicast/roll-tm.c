@@ -47,6 +47,8 @@
 #include "net/ipv6/multicast/uip-mcast6.h"
 #include "net/ipv6/multicast/roll-tm.h"
 #include "dev/watchdog.h"
+#include <stdbool.h>
+#include <stddef.h>
 #include <string.h>
 
 #define DEBUG DEBUG_NONE
@@ -1084,6 +1086,50 @@ accept(uint8_t in)
   return UIP_MCAST6_ACCEPT;
 }
 /*---------------------------------------------------------------------------*/
+/*
+ * A control message has to be a whole number of sequence lists that we can
+ * parse. Checking this before any list is acted on keeps a malformed
+ * message from changing the windows, the buffer or the Trickle timers.
+ */
+static bool
+sequence_lists_valid(const uint8_t *ptr, const uint8_t *end)
+{
+  const struct sequence_list_header *hdr;
+  size_t list_len;
+
+  while(ptr < end) {
+    if(end - ptr < (ptrdiff_t)sizeof(struct sequence_list_header)) {
+      PRINTF("ROLL TM: ICMPv6 In, truncated sequence list header\n");
+      return false;
+    }
+    hdr = (const struct sequence_list_header *)ptr;
+
+    if((hdr->flags & SEQUENCE_LIST_RES) != 0) {
+      PRINTF("ROLL TM: ICMPv6 In, non-zero reserved bits\n");
+      return false;
+    }
+
+    /* The S bit is set for short Seed IDs, as icmp_output() sends them. */
+#if ROLL_TM_SHORT_SEEDS
+    if(!SEQUENCE_LIST_GET_S(hdr)) {
+#else
+    if(SEQUENCE_LIST_GET_S(hdr)) {
+#endif
+      PRINTF("ROLL TM: ICMPv6 In, unsupported Seed ID length\n");
+      return false;
+    }
+
+    list_len = sizeof(struct sequence_list_header) + 2 * (size_t)hdr->seq_len;
+    if((size_t)(end - ptr) < list_len) {
+      PRINTF("ROLL TM: ICMPv6 In, sequence list runs past the message\n");
+      return false;
+    }
+    ptr += list_len;
+  }
+
+  return true;
+}
+/*---------------------------------------------------------------------------*/
 /* ROLL TM ICMPv6 Input Handler */
 static void
 icmp_input()
@@ -1092,6 +1138,18 @@ icmp_input()
   uint16_t *seq_ptr;
   uint16_t *end_ptr;
   uint16_t val;
+  const uint8_t *payload_end;
+  size_t list_len;
+
+  /*
+   * A message too short for an ICMPv6 header would put payload_end
+   * before the start of the payload.
+   */
+  if(uip_len < uip_l3_icmp_hdr_len) {
+    PRINTF("ROLL TM: ICMPv6 In, truncated ICMPv6 header\n");
+    ROLL_TM_STATS_ADD(icmp_bad);
+    goto discard;
+  }
 
 #if UIP_CONF_IPV6_CHECKS
   if(!uip_is_addr_linklocal(&UIP_IP_BUF->srcipaddr)) {
@@ -1130,6 +1188,13 @@ icmp_input()
 
   ROLL_TM_STATS_ADD(icmp_in);
 
+  payload_end =
+    (const uint8_t *)UIP_ICMP_PAYLOAD + uip_len - uip_l3_icmp_hdr_len;
+  if(!sequence_lists_valid(UIP_ICMP_PAYLOAD, payload_end)) {
+    ROLL_TM_STATS_ADD(icmp_bad);
+    goto discard;
+  }
+
   /* Reset Is-Listed bit for all windows */
   for(iterswptr = &windows[ROLL_TM_WINS - 1]; iterswptr >= windows;
       iterswptr--) {
@@ -1145,42 +1210,20 @@ icmp_input()
   locslhptr = (struct sequence_list_header *)UIP_ICMP_PAYLOAD;
 
   VERBOSE_PRINTF("ROLL TM: ICMPv6 In, parse from %p to %p\n",
-                 UIP_ICMP_PAYLOAD,
-                 (uint8_t *)UIP_ICMP_PAYLOAD + uip_len -
-                 uip_l3_icmp_hdr_len);
-  while(locslhptr <
-        (struct sequence_list_header *)((uint8_t *)UIP_ICMP_PAYLOAD +
-                                        uip_len - uip_l3_icmp_hdr_len)) {
+                 UIP_ICMP_PAYLOAD, payload_end);
+  while((const uint8_t *)locslhptr < payload_end) {
     VERBOSE_PRINTF("ROLL TM: ICMPv6 In, seq hdr @ %p\n", locslhptr);
-
-    if((locslhptr->flags & SEQUENCE_LIST_RES) != 0) {
-      PRINTF("ROLL TM: ICMPv6 In, non-zero reserved bits\n");
-      goto drop;
-    }
-
-    /* Drop unsupported Seed ID Lengths. S bit: 0->short, 1->long */
-#if ROLL_TM_SHORT_SEEDS
-    if(!SEQUENCE_LIST_GET_S(locslhptr)) {
-      ROLL_TM_STATS_ADD(icmp_bad);
-      goto drop;
-    }
-#else
-    if(SEQUENCE_LIST_GET_S(locslhptr)) {
-      ROLL_TM_STATS_ADD(icmp_bad);
-      goto drop;
-    }
-#endif
 
     PRINTF("ROLL TM: ICMPv6 In, Sequence List for Seed ID ");
     PRINT_SEED(&locslhptr->seed_id);
     PRINTF(" M=%u, S=%u, Len=%u\n", SEQUENCE_LIST_GET_M(locslhptr),
            SEQUENCE_LIST_GET_S(locslhptr), locslhptr->seq_len);
 
+    list_len = sizeof(struct sequence_list_header) +
+      2 * (size_t)locslhptr->seq_len;
     seq_ptr = (uint16_t *)((uint8_t *)locslhptr
                            + sizeof(struct sequence_list_header));
-    end_ptr = (uint16_t *)((uint8_t *)locslhptr
-                           + sizeof(struct sequence_list_header) +
-                           locslhptr->seq_len * 2);
+    end_ptr = (uint16_t *)((uint8_t *)locslhptr + list_len);
 
     /* Fetch a pointer to the corresponding trickle timer */
     loctpptr = &t[SEQUENCE_LIST_GET_M(locslhptr)];
@@ -1252,8 +1295,8 @@ icmp_input()
       PRINTF("ROLL TM: Inconsistency - Advertised window unknown to us\n");
       loctpptr->inconsistency = 1;
     }
-    locslhptr = (struct sequence_list_header *)(((uint8_t *)locslhptr) +
-        sizeof(struct sequence_list_header) + (2 * locslhptr->seq_len));
+    locslhptr = (struct sequence_list_header *)((uint8_t *)locslhptr +
+                                                list_len);
   }
   /* Done parsing the message */
 
@@ -1291,8 +1334,6 @@ icmp_input()
       }
     }
   }
-
-drop:
 
   if(t[0].inconsistency) {
     reset_trickle_timer(0);
