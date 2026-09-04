@@ -99,6 +99,7 @@ hello-world/cc26x0-cc13x0:BOARD=launchpad/cc2650 \
 hello-world/cc26x0-cc13x0:BOARD=launchpad/cc1310 \
 hello-world/cc26x0-cc13x0:BOARD=launchpad/cc1350 \
 hello-world/nrf:BOARD=nrf52840/dk \
+hello-world/nrf:BOARD=nrf54l15/xiao:MAKE_WITH_XMEM=1 \
 hello-world/nrf:BOARD=nrf52840/dongle \
 hello-world/nrf:BOARD=nrf5340/dk/application \
 hello-world/nrf:BOARD=nrf5340/dk/network \

@@ -37,8 +37,21 @@ EXTERNALDIRS += $(NRFX_ROOT)/mdk
 NRFX_C_SRCS += $(NRF54L15_MDK_DIR)/system_nrf54l.c
 NRFX_ASM_SRCS += $(NRF54L15_MDK_ASM_SRCS)
 
-LDSCRIPT ?= $(NRF54L15_MDK_DIR)/nrf54l15_xxaa_application.ld
+# The MDK's linker script with an optional region reserved for xmem.
+LDSCRIPT ?= $(CONTIKI_CPU)/nrf54l15/nrf54l15_xxaa_application.ld
 LDFLAGS += -L$(NRF54L15_MDK_DIR)
+
+### External memory (MAKE_WITH_XMEM=1): the xmem API over a region of
+### XMEM_CONF_SIZE bytes (default 64 kB, a multiple of 4 kB, 0 allowed)
+### that the linker script reserves at the top of the code RRAM, driven
+### through the RRAMC. Without the flag nothing is reserved.
+ifeq ($(MAKE_WITH_XMEM),1)
+XMEM_CONF_SIZE ?= 65536
+CONTIKI_CPU_SOURCEFILES += xmem-rram.c
+CFLAGS += -DXMEM_CONF_SIZE=$(XMEM_CONF_SIZE) -DNRFX_RRAMC_ENABLED=1
+LDFLAGS += -Wl,--defsym,__xmem_conf_size=$(XMEM_CONF_SIZE)
+NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_rramc.c
+endif
 
 include $(CONTIKI)/$(CONTIKI_NG_CM33_DIR)/Makefile.cm33
 
