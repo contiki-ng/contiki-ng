@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, George Oikonomou - http://www.spd.gr
+ * Copyright (c) 2026, RISE Research Institutes of Sweden
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -8,9 +8,11 @@
  *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -28,63 +30,44 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 /**
- * \addtogroup arm
+ * \addtogroup cycles
  * @{
  *
  * \file
- *  Compiler and data type definitions for all ARM-based CPUs
+ *         Cycle counter on the Cortex-M Data Watchpoint and Trace unit.
+ * \author
+ *         Niclas Finne <niclas.finne@ri.se>
  */
+#include "contiki.h"
+#include "cycles-arch.h"
 /*---------------------------------------------------------------------------*/
-#ifndef ARM_DEF_
-#define ARM_DEF_
+void
+cycles_arch_start(void)
+{
+  /*
+   * Off after a power-on reset, and otherwise as a warm reset or a
+   * debugger left it. TRCENA is set first because it gates the counting
+   * as well as the register definitions: a core found with CYCCNTENA
+   * set and TRCENA clear keeps its counter frozen. TRCENA stays set
+   * once enabled, being the global enable for the whole DWT and ITM.
+   *
+   * Only enable bits are touched, so a call from a second user does not
+   * disturb a measurement in progress, and a counter that is already
+   * running keeps running.
+   */
+  CYCLES_ARCH_DEMCR |= CYCLES_ARCH_DEMCR_TRCENA;
+  CYCLES_ARCH_DWT_CTRL |= CYCLES_ARCH_DWT_CTRL_CYCCNTENA;
+}
 /*---------------------------------------------------------------------------*/
-#include <stdint.h>
-
-/*
- * The Cortex-M3, M4 and M33 cores that Contiki-NG runs on all have the
- * DWT cycle counter, see os/sys/cycles.h. A Cortex-M0, M0+ or M23 port
- * has no CYCCNT and has to set this to 0, as does an application that
- * wants the DWT left to a debugger.
- */
-#ifndef CYCLES_CONF_ARCH_SUPPORTED
-#define CYCLES_CONF_ARCH_SUPPORTED 1
-#endif /* CYCLES_CONF_ARCH_SUPPORTED */
-/*---------------------------------------------------------------------------*/
-/**
- * \name Macros and typedefs
- *
- * Those values are not meant to be modified by the user
- * @{
- */
-#define CLOCK_CONF_SIZE 4
-#define CLOCK_CONF_SECOND 128
-
-/* Platform typedefs */
-typedef uint32_t uip_stats_t;
-
-/** @} */
-
-/*
- * The stdio.h that ships with the arm-gcc toolchain does this:
- *
- * int  _EXFUN(putchar, (int));
- * [...]
- * #define  putchar(x)  putc(x, stdout)
- *
- * This causes us a lot of trouble: For platforms using this toolchain, every
- * time we use putchar we need to first #undef putchar. What we do here is to
- * #undef putchar across the board. The resulting code will cause the linker
- * to search for a symbol named putchar and this allows us to use the
- * implementation under os/lib/dbg-io.
- *
- * This will fail if stdio.h is included before contiki.h, but it is common
- * practice to include contiki.h first
- */
-#include <stdio.h>
-#undef putchar
-/*---------------------------------------------------------------------------*/
-#endif /* ARM_DEF_ */
+void
+cycles_arch_stop(void)
+{
+  /*
+   * Only the counter stops; TRCENA is left alone so that the count stays
+   * readable and a trace session set up by a debugger survives.
+   */
+  CYCLES_ARCH_DWT_CTRL &= ~CYCLES_ARCH_DWT_CTRL_CYCCNTENA;
+}
 /*---------------------------------------------------------------------------*/
 /** @} */

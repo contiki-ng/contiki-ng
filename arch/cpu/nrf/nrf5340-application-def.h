@@ -77,6 +77,17 @@
 #define NRF_HAS_USB     1
 #define NRF_HAS_UARTE   1
 /*---------------------------------------------------------------------------*/
+/*
+ * This core is the one whose rate is not fixed: SystemCoreClock is
+ * 128 MHz shifted right by HFCLKCTRL.HCLK. SystemInit() leaves HFCLKCTRL
+ * at Div2 as the errata 42 workaround, so a stock boot runs at 64 MHz.
+ * An application that selects 128 MHz has to override this, or readings
+ * come out half of what they should be. See os/sys/cycles.h.
+ */
+#ifndef CYCLES_CONF_HZ
+#define CYCLES_CONF_HZ 64000000
+#endif /* CYCLES_CONF_HZ */
+/*---------------------------------------------------------------------------*/
 #endif /* NRF5340_APPLICATION_DEF_H_ */
 /*---------------------------------------------------------------------------*/
 /** 

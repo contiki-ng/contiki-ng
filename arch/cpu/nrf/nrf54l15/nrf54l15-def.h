@@ -21,4 +21,12 @@
 #define CSMA_CONF_SEND_SOFT_ACK 0
 #endif
 
+/* SystemInit selects the 128 MHz PLL unless the application asks for
+   another frequency, see os/sys/cycles.h. */
+#ifdef NRF_CONFIG_CPU_FREQ_MHZ
+#define CYCLES_CONF_HZ (NRF_CONFIG_CPU_FREQ_MHZ * 1000000)
+#else
+#define CYCLES_CONF_HZ 128000000
+#endif
+
 #endif /* NRF54L15_DEF_H_ */

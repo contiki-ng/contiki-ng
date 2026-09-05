@@ -34,6 +34,9 @@
 /*---------------------------------------------------------------------------*/
 #include "cm4/cm4-def.h"
 /*---------------------------------------------------------------------------*/
+/* The core runs at 64 MHz, see os/sys/cycles.h. */
+#define CYCLES_CONF_HZ 64000000
+/*---------------------------------------------------------------------------*/
 /* Path to headers with implementation of mutexes, atomic and memory barriers */
 #define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
 #define ATOMIC_CONF_ARCH_HEADER_PATH         "atomic-cortex.h"
