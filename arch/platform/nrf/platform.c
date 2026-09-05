@@ -56,7 +56,7 @@
 #include "nrfx_config.h"
 #include "usb.h"
 
-#ifdef NRF_ICACHE
+#if defined(NRF_ICACHE) || defined(NRF_CACHE)
 #include "hal/nrf_cache.h"
 #endif
 
@@ -67,12 +67,26 @@
 #define LOG_LEVEL LOG_LEVEL_MAIN
 /*---------------------------------------------------------------------------*/
 /*
- * Only the SoCs with an ICACHE peripheral define this in their CPU
- * configuration header, so provide an off default for the others.
+ * Only the SoCs with an ICACHE or similar peripheral define this in their
+ * CPU configuration header, so provide an off default for the others.
  */
 #ifndef NRF_CONF_ICACHE_ENABLE
 #define NRF_CONF_ICACHE_ENABLE 0
 #endif
+
+/*
+ * The code cache peripheral, on SoCs that have one. The cache is a
+ * secure-only peripheral, so it is enabled by the secure world only and
+ * never by a TrustZone normal-world image. Consequently, the
+ * NRF_CONF_ICACHE_ENABLE opt-out takes effect in the secure world build.
+ */
+#if !defined(NRF_TRUSTZONE_NONSECURE)
+#if defined(NRF_ICACHE)
+#define NRF_CODE_CACHE NRF_ICACHE /* nRF54L series */
+#elif defined(NRF_CACHE)
+#define NRF_CODE_CACHE NRF_CACHE /* nRF5340 */
+#endif
+#endif /* !defined(NRF_TRUSTZONE_NONSECURE) */
 /*---------------------------------------------------------------------------*/
 #if NRF_HARDFAULT_HANDLER_EXTENDED
 void hardfault_print_saved_crash(void);
@@ -91,22 +105,22 @@ platform_init_board_stage_two(void)
 static void
 icache_init(void)
 {
-#if defined(NRF_ICACHE) && NRF_CONF_ICACHE_ENABLE
+#if defined(NRF_CODE_CACHE) && NRF_CONF_ICACHE_ENABLE
   /*
-   * Enable the instruction cache, on SoCs that have the ICACHE peripheral
-   * and have not opted out (see NRF_CONF_ICACHE_ENABLE). Enabling performs
-   * no invalidation of its own, and the reset state of the cache memory is
+   * Enable the code cache, on SoCs that have the peripheral and have
+   * not opted out (see NRF_CONF_ICACHE_ENABLE). Enabling performs no
+   * invalidation of its own, and the reset state of the cache memory is
    * not documented, so invalidate first rather than risk serving a line
    * left over from code that a firmware update has since rewritten. The
    * invalidate task runs asynchronously; wait for it before enabling.
    */
-  nrf_cache_invalidate(NRF_ICACHE);
+  nrf_cache_invalidate(NRF_CODE_CACHE);
 #if NRF_CACHE_HAS_STATUS
-  while(nrf_cache_busy_check(NRF_ICACHE)) {
+  while(nrf_cache_busy_check(NRF_CODE_CACHE)) {
   }
-#endif
-  nrf_cache_enable(NRF_ICACHE);
-#endif /* defined(NRF_ICACHE) && NRF_CONF_ICACHE_ENABLE */
+#endif /* NRF_CACHE_HAS_STATUS */
+  nrf_cache_enable(NRF_CODE_CACHE);
+#endif /* defined(NRF_CODE_CACHE) && NRF_CONF_ICACHE_ENABLE */
 }
 /*---------------------------------------------------------------------------*/
 void
