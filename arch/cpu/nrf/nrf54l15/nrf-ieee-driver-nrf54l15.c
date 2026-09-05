@@ -80,6 +80,12 @@ static uint8_t current_channel = DEFAULT_CHANNEL;
 static int8_t current_tx_power = DEFAULT_TX_POWER;
 static bool radio_is_on;
 
+/* Reflects the nrf_802154 configuration applied in init(): frame filtering
+ * and auto-ACK enabled. Poll mode is not supported, reception is
+ * interrupt-driven, so it is never present in rx_mode. */
+static radio_value_t rx_mode =
+  RADIO_RX_MODE_ADDRESS_FILTER | RADIO_RX_MODE_AUTOACK;
+
 /*---------------------------------------------------------------------------*/
 PROCESS(nrf54l15_radio_process, "nRF54L15 radio driver");
 /*---------------------------------------------------------------------------*/
@@ -155,8 +161,9 @@ init(void)
   nrf_802154_channel_set(current_channel);
   nrf_802154_tx_power_set(current_tx_power);
 
-  /* Enable auto-ACK. */
-  nrf_802154_auto_ack_set(true);
+  /* Apply the receive mode: frame filtering and auto-ACK. */
+  nrf_802154_promiscuous_set((rx_mode & RADIO_RX_MODE_ADDRESS_FILTER) == 0);
+  nrf_802154_auto_ack_set((rx_mode & RADIO_RX_MODE_AUTOACK) != 0);
   nrf_802154_rx_on_when_idle_set(true);
 
   /* Set PAN ID from Contiki-NG configuration. */
@@ -437,7 +444,7 @@ get_value(radio_param_t param, radio_value_t *value)
     return RADIO_RESULT_NOT_SUPPORTED;
 
   case RADIO_PARAM_RX_MODE:
-    *value = 0;
+    *value = rx_mode;
     return RADIO_RESULT_OK;
 
   case RADIO_PARAM_TX_MODE:
@@ -506,6 +513,14 @@ set_value(radio_param_t param, radio_value_t value)
     return RADIO_RESULT_OK;
 
   case RADIO_PARAM_RX_MODE:
+    if((value & ~(radio_value_t)(RADIO_RX_MODE_ADDRESS_FILTER |
+                                 RADIO_RX_MODE_AUTOACK)) != 0) {
+      /* Poll mode is not supported: reception is interrupt-driven. */
+      return RADIO_RESULT_NOT_SUPPORTED;
+    }
+    nrf_802154_promiscuous_set((value & RADIO_RX_MODE_ADDRESS_FILTER) == 0);
+    nrf_802154_auto_ack_set((value & RADIO_RX_MODE_AUTOACK) != 0);
+    rx_mode = value;
     return RADIO_RESULT_OK;
 
   case RADIO_PARAM_TX_MODE:
