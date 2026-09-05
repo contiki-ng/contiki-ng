@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Thingsquare, http://www.thingsquare.com/.
+ * Copyright (c) 2026, RISE Research Institutes of Sweden AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,7 +10,6 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -27,37 +26,26 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *
  */
+/*---------------------------------------------------------------------------*/
+/**
+ * \file
+ *         IP64 configuration for the ip64-router example.
+ * \author
+ *         Joakim Eriksson <joakim.eriksson@ri.se>
+ */
+/*---------------------------------------------------------------------------*/
 #ifndef IP64_CONF_H
 #define IP64_CONF_H
-
+/*---------------------------------------------------------------------------*/
 #include "ip64/ip64-eth-interface.h"
-
-/*
- * The Ethernet driver. Two are available in the tree:
- *
- *   enc28j60_ip64_driver  - Microchip ENC28J60 over SPI, from
- *                           arch/dev/ethernet/enc28j60. Add that directory to
- *                           MODULES and include enc28j60-ip64-driver.h.
- *   ip64_null_driver      - discards everything, from ip64-null-driver.h.
- *                           Useful to get a build going before the hardware
- *                           driver is ready.
- *
- * For a complete, working configuration see
- * examples/platform-specific/nrf/ip64-router or
- * arch/platform/zoul/orion/ip64-conf.h.
- */
 #include "enc28j60-ip64-driver.h"
-
-#define IP64_CONF_UIP_FALLBACK_INTERFACE    ip64_eth_interface
-#define IP64_CONF_INPUT                     ip64_eth_interface_input
-
-#define IP64_CONF_ETH_DRIVER                enc28j60_ip64_driver
-
-/* 
- * In contrast to the mandatory parameters above, IP64_CONF_DHCP is an 
- * optional configuration parameter. The default value is set in ip64.h 
- */
-/* #define IP64_CONF_DHCP                      1 */
+/*---------------------------------------------------------------------------*/
+#define IP64_CONF_UIP_FALLBACK_INTERFACE  ip64_eth_interface
+#define IP64_CONF_INPUT                   ip64_eth_interface_input
+#define IP64_CONF_ETH_DRIVER              enc28j60_ip64_driver
+/*---------------------------------------------------------------------------*/
+/* Acquire the IPv4 address, gateway and netmask over DHCP. */
+#define IP64_CONF_DHCP                    1
+/*---------------------------------------------------------------------------*/
 #endif /* IP64_CONF_H */

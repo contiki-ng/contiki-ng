@@ -84,6 +84,15 @@
 #define GPIO_HAL_CONF_ARCH_HDR_PATH          "gpio-hal-arch.h"
 #define GPIO_HAL_CONF_ARCH_SW_TOGGLE         0
 /*---------------------------------------------------------------------------*/
+/*
+ * SPI is opt-in: NRF_SPI_CONF_CONTROLLER_COUNT is defined by Makefile.nrf
+ * when NRF_WITH_SPI=1. Without it the SPI HAL compiles out entirely.
+ */
+#ifdef NRF_SPI_CONF_CONTROLLER_COUNT
+#define SPI_CONF_CONTROLLER_COUNT NRF_SPI_CONF_CONTROLLER_COUNT
+#define SPI_HAL_CONF_ARCH_HDR_PATH "spi-arch.h"
+#endif /* NRF_SPI_CONF_CONTROLLER_COUNT */
+/*---------------------------------------------------------------------------*/
 #ifndef TSCH_CONF_HW_FRAME_FILTERING
 #define TSCH_CONF_HW_FRAME_FILTERING  0
 #endif /* TSCH_CONF_HW_FRAME_FILTERING */

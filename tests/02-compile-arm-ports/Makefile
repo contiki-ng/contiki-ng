@@ -162,6 +162,14 @@ platform-specific/cc26x0-cc13x0/base-demo/simplelink:BOARD=sensortag/cc1350 \
 platform-specific/cc26x0-cc13x0/base-demo/simplelink:BOARD=sensortag/cc1352r1 \
 platform-specific/nrf/ipc-radio-service/nrf:BOARD=nrf5340/dk/network \
 platform-specific/nrf/ipc-radio-service/nrf:BOARD=nrf5340/dk/network:NRF_802154=1 \
+platform-specific/nrf/spi-flash/nrf:BOARD=nrf54l15/dk \
+platform-specific/nrf/spi-flash/nrf:BOARD=nrf54l15/dk:NRF_SPI_INSTANCES=00,22 \
+platform-specific/nrf/spi-flash/nrf:BOARD=nrf52840/dk:NRF_SPI_INSTANCES=0 \
+platform-specific/nrf/spi-flash/nrf:BOARD=nrf5340/dk/application:NRF_SPI_INSTANCES=1 \
+platform-specific/nrf/enc28j60-test/nrf:BOARD=nrf54l15/dk \
+platform-specific/nrf/ip64-router/nrf:BOARD=nrf54l15/dk \
+platform-specific/nrf/nat64-node/nrf:BOARD=nrf54l15/xiao \
+platform-specific/nrf/lwm2m-nat64/nrf:BOARD=nrf54l15/xiao \
 platform-specific/nrf/start-network-core/nrf:BOARD=nrf5340/dk/application \
 platform-specific/nrf/start-network-core/nrf:BOARD=nrf5340/dk/network \
 platform-specific/nrf/trustzone/nrf:BOARD=nrf5340/dk/application \
