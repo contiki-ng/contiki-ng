@@ -180,6 +180,12 @@ PROCESS_THREAD(test_process, ev, data)
   UNIT_TEST_RUN(aesccm_encrypt);
   UNIT_TEST_RUN(aesccm_decrypt);
 
+  if(!UNIT_TEST_PASSED(aesccm_encrypt)
+     || !UNIT_TEST_PASSED(aesccm_decrypt)) {
+    printf("=check-me= FAILED\n");
+    printf("---\n");
+  }
+
   printf("=check-me= DONE\n");
   printf("---\n");
 
