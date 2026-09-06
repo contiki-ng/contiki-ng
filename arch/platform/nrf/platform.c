@@ -44,6 +44,7 @@
 #include "dev/button-hal.h"
 #include "dev/leds.h"
 #include "dev/serial-line.h"
+#include "drivers/nrfx_errors.h"
 #include "lib/csprng.h"
 
 #include "int-master.h"
@@ -55,6 +56,10 @@
 #include "lpm.h"
 #include "nrfx_config.h"
 #include "usb.h"
+
+#if defined(NRF54L15_XXAA) && !defined(NRF_TRUSTZONE_NONSECURE)
+#include "nrfx_cracen.h"
+#endif
 
 /*---------------------------------------------------------------------------*/
 /* Log configuration */
@@ -87,7 +92,19 @@ platform_init_stage_one(void)
 static void
 feed_csprng(void)
 {
-#if defined(NRF_RNG) && CSPRNG_ENABLED
+#if CSPRNG_ENABLED && defined(NRF54L15_XXAA)
+  struct csprng_seed seed;
+  nrfx_err_t err;
+
+  err = nrfx_cracen_ctr_drbg_init();
+  if(err == NRFX_SUCCESS) {
+    err = nrfx_cracen_ctr_drbg_random_get(seed.u8, sizeof(seed));
+    if(err == NRFX_SUCCESS) {
+      csprng_feed(&seed);
+    }  
+    nrfx_cracen_ctr_drbg_uninit();
+  }
+#elif defined(NRF_RNG) && CSPRNG_ENABLED
   struct csprng_seed seed;
 
   NRF_RNG->TASKS_START = 1;
