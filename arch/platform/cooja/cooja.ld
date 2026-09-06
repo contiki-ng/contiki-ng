@@ -6,4 +6,4 @@ SECTIONS{
     cooja_bssStart = ADDR(.bss);
     cooja_dataStart = ADDR(.data);
 }
-INSERT BEFORE .lbss;
+INSERT AFTER .bss;
