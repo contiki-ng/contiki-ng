@@ -23,6 +23,12 @@ software on the host that knows nothing about NAT64, see
 | `dns64_rewrite` | `ip64_dns64_6to4` (AAAA to A) and `ip64_dns64_4to6` (A to AAAA) |
 | `icmp_echo` | ICMP translation in both directions: an IPv4 ping reaches the local IPv6 host and its reply is translated back |
 | `inbound_ports` | Inbound port handling: delivery to the local host below `EPHEMERAL_PORTRANGE`, and the drop of ephemeral-port traffic that matches no mapping |
+| `sixto4_rejects_bad_length` | `ip64_6to4` against an IPv6 payload length field larger than the payload received, and against a packet shorter than a header |
+
+The last one calls `ip64_6to4()` directly with malformed input and checks the
+return value, and that a canary past the buffer it was given is untouched, so
+an out-of-bounds write shows up without a sanitiser. It fails against the code
+as it stood before the fix in this pull request.
 
 Outbound packets come from ordinary `simple_udp` sockets and are collected
 through the fallback interface. Inbound packets are handed to
