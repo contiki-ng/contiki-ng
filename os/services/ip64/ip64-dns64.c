@@ -147,13 +147,9 @@ int
 ip64_dns64_4to6(const uint8_t *ipv4data, int ipv4datalen,
                 uint8_t *ipv6data, int ipv6capacity)
 {
-  /* The answer is copied verbatim except for the records that grow, so the
-     message starts out as long as the one that came in. */
-  int ipv6datalen = ipv4datalen;
-
   uint8_t n;
   int i, j;
-  int qlen, len;
+  int qlen, len, taillen;
   const uint8_t *qdata, *adata;
   uint8_t *qcopy, *acopy, *lenptr;
   uint8_t *q;
@@ -326,7 +322,6 @@ ip64_dns64_4to6(const uint8_t *ipv4data, int ipv4datalen,
         acopy += 16;
         lenptr[0] = 0;
         lenptr[1] = 16;
-        ipv6datalen += 12;
 
       } else {
         if(acopy + len > ipv6data + ipv6capacity) {
@@ -368,6 +363,22 @@ ip64_dns64_4to6(const uint8_t *ipv4data, int ipv4datalen,
       adata += len;
     }
   }
-  return ipv6datalen;
+
+  /*
+   * The authority and the additional sections are copied as they stand, but
+   * they still have to move, since the answers before them grew. A name in
+   * them that points back into an answer keeps the offset it had, which the
+   * growth invalidated; correcting those would mean rewriting the names in
+   * the whole message.
+   */
+  taillen = ipv4data + ipv4datalen - adata;
+  if(acopy + taillen > ipv6data + ipv6capacity) {
+    LOG_WARN("ip64_dns64_4to6: packet ended while parsing (out)\n");
+    return IP64_DNS64_DROP;
+  }
+  memcpy(acopy, adata, taillen);
+  acopy += taillen;
+
+  return acopy - ipv6data;
 }
 /*---------------------------------------------------------------------------*/
