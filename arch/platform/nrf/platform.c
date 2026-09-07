@@ -56,8 +56,32 @@
 #include "nrfx_config.h"
 #include "usb.h"
 
-#if defined(NRF_ICACHE) || defined(NRF_CACHE)
+/* Pulls in the SoC feature macros, such as NVMC_FEATURE_CACHE_PRESENT. */
+#include "nrf_peripherals.h"
+
+/*
+ * The cache mechanism available to this build, if any. Both the dedicated
+ * cache peripheral and the NVMC-embedded cache are secure-only on
+ * TrustZone parts, so neither is defined for a normal-world image;
+ * consequently NRF_CONF_ICACHE_ENABLE takes effect in the secure-world
+ * build only. Everything downstream (the #include below and the
+ * icache_init() branch) tests only these two derived macros, never the
+ * raw peripheral-presence macros, so the two selections cannot drift.
+ */
+#if !defined(NRF_TRUSTZONE_NONSECURE)
+#if defined(NRF_ICACHE)
+#define NRF_CODE_CACHE NRF_ICACHE /* nRF54L series */
+#elif defined(NRF_CACHE)
+#define NRF_CODE_CACHE NRF_CACHE /* nRF5340 application core */
+#elif defined(NVMC_FEATURE_CACHE_PRESENT)
+#define NRF_NVMC_CODE_CACHE NRF_NVMC /* nRF52840, nRF5340 network core */
+#endif
+#endif /* !defined(NRF_TRUSTZONE_NONSECURE) */
+
+#if defined(NRF_CODE_CACHE)
 #include "hal/nrf_cache.h"
+#elif defined(NRF_NVMC_CODE_CACHE)
+#include "hal/nrf_nvmc.h"
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -74,19 +98,6 @@
 #define NRF_CONF_ICACHE_ENABLE 0
 #endif
 
-/*
- * The code cache peripheral, on SoCs that have one. The cache is a
- * secure-only peripheral, so it is enabled by the secure world only and
- * never by a TrustZone normal-world image. Consequently, the
- * NRF_CONF_ICACHE_ENABLE opt-out takes effect in the secure world build.
- */
-#if !defined(NRF_TRUSTZONE_NONSECURE)
-#if defined(NRF_ICACHE)
-#define NRF_CODE_CACHE NRF_ICACHE /* nRF54L series */
-#elif defined(NRF_CACHE)
-#define NRF_CODE_CACHE NRF_CACHE /* nRF5340 */
-#endif
-#endif /* !defined(NRF_TRUSTZONE_NONSECURE) */
 /*---------------------------------------------------------------------------*/
 #if NRF_HARDFAULT_HANDLER_EXTENDED
 void hardfault_print_saved_crash(void);
@@ -105,7 +116,8 @@ platform_init_board_stage_two(void)
 static void
 icache_init(void)
 {
-#if defined(NRF_CODE_CACHE) && NRF_CONF_ICACHE_ENABLE
+#if NRF_CONF_ICACHE_ENABLE
+#if defined(NRF_CODE_CACHE)
   /*
    * Enable the code cache, on SoCs that have the peripheral and have
    * not opted out (see NRF_CONF_ICACHE_ENABLE). Enabling performs no
@@ -120,7 +132,22 @@ icache_init(void)
   }
 #endif /* NRF_CACHE_HAS_STATUS */
   nrf_cache_enable(NRF_CODE_CACHE);
-#endif /* defined(NRF_CODE_CACHE) && NRF_CONF_ICACHE_ENABLE */
+#elif defined(NRF_NVMC_CODE_CACHE)
+  /*
+   * The nRF52840 and the nRF5340 network core cache instruction fetches in
+   * the NVMC rather than in a separate cache peripheral. ICACHECNF resets
+   * to disabled, but that only covers power-on reset: a watchdog reset or
+   * the dongle's DFU reset path also leaves ICACHECNF at 0 without the
+   * cache RAM's contents being documented as cleared. Disabling is the
+   * documented invalidate for this cache, so do it before enabling rather
+   * than trust the reset state. Go through the HAL rather than writing
+   * ICACHECNF directly; it carries the workaround for nRF53 anomaly 6 on
+   * the disable path.
+   */
+  nrf_nvmc_icache_config_set(NRF_NVMC_CODE_CACHE, NRF_NVMC_ICACHE_DISABLE);
+  nrf_nvmc_icache_config_set(NRF_NVMC_CODE_CACHE, NRF_NVMC_ICACHE_ENABLE);
+#endif
+#endif /* NRF_CONF_ICACHE_ENABLE */
 }
 /*---------------------------------------------------------------------------*/
 void
