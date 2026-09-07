@@ -240,6 +240,7 @@ static uint8_t isn_key[16];
 
 static void nat64_tcp_send_pending(struct tcp_seqstate *ts);
 static void nat64_tcp_ack_confirmed(struct tcp_seqstate *ts);
+static void nat64_tcp_deliver_pending(struct tcp_seqstate *ts);
 /*---------------------------------------------------------------------------*/
 static struct tcp_seqstate *
 find_seqstate(const struct nat64_session *s)
@@ -489,18 +490,16 @@ nat64_tcp_output(const uint8_t *pkt, uint16_t len)
    * ackno covers its end.  Otherwise the segment was lost in flight;
    * we leave the retransmit timer to recover rather than guessing
    * from dup-ACK heuristics, since uIP-side TCP does not consistently
-   * dup-ACK in the way classic TCP stacks do. */
-  if(tcp->flags & TCP_ACK) {
-    if(ts->in_flight > 0) {
-      uint32_t ackno = get32(tcp->ackno);
-      uint32_t end_of_inflight = ts->our_seq + ts->in_flight;
-      if((int32_t)(ackno - end_of_inflight) >= 0) {
-        nat64_tcp_ack_confirmed(ts);
-      }
-    } else if(ts->rxbuf_len > ts->rxbuf_offset) {
-      /* Make progress if the previous sender stopped after clearing
-       * in_flight but before queuing the next buffered segment. */
-      nat64_tcp_send_pending(ts);
+   * dup-ACK in the way classic TCP stacks do.
+   *
+   * Only the bookkeeping happens here. Whatever this ACK releases is
+   * sent from ::nat64_tcp_flush_acks, which runs in the main loop
+   * rather than inside the output path; see the comment there. */
+  if((tcp->flags & TCP_ACK) && ts->in_flight > 0) {
+    uint32_t ackno = get32(tcp->ackno);
+    uint32_t end_of_inflight = ts->our_seq + ts->in_flight;
+    if((int32_t)(ackno - end_of_inflight) >= 0) {
+      nat64_tcp_ack_confirmed(ts);
     }
   }
 
@@ -614,11 +613,22 @@ nat64_tcp_send_pending(struct tcp_seqstate *ts)
           ? NAT64_TCP_SEGMENT_SIZE : remaining;
 
   LOG_INFO("TCP paced: %u/%u bytes -> IoT node\n", chunk, remaining);
-  inject_tcp(ts->session, ts, TCP_PSH | TCP_ACK,
-             ts->rxbuf + ts->rxbuf_offset, chunk);
+
+  /*
+   * Record the segment as in flight before injecting it. inject_tcp()
+   * enters the IoT node's stack synchronously through tcpip_input(),
+   * and the ACK that comes straight back is processed before it
+   * returns. Setting in_flight afterwards made that ACK arrive while
+   * the segment was still recorded as unsent, so it was ignored and
+   * every chunk waited out the retransmit timer instead — delivering
+   * each one twice.
+   */
   ts->in_flight = chunk;
   ts->rtx_count = 0;
   timer_set(&ts->rtx_timer, NAT64_TCP_RTX_TIMEOUT);
+
+  inject_tcp(ts->session, ts, TCP_PSH | TCP_ACK,
+             ts->rxbuf + ts->rxbuf_offset, chunk);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -640,16 +650,34 @@ nat64_tcp_ack_confirmed(struct tcp_seqstate *ts)
   if(ts->rxbuf_offset >= ts->rxbuf_len) {
     ts->rxbuf_len = 0;
     ts->rxbuf_offset = 0;
-    if(ts->server_fin_pending) {
-      ts->server_fin_pending = false;
-      LOG_INFO("TCP deferred FIN: sending now\n");
-      inject_tcp(ts->session, ts, TCP_FIN | TCP_ACK, NULL, 0);
-      ts->our_seq++;
-    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Send whatever a session owes the IoT node.
+ * \param ts The sequence state to deliver from.
+ *
+ * The next paced chunk of buffered server data, or the FIN that was
+ * held back until that buffer drained. Injects into uip_buf, so it
+ * must not be called while an outgoing packet is still being read
+ * from there; see ::nat64_tcp_output.
+ */
+static void
+nat64_tcp_deliver_pending(struct tcp_seqstate *ts)
+{
+  /* Stop-and-wait: one segment in flight at a time. */
+  if(ts->in_flight > 0) {
     return;
   }
 
-  nat64_tcp_send_pending(ts);
+  if(ts->rxbuf_len > ts->rxbuf_offset) {
+    nat64_tcp_send_pending(ts);
+  } else if(ts->server_fin_pending) {
+    ts->server_fin_pending = false;
+    LOG_INFO("TCP deferred FIN: sending now\n");
+    inject_tcp(ts->session, ts, TCP_FIN | TCP_ACK, NULL, 0);
+    ts->our_seq++;
+  }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -680,6 +708,22 @@ nat64_tcp_flush_acks(void)
       inject_tcp(ts->session, ts, TCP_PSH | TCP_ACK,
                  ts->rxbuf + ts->rxbuf_offset, ts->in_flight);
       timer_reset(&ts->rtx_timer);
+    }
+
+    /*
+     * Deliver buffered server data, and the FIN that waits behind it,
+     * from here rather than from ::nat64_tcp_output. That runs inside
+     * the fallback interface's output path, where uip_buf still holds
+     * the packet the IoT node is sending: injecting there overwrote
+     * that packet, so its payload was forwarded to the IPv4 server in
+     * place of what the node sent, and re-entered tcpip_input() while
+     * uIP was mid-transmit. This function runs once per main-loop
+     * iteration, with uip_buf idle.
+     */
+    nat64_tcp_deliver_pending(ts);
+    if(ts->in_flight > 0) {
+      /* The segment just sent carries the current ack number. */
+      ts->pending_ack = false;
     }
 
     if(ts->pending_ack) {
