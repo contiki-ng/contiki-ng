@@ -32,6 +32,14 @@
 #ifndef IP64_DNS64_H_
 #define IP64_DNS64_H_
 
+/*
+ * Returned by ip64_dns64_4to6() for a message it cannot translate. The
+ * records that come after the point where it stopped are still at the
+ * offsets they had before the ones before them grew, so the packet is no
+ * longer a well-formed reply and the caller has to drop it.
+ */
+#define IP64_DNS64_DROP (-1)
+
 /* Rewrites a DNS question in place. ipv4datalen is the length of the
    message in ipv4data, which the rewrite does not change. */
 void ip64_dns64_6to4(const uint8_t *ipv6data, int ipv6datalen,
@@ -39,7 +47,8 @@ void ip64_dns64_6to4(const uint8_t *ipv6data, int ipv6datalen,
 
 /* Rewrites a DNS answer while copying it, growing it by 12 bytes for every A
    record turned into a AAAA record. ipv6capacity is the room available in
-   ipv6data, not the length of the message; the new length is returned. */
+   ipv6data, not the length of the message. Returns the length of the message
+   that was written, or IP64_DNS64_DROP. */
 int ip64_dns64_4to6(const uint8_t *ipv4data, int ipv4datalen,
                     uint8_t *ipv6data, int ipv6capacity);
 
