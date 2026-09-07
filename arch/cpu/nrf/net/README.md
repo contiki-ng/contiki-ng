@@ -99,7 +99,9 @@ by 802.15.4). The ACK is sent from within the radio driver's process
 context, which runs immediately after the radio ISR — well within
 the ~400 us ACK timing window. When the network core is built with
 `NRF_802154=1`, the nrf_802154 driver auto-acknowledges instead and the
-IPC MAC software ACK is compiled out.
+IPC MAC software ACK is compiled out. A stand-alone CSMA stack built for
+the network core with `NRF_802154=1` gets `CSMA_CONF_SEND_SOFT_ACK=0` and
+`CSMA_CONF_USE_RADIO_ACK=1` from `nrf802154.mk` for the same reason.
 
 The application core's CSMA sends no software ACK of its own
 (`CSMA_CONF_SEND_SOFT_ACK` is 0 in `nrf5340-application-def.h`): the
