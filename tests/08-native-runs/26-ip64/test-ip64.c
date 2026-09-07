@@ -177,11 +177,39 @@ static const uint8_t dns_response_two[] = {
   93, 184, 216, 35
 };
 
+/* The same response with an EDNS OPT record in the additional section, which
+   nearly every resolver appends. The record is not rewritten, but it still
+   has to move when the answer before it grows. */
+static const uint8_t dns_response_opt[] = {
+  0x12, 0x34, 0x81, 0x80, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+  7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0,
+  0x00, 0x01, 0x00, 0x01,
+  /* Answer: name as a compression pointer, address 93.184.216.34. */
+  0xc0, 0x0c,
+  0x00, 0x01, 0x00, 0x01,
+  0x00, 0x00, 0x0e, 0x10,
+  0x00, 0x04,
+  93, 184, 216, 34,
+  /* Additional: an OPT record on the root name, offering 1232 bytes. */
+  0,
+  0x00, 0x29, 0x04, 0xd0,
+  0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00
+};
+
+/* The OPT record above, as it has to come out. */
+static const uint8_t opt_record[] = {
+  0, 0x00, 0x29, 0x04, 0xd0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
 /* Where the record that follows the first answer starts once that answer has
    grown: the 12-byte header, the 17-byte question, and a record of a 2-byte
    name, a 2-byte type, 8 bytes of class, TTL and length, and a 16-byte
    address. */
 #define SECOND_RECORD_OFFSET (12 + 17 + 2 + 2 + 8 + 16)
+
+/* A DNS header is 12 bytes. */
+#define DNS_HDR_LEN 12
 
 struct eth_hdr {
   uint8_t dest[6];
@@ -261,6 +289,18 @@ UNIT_TEST_REGISTER(sixto4_rejects_bad_length,
                    "6to4 drops a packet whose payload length field lies");
 UNIT_TEST_REGISTER(dns64_copies_later_records,
                    "DNS64 keeps the name of a record that follows a rewrite");
+UNIT_TEST_REGISTER(dns64_moves_the_additional_section,
+                   "DNS64 moves the sections that follow the answers");
+UNIT_TEST_REGISTER(dns64_rejects_oversized_record,
+                   "DNS64 drops a record that claims more data than it has");
+UNIT_TEST_REGISTER(dns64_rejects_a_late_oversized_record,
+                   "DNS64 drops a reply it has already started to rewrite");
+UNIT_TEST_REGISTER(dns64_rejects_unterminated_name,
+                   "DNS64 stops at the end of a packet whose name runs on");
+UNIT_TEST_REGISTER(dns64_stops_when_the_output_is_full,
+                   "DNS64 drops a reply that does not fit in the room given");
+UNIT_TEST_REGISTER(dns64_6to4_stops_at_the_end,
+                   "DNS64 leaves a malformed query on the way out alone");
 UNIT_TEST_REGISTER(inbound_ports,
                    "Inbound packets reach the local host only below the "
                    "ephemeral port range");
@@ -927,6 +967,146 @@ UNIT_TEST(dns64_copies_later_records)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+UNIT_TEST(dns64_moves_the_additional_section)
+{
+  static uint8_t out[PARSE_CAPACITY + CANARY_LEN];
+  int len;
+
+  UNIT_TEST_BEGIN();
+
+  parse_setup(out, sizeof(out), dns_response_opt, sizeof(dns_response_opt));
+
+  len = ip64_dns64_4to6(dns_response_opt, sizeof(dns_response_opt), out,
+                        PARSE_CAPACITY);
+
+  /* The answer grew by 12 bytes, and the length has to account for the OPT
+     record that follows it. */
+  UNIT_TEST_ASSERT(len == sizeof(dns_response_opt) + 12);
+
+  /* The OPT record itself moved along with the answer. */
+  UNIT_TEST_ASSERT(memcmp(&out[SECOND_RECORD_OFFSET], opt_record,
+                          sizeof(opt_record)) == 0);
+  UNIT_TEST_ASSERT(canary_intact(out, PARSE_CAPACITY, sizeof(out)));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST(dns64_rejects_oversized_record)
+{
+  static uint8_t answer[sizeof(dns_response)];
+  static uint8_t out[PARSE_CAPACITY + CANARY_LEN];
+  int len;
+
+  UNIT_TEST_BEGIN();
+
+  /* The A record now claims 65535 bytes of address, where the packet holds
+     four. A parser that trusts the field copies far past both buffers. */
+  memcpy(answer, dns_response, sizeof(answer));
+  answer[sizeof(answer) - 6] = 0xff;
+  answer[sizeof(answer) - 5] = 0xff;
+
+  parse_setup(out, sizeof(out), answer, sizeof(answer));
+  len = ip64_dns64_4to6(answer, sizeof(answer), out, PARSE_CAPACITY);
+
+  UNIT_TEST_ASSERT(len == IP64_DNS64_DROP);
+  UNIT_TEST_ASSERT(canary_intact(out, PARSE_CAPACITY, sizeof(out)));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST(dns64_rejects_a_late_oversized_record)
+{
+  static uint8_t answer[sizeof(dns_response_two)];
+  static uint8_t out[PARSE_CAPACITY + CANARY_LEN];
+  int len;
+
+  UNIT_TEST_BEGIN();
+
+  /* The record that claims more data than it has is the second one, so the
+     first has already been rewritten when the parser gives up. What is left
+     in the buffer is not a reply that can be sent, whatever its length. */
+  memcpy(answer, dns_response_two, sizeof(answer));
+  answer[sizeof(answer) - 6] = 0xff;
+  answer[sizeof(answer) - 5] = 0xff;
+
+  parse_setup(out, sizeof(out), answer, sizeof(answer));
+  len = ip64_dns64_4to6(answer, sizeof(answer), out, PARSE_CAPACITY);
+
+  UNIT_TEST_ASSERT(len == IP64_DNS64_DROP);
+  UNIT_TEST_ASSERT(canary_intact(out, PARSE_CAPACITY, sizeof(out)));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST(dns64_rejects_unterminated_name)
+{
+  static uint8_t answer[sizeof(dns_response)];
+  static uint8_t out[PARSE_CAPACITY + CANARY_LEN];
+  int len;
+
+  UNIT_TEST_BEGIN();
+
+  /* The first label of the question name claims 63 bytes, so the name runs
+     past the end of the packet and the walk never meets its terminator. */
+  memcpy(answer, dns_response, sizeof(answer));
+  answer[DNS_HDR_LEN] = 63;
+
+  parse_setup(out, sizeof(out), answer, sizeof(answer));
+  len = ip64_dns64_4to6(answer, sizeof(answer), out, PARSE_CAPACITY);
+
+  UNIT_TEST_ASSERT(len == IP64_DNS64_DROP);
+  UNIT_TEST_ASSERT(canary_intact(out, PARSE_CAPACITY, sizeof(out)));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST(dns64_stops_when_the_output_is_full)
+{
+  /* Room for the message that came in and for one record to grow, where two
+     of them do. */
+  const uint16_t capacity = sizeof(dns_response_two) + 12;
+  static uint8_t out[PARSE_CAPACITY + CANARY_LEN];
+  int len;
+
+  UNIT_TEST_BEGIN();
+
+  parse_setup(out, sizeof(out), dns_response_two, sizeof(dns_response_two));
+
+  len = ip64_dns64_4to6(dns_response_two, sizeof(dns_response_two), out,
+                        capacity);
+
+  UNIT_TEST_ASSERT(len == IP64_DNS64_DROP);
+  UNIT_TEST_ASSERT(canary_intact(out, capacity, sizeof(out)));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST(dns64_6to4_stops_at_the_end)
+{
+  /* A query truncated in the middle of its question: the name is there, but
+     the type and the class that follow it are not. */
+  const uint16_t truncated = DNS_HDR_LEN + 13;
+  /* What happens to lie past the end of the message, which a walk that runs
+     on takes for the question it is looking for. */
+  static const uint8_t past[] = { 0x00, 0x1c, 0x00, 0x01 };
+  static uint8_t out[PARSE_CAPACITY + CANARY_LEN];
+
+  UNIT_TEST_BEGIN();
+
+  parse_setup(out, sizeof(out), dns_query, truncated);
+  memcpy(&out[truncated], past, sizeof(past));
+
+  ip64_dns64_6to4(dns_query, truncated, out, truncated);
+
+  /* The question is never reached, so nothing is rewritten, and nothing
+     past the end of the message is touched. */
+  UNIT_TEST_ASSERT(memcmp(out, dns_query, truncated) == 0);
+  UNIT_TEST_ASSERT(memcmp(&out[truncated], past, sizeof(past)) == 0);
+  UNIT_TEST_ASSERT(canary_intact(out, truncated + sizeof(past), sizeof(out)));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(test_ip64_process, ev, data)
 {
   static struct etimer startup_timer;
@@ -973,6 +1153,12 @@ PROCESS_THREAD(test_ip64_process, ev, data)
   UNIT_TEST_RUN(inbound_ports);
   UNIT_TEST_RUN(sixto4_rejects_bad_length);
   UNIT_TEST_RUN(dns64_copies_later_records);
+  UNIT_TEST_RUN(dns64_moves_the_additional_section);
+  UNIT_TEST_RUN(dns64_rejects_oversized_record);
+  UNIT_TEST_RUN(dns64_rejects_a_late_oversized_record);
+  UNIT_TEST_RUN(dns64_rejects_unterminated_name);
+  UNIT_TEST_RUN(dns64_stops_when_the_output_is_full);
+  UNIT_TEST_RUN(dns64_6to4_stops_at_the_end);
 
   if(!UNIT_TEST_PASSED(arp_resolution) ||
      !UNIT_TEST_PASSED(udp_round_trip) ||
@@ -981,7 +1167,13 @@ PROCESS_THREAD(test_ip64_process, ev, data)
      !UNIT_TEST_PASSED(icmp_echo) ||
      !UNIT_TEST_PASSED(inbound_ports) ||
      !UNIT_TEST_PASSED(sixto4_rejects_bad_length) ||
-     !UNIT_TEST_PASSED(dns64_copies_later_records)) {
+     !UNIT_TEST_PASSED(dns64_copies_later_records) ||
+     !UNIT_TEST_PASSED(dns64_moves_the_additional_section) ||
+     !UNIT_TEST_PASSED(dns64_rejects_oversized_record) ||
+     !UNIT_TEST_PASSED(dns64_rejects_a_late_oversized_record) ||
+     !UNIT_TEST_PASSED(dns64_rejects_unterminated_name) ||
+     !UNIT_TEST_PASSED(dns64_stops_when_the_output_is_full) ||
+     !UNIT_TEST_PASSED(dns64_6to4_stops_at_the_end)) {
     printf("=check-me= FAILED\n");
     printf("---\n");
   }
