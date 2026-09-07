@@ -100,7 +100,9 @@
 #define TSCH_CONF_TIMESYNC_REMOVE_JITTER 0
 #endif /* TSCH_CONF_TIMESYNC_REMOVE_JITTER */
 /*---------------------------------------------------------------------------*/
+#ifndef CSMA_CONF_SEND_SOFT_ACK
 #define CSMA_CONF_SEND_SOFT_ACK       1
+#endif /* CSMA_CONF_SEND_SOFT_ACK */
 /*---------------------------------------------------------------------------*/
 #endif /* NRF_DEF_H_ */
 /*---------------------------------------------------------------------------*/
