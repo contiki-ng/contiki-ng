@@ -63,6 +63,17 @@
 #endif
 #endif
 /*---------------------------------------------------------------------------*/
+/*
+ * The network core acknowledges received frames itself: the IPC MAC sends
+ * a software ACK, or nrf_802154 auto-acknowledges when built with
+ * NRF_802154=1. A CSMA software ACK relayed over IPC would be a second,
+ * late ACK for the same frame, and CSMA's attempt to disable the radio's
+ * auto-ACK would switch off the nrf_802154 one.
+ */
+#ifndef CSMA_CONF_SEND_SOFT_ACK
+#define CSMA_CONF_SEND_SOFT_ACK    0
+#endif /* CSMA_CONF_SEND_SOFT_ACK */
+/*---------------------------------------------------------------------------*/
 #define NRF_HAS_USB     1
 #define NRF_HAS_UARTE   1
 /*---------------------------------------------------------------------------*/
