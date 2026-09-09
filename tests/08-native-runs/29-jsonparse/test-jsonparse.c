@@ -222,6 +222,27 @@ UNIT_TEST(test_number_conversion)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(test_long_fraction,
+                   "Convert numbers with a long fractional part");
+UNIT_TEST(test_long_fraction)
+{
+  static struct jsonparse_state state;
+  /* The token is longer than the buffer that the conversion copies it
+     into, but its integer part is not. */
+  static const char json[] = "-1.234567890123456789012345678901234567890";
+
+  UNIT_TEST_BEGIN();
+
+  jsonparse_setup(&state, json, strlen(json));
+  UNIT_TEST_ASSERT(jsonparse_next(&state) == JSON_TYPE_NUMBER);
+  UNIT_TEST_ASSERT(stayed_in_bounds(&state));
+  UNIT_TEST_ASSERT(state.vlen == (int)strlen(json));
+  UNIT_TEST_ASSERT(jsonparse_get_value_as_int(&state) == -1);
+  UNIT_TEST_ASSERT(jsonparse_get_value_as_long(&state) == -1);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(run_tests, ev, data)
 {
   PROCESS_BEGIN();
@@ -233,12 +254,14 @@ PROCESS_THREAD(run_tests, ev, data)
   UNIT_TEST_RUN(test_no_nul_terminator);
   UNIT_TEST_RUN(test_invalid_literal);
   UNIT_TEST_RUN(test_number_conversion);
+  UNIT_TEST_RUN(test_long_fraction);
 
   if(!UNIT_TEST_PASSED(test_literal_whitespace)
      || !UNIT_TEST_PASSED(test_truncated_input)
      || !UNIT_TEST_PASSED(test_no_nul_terminator)
      || !UNIT_TEST_PASSED(test_invalid_literal)
-     || !UNIT_TEST_PASSED(test_number_conversion)) {
+     || !UNIT_TEST_PASSED(test_number_conversion)
+     || !UNIT_TEST_PASSED(test_long_fraction)) {
     printf("=check-me= FAILED\n");
     printf("---\n");
   }

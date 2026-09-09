@@ -350,12 +350,28 @@ jsonparse_copy_value(struct jsonparse_state *state, char *str, int size)
 static bool
 copy_number(struct jsonparse_state *state, char *buf, int size)
 {
-  if(state->vtype != JSON_TYPE_NUMBER ||
-     state->vlen < 0 || state->vlen >= size) {
+  int i;
+  char c;
+
+  if(state->vtype != JSON_TYPE_NUMBER || state->vlen < 0) {
     return false;
   }
-  memcpy(buf, &state->json[state->vstart], state->vlen);
-  buf[state->vlen] = '\0';
+  /* atoi() and atol() stop at the fractional part, so only the integer
+     prefix is copied. A long fraction then does not make the number
+     unconvertible.
+  */
+  for(i = 0; i < state->vlen; i++) {
+    c = state->json[state->vstart + i];
+    if((c < '0' || c > '9') && !(i == 0 && c == '-')) {
+      break;
+    }
+    if(i >= size - 1) {
+      /* The integer part alone is longer than any convertible number. */
+      return false;
+    }
+    buf[i] = c;
+  }
+  buf[i] = '\0';
   return true;
 }
 /*--------------------------------------------------------------------*/

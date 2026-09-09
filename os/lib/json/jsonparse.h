@@ -41,9 +41,10 @@
 #define JSONPARSE_MAX_DEPTH 10
 #endif
 
-/* The longest number that jsonparse_get_value_as_int() and
+/* The longest integer part that jsonparse_get_value_as_int() and
    jsonparse_get_value_as_long() can convert. Long enough for any 64-bit
-   value with a sign; longer numbers convert to 0. */
+   value with a sign; numbers with a longer integer part convert to 0. The
+   fractional part is not converted, and hence not bounded by this. */
 #define JSONPARSE_NUMBER_MAX_LEN 24
 
 struct jsonparse_state {
