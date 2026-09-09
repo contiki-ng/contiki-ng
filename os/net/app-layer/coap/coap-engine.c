@@ -349,12 +349,18 @@ coap_receive(const coap_endpoint_t *src,
   } else if(coap_status_code == MANUAL_RESPONSE) {
     LOG_DBG("Clearing transaction for manual response");
     coap_clear_transaction(transaction);
+  } else if(payload_length < COAP_HEADER_LEN) {
+    /*
+     * A message this short carries no message ID, so nothing that is sent
+     * in reply can be matched with it. RFC 7252, Section 4.2 and 4.3, have
+     * such a message rejected, which is done here by ignoring it.
+     */
+    LOG_WARN("ERROR %u: message too short to answer\n", coap_status_code);
+    coap_clear_transaction(transaction);
   } else {
     coap_message_type_t reply_type = COAP_TYPE_ACK;
     uint16_t reply_mid = message->mid;
     uint8_t token[COAP_TOKEN_LEN];
-    /* A message whose token length is out of range is rejected by the
-       parser, which leaves the length it read behind. */
     size_t token_len = MIN(message->token_len, sizeof(token));
 
 #if COAP_MESSAGE_ON_ERROR
