@@ -44,6 +44,7 @@
 #include "dev/button-hal.h"
 #include "dev/leds.h"
 #include "dev/serial-line.h"
+#include "dev/xmem.h"
 #include "lib/csprng.h"
 
 #include "int-master.h"
@@ -202,6 +203,14 @@ platform_init_stage_two(void)
   hardfault_print_saved_crash();
 #endif
 #endif /* NRF_HAS_UARTE */
+
+  /*
+   * The RRAMC behind xmem is a secure peripheral, so with TrustZone only
+   * the secure image initializes it, as with the UARTE above.
+   */
+#if BUILD_WITH_XMEM && !defined(NRF_TRUSTZONE_NONSECURE)
+  xmem_init();
+#endif
 
 #if NRF_HAS_USB && defined(NRF_NATIVE_USB) && NRF_NATIVE_USB == 1
   usb_init();
