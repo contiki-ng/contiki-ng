@@ -338,8 +338,8 @@ duplicate `SERIALn_IRQHandler`. Known-good choices are documented in
 `arch/cpu/nrf/dev/spi-arch.h`: SPIM00 or SPIM22 on the nRF54L15, SPIM1 and up
 on the nRF5340 application core, and any instance on the nRF52840.
 
-`examples/platform-specific/nrf/spi-flash` brings the bus up against the
-nRF54L15 DK's on-board flash, which is useful when wiring a new peripheral:
+`examples/platform-specific/nrf/spi-flash` brings the bus up against a DK's
+on-board MX25R6435F flash, which is useful when wiring a new peripheral:
 it fails on the driver rather than on your jumper wires.
 
 ### Ethernet and IPv4 (IP64)

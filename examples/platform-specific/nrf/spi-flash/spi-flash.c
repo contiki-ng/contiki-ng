@@ -31,14 +31,18 @@
  * \file
  *         Bring-up test for the nRF SPI (SPIM) driver.
  *
- *         Reads the JEDEC ID and the SFDP signature from the SPI NOR flash
- *         on the nRF54L15 DK (MX25R6435F on SPI00) and reports whether the
+ *         Reads the JEDEC ID and the SFDP signature from the on-board
+ *         MX25R6435F SPI NOR flash of a Nordic DK and reports whether the
  *         values match what the part should return. Nothing is written, so
  *         this is safe to run against a flash holding data.
  *
  *         The point of testing against this device rather than a loopback
  *         is that it is already wired on the board: a wrong answer is the
  *         driver's fault, not the bench's.
+ *
+ *         Verified on hardware on the nRF54L15 DK. The nRF5340 and nRF52840
+ *         defaults below are taken from the board documentation and are
+ *         build-tested only.
  * \author
  *         Joakim Eriksson <joakim.eriksson@ri.se>
  */
@@ -49,7 +53,7 @@
 #include <stdio.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
-/* Board wiring. Defaults are the nRF54L15 DK's onboard MX25R6435F. */
+/* Board wiring. Defaults are the on-board MX25R6435F of each Nordic DK. */
 #ifndef SPI_FLASH_CONF_CONTROLLER
 #define SPI_FLASH_CONTROLLER 0
 #else
@@ -57,8 +61,14 @@
 #endif
 
 /*
- * Pins of the on-board MX25R6435F on each Nordic DK. It sits on the QSPI
- * pins; SCK/CSN plus IO0 (MOSI) and IO1 (MISO) drive it in plain SPI mode.
+ * Pins of the on-board MX25R6435F on each Nordic DK. Which bus it hangs off
+ * differs by board:
+ *
+ *   nRF54L15 DK  - a plain SPI device on SPIM00, so nothing special applies.
+ *   nRF5340 DK,  - wired to the QSPI peripheral's pins. The part is an
+ *   nRF52840 DK    ordinary SPI NOR, so a SPIM can drive it over SCK/CSN
+ *                  plus IO0 as MOSI and IO1 as MISO, provided QSPI itself
+ *                  is not also driving those pins.
  */
 #ifndef SPI_FLASH_CONF_SCK_PORT
 #if defined(NRF54L15_XXAA)
