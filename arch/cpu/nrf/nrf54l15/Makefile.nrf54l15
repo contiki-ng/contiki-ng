@@ -105,11 +105,20 @@ NRF54L15_CAN_USE_OPENOCD := $(if $(NRF54L15_OPENOCD_CFG),$(shell which openocd))
 
 # Generate hex and flash for nRF54L15
 # Usage: make TARGET=nrf BOARD=nrf54l15/xiao hello-world.flash
+#
+# With OpenOCD the device is reset through the board config's secure
+# reset and halted at the reset vector before programming, so that no
+# firmware configuration (TrustZone memory protection, RRAM write
+# permissions) is live while the image is written; this also recovers
+# a board left halted by a failed flash. The image is verified after a
+# second reset-halt, again before any firmware runs, since a TrustZone
+# secure world would make OpenOCD's on-target verification fault, and
+# the core is then released.
 %.flash %.upload: $(OUT_HEX)
 ifneq ($(NRF54L15_CAN_USE_OPENOCD),)
 	@echo "Flashing with OpenOCD..."
 	openocd -f $(NRF54L15_OPENOCD_CFG) \
-		-c "init; reset halt; nrf54l-load $<; verify_image $<; reset run; shutdown"
+		-c "init; nrf54l-reset-halt; nrf54l-load $<; nrf54l-reset-halt; verify_image $<; nrf54l-run; shutdown"
 else ifneq (, $(shell which $(NRFUTIL)))
 	@echo "Flashing with nrfutil..."
 	$(NRFUTIL) device program --firmware $< \
