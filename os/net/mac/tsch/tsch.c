@@ -470,10 +470,23 @@ eb_input(struct input_packet *current_input)
 #endif /* TSCH_AUTOSELECT_TIME_SOURCE */
       }
 
-      /* TSCH hopping sequence */
+      /*
+       * TSCH hopping sequence. An IE may name a sequence ID without
+       * carrying a sequence list, meaning the sender expects us to know
+       * that sequence already. Contiki-NG keeps no table of sequences by
+       * ID, so keep the one already in use. A zero length must also never
+       * reach TSCH_ASN_DIVISOR_INIT(), which would divide by zero.
+       */
       if(eb_ies.ie_channel_hopping_sequence_id != 0) {
-        if(eb_ies.ie_hopping_sequence_len != tsch_hopping_sequence_length.val
-            || memcmp((uint8_t *)tsch_hopping_sequence, eb_ies.ie_hopping_sequence_list, tsch_hopping_sequence_length.val)) {
+        if(eb_ies.ie_hopping_sequence_len == 0) {
+          LOG_DBG("parse_eb: no sequence list for hopping sequence ID %u,"
+                  " keeping the current sequence\n",
+                  eb_ies.ie_channel_hopping_sequence_id);
+        } else if(eb_ies.ie_hopping_sequence_len
+                  != tsch_hopping_sequence_length.val
+                  || memcmp((uint8_t *)tsch_hopping_sequence,
+                            eb_ies.ie_hopping_sequence_list,
+                            tsch_hopping_sequence_length.val)) {
           if(eb_ies.ie_hopping_sequence_len <= sizeof(tsch_hopping_sequence)) {
             memcpy((uint8_t *)tsch_hopping_sequence, eb_ies.ie_hopping_sequence_list,
                    eb_ies.ie_hopping_sequence_len);
@@ -662,11 +675,19 @@ tsch_associate(const struct input_packet *input_eb, rtimer_clock_t timestamp)
     memcpy(tsch_hopping_sequence, TSCH_DEFAULT_HOPPING_SEQUENCE, sizeof(TSCH_DEFAULT_HOPPING_SEQUENCE));
     TSCH_ASN_DIVISOR_INIT(tsch_hopping_sequence_length, sizeof(TSCH_DEFAULT_HOPPING_SEQUENCE));
   } else {
-    if(ies.ie_hopping_sequence_len <= sizeof(tsch_hopping_sequence)) {
+    /*
+     * Unlike eb_input(), there is no working sequence to fall back on
+     * here, and adopting the default for a sequence ID we cannot resolve
+     * would leave us hopping on the wrong channels. Decline to associate
+     * and keep scanning.
+     */
+    if(ies.ie_hopping_sequence_len > 0
+       && ies.ie_hopping_sequence_len <= sizeof(tsch_hopping_sequence)) {
       memcpy(tsch_hopping_sequence, ies.ie_hopping_sequence_list, ies.ie_hopping_sequence_len);
       TSCH_ASN_DIVISOR_INIT(tsch_hopping_sequence_length, ies.ie_hopping_sequence_len);
     } else {
-      LOG_ERR("! parse_eb: hopping sequence too long (%u)\n", ies.ie_hopping_sequence_len);
+      LOG_ERR("! parse_eb: invalid hopping sequence length (%u)\n",
+              ies.ie_hopping_sequence_len);
       return 0;
     }
   }
