@@ -101,7 +101,17 @@
 #else
 #error "No default SPI flash pins for this SoC; set SPI_FLASH_CONF_*"
 #endif
-#endif
+#else /* SPI_FLASH_CONF_SCK_PORT */
+/* A board that overrides one pin must give all eight. */
+#define SPI_FLASH_SCK_PORT   SPI_FLASH_CONF_SCK_PORT
+#define SPI_FLASH_SCK_PIN    SPI_FLASH_CONF_SCK_PIN
+#define SPI_FLASH_MOSI_PORT  SPI_FLASH_CONF_MOSI_PORT
+#define SPI_FLASH_MOSI_PIN   SPI_FLASH_CONF_MOSI_PIN
+#define SPI_FLASH_MISO_PORT  SPI_FLASH_CONF_MISO_PORT
+#define SPI_FLASH_MISO_PIN   SPI_FLASH_CONF_MISO_PIN
+#define SPI_FLASH_CS_PORT    SPI_FLASH_CONF_CS_PORT
+#define SPI_FLASH_CS_PIN     SPI_FLASH_CONF_CS_PIN
+#endif /* SPI_FLASH_CONF_SCK_PORT */
 
 /* The MX25R6435F is rated for 8 MHz in low-power mode. */
 #ifndef SPI_FLASH_CONF_BIT_RATE
