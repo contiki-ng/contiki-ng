@@ -75,13 +75,17 @@
  * on the way back (ip64.c 6to4/4to6 -> ip64-dns64.c). A successful lookup
  * therefore returns a 64:ff9b:: address that can be used directly, which is
  * what removes the need to hardcode any IPv4 literal.
+ *
+ * Off by default, like the UDP probe above: it sends traffic to a third-party
+ * resolver, which is not something an example should do unasked. Define
+ * NAT64_LOOKUP_NAME to enable it, and NAT64_DNS_SERVER to choose the resolver
+ * rather than taking the default below.
  */
+#ifdef NAT64_LOOKUP_NAME
 #ifndef NAT64_DNS_SERVER
 #define NAT64_DNS_SERVER 8, 8, 8, 8
 #endif
-#ifndef NAT64_LOOKUP_NAME
-#define NAT64_LOOKUP_NAME "leshan.eclipseprojects.io"
-#endif
+#endif /* NAT64_LOOKUP_NAME */
 
 /* Expand the octets before uip_nat64addr() counts its arguments. */
 #define NAT64_SET_DEST(addr, ...) uip_nat64addr(addr, __VA_ARGS__)
@@ -113,9 +117,11 @@ PROCESS_THREAD(nat64_node_process, ev, data)
   static unsigned long sent;
 #endif
   static int joined;
+#ifdef NAT64_LOOKUP_NAME
   static uip_ipaddr_t dns;
   static int dns_asked;
   static int dns_done;
+#endif
 
   PROCESS_BEGIN();
 
@@ -149,14 +155,17 @@ PROCESS_THREAD(nat64_node_process, ev, data)
       joined = 1;
       printf("joined the RPL network -- sending through NAT64 now\n");
 
+#ifdef NAT64_LOOKUP_NAME
       /* Point the resolver at an IPv4 DNS server via the NAT64 prefix. */
       NAT64_SET_DEST(&dns, NAT64_DNS_SERVER);
       uip_nameserver_update(&dns, UIP_NAMESERVER_INFINITE_LIFETIME);
       printf("DNS64: nameserver set to ");
       uip_debug_ipaddr_print(&dns);
       printf("\n");
+#endif /* NAT64_LOOKUP_NAME */
     }
 
+#ifdef NAT64_LOOKUP_NAME
     if(joined && !dns_asked) {
       dns_asked = 1;
       printf("DNS64: looking up %s\n", NAT64_LOOKUP_NAME);
@@ -179,6 +188,7 @@ PROCESS_THREAD(nat64_node_process, ev, data)
         printf("DNS64: resolving... (status %d)\n", st);
       }
     }
+#endif /* NAT64_LOOKUP_NAME */
 
 #ifdef NAT64_TEST_ADDR
     {
