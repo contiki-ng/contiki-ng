@@ -127,6 +127,16 @@ ifeq ($(NRF_WITH_SPI),1)
 
   CFLAGS += -DNRFX_SPIM_ENABLED=1
   CFLAGS += $(foreach i,$(NRF_SPI_IDS),-DNRFX_SPIM$(i)_ENABLED=1)
+
+  # nRF52840 anomaly 198: SPIM3 transmit data can be silently corrupted.
+  # nrfx carries the workaround but defaults it off, and SPIM3 is the only
+  # instance on this SoC that reaches 16 and 32 Mbps -- so it is exactly the
+  # one picked for a fast device. Enable it whenever SPIM3 is in use.
+  ifneq ($(filter 3,$(NRF_SPI_IDS)),)
+    ifeq ($(CPU_FAMILY),nrf52840)
+      CFLAGS += -DNRFX_SPIM3_NRF52840_ANOMALY_198_WORKAROUND_ENABLED=1
+    endif
+  endif
   CFLAGS += -DNRF_SPI_CONF_CONTROLLER_COUNT=$(words $(NRF_SPI_IDS))
   CFLAGS += -DNRF_SPI_CONF_CONTROLLER0_ID=$(word 1,$(NRF_SPI_IDS))
   ifneq ($(word 2,$(NRF_SPI_IDS)),)
