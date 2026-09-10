@@ -155,6 +155,14 @@ static const uint32_t spim_easydma_max_len[SPI_CONTROLLER_COUNT] = {
 #endif
 };
 
+/*
+ * One pair of staging buffers is shared by every controller. A transfer runs
+ * to completion inside spi_arch_transfer() -- nrfx is driven in blocking mode
+ * -- and Contiki-NG processes are cooperatively scheduled, so a second
+ * transfer cannot begin while one is using these. That also means the SPI HAL
+ * must not be called from an interrupt handler, which is true of it anyway:
+ * the bus lock is a plain mutex with no interrupt masking.
+ */
 static uint8_t stage_tx[NRF_SPI_CHUNK_SIZE];
 static uint8_t stage_rx[NRF_SPI_CHUNK_SIZE];
 /*---------------------------------------------------------------------------*/
@@ -180,7 +188,30 @@ resolve_bit_rate(unsigned controller, uint32_t requested)
     requested = spim_max_bit_rate[controller];
   }
 
-#if NRF_SPIM_HAS_PRESCALER
+/*
+ * Mirror nrfx's own order in spim_frequency_valid_check(): it tests
+ * NRF_SPIM_HAS_FREQUENCY first and only then NRF_SPIM_HAS_PRESCALER. Picking
+ * the other order here would compute a rate on a different rule from the one
+ * nrfx validates it against, and nrfx would then reject our own answer.
+ */
+#if NRF_SPIM_HAS_FREQUENCY
+  /* Fixed steps: pick the highest one not above the request. */
+  static const uint32_t steps[] = {
+    32000000, 16000000, 8000000, 4000000, 2000000, 1000000, 500000, 250000,
+    125000
+  };
+  unsigned i;
+
+  (void)inst;
+
+  for(i = 0; i < sizeof(steps) / sizeof(steps[0]); i++) {
+    if(requested >= steps[i]) {
+      return steps[i];
+    }
+  }
+
+  return steps[sizeof(steps) / sizeof(steps[0]) - 1];
+#elif NRF_SPIM_HAS_PRESCALER
   uint32_t base = NRFX_SPIM_BASE_FREQUENCY_GET(inst);
   uint32_t min = NRF_SPIM_PRESCALER_MIN_GET(inst->p_reg);
   uint32_t max = NRF_SPIM_PRESCALER_MAX_GET(inst->p_reg);
@@ -200,24 +231,9 @@ resolve_bit_rate(unsigned controller, uint32_t requested)
   }
 
   return base / prescaler;
-#else /* NRF_SPIM_HAS_PRESCALER */
-  /* Fixed steps: pick the highest one not above the request. */
-  static const uint32_t steps[] = {
-    32000000, 16000000, 8000000, 4000000, 2000000, 1000000, 500000, 250000,
-    125000
-  };
-  unsigned i;
-
-  (void)inst;
-
-  for(i = 0; i < sizeof(steps) / sizeof(steps[0]); i++) {
-    if(requested >= steps[i]) {
-      return steps[i];
-    }
-  }
-
-  return steps[sizeof(steps) / sizeof(steps[0]) - 1];
-#endif /* NRF_SPIM_HAS_PRESCALER */
+#else
+#error "SPIM instance has neither a frequency register nor a prescaler"
+#endif
 }
 /*---------------------------------------------------------------------------*/
 static nrf_spim_mode_t
@@ -380,17 +396,28 @@ xfer(const nrfx_spim_t *inst, const uint8_t *tx, size_t tx_len,
 static spi_status_t
 transfer_staged(const nrfx_spim_t *inst,
                 const uint8_t *write_buf, int wlen,
-                uint8_t *inbuf, int rlen, int total)
+                uint8_t *inbuf, int rlen, int total,
+                uint32_t max_len)
 {
   int done = 0;
+  int chunk = NRF_SPI_CHUNK_SIZE;
+
+  /*
+   * The staging buffers cap the chunk, but so does the instance's EasyDMA
+   * MAXCNT width: NRF_SPI_CONF_CHUNK_SIZE is configurable and an instance
+   * with a narrow MAXCNT would otherwise be handed a too-long transfer.
+   */
+  if((uint32_t)chunk > max_len) {
+    chunk = (int)max_len;
+  }
 
   while(done < total) {
     int n = total - done;
     int i;
     spi_status_t status;
 
-    if(n > NRF_SPI_CHUNK_SIZE) {
-      n = NRF_SPI_CHUNK_SIZE;
+    if(n > chunk) {
+      n = chunk;
     }
 
     for(i = 0; i < n; i++) {
@@ -444,23 +471,34 @@ spi_arch_transfer(const spi_device_t *dev,
     return SPI_DEV_STATUS_OK;
   }
 
+  /*
+   * A read destination outside Data RAM cannot be rescued by staging: the
+   * staged path would land the bytes with a CPU store to that same address.
+   * Only a write buffer benefits from staging, because const data commonly
+   * lives in flash, which EasyDMA cannot read but the CPU can.
+   */
+  if(rlen > 0 && !nrfx_is_in_ram(inbuf)) {
+    LOG_ERR("read buffer is not in RAM\n");
+    return SPI_DEV_STATUS_EINVAL;
+  }
+
   inst = &spim_instance[dev->spi_controller];
 
   /*
-   * Fast path: nothing to discard, both buffers are where EasyDMA can
-   * reach them, and the lengths fit the 16-bit MAXCNT registers. nrfx
-   * clocks max(wlen, rlen) bytes, padding the shorter side, which is
-   * exactly the contract of this function when ignore_len is 0.
+   * Fast path: nothing to discard, the write buffer is where EasyDMA can
+   * reach it, and the lengths fit the instance's MAXCNT. nrfx clocks
+   * max(wlen, rlen) bytes, padding the shorter side, which is exactly the
+   * contract of this function when ignore_len is 0.
    */
   if(ignore_len == 0 &&
      wlen <= spim_easydma_max_len[dev->spi_controller] &&
      rlen <= spim_easydma_max_len[dev->spi_controller] &&
-     (wlen == 0 || nrfx_is_in_ram(write_buf)) &&
-     (rlen == 0 || nrfx_is_in_ram(inbuf))) {
+     (wlen == 0 || nrfx_is_in_ram(write_buf))) {
     return xfer(inst, write_buf, wlen, inbuf, rlen);
   }
 
-  return transfer_staged(inst, write_buf, wlen, inbuf, rlen, total);
+  return transfer_staged(inst, write_buf, wlen, inbuf, rlen, total,
+                         spim_easydma_max_len[dev->spi_controller]);
 }
 /*---------------------------------------------------------------------------*/
 #endif /* SPI_CONTROLLER_COUNT > 0 */
