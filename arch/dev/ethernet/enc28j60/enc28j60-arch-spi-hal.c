@@ -37,10 +37,16 @@
  *         has to supply the pin defines below. Enable it by defining
  *         ENC28J60_CONF_USE_SPI_HAL as 1.
  *
+ *         Note the cost model: the enc28j60 driver's arch interface moves one
+ *         byte per call, so each byte here becomes its own SPI HAL transfer
+ *         and, on nRF, its own EasyDMA transaction. That is the interface's
+ *         shape, not something this layer can batch. It is why the practical
+ *         limit on throughput is the driver rather than the bus clock.
+ *
  *         The bus is acquired for the duration of a chip-select assertion
  *         rather than held forever, so the ENC28J60 can share a controller
  *         with other devices. The driver keeps CS asserted across a whole
- *         register access or packet transfer, so this is one acquire per
+ *         register access or packet transfer, so the *lock* is taken once per
  *         transaction, not per byte.
  * \author
  *         Joakim Eriksson <joakim.eriksson@ri.se>
