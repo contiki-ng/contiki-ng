@@ -148,12 +148,14 @@ per-source entry in ip64's address map. With both probes enabled, a listener
 sees one IPv4 source address and two distinct mapped ports. Neither probe is
 on by default, so a stock build does not send traffic to anyone's LAN.
 
-It also resolves a hostname through DNS64, pointing the resolver at a public
-IPv4 DNS server via the NAT64 prefix:
+Defining `NAT64_LOOKUP_NAME` additionally resolves that hostname through
+DNS64, pointing the resolver at a public IPv4 DNS server via the NAT64 prefix
+(`NAT64_DNS_SERVER`, Google's by default):
 
     DNS64 OK: leshan.eclipseprojects.io -> 64:ff9b::23.97.187.154
 
-Use this rather than hardcoding IPv4 literals in NAT64 form; those go stale.
+Prefer this over hardcoding IPv4 literals in NAT64 form; those go stale. It is
+off by default because it sends a query to a third-party resolver.
 
 ## Things that will cost you time
 
