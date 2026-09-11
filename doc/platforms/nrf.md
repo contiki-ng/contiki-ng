@@ -334,6 +334,38 @@ For the full guide — toolchain setup (the FLPR needs an RV32EMC RISC-V GCC),
 build/deploy steps, the boot sequence, and the `hello-vpr` / `flpr-host`
 examples — see the [nrf-vpr platform documentation](nrf-vpr.md).
 
+### SPI
+
+The nRF port implements the Contiki-NG SPI HAL (`os/dev/spi.h`) on top of
+`nrfx_spim`. It is built by default on the application cores with one SPIM
+instance (SPIM0 on the nRF52840, SPIM1 on the nRF5340 application core, SPIM00
+on the nRF54L15), so a `spi_device_t` on those pins works with no makefile
+changes; unused, it costs a few hundred bytes. To use other or additional
+instances, list the ids in `NRF_SPI_INSTANCES`, in logical controller order;
+an id that does not exist on the SoC is rejected with a message listing the
+ones that do, and listing one twice is rejected too. `NRF_WITH_SPI=0` leaves
+SPI out. The nRF5340 network core has no SPI support: its only SPIM shares
+SERIAL0 with the console UARTE, so `NRF_WITH_SPI=1` is rejected there.
+
+Instance choice is constrained on SoCs that group peripherals into SERIAL
+slots. SPIMn and UARTEn in the same slot share an interrupt vector, so
+selecting the one that collides with the console UART fails at link time with a
+duplicate `SERIALn_IRQHandler`. Known-good choices are documented in
+`arch/cpu/nrf/dev/spi-arch.h`: SPIM00 or SPIM22 on the nRF54L15, SPIM1 and up
+on the nRF5340 application core, and any instance on the nRF52840.
+
+`examples/platform-specific/nrf/spi-flash` brings the bus up against a DK's
+on-board MX25R6435F flash, which is useful when wiring a new peripheral:
+it fails on the driver rather than on your jumper wires.
+
+### Ethernet and IPv4 (IP64)
+
+With an ENC28J60 module on SPI, an nRF board can act as a self-contained
+border router — RPL root on the 802.15.4 side, NAT64 and DNS64 on the IPv4
+side, with no host in the data path. See the
+[ENC28J60 / IP64 documentation](nrf-ip64-ethernet.md) for wiring, the GPIO
+voltage change the nRF54L15 DK needs first, and a bring-up sequence.
+
 ## Support
 
 For bug reports or/and suggestions please open a github issue.
