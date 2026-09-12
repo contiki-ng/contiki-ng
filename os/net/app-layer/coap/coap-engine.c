@@ -369,6 +369,11 @@ coap_receive(const coap_endpoint_t *src,
     }
     coap_init_message(message, reply_type, coap_status_code,
                       message->mid);
+    if(coap_status_code == REQUEST_ENTITY_TOO_LARGE_4_13) {
+      /* Tell the sender the largest payload we accept, so that it can
+         retry using block-wise transfers. See RFC 7959, Section 2.9.3. */
+      coap_set_header_size1(message, COAP_MAX_CHUNK_SIZE);
+    }
 #if COAP_MESSAGE_ON_ERROR
     coap_set_payload(message, coap_error_message,
                      strlen(coap_error_message));
