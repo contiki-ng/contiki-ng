@@ -241,6 +241,10 @@ struct rpl_instance {
   /* My last registered DAO that I might be waiting for an ACK on. */
   uint8_t my_dao_seqno;
   uint8_t my_dao_transmissions;
+#if RPL_WITH_DAO_ACK
+  /* The node that the DAO was sent to, and thus the only valid ACK source. */
+  uip_ipaddr_t my_dao_dest;
+#endif /* RPL_WITH_DAO_ACK */
   /* this is intended to keep track if this instance have a route downward */
   uint8_t has_downward_route;
   rpl_rank_t max_rankinc;
