@@ -63,6 +63,7 @@ db_result_t storage_rename_relation(char *, char *);
 db_result_t storage_put_attribute(relation_t *, attribute_t *);
 db_result_t storage_get_index(index_t *, relation_t *, attribute_t *);
 db_result_t storage_put_index(index_t *);
+db_result_t storage_remove_index(index_t *);
 
 db_result_t storage_get_row(relation_t *, tuple_id_t *, storage_row_t);
 db_result_t storage_put_row(relation_t *, storage_row_t);
