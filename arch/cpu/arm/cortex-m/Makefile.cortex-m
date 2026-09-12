@@ -11,6 +11,7 @@ ifndef CMSIS_PATH
 endif
 
 CONTIKI_ARM_DIRS += cortex-m
+CONTIKI_CPU_SOURCEFILES += cycles-arch.c
 
 ### Build syscalls for newlib
 MODULES += os/lib/newlib

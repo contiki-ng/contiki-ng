@@ -52,6 +52,14 @@
 #error "CPU_DEF_PATH undefined"
 #endif /* BOARD_CONF_PATH */
 /*---------------------------------------------------------------------------*/
+/*
+ * The nRF cores run at 64 MHz unless the CPU header says otherwise, see
+ * os/sys/cycles.h.
+ */
+#ifndef CYCLES_CONF_HZ
+#define CYCLES_CONF_HZ 64000000
+#endif /* CYCLES_CONF_HZ */
+/*---------------------------------------------------------------------------*/
 /* Path to headers with implementation of mutexes, atomic and memory barriers */
 #define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
 #define ATOMIC_CONF_ARCH_HEADER_PATH         "atomic-cortex.h"

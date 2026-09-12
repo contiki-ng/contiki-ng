@@ -43,6 +43,11 @@
 /*---------------------------------------------------------------------------*/
 #include "arm-def.h"
 /*---------------------------------------------------------------------------*/
+/* sl_device_init_clocks() runs the core from the HFXO, whose frequency
+   the board configures, see os/sys/cycles.h. */
+#include "sl_device_init_hfxo_config.h"
+#define CYCLES_CONF_HZ SL_DEVICE_INIT_HFXO_FREQ
+/*---------------------------------------------------------------------------*/
 /* Path to headers with implementation of mutexes, atomic and memory barriers */
 #define MUTEX_CONF_ARCH_HEADER_PATH          "mutex-cortex.h"
 #define ATOMIC_CONF_ARCH_HEADER_PATH         "atomic-cortex.h"

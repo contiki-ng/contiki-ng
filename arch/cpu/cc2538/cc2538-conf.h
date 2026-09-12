@@ -331,6 +331,21 @@
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
+/**
+ * \name CPU cycle counter configuration
+ *
+ * The DWT cycle counter runs on the system clock, whose frequency is
+ * fixed at build time by SYS_CTRL_CONF_SYS_DIV. Around PM1 and PM2 the
+ * low-power code sources the system clock from the 16 MHz RC oscillator,
+ * so with a 32 MHz configuration the code that runs between wake-up and
+ * lpm_exit(), such as the waking interrupt handler, is counted at 16 MHz.
+ * See os/sys/cycles.h.
+ * @{
+ */
+#include "dev/sys-ctrl.h"
+#define CYCLES_CONF_HZ          SYS_CTRL_SYS_CLOCK
+/** @} */
+/*---------------------------------------------------------------------------*/
 #endif /* CC2538_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /** @} */

@@ -34,5 +34,6 @@ tests/08-native-runs/27-ip64-tap/native:./27-ip64-tap.sh \
 tests/08-native-runs/27-ip64-tap/native:./27-ip64-tap.sh:DEFINES=IP64_CONF_DHCP=1 \
 tests/08-native-runs/28-coap-parse/native:./28-coap-parse.sh \
 tests/08-native-runs/29-jsonparse/native:./29-jsonparse.sh \
+tests/08-native-runs/30-cycles/native:./30-cycles.sh \
 
 include ../Makefile.compile-test
