@@ -349,8 +349,19 @@ coap_receive(const coap_endpoint_t *src,
   } else if(coap_status_code == MANUAL_RESPONSE) {
     LOG_DBG("Clearing transaction for manual response");
     coap_clear_transaction(transaction);
+  } else if(payload_length < COAP_HEADER_LEN) {
+    /*
+     * A message this short carries no message ID, so nothing that is sent
+     * in reply can be matched with it. RFC 7252, Section 4.2 and 4.3, have
+     * such a message rejected, which is done here by ignoring it.
+     */
+    LOG_WARN("ERROR %u: message too short to answer\n", coap_status_code);
+    coap_clear_transaction(transaction);
   } else {
     coap_message_type_t reply_type = COAP_TYPE_ACK;
+    uint16_t reply_mid = message->mid;
+    uint8_t token[COAP_TOKEN_LEN];
+    size_t token_len = MIN(message->token_len, sizeof(token));
 
 #if COAP_MESSAGE_ON_ERROR
     LOG_WARN("ERROR %u: %s\n", coap_status_code, coap_error_message);
@@ -359,16 +370,32 @@ coap_receive(const coap_endpoint_t *src,
 #endif
     coap_clear_transaction(transaction);
 
+    /* The reply is built in the buffer the message came in, so the token
+       has to be kept before that buffer is cleared. */
+    memcpy(token, message->token, token_len);
+
     if(coap_status_code == PING_RESPONSE) {
       coap_status_code = 0;
       reply_type = COAP_TYPE_RST;
-    } else if(coap_status_code >= 192) {
-      /* set to sendable error code */
-      coap_status_code = INTERNAL_SERVER_ERROR_5_00;
-      /* reuse input buffer for error message */
+    } else {
+      if(coap_status_code >= 192) {
+        /* set to sendable error code */
+        coap_status_code = INTERNAL_SERVER_ERROR_5_00;
+        /* reuse input buffer for error message */
+      }
+      if(message->type == COAP_TYPE_NON) {
+        /* An unreliable message is answered with one of its own, which
+           carries a message ID of its own as well. */
+        reply_type = COAP_TYPE_NON;
+        reply_mid = coap_get_mid();
+      }
     }
-    coap_init_message(message, reply_type, coap_status_code,
-                      message->mid);
+    coap_init_message(message, reply_type, coap_status_code, reply_mid);
+    if(reply_type != COAP_TYPE_RST && token_len > 0) {
+      /* A response carries the token of the message it answers. A reset is
+         an empty message and carries none. */
+      coap_set_token(message, token, token_len);
+    }
 #if COAP_MESSAGE_ON_ERROR
     coap_set_payload(message, coap_error_message,
                      strlen(coap_error_message));

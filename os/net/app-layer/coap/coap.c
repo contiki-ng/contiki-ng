@@ -430,14 +430,17 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
     }                                                                   \
   } while (0)
 
+  /*
+   * Initialize the message before anything can fail, so that a message
+   * that is rejected leaves nothing of an earlier one behind.
+   */
+  memset(coap_pkt, 0, sizeof(coap_message_t));
+
   if(data_len < COAP_HEADER_LEN) {
     /* Too short - malformed CoAP message */
     LOG_WARN("BAD REQUEST: message too short\n");
     return BAD_REQUEST_4_00;
   }
-
-  /* initialize message */
-  memset(coap_pkt, 0, sizeof(coap_message_t));
 
   /* pointer to message bytes */
   coap_pkt->buffer = data;
@@ -447,7 +450,7 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
     >> COAP_HEADER_VERSION_POSITION;
   coap_pkt->type = (COAP_HEADER_TYPE_MASK & coap_pkt->buffer[0])
     >> COAP_HEADER_TYPE_POSITION;
-  coap_pkt->token_len = (COAP_HEADER_TOKEN_LEN_MASK & coap_pkt->buffer[0])
+  uint8_t token_len = (COAP_HEADER_TOKEN_LEN_MASK & coap_pkt->buffer[0])
     >> COAP_HEADER_TOKEN_LEN_POSITION;
   coap_pkt->code = coap_pkt->buffer[1];
   coap_pkt->mid = coap_pkt->buffer[2] << 8 | coap_pkt->buffer[3];
@@ -459,7 +462,7 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
     return BAD_REQUEST_4_00;
   }
 
-  if(coap_pkt->token_len > COAP_TOKEN_LEN) {
+  if(token_len > COAP_TOKEN_LEN) {
 #if COAP_MESSAGE_ON_ERROR
     coap_error_message = "Token Length must not be more than 8";
 #endif
@@ -467,9 +470,14 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
   }
 
   uint8_t *current_option = data + COAP_HEADER_LEN;
-  CHECK_OPTION_BOUNDARY(coap_pkt->token_len);
+  CHECK_OPTION_BOUNDARY(token_len);
 
-  memcpy(coap_pkt->token, current_option, coap_pkt->token_len);
+  /*
+   * The length is recorded only once the token has been read, so that a
+   * message never carries the length of a token that it does not hold.
+   */
+  memcpy(coap_pkt->token, current_option, token_len);
+  coap_pkt->token_len = token_len;
   LOG_DBG("Token (len %u) [0x%02X%02X%02X%02X%02X%02X%02X%02X]\n",
           coap_pkt->token_len, coap_pkt->token[0], coap_pkt->token[1],
           coap_pkt->token[2], coap_pkt->token[3], coap_pkt->token[4],
