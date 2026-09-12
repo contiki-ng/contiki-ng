@@ -541,7 +541,6 @@ insert_item(heap_t *heap, maxheap_key_t key, maxheap_value_t value)
 static db_result_t
 create(index_t *index)
 {
-  char heap_filename[DB_MAX_FILENAME_LENGTH];
   char bucket_filename[DB_MAX_FILENAME_LENGTH];
   char *filename;
   db_result_t result;
@@ -621,7 +620,7 @@ create(index_t *index)
       memb_free(&heaps, heap);
     }
     if(index->descriptor_file[0] != '\0') {
-      cfs_remove(heap_filename);
+      cfs_remove(index->descriptor_file);
       index->descriptor_file[0] = '\0';
     }
     if(bucket_filename[0] != '\0') {
