@@ -442,6 +442,7 @@ static int
 bucket_append(heap_t *heap, int bucket_id, struct key_value_pair *pair)
 {
   unsigned long offset;
+  struct bucket_cache *cache;
 
   if(heap->next_free_slot[bucket_id] >= BUCKET_SIZE) {
     PRINTF("DB: Invalid write attempt to the full bucket %d\n", bucket_id);
@@ -453,6 +454,12 @@ bucket_append(heap_t *heap, int bucket_id, struct key_value_pair *pair)
 
   if(DB_ERROR(storage_write(heap->bucket_storage, pair, offset, sizeof(*pair)))) {
     return 0;
+  }
+
+  /* Keep a cached copy of the bucket consistent with the storage. */
+  cache = get_cache(heap, bucket_id);
+  if(cache != NULL) {
+    cache->bucket.pairs[heap->next_free_slot[bucket_id]] = *pair;
   }
 
   heap->next_free_slot[bucket_id]++;
@@ -514,6 +521,16 @@ insert_item(heap_t *heap, maxheap_key_t key, maxheap_value_t value)
 
   pair.key = key;
   pair.value = value;
+
+  /*
+   * A free slot index of zero has not been determined yet, as is the case
+   * after loading the heap from storage. Loading the bucket determines it,
+   * so that the append below does not overwrite stored pairs.
+   */
+  if(heap->next_free_slot[bucket_id] == 0 &&
+     bucket_load(heap, bucket_id) == NULL) {
+    return 0;
+  }
 
   if(heap->next_free_slot[bucket_id] == BUCKET_SIZE) {
     PRINTF("DB: Bucket %d is full\n", bucket_id);
@@ -680,8 +697,7 @@ load(index_t *index)
     return DB_STORAGE_ERROR;
   }
 
-  if(storage_read(fd, bucket_file, 0, sizeof(bucket_file)) !=
-     sizeof(bucket_file)) {
+  if(DB_ERROR(storage_read(fd, bucket_file, 0, sizeof(bucket_file)))) {
     storage_close(fd);
     memb_free(&heaps, heap);
     return DB_STORAGE_ERROR;
@@ -691,6 +707,12 @@ load(index_t *index)
 
   heap->heap_storage = storage_open(index->descriptor_file);
   heap->bucket_storage = storage_open(bucket_file);
+  if(heap->heap_storage < 0 || heap->bucket_storage < 0) {
+    storage_close(heap->heap_storage);
+    storage_close(heap->bucket_storage);
+    memb_free(&heaps, heap);
+    return DB_STORAGE_ERROR;
+  }
 
   memset(&heap->next_free_slot, 0, sizeof(heap->next_free_slot));
 

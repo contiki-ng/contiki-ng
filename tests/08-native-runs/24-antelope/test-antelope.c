@@ -41,6 +41,7 @@
 
 #include "antelope.h"
 #include "attribute.h"
+#include "relation.h"
 
 #include "unit-test/unit-test.h"
 
@@ -504,9 +505,8 @@ UNIT_TEST(join_relations)
   /*
    * Antelope performs equi-joins through an index on the join attribute of
    * the right-hand relation, so "groups.gid" must be indexed. A MAXHEAP index
-   * is used because, unlike an INLINE index, it is persisted and thus restored
-   * when the relation is reloaded to execute the join. It is created before the
-   * inserts so that it is populated as the rows are added.
+   * is created before the inserts so that it is populated as the rows are
+   * added. The index_persistence test covers restoring it from storage.
    */
   UNIT_TEST_ASSERT(exec_query("CREATE INDEX groups.gid TYPE MAXHEAP;") == DB_OK);
 
@@ -531,6 +531,109 @@ UNIT_TEST(join_relations)
                    "JOIN members, groups ON gid PROJECT uid, gname;") == DB_OK);
   UNIT_TEST_ASSERT(result_rows == 3);
   UNIT_TEST_ASSERT(result_cols == 2);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * Report whether an attribute has an index after its relation has been
+ * loaded. Returns -1 if the relation or the attribute does not exist.
+ */
+static int
+index_restored(char *relation_name, char *attribute_name)
+{
+  relation_t *rel;
+  attribute_t *attr;
+  int restored;
+
+  rel = relation_load(relation_name);
+  if(rel == NULL) {
+    return -1;
+  }
+
+  attr = relation_attribute_get(rel, attribute_name);
+  restored = attr == NULL ? -1 : attr->index != NULL;
+  relation_release(rel);
+
+  return restored;
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(index_persistence,
+                   "A MAXHEAP index is restored after re-initialization");
+UNIT_TEST(index_persistence)
+{
+  UNIT_TEST_BEGIN();
+
+  UNIT_TEST_ASSERT(cfs_coffee_format() == 0);
+  db_init();
+
+  UNIT_TEST_ASSERT(exec_query("CREATE RELATION groups;") == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("CREATE ATTRIBUTE gid DOMAIN INT IN groups;")
+                   == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("CREATE ATTRIBUTE gname DOMAIN STRING(16) IN groups;")
+                   == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("CREATE INDEX groups.gid TYPE MAXHEAP;") == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("INSERT (1, 'Red') INTO groups;") == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("INSERT (2, 'Blue') INTO groups;") == DB_OK);
+
+  UNIT_TEST_ASSERT(exec_query("CREATE RELATION members;") == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("CREATE ATTRIBUTE gid DOMAIN INT IN members;")
+                   == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("CREATE ATTRIBUTE uid DOMAIN INT IN members;")
+                   == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("INSERT (1, 100) INTO members;") == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("INSERT (2, 101) INTO members;") == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("INSERT (1, 102) INTO members;") == DB_OK);
+
+  /*
+   * Re-initialize the database without formatting the file system, as after
+   * a restart. The relations and the index must then be loaded from storage.
+   */
+  db_init();
+  UNIT_TEST_ASSERT(index_restored("groups", "gid") == 1);
+
+  /*
+   * Insert into the restored index before anything has read its bucket. The
+   * new pair must not overwrite a stored pair, and it must refer to the new
+   * tuple rather than to a tuple stored before the restart. The join lists
+   * the members in insertion order.
+   */
+  UNIT_TEST_ASSERT(exec_query("INSERT (3, 'Green') INTO groups;") == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("INSERT (3, 103) INTO members;") == DB_OK);
+  UNIT_TEST_ASSERT(select_query(
+                   "JOIN members, groups ON gid PROJECT uid, gname;") == DB_OK);
+  UNIT_TEST_ASSERT(result_rows == 4);
+  UNIT_TEST_ASSERT(cell_long(0, 0) == 100);
+  UNIT_TEST_ASSERT(strcmp(cell_str(0, 1), "Red") == 0);
+  UNIT_TEST_ASSERT(cell_long(3, 0) == 103);
+  UNIT_TEST_ASSERT(strcmp(cell_str(3, 1), "Green") == 0);
+
+  /*
+   * Insert again now that the join has cached the bucket. The next join must
+   * find the new pair.
+   */
+  UNIT_TEST_ASSERT(exec_query("INSERT (4, 'Grey') INTO groups;") == DB_OK);
+  UNIT_TEST_ASSERT(exec_query("INSERT (4, 104) INTO members;") == DB_OK);
+  UNIT_TEST_ASSERT(select_query(
+                   "JOIN members, groups ON gid PROJECT uid, gname;") == DB_OK);
+  UNIT_TEST_ASSERT(result_rows == 5);
+  UNIT_TEST_ASSERT(cell_long(4, 0) == 104);
+  UNIT_TEST_ASSERT(strcmp(cell_str(4, 1), "Grey") == 0);
+
+  /* The pairs inserted after the restart must survive another restart. */
+  db_init();
+  UNIT_TEST_ASSERT(index_restored("groups", "gid") == 1);
+  UNIT_TEST_ASSERT(select_query(
+                   "JOIN members, groups ON gid PROJECT uid, gname;") == DB_OK);
+  UNIT_TEST_ASSERT(result_rows == 5);
+  UNIT_TEST_ASSERT(strcmp(cell_str(3, 1), "Green") == 0);
+  UNIT_TEST_ASSERT(strcmp(cell_str(4, 1), "Grey") == 0);
+
+  /* A removed index must not be restored. */
+  UNIT_TEST_ASSERT(exec_query("REMOVE INDEX groups.gid;") == DB_OK);
+  UNIT_TEST_ASSERT(index_restored("groups", "gid") == 0);
+  db_init();
+  UNIT_TEST_ASSERT(index_restored("groups", "gid") == 0);
 
   UNIT_TEST_END();
 }
@@ -641,6 +744,7 @@ PROCESS_THREAD(test_process, ev, data)
   UNIT_TEST_RUN(indexed_query);
   UNIT_TEST_RUN(remove_tuples);
   UNIT_TEST_RUN(join_relations);
+  UNIT_TEST_RUN(index_persistence);
   UNIT_TEST_RUN(large_relation);
   UNIT_TEST_RUN(error_handling);
 
@@ -650,6 +754,7 @@ PROCESS_THREAD(test_process, ev, data)
      !UNIT_TEST_PASSED(indexed_query) ||
      !UNIT_TEST_PASSED(remove_tuples) ||
      !UNIT_TEST_PASSED(join_relations) ||
+     !UNIT_TEST_PASSED(index_persistence) ||
      !UNIT_TEST_PASSED(large_relation) ||
      !UNIT_TEST_PASSED(error_handling)) {
     printf("=check-me= FAILED\n");
