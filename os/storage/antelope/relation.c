@@ -516,8 +516,19 @@ relation_insert(relation_t *rel, attribute_value_t *values)
   unsigned char *ptr;
   attribute_value_t *value;
   db_result_t result;
+  tuple_id_t tuple_id;
 
   value = values;
+
+  /*
+   * Tuples are only appended, so the new tuple's id is the cardinality of
+   * the relation. For a relation loaded from storage, relation_cardinality()
+   * determines it from the tuple file.
+   */
+  tuple_id = relation_cardinality(rel);
+  if(tuple_id == INVALID_TUPLE) {
+    return DB_STORAGE_ERROR;
+  }
 
   PRINTF("DB: Relation %s has a record size of %u bytes\n",
 	 rel->name, (unsigned)rel->row_length);
@@ -570,7 +581,7 @@ relation_insert(relation_t *rel, attribute_value_t *values)
 
     ptr += attr->element_size;
     if(attr->index != NULL) {
-      if(DB_ERROR(index_insert(attr->index, value, rel->next_row))) {
+      if(DB_ERROR(index_insert(attr->index, value, tuple_id))) {
         return DB_INDEX_ERROR;
       }
     }
@@ -578,8 +589,7 @@ relation_insert(relation_t *rel, attribute_value_t *values)
 
   PRINTF(")\n");
 
-  rel->cardinality++;
-  rel->next_row++;
+  rel->cardinality = tuple_id + 1;
   return storage_put_row(rel, record);
 }
 
