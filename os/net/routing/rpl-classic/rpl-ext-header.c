@@ -192,6 +192,14 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
   rh_header = (struct uip_routing_hdr *)uipbuf_search_header(uip_buf, uip_len, UIP_PROTO_ROUTING);
 
   dag = rpl_get_dag(&UIP_IP_BUF->destipaddr);
+  if(dag == NULL) {
+    /*
+     * The destination is not in a DAG that we have joined, so there is
+     * no source routing graph to consult.
+     */
+    return 0;
+  }
+
   root_node = uip_sr_get_node(dag, &dag->dag_id);
   dest_node = uip_sr_get_node(dag, &UIP_IP_BUF->destipaddr);
 
@@ -217,32 +225,126 @@ rpl_ext_header_srh_get_next_hop(uip_ipaddr_t *ipaddr)
 }
 /*---------------------------------------------------------------------------*/
 #if RPL_WITH_NON_STORING
+/*
+ * Derived contents of a source routing header, after validation against
+ * both the extent declared by the header and the length of the received
+ * packet. An address access computed from these values is guaranteed to
+ * stay within the header.
+ */
+struct rpl_srh_info {
+  size_t ext_len;        /* Total size of the routing header, in bytes. */
+  uint8_t segments_left;
+  uint8_t cmpri;
+  uint8_t cmpre;
+  uint8_t padding;
+  uint8_t path_len;      /* Number of addresses carried in the header. */
+};
+/*---------------------------------------------------------------------------*/
+/*
+ * Parse and validate a source routing header. The compression and padding
+ * fields come from the packet, so the address vector must be shown to have
+ * exactly the size that they imply, and the whole header must be contained
+ * in the received packet, before any address is accessed.
+ */
 static bool
-srh_is_valid(struct uip_routing_hdr *rh_header,
-             struct uip_rpl_srh_hdr *srh_header)
+srh_parse(const struct uip_routing_hdr *rh_header, struct rpl_srh_info *srh)
+{
+  const struct uip_rpl_srh_hdr *srh_header;
+  ptrdiff_t rh_offset;
+  size_t vector_len;
+  size_t last_addr_len;
+  size_t path_len;
+
+  rh_offset = (const uint8_t *)rh_header - uip_buf;
+  srh->ext_len = (size_t)rh_header->len * 8 + 8;
+
+  /* The complete routing header must be part of the received packet. */
+  if(rh_offset < 0 || (size_t)rh_offset + srh->ext_len > uip_len) {
+    LOG_ERR("SRH extends past the received packet\n");
+    return false;
+  }
+
+  srh_header = (const struct uip_rpl_srh_hdr *)
+    ((const uint8_t *)rh_header + RPL_RH_LEN);
+  srh->segments_left = rh_header->seg_left;
+  srh->cmpri = srh_header->cmpr >> 4;
+  srh->cmpre = srh_header->cmpr & 0x0f;
+  srh->padding = srh_header->pad >> 4;
+
+  /*
+   * Padding only aligns the header to an eight-octet boundary. Values of
+   * eight or more are rejected here, although the field itself is four
+   * bits wide.
+   */
+  if(srh->padding >= 8) {
+    LOG_ERR("SRH with invalid padding %u\n", (unsigned)srh->padding);
+    return false;
+  }
+
+  /*
+   * The addresses follow the two fixed headers. All of them but the last
+   * are compressed by CmprI, and the last one by CmprE. Both fields are
+   * four bits wide, so an address is never shorter than a single byte.
+   */
+  vector_len = srh->ext_len - RPL_RH_LEN - RPL_SRH_LEN;
+  last_addr_len = 16 - srh->cmpre;
+  if(vector_len < last_addr_len + srh->padding) {
+    LOG_ERR("SRH too short to hold an address vector\n");
+    return false;
+  }
+
+  path_len = (vector_len - last_addr_len - srh->padding) / (16 - srh->cmpri) + 1;
+  if(path_len > UINT8_MAX) {
+    LOG_ERR("SRH with too many addresses (%u)\n", (unsigned)path_len);
+    return false;
+  }
+
+  /* The address vector must have exactly the size that it declares. */
+  if((path_len - 1) * (16 - srh->cmpri) + last_addr_len + srh->padding
+     != vector_len) {
+    LOG_ERR("SRH with an inconsistent address vector size\n");
+    return false;
+  }
+
+  if(srh->segments_left > path_len) {
+    LOG_ERR("SRH with too many segments left (%u > %u)\n",
+            (unsigned)srh->segments_left, (unsigned)path_len);
+    return false;
+  }
+
+  srh->path_len = path_len;
+  return true;
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * Return a pointer to the address at the given index, and the number of
+ * bytes by which that address is compressed. RFC 6554, Section 3: every
+ * address but the last is compressed by CmprI, and the last one by CmprE.
+ * The index must be below the path length of a header that srh_parse()
+ * has accepted, which makes the access stay within the header.
+ */
+static uint8_t *
+srh_addr(struct uip_routing_hdr *rh_header, const struct rpl_srh_info *srh,
+         uint8_t index, uint8_t *cmpr)
+{
+  *cmpr = index == srh->path_len - 1 ? srh->cmpre : srh->cmpri;
+  return (uint8_t *)rh_header + RPL_RH_LEN + RPL_SRH_LEN +
+    (size_t)index * (16 - srh->cmpri);
+}
+/*---------------------------------------------------------------------------*/
+static bool
+srh_is_valid(struct uip_routing_hdr *rh_header, const struct rpl_srh_info *srh)
 {
   uip_ipaddr_t hop_addr;
-  uip_ipaddr_copy(&hop_addr, &UIP_IP_BUF->destipaddr);
-
-  uint8_t segments_left = rh_header->seg_left;
-  uint8_t ext_len = rh_header->len * 8 + 8;
-  uint8_t cmpri = srh_header->cmpr >> 4;
-  uint8_t cmpre = srh_header->cmpr & 0x0f;
-  uint8_t padding = srh_header->pad >> 4;
-  uint8_t path_len = ((ext_len - padding - RPL_RH_LEN - RPL_SRH_LEN - (16 - cmpre)) / (16 - cmpri)) + 1;
-
   bool prev_hop_is_my_addr = false;
   uint8_t my_addr_count = 0;
-  for(uint8_t i = path_len - segments_left; i < path_len; i++) {
-    uint8_t cmpr = segments_left == 1 ? cmpre : cmpri;
-    ptrdiff_t rh_offset = (uint8_t *)rh_header - uip_buf;
-    size_t addr_offset = RPL_RH_LEN + RPL_SRH_LEN + (i * (16 - cmpri));
 
-    if(rh_offset + addr_offset + 16 - cmpr > UIP_BUFSIZE) {
-      return false;
-    }
+  uip_ipaddr_copy(&hop_addr, &UIP_IP_BUF->destipaddr);
 
-    uint8_t *addr_ptr = (uint8_t *)rh_header + addr_offset;
+  for(uint8_t i = srh->path_len - srh->segments_left; i < srh->path_len; i++) {
+    uint8_t cmpr;
+    const uint8_t *addr_ptr = srh_addr(rh_header, srh, i, &cmpr);
+
     memcpy((uint8_t *)&hop_addr + cmpr, addr_ptr, 16 - cmpr);
 
     LOG_DBG("Processing SRH hop %u, IP addr ", i);
@@ -287,7 +389,6 @@ rpl_ext_header_srh_update(void)
 {
 #if RPL_WITH_NON_STORING
   struct uip_routing_hdr *rh_header;
-  struct uip_rpl_srh_hdr *srh_header;
 
   /* Look for routing ext header */
   rh_header = (struct uip_routing_hdr *)uipbuf_search_header(uip_buf, uip_len,
@@ -295,50 +396,31 @@ rpl_ext_header_srh_update(void)
 
   if(rh_header != NULL && rh_header->routing_type == RPL_RH_TYPE_SRH) {
     /* SRH found, now look for next hop */
-    uint8_t cmpri, cmpre;
-    uint8_t ext_len;
-    uint8_t padding;
-    uint8_t path_len;
-    uint8_t segments_left;
+    struct rpl_srh_info srh;
     uip_ipaddr_t current_dest_addr;
 
-    srh_header = (struct uip_rpl_srh_hdr *)(((uint8_t *)rh_header) + RPL_RH_LEN);
-    segments_left = rh_header->seg_left;
-    ext_len = rh_header->len * 8 + 8;
-    cmpri = srh_header->cmpr >> 4;
-    cmpre = srh_header->cmpr & 0x0f;
-    padding = srh_header->pad >> 4;
-    path_len = ((ext_len - padding - RPL_RH_LEN - RPL_SRH_LEN - (16 - cmpre)) / (16 - cmpri)) + 1;
-    (void)path_len;
+    if(!srh_parse(rh_header, &srh)) {
+      return 0;
+    }
 
     LOG_DBG("read SRH, path len %u, segments left %u, Cmpri %u, Cmpre %u, ext len %u (padding %u)\n",
-            path_len, segments_left, cmpri, cmpre, ext_len, padding);
+            srh.path_len, srh.segments_left, srh.cmpri, srh.cmpre,
+            (unsigned)srh.ext_len, srh.padding);
 
-    if(segments_left == 0) {
+    if(srh.segments_left == 0) {
       /* We are the final destination, do nothing. */
-    } else if(segments_left > path_len) {
-      /* Discard the packet because of a parameter problem. */
-      LOG_ERR("SRH with too many segments left (%u > %u)\n",
-              segments_left, path_len);
-      return 0;
     } else {
-      if(!srh_is_valid(rh_header, srh_header)) {
+      uint8_t cmpr;
+      uint8_t *addr_ptr;
+
+      if(!srh_is_valid(rh_header, &srh)) {
         LOG_ERR("Invalid SRH hop sequence\n");
         return 0;
       }
 
       /* The index of the next address to be visited. */
-      uint8_t i = path_len - segments_left;
-      uint8_t cmpr = segments_left == 1 ? cmpre : cmpri;
-      ptrdiff_t rh_offset = (uint8_t *)rh_header - uip_buf;
-      size_t addr_offset = RPL_RH_LEN + RPL_SRH_LEN + (i * (16 - cmpri));
-
-      if(rh_offset + addr_offset + 16 - cmpr > UIP_BUFSIZE) {
-        LOG_ERR("Invalid SRH address pointer\n");
-        return 0;
-      }
-
-      uint8_t *addr_ptr = ((uint8_t *)rh_header) + addr_offset;
+      addr_ptr = srh_addr(rh_header, &srh,
+                          srh.path_len - srh.segments_left, &cmpr);
 
       /* As per RFC6554: swap the IPv6 destination address and address[i]. */
 
