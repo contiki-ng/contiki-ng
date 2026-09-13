@@ -101,7 +101,6 @@ enum token {
   INLINE = 43,
   PROJECT = 44,
   MAXHEAP = 45,
-  MEMHASH = 46,
   RELATION = 47,
   ATTRIBUTE = 48,
 

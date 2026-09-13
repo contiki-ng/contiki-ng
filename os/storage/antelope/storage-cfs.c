@@ -341,6 +341,28 @@ error:
 }
 #endif /* DB_FEATURE_REMOVE */
 
+/*
+ * Find the offset of the first record in an open index catalog whose
+ * attribute name matches the given name, or -1 if there is none. An empty
+ * name matches a record cleared by storage_remove_index().
+ */
+static cfs_offset_t
+find_index_record(int fd, const char *attribute_name)
+{
+  cfs_offset_t offset;
+  struct index_record record;
+
+  for(offset = 0;; offset += sizeof(record)) {
+    if(cfs_seek(fd, offset, CFS_SEEK_SET) != offset ||
+       cfs_read(fd, &record, sizeof(record)) < (int)sizeof(record)) {
+      return -1;
+    }
+    if(strcmp(attribute_name, record.attribute_name) == 0) {
+      return offset;
+    }
+  }
+}
+
 db_result_t
 storage_get_index(index_t *index, relation_t *rel, attribute_t *attr)
 {
@@ -385,6 +407,7 @@ storage_put_index(index_t *index)
   char filename[INDEX_NAME_LENGTH + 1];
   int fd;
   int r;
+  cfs_offset_t offset;
   struct index_record record;
   db_result_t result;
 
@@ -393,11 +416,28 @@ storage_put_index(index_t *index)
     return DB_NAME_ERROR;
   }
 
-  fd = cfs_open(filename, CFS_WRITE | CFS_APPEND);
+  /* Reuse a record cleared by storage_remove_index() if there is one. */
+  offset = -1;
+  fd = cfs_open(filename, CFS_READ);
+  if(fd >= 0) {
+    offset = find_index_record(fd, "");
+    cfs_close(fd);
+  }
+
+  if(offset >= 0) {
+    fd = cfs_open(filename, CFS_READ | CFS_WRITE);
+    if(fd >= 0 && cfs_seek(fd, offset, CFS_SEEK_SET) != offset) {
+      cfs_close(fd);
+      return DB_STORAGE_ERROR;
+    }
+  } else {
+    fd = cfs_open(filename, CFS_WRITE | CFS_APPEND);
+  }
   if(fd < 0) {
     return DB_STORAGE_ERROR;
   }
 
+  memset(&record, 0, sizeof(record));
   strcpy(record.attribute_name, index->attr->name);
   memcpy(record.file_name, index->descriptor_file, sizeof(record.file_name));
   record.type = index->type;
@@ -409,6 +449,52 @@ storage_put_index(index_t *index)
   } else {
     PRINTF("DB: Wrote an index record for %s.%s, type %d\n",
       index->rel->name, index->attr->name, record.type);
+  }
+
+  cfs_close(fd);
+
+  return result;
+}
+
+db_result_t
+storage_remove_index(index_t *index)
+{
+  char filename[INDEX_NAME_LENGTH + 1];
+  int fd;
+  cfs_offset_t offset;
+  struct index_record record;
+  db_result_t result;
+
+  if(!merge_strings(filename, sizeof(filename), index->rel->name,
+                    INDEX_NAME_SUFFIX)) {
+    return DB_NAME_ERROR;
+  }
+
+  fd = cfs_open(filename, CFS_READ);
+  if(fd < 0) {
+    /* No index records have been stored for this relation. */
+    return DB_OK;
+  }
+  cfs_close(fd);
+
+  fd = cfs_open(filename, CFS_READ | CFS_WRITE);
+  if(fd < 0) {
+    return DB_STORAGE_ERROR;
+  }
+
+  /*
+   * The catalog cannot be shrunk, so a record is removed by clearing it.
+   * A cleared record has an empty attribute name, which no attribute
+   * matches, and storage_put_index() reuses it.
+   */
+  memset(&record, 0, sizeof(record));
+  result = DB_OK;
+  while((offset = find_index_record(fd, index->attr->name)) >= 0) {
+    if(cfs_seek(fd, offset, CFS_SEEK_SET) != offset ||
+       cfs_write(fd, &record, sizeof(record)) < (int)sizeof(record)) {
+      result = DB_STORAGE_ERROR;
+      break;
+    }
   }
 
   cfs_close(fd);
