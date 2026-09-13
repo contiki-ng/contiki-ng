@@ -123,6 +123,16 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
   int len = coap_get_header_uri_query(request, &filter);
 
   if(len) {
+    /*
+     * The filter is compared against NUL-terminated strings, so a NUL
+     * byte in it would end a match before the whole filter was compared.
+     */
+    if(memchr(filter, '\0', len) != NULL) {
+      LOG_WARN("Filter with a NUL byte\n");
+      coap_set_status_code(response, BAD_REQUEST_4_00);
+      return;
+    }
+
     separator = memchr(filter, '=', len);
     if(separator == NULL || separator + 1 >= filter + len) {
       /* A filter is a name, an equals sign and a value. */
