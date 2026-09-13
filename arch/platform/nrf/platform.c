@@ -154,6 +154,13 @@ icache_init(void)
 void
 platform_init_stage_one(void)
 {
+  /*
+   * SystemInit() on the nRF54L15 selects the 128 MHz PLL but leaves
+   * SystemCoreClock at its 64 MHz default. The nrfx microsecond delays
+   * derive their loop count from SystemCoreClock, so without this update
+   * they wait half as long as requested.
+   */
+  SystemCoreClockUpdate();
   icache_init();
   gpio_hal_init();
   platform_init_board();
