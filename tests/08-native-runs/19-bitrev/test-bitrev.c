@@ -136,6 +136,7 @@ PROCESS_THREAD(run_tests, ev, data)
 {
   PROCESS_BEGIN();
 
+  printf("Run unit-test\n");
   printf("\nRunning bit reversal library unit tests\n");
 
   UNIT_TEST_RUN(test_bitrev_byte);
