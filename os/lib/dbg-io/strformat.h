@@ -38,6 +38,12 @@
 /*---------------------------------------------------------------------------*/
 #define STRFORMAT_OK 0
 #define STRFORMAT_FAILED 1
+/* Support for dbg-io float formatting */
+#ifdef DBG_IO_CONF_FLOAT
+#define DBG_IO_FLOAT DBG_IO_CONF_FLOAT
+#else
+#define DBG_IO_FLOAT 0
+#endif
 /*---------------------------------------------------------------------------*/
 typedef unsigned int strformat_result;
 /*---------------------------------------------------------------------------*/

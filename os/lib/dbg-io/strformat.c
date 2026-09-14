@@ -409,13 +409,19 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 #ifdef HAVE_DOUBLE
     case 'f':
     case 'F':
+      flags |= CONV_FLOAT | FLOAT_NORMAL;
+      break;
     case 'e':
     case 'E':
+      flags |= CONV_FLOAT | FLOAT_EXPONENT;
+      break;
     case 'g':
     case 'G':
+      flags |= CONV_FLOAT | FLOAT_DEPENDANT;
+      break;
     case 'a':
     case 'A':
-      flags |= CONV_FLOAT;
+      flags |= CONV_FLOAT | FLOAT_HEX;
       break;
 #endif
     case 'c':
@@ -543,6 +549,7 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 
       width += precision_fill;
 
+      /* Handle hex prefix */
       if((flags & (RADIX_MASK | ALTERNATE_FORM))
          == (RADIX_HEX | ALTERNATE_FORM) && uvalue != 0) {
         prefix_len = 2;
@@ -553,6 +560,7 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
         }
       }
 
+      /* handle sign prefixes: '-','+' and ' ' */
       if(flags & SIGNED_YES) {
         if(negative) {
           prefix = "-";
@@ -575,6 +583,7 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 
       field_fill = (minwidth > width) ? minwidth - width : 0;
 
+      /* spaces */
       if((flags & JUSTIFY_MASK) == JUSTIFY_RIGHT) {
         if(flags & PAD_ZERO) {
           precision_fill += field_fill;
@@ -584,11 +593,13 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
         }
       }
 
+      /* prefix */
       if(prefix_len > 0) {
         CHECKCB(ctxt->write_str(ctxt->user_data, prefix, prefix_len));
       }
       written += prefix_len;
 
+      /* leading zeroes */
       CHECKCB(fill_zero(ctxt, precision_fill));
       written += precision_fill;
 
@@ -697,9 +708,132 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       break;
 #ifdef HAVE_DOUBLE
     case CONV_FLOAT:
+#if DBG_IO_FLOAT
+    if((flags & FLOAT_MASK) == FLOAT_NORMAL) /* Only decimal floating point supported */
+    {
+      const char *prefix = 0; /* to store the prefix: '-','+' or ' '*/
+      unsigned int prefix_len = 0; /* prefix length */
+      LARGEST_UNSIGNED ivalue; /* integer part */
+      unsigned int conv_len = 0; /* integer conversion length */
+      char buffer[MAXCHARS]; /* buffer for writing integer part */
+      char *conv_pos = buffer + MAXCHARS;
+      unsigned int width; /* print width */
+      bool print_dot = 0;
+      char pad_char = ' '; /* for padding left or right */
+      double to_add = 0.5; /* for rounding */
+      /* read argument */
+      double fvalue = va_arg(ap, double);
+
+      /* precision and rounding */
+      if (precision < 0) {
+        precision = 6; /* default decimal precision */
+      }
+      width = precision;
+      
+      for(int i = 0; i < precision; i++) {
+        to_add /= 10;
+      }
+      fvalue += (fvalue >= 0 ? to_add : -to_add);
+
+      /* prefix and integer part */
+      if(fvalue < 0) {
+        ivalue = (LARGEST_UNSIGNED)(-fvalue);
+        prefix = "-";
+        prefix_len = 1;
+      } else {
+        switch(flags & POSITIVE_MASK) {
+        case POSITIVE_SPACE:
+          prefix = " ";
+          prefix_len = 1;
+          break;
+        case POSITIVE_PLUS:
+          prefix = "+";
+          prefix_len = 1;
+          break;
+        }
+        /* Integer part */
+        ivalue = (LARGEST_UNSIGNED)(fvalue);
+      }
+      width += prefix_len;
+      
+      /* integer part */
+      if(ivalue > 0) {
+        conv_len = output_uint_decimal(&conv_pos, ivalue);
+      } else { /* ivalue == 0 */
+        conv_len = 1;
+        *--conv_pos = '0';
+      }
+      width += conv_len;
+      
+      if(fvalue < 0) {
+        fvalue = -fvalue;
+      }
+      fvalue -= ivalue;
+
+      /* '.' only if decimal part needed */
+      if (precision > 0) {
+        width += 1;
+        print_dot = true;
+      }
+
+      /* left padding */
+      if(minwidth > width) {
+        if(flags & PAD_ZERO) {
+          pad_char = '0';
+          /* Sign before paddng 0's */
+          CHECKCB(ctxt->write_str(ctxt->user_data, prefix, prefix_len));
+          written += prefix_len;
+          prefix_len = 0;
+        }
+        if((flags & JUSTIFY_MASK) == JUSTIFY_RIGHT) {
+          /* output to the left */
+          for (int i = 0; i < (minwidth - width); i++) {
+            CHECKCB(ctxt->write_str(ctxt->user_data, &pad_char, 1));
+            written ++;
+          }
+        }
+      }
+
+      /* write the prefix */
+      CHECKCB(ctxt->write_str(ctxt->user_data, prefix, prefix_len));
+      written += prefix_len;
+      /* integer part */
+      CHECKCB(ctxt->write_str(ctxt->user_data, conv_pos, conv_len));
+      written += conv_len;
+      /* '.' only if decimal part needed */
+      if (print_dot) {
+        CHECKCB(ctxt->write_str(ctxt->user_data, ".", 1));
+        written++;
+      }
+      /* print the decimal part */      
+      for(int i = 0; i < precision; i++) {
+        LARGEST_UNSIGNED factor = 10;
+        for(int j = 0; j < i; j++) {
+          factor *= 10;
+        }
+        char c = (LARGEST_UNSIGNED)(fvalue*factor) % 10 + '0';
+        CHECKCB(ctxt->write_str(ctxt->user_data, &c, 1));
+      }
+      written += precision;
+
+      /* right padding */
+      if(minwidth > width) {
+        if((flags & JUSTIFY_MASK) == JUSTIFY_LEFT) {
+          /* output spaces to the right */
+          for (int i = 0; i < (minwidth - width); i++) {
+            CHECKCB(ctxt->write_str(ctxt->user_data, &pad_char, 1));
+            written ++;
+          }
+        }
+      }
+    } else {
+      (void)va_arg(ap, double);
+    }
+#else /* DBG_IO_FLOAT */
       /* Float formatting is not implemented, but consume the argument
          to keep the va_list aligned for subsequent arguments. */
       (void)va_arg(ap, double);
+#endif /* DBG_IO_FLOAT */
       break;
 #endif
     }

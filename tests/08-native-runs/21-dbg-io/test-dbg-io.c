@@ -345,10 +345,10 @@ UNIT_TEST(test_float_va_list_consumed)
   UNIT_TEST_BEGIN();
 
   /* %f is not rendered, but the double must be consumed so that %d reads 42 */
-  UNIT_TEST_ASSERT(test_format("42", "%f%d", 3.14, 42));
+  UNIT_TEST_ASSERT(test_format("3.14000042", "%f%d", 3.14, 42));
   UNIT_TEST_ASSERT(test_format("hello", "%e%s", 2.718, "hello"));
   /* Multiple floats followed by an integer */
-  UNIT_TEST_ASSERT(test_format("99", "%g%f%d", 1.0, 2.0, 99));
+  UNIT_TEST_ASSERT(test_format("2.00000099", "%g%f%d", 1.0, 2.0, 99));
 
   UNIT_TEST_END();
 }
@@ -622,6 +622,46 @@ UNIT_TEST(test_edge_cases)
     test_buf[test_buf_pos] = '\0';
     UNIT_TEST_ASSERT(strcmp(test_buf, "abc") == 0);
   }
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(test_float_formats,
+                   "Basic float formatting"); /* TODO: Add rounding tests */
+UNIT_TEST(test_float_formats)
+{
+  UNIT_TEST_BEGIN();
+
+  /* Basic %f */
+  UNIT_TEST_ASSERT(test_format("3.141593", "%f", 3.1415926535));
+  UNIT_TEST_ASSERT(test_format("-3.141593", "%f", -3.1415926535));
+  /* Precision control */
+  UNIT_TEST_ASSERT(test_format("3.14", "%.2f", 3.1415926535));
+  UNIT_TEST_ASSERT(test_format("3", "%.0f", 3.1415926535));
+  UNIT_TEST_ASSERT(test_format("3.1415926535", "%.10f", 3.1415926535));
+  UNIT_TEST_ASSERT(test_format("123.4568", "%.4f", 123.456789));
+  /* Width and alignment */
+  UNIT_TEST_ASSERT(test_format("       3.141593", "%15f", 3.1415926535));
+  UNIT_TEST_ASSERT(test_format("3.141593       ", "%-15f", 3.1415926535));
+  UNIT_TEST_ASSERT(test_format("00000003.141593", "%015f", 3.1415926535));
+  UNIT_TEST_ASSERT(test_format("-0000003.141593", "%015f", -3.1415926535));
+  /* Sign handling */
+  UNIT_TEST_ASSERT(test_format("+3.141593", "%+f", 3.1415926535));
+  UNIT_TEST_ASSERT(test_format("-3.141593", "%+f", -3.1415926535));
+  UNIT_TEST_ASSERT(test_format(" 3.141593", "% f", 3.1415926535));
+  UNIT_TEST_ASSERT(test_format("-3.141593", "% f", -3.1415926535));
+  /* Combined options */
+  UNIT_TEST_ASSERT(test_format("+000003.14", "%+010.2f", 3.1415926535));
+  UNIT_TEST_ASSERT(test_format("-000003.14", "%+010.2f", -3.1415926535));
+  UNIT_TEST_ASSERT(test_format("+3.14     ", "%-+10.2f", 3.1415926535));
+  /* Edge cases */
+  UNIT_TEST_ASSERT(test_format("0.000000", "%f", 0.0));
+  UNIT_TEST_ASSERT(test_format("0", "%.0f", 0.0));
+  UNIT_TEST_ASSERT(test_format("123456789.123457", "%f", 123456789.123456789));
+  UNIT_TEST_ASSERT(test_format("0.0000001235", "%.10f", 0.000000123456));
+  /* Mixed examples */
+  UNIT_TEST_ASSERT(test_format("+0003.1416", "%+#010.4f", 3.1415926535));
+  UNIT_TEST_ASSERT(test_format("-3.1      ", "%- 10.1f", -3.1415926535));
 
   UNIT_TEST_END();
 }
@@ -903,6 +943,7 @@ PROCESS_THREAD(run_tests, ev, data)
   UNIT_TEST_RUN(test_snprintf_basic);
   UNIT_TEST_RUN(test_mixed_formats);
   UNIT_TEST_RUN(test_edge_cases);
+  UNIT_TEST_RUN(test_float_formats);
 
   /* Part 3: printf, sprintf, puts, putchar via dbg backend */
   printf("\n--- Backend integration tests ---\n");
@@ -937,6 +978,7 @@ PROCESS_THREAD(run_tests, ev, data)
      !UNIT_TEST_PASSED(test_snprintf_basic) ||
      !UNIT_TEST_PASSED(test_mixed_formats) ||
      !UNIT_TEST_PASSED(test_edge_cases) ||
+     !UNIT_TEST_PASSED(test_float_formats) ||
      !UNIT_TEST_PASSED(test_printf_via_dbg) ||
      !UNIT_TEST_PASSED(test_sprintf_basic) ||
      !UNIT_TEST_PASSED(test_puts_via_dbg) ||
