@@ -549,7 +549,6 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 
       width += precision_fill;
 
-      /* Handle hex prefix */
       if((flags & (RADIX_MASK | ALTERNATE_FORM))
          == (RADIX_HEX | ALTERNATE_FORM) && uvalue != 0) {
         prefix_len = 2;
@@ -560,7 +559,6 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
         }
       }
 
-      /* handle sign prefixes: '-','+' and ' ' */
       if(flags & SIGNED_YES) {
         if(negative) {
           prefix = "-";
@@ -583,7 +581,6 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 
       field_fill = (minwidth > width) ? minwidth - width : 0;
 
-      /* spaces */
       if((flags & JUSTIFY_MASK) == JUSTIFY_RIGHT) {
         if(flags & PAD_ZERO) {
           precision_fill += field_fill;
@@ -593,13 +590,11 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
         }
       }
 
-      /* prefix */
       if(prefix_len > 0) {
         CHECKCB(ctxt->write_str(ctxt->user_data, prefix, prefix_len));
       }
       written += prefix_len;
 
-      /* leading zeroes */
       CHECKCB(fill_zero(ctxt, precision_fill));
       written += precision_fill;
 
