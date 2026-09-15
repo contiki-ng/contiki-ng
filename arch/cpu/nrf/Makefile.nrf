@@ -67,6 +67,86 @@ NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_uarte.c
 NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_usbreg.c
 NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_ipc.c
 
+# SPI (SPIM) support through the Contiki-NG SPI HAL (os/dev/spi.h). Built
+# by default on the application cores with one SPIM instance that does not
+# collide with the console UART; unused, it costs a few hundred bytes since
+# the linker drops what is not referenced. NRF_WITH_SPI=0 leaves it out.
+#
+# NRF_SPI_INSTANCES lists the nRF SPIM instance ids to enable, in logical
+# controller order, so the first entry becomes controller 0. The id is the
+# number in the peripheral name: SPIM00 is 00, SPIM22 is 22. Ids may be
+# separated by spaces or commas; commas let the list be passed as a single
+# make argument, e.g. NRF_SPI_INSTANCES=00,22.
+ifeq ($(CPU_FAMILY),nrf5340_network)
+  # The network core's only SPIM shares its SERIAL slot with the console
+  # UARTE, and no board in the tree uses SPI there.
+  NRF_WITH_SPI ?= 0
+else
+  NRF_WITH_SPI ?= 1
+endif
+ifeq ($(NRF_WITH_SPI),1)
+  # SPIM instances that exist on each SoC, and a default that does not
+  # collide with the console UART (see arch/cpu/nrf/dev/spi-arch.h).
+  ifeq ($(CPU_FAMILY),nrf52840)
+    NRF_SPI_VALID_IDS := 0 1 2 3
+    NRF_SPI_INSTANCES ?= 0
+  else ifeq ($(CPU_FAMILY),nrf5340_application)
+    NRF_SPI_VALID_IDS := 0 1 2 3 4
+    NRF_SPI_INSTANCES ?= 1
+  else ifeq ($(CPU_FAMILY),nrf54l15)
+    NRF_SPI_VALID_IDS := 00 20 21 22 30
+    NRF_SPI_INSTANCES ?= 00
+  else
+    $(error NRF_WITH_SPI=1 is not supported for CPU_FAMILY=$(CPU_FAMILY))
+  endif
+
+  # Normalize into a private variable rather than reassigning
+  # NRF_SPI_INSTANCES: a value given on the make command line overrides any
+  # assignment made here, which would leave the commas in place.
+  NRF_SPI_COMMA := ,
+  NRF_SPI_IDS := $(subst $(NRF_SPI_COMMA), ,$(NRF_SPI_INSTANCES))
+
+  ifeq ($(words $(NRF_SPI_IDS)),0)
+    $(error NRF_WITH_SPI=1 but NRF_SPI_INSTANCES is empty)
+  endif
+  ifneq ($(filter-out 1 2 3,$(words $(NRF_SPI_IDS))),)
+    $(error NRF_SPI_INSTANCES supports at most 3 instances, got $(NRF_SPI_IDS))
+  endif
+  ifneq ($(filter-out $(NRF_SPI_VALID_IDS),$(NRF_SPI_IDS)),)
+    $(error NRF_SPI_INSTANCES=$(NRF_SPI_IDS): $(CPU_FAMILY) has SPIM instances $(NRF_SPI_VALID_IDS))
+  endif
+  # Each instance backs one logical controller. Listing one twice would give
+  # the two controllers separate locks over the same peripheral, so nothing
+  # serialises them and the second nrfx_spim_init() fails as already done.
+  ifneq ($(words $(sort $(NRF_SPI_IDS))),$(words $(NRF_SPI_IDS)))
+    $(error NRF_SPI_INSTANCES=$(NRF_SPI_IDS): each SPIM instance can back only one controller)
+  endif
+
+  CONTIKI_CPU_SOURCEFILES += spi-arch.c
+  NRFX_C_SRCS += $(NRFX_ROOT)/drivers/src/nrfx_spim.c
+
+  CFLAGS += -DNRFX_SPIM_ENABLED=1
+  CFLAGS += $(foreach i,$(NRF_SPI_IDS),-DNRFX_SPIM$(i)_ENABLED=1)
+
+  # nRF52840 anomaly 198: SPIM3 transmit data can be silently corrupted.
+  # nrfx carries the workaround but defaults it off, and SPIM3 is the only
+  # instance on this SoC that reaches 16 and 32 Mbps -- so it is exactly the
+  # one picked for a fast device. Enable it whenever SPIM3 is in use.
+  ifneq ($(filter 3,$(NRF_SPI_IDS)),)
+    ifeq ($(CPU_FAMILY),nrf52840)
+      CFLAGS += -DNRFX_SPIM3_NRF52840_ANOMALY_198_WORKAROUND_ENABLED=1
+    endif
+  endif
+  CFLAGS += -DNRF_SPI_CONF_CONTROLLER_COUNT=$(words $(NRF_SPI_IDS))
+  CFLAGS += -DNRF_SPI_CONF_CONTROLLER0_ID=$(word 1,$(NRF_SPI_IDS))
+  ifneq ($(word 2,$(NRF_SPI_IDS)),)
+    CFLAGS += -DNRF_SPI_CONF_CONTROLLER1_ID=$(word 2,$(NRF_SPI_IDS))
+  endif
+  ifneq ($(word 3,$(NRF_SPI_IDS)),)
+    CFLAGS += -DNRF_SPI_CONF_CONTROLLER2_ID=$(word 3,$(NRF_SPI_IDS))
+  endif
+endif
+
 NRFX_C_SRCS += $(NRFX_ROOT)/soc/nrfx_atomic.c
 
 NRFX_C_SRCS += $(NRFX_ROOT)/helpers/nrfx_flag32_allocator.c
@@ -80,6 +160,7 @@ CONTIKI_SOURCEFILES += $(notdir $(NRFX_C_SRCS))
 CONTIKI_SOURCEFILES += $(notdir $(NRFX_ASM_SRCS))
 
 $(OBJECTDIR)/nrfx_uarte.o: CFLAGS += -Wno-error=unused-variable
+$(OBJECTDIR)/nrfx_spim.o: CFLAGS += -Wno-error=unused-variable
 
 #includes common to all targets
 NRFX_INC_PATHS += .

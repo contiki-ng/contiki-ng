@@ -44,6 +44,20 @@
 #ifndef NRF5340_APPLICATION_CONF_H_
 #define NRF5340_APPLICATION_CONF_H_
 /*---------------------------------------------------------------------------*/
+/*
+ * Enable the CPU code/data cache at boot. The application core executes
+ * from wait-stated flash behind the CACHE peripheral, which is disabled
+ * at reset. Set 0 to run uncached, e.g. for cycle-exact profiling. With
+ * TrustZone the cache is a secure-only peripheral, so this must be set
+ * when building the secure world; the normal world cannot change it. Do
+ * this with `make TRUSTZONE=1 DEFINES=NRF_CONF_ICACHE_ENABLE=0`, since an
+ * application's own project-conf.h does not reach the recursively-built
+ * secure world.
+ */
+#ifndef NRF_CONF_ICACHE_ENABLE
+#define NRF_CONF_ICACHE_ENABLE 1
+#endif
+/*---------------------------------------------------------------------------*/
 #endif /* NRF5340_APPLICATION_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /** 

@@ -46,17 +46,7 @@
 #include <string.h>
 
 linkaddr_t linkaddr_node_addr;
-#if LINKADDR_SIZE == 2
-const linkaddr_t linkaddr_null = { { 0, 0 } };
-#else /*LINKADDR_SIZE == 2*/
-#if LINKADDR_SIZE == 8
-const linkaddr_t linkaddr_null = { { 0, 0, 0, 0, 0, 0, 0, 0 } };
-#endif /*LINKADDR_SIZE == 8*/
-#if LINKADDR_SIZE == 6
-const linkaddr_t linkaddr_null = { { 0, 0, 0, 0, 0, 0 } };
-#endif /*LINKADDR_SIZE == 6*/
-#endif /*LINKADDR_SIZE == 2*/
-
+const linkaddr_t linkaddr_null;
 
 /*---------------------------------------------------------------------------*/
 void
@@ -68,7 +58,7 @@ linkaddr_copy(linkaddr_t *dest, const linkaddr_t *src)
 bool
 linkaddr_cmp(const linkaddr_t *addr1, const linkaddr_t *addr2)
 {
-	return (memcmp(addr1, addr2, LINKADDR_SIZE) == 0);
+	return !memcmp(addr1, addr2, LINKADDR_SIZE);
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

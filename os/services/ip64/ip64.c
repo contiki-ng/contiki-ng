@@ -370,11 +370,26 @@ ip64_6to4(const uint8_t *ipv6packet, const uint16_t ipv6packet_len,
   v6hdr = (struct ipv6_hdr *)ipv6packet;
   v4hdr = (struct ipv4_hdr *)resultpacket;
 
-  if((v6hdr->len[0] << 8) + v6hdr->len[1] <= ipv6packet_len) {
+  if(ipv6packet_len < IPV6_HDRLEN) {
+    LOG_WARN("6to4: Packet shorter (%u) than an IPv6 header, dropping\n",
+        ipv6packet_len);
+    return 0;
+  }
+
+  /* The length field counts the bytes after the header, so it has to fit in
+     what was received after the header, not in the whole packet. */
+  if((v6hdr->len[0] << 8) + v6hdr->len[1] <= ipv6packet_len - IPV6_HDRLEN) {
     ipv6len = (v6hdr->len[0] << 8) + v6hdr->len[1] + IPV6_HDRLEN;
   } else {
     LOG_WARN("6to4: Packet smaller (%u) than in IPv6 header (%u), dropping\n",
         ipv6packet_len, (v6hdr->len[0] << 8) + v6hdr->len[1]);
+    return 0;
+  }
+
+  /* Make sure that the resulting packet fits in the ip64 packet buffer. If
+     not, we drop it, as ip64_4to6() does for the other direction. */
+  if(ipv6len - IPV6_HDRLEN + IPV4_HDRLEN > BUFSIZE) {
+    LOG_WARN("6to4: Packet too big, dropping\n");
     return 0;
   }
 
@@ -436,13 +451,18 @@ ip64_6to4(const uint8_t *ipv6packet, const uint16_t ipv6packet_len,
     LOG_DBG("6to4: UDP header\n");
     v4hdr->proto = IP_PROTO_UDP;
 
+    if(ipv6len < IPV6_HDRLEN + sizeof(struct udp_hdr)) {
+      LOG_WARN("6to4: UDP packet shorter than its header, dropping\n");
+      return 0;
+    }
+
     /* Check if this is a DNS request. If so, we should rewrite it
        with the DNS64 module. */
     if(udphdr->destport == UIP_HTONS(DNS_PORT)) {
       ip64_dns64_6to4((uint8_t *)v6hdr + IPV6_HDRLEN + sizeof(struct udp_hdr),
                       ipv6len - IPV6_HDRLEN - sizeof(struct udp_hdr),
                       (uint8_t *)udphdr + sizeof(struct udp_hdr),
-                      BUFSIZE - IPV4_HDRLEN - sizeof(struct udp_hdr));
+                      ipv6len - IPV6_HDRLEN - sizeof(struct udp_hdr));
     }
     /* Compute and check the UDP checksum - since we're going to
        recompute it ourselves, we must ensure that it was correct in
@@ -722,6 +742,11 @@ ip64_4to6(const uint8_t *ipv4packet, const uint16_t ipv4packet_len,
   switch(v4hdr->proto) {
   case IP_PROTO_UDP:
     v6hdr->nxthdr = IP_PROTO_UDP;
+    if(ipv4len < IPV4_HDRLEN + sizeof(struct udp_hdr)) {
+      LOG_WARN("4to6: UDP packet shorter than its header, dropping\n");
+      return 0;
+    }
+
     /* Check if this is a DNS request. If so, we should rewrite it
        with the DNS64 module. */
     if(udphdr->srcport == UIP_HTONS(DNS_PORT)) {
@@ -730,7 +755,11 @@ ip64_4to6(const uint8_t *ipv4packet, const uint16_t ipv4packet_len,
       len = ip64_dns64_4to6((uint8_t *)v4hdr + IPV4_HDRLEN + sizeof(struct udp_hdr),
                             ipv4len - IPV4_HDRLEN - sizeof(struct udp_hdr),
                             (uint8_t *)v6hdr + IPV6_HDRLEN + sizeof(struct udp_hdr),
-                            ipv6_packet_len - sizeof(struct udp_hdr));
+                            BUFSIZE - IPV6_HDRLEN - sizeof(struct udp_hdr));
+      if(len == IP64_DNS64_DROP) {
+        LOG_WARN("4to6: Failed to translate the DNS reply, dropping\n");
+        return 0;
+      }
       ipv6_packet_len = len + sizeof(struct udp_hdr);
       v6hdr->len[0] = ipv6_packet_len >> 8;
       v6hdr->len[1] = ipv6_packet_len & 0xff;

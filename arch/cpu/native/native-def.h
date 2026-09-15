@@ -35,5 +35,10 @@
 #define GPIO_HAL_CONF_ARCH_SW_TOGGLE     1
 #define GPIO_HAL_CONF_PORT_PIN_NUMBERING 0
 /*---------------------------------------------------------------------------*/
+/* A cycle counter on the process CPU-time clock, see os/sys/cycles.h. */
+#ifndef CYCLES_CONF_ARCH_SUPPORTED
+#define CYCLES_CONF_ARCH_SUPPORTED       1
+#endif /* CYCLES_CONF_ARCH_SUPPORTED */
+/*---------------------------------------------------------------------------*/
 #endif /* NATIVE_DEF_H_ */
 /*---------------------------------------------------------------------------*/

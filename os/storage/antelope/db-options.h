@@ -134,6 +134,13 @@
 #define AQL_ATTRIBUTE_LIMIT    		5
 #endif /* AQL_ATTRIBUTE_LIMIT */
 
+/* The maximum number of values buffered when computing a MEDIAN aggregate.
+   A query using MEDIAN over more matching values than this fails with a
+   limit error. At most one MEDIAN aggregate may be used per query. */
+#ifndef DB_MEDIAN_POOL_SIZE
+#define DB_MEDIAN_POOL_SIZE    		16
+#endif /* DB_MEDIAN_POOL_SIZE */
+
 /*----------------------------------------------------------------------------*/
 
 /*
@@ -194,16 +201,6 @@
 #ifndef DB_INDEX_COST
 #define DB_INDEX_COST			64
 #endif /* DB_INDEX_COST */
-
-/* The maximum number of hash table indexes. */
-#ifndef DB_MEMHASH_INDEX_LIMIT
-#define DB_MEMHASH_INDEX_LIMIT  	1
-#endif /* DB_MEMHASH_INDEX_LIMIT */
-
-/* The default hash table index size. */
-#ifndef DB_MEMHASH_TABLE_SIZE
-#define DB_MEMHASH_TABLE_SIZE		61
-#endif /* DB_MEMHASH_TABLE_SIZE */
 
 /* The maximum number of Maxheap indexes. */
 #ifndef DB_HEAP_INDEX_LIMIT

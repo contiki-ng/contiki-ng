@@ -380,12 +380,6 @@ spu_periph_init_cfg(void)
    */
   gpio_pin_select(PIN_XL1, GPIO_PIN_SEL_PERIPHERAL);
   gpio_pin_select(PIN_XL2, GPIO_PIN_SEL_PERIPHERAL);
-
-  /*
-   * Enable the instruction and data cache (this can be done only from secure
-   * code; that's why it is placed here).
-   */
-  NRF_CACHE->ENABLE = CACHE_ENABLE_ENABLE_Enabled;
 }
 /******************************************************************************/
 void

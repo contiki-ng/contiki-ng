@@ -41,6 +41,16 @@
 #define ARM_DEF_
 /*---------------------------------------------------------------------------*/
 #include <stdint.h>
+
+/*
+ * The Cortex-M3, M4 and M33 cores that Contiki-NG runs on all have the
+ * DWT cycle counter, see os/sys/cycles.h. A Cortex-M0, M0+ or M23 port
+ * has no CYCCNT and has to set this to 0, as does an application that
+ * wants the DWT left to a debugger.
+ */
+#ifndef CYCLES_CONF_ARCH_SUPPORTED
+#define CYCLES_CONF_ARCH_SUPPORTED 1
+#endif /* CYCLES_CONF_ARCH_SUPPORTED */
 /*---------------------------------------------------------------------------*/
 /**
  * \name Macros and typedefs

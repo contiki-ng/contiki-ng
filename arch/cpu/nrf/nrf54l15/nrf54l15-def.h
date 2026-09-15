@@ -15,4 +15,18 @@
 #define NRF_HAS_UARTE   1
 #define NRF_HAS_USB     0
 
+/* nrf_802154 acknowledges received frames in hardware within the
+ * turnaround time; a software ACK from CSMA would only follow late. */
+#ifndef CSMA_CONF_SEND_SOFT_ACK
+#define CSMA_CONF_SEND_SOFT_ACK 0
+#endif
+
+/* SystemInit selects the 128 MHz PLL unless the application asks for
+   another frequency, see os/sys/cycles.h. */
+#ifdef NRF_CONFIG_CPU_FREQ_MHZ
+#define CYCLES_CONF_HZ (NRF_CONFIG_CPU_FREQ_MHZ * 1000000)
+#else
+#define CYCLES_CONF_HZ 128000000
+#endif
+
 #endif /* NRF54L15_DEF_H_ */

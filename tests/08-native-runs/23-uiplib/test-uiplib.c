@@ -367,6 +367,7 @@ PROCESS_THREAD(run_tests, ev, data)
 {
   PROCESS_BEGIN();
 
+  printf("Run unit-test\n");
   printf("\nRunning uiplib unit tests\n");
 
   UNIT_TEST_RUN(test_parse_loopback);

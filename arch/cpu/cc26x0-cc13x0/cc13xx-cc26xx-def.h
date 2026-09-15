@@ -34,6 +34,12 @@
 /*---------------------------------------------------------------------------*/
 #include "cm3/cm3-def.h"
 /*---------------------------------------------------------------------------*/
+/*
+ * The CPU runs at 48 MHz from either high-frequency oscillator, see
+ * os/sys/cycles.h.
+ */
+#define CYCLES_CONF_HZ 48000000
+/*---------------------------------------------------------------------------*/
 /* TSCH related defines */
 
 /* 2 bytes header, 4 bytes CRC */

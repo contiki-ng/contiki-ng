@@ -63,8 +63,30 @@
 #endif
 #endif
 /*---------------------------------------------------------------------------*/
+/*
+ * The network core acknowledges received frames itself: the IPC MAC sends
+ * a software ACK, or nrf_802154 auto-acknowledges when built with
+ * NRF_802154=1. A CSMA software ACK relayed over IPC would be a second,
+ * late ACK for the same frame, and CSMA's attempt to disable the radio's
+ * auto-ACK would switch off the nrf_802154 one.
+ */
+#ifndef CSMA_CONF_SEND_SOFT_ACK
+#define CSMA_CONF_SEND_SOFT_ACK    0
+#endif /* CSMA_CONF_SEND_SOFT_ACK */
+/*---------------------------------------------------------------------------*/
 #define NRF_HAS_USB     1
 #define NRF_HAS_UARTE   1
+/*---------------------------------------------------------------------------*/
+/*
+ * This core is the one whose rate is not fixed: SystemCoreClock is
+ * 128 MHz shifted right by HFCLKCTRL.HCLK. SystemInit() leaves HFCLKCTRL
+ * at Div2 as the errata 42 workaround, so a stock boot runs at 64 MHz.
+ * An application that selects 128 MHz has to override this, or readings
+ * come out half of what they should be. See os/sys/cycles.h.
+ */
+#ifndef CYCLES_CONF_HZ
+#define CYCLES_CONF_HZ 64000000
+#endif /* CYCLES_CONF_HZ */
 /*---------------------------------------------------------------------------*/
 #endif /* NRF5340_APPLICATION_DEF_H_ */
 /*---------------------------------------------------------------------------*/

@@ -44,6 +44,15 @@
 #ifndef NRF5340_NETWORK_CONF_H_
 #define NRF5340_NETWORK_CONF_H_
 /*---------------------------------------------------------------------------*/
+/*
+ * Enable the NVMC instruction cache at boot. The CPU executes from
+ * wait-stated flash behind an I-code cache in the NVMC, which is disabled
+ * at reset. Set 0 to run uncached, e.g. for cycle-exact profiling.
+ */
+#ifndef NRF_CONF_ICACHE_ENABLE
+#define NRF_CONF_ICACHE_ENABLE 1
+#endif
+/*---------------------------------------------------------------------------*/
 #endif /* NRF5340_NETWORK_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /** 

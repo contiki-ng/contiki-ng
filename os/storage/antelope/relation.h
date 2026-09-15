@@ -66,7 +66,6 @@ struct relation {
   size_t row_length;
   attribute_id_t attribute_count;
   tuple_id_t cardinality;
-  tuple_id_t next_row;
   db_storage_id_t tuple_storage;
   db_direction_t dir;
   uint8_t references;

@@ -25,6 +25,13 @@ CFLAGS += -DNRFX_DPPI_ENABLED=1
 # -- nrf_802154 acknowledges in hardware, so disable the IPC MAC software ACK. --
 CFLAGS += -DNRF_IPC_MAC_CONF_HW_AUTOACK=1
 
+# -- A stand-alone CSMA stack on this core must rely on the hardware ACK as
+#    well: nrf_802154 never delivers ACK frames to the MAC, so CSMA must not
+#    send soft ACKs (its init would also switch the auto-ACK off) and must
+#    trust the transmit verdict instead of polling for ACK frames. --
+CFLAGS += -DCSMA_CONF_SEND_SOFT_ACK=0
+CFLAGS += -DCSMA_CONF_USE_RADIO_ACK=1
+
 # -- Include paths: our glue/config first, then the library. --
 CFLAGS += -I$(NRF802154_GLUE)
 CFLAGS += -I$(NRF_802154_ROOT)/common/include

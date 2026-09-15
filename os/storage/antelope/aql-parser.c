@@ -652,9 +652,6 @@ PARSER_TOKEN(index_type)
   case MAXHEAP:
     type = INDEX_MAXHEAP;
     break;
-  case MEMHASH:
-    type = INDEX_MEMHASH;
-    break;
   default:
     return NONE;
   };

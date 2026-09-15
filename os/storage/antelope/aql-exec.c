@@ -169,6 +169,8 @@ aql_execute(db_handle_t *handle, aql_adt_t *adt)
     handle->right_rel = relation_load(adt->relations[first_rel_arg + 1]);
     if(handle->right_rel == NULL) {
       relation_release(handle->left_rel);
+      /* Cleared so db_free() does not release it again. */
+      handle->left_rel = NULL;
       break;
     }
     result = relation_join(handle, adt);
@@ -181,6 +183,14 @@ aql_execute(db_handle_t *handle, aql_adt_t *adt)
   if(rel != NULL) {
     if(handle == NULL || !(handle->flags & DB_HANDLE_FLAG_PROCESSING)) {
       relation_release(rel);
+      if(handle != NULL) {
+        /*
+         * relation_select() records the source relation in handle->rel.
+         * Clear it so that a subsequent db_free() does not release the
+         * same relation a second time.
+         */
+        handle->rel = NULL;
+      }
     }
   }
 
