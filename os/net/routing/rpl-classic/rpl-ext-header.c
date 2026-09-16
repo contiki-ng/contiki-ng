@@ -113,7 +113,7 @@ rpl_ext_header_hbh_update(uint8_t *ext_buf, int opt_offset)
     return 0;
   }
 
-  if(!instance->current_dag->joined) {
+  if(instance->current_dag == NULL || !instance->current_dag->joined) {
     LOG_ERR("No DAG in the instance\n");
     return 0;
   }
@@ -536,7 +536,8 @@ update_hbh_header(void)
     }
 
     instance = rpl_get_instance(rpl_opt->instance);
-    if(instance == NULL || !instance->used || !instance->current_dag->joined) {
+    if(instance == NULL || !instance->used
+       || instance->current_dag == NULL || !instance->current_dag->joined) {
       LOG_ERR("Unable to add/update hop-by-hop extension header: incorrect instance\n");
       return 0; /* Drop */
     }
