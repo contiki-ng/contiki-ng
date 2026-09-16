@@ -42,6 +42,7 @@
  */
 
 #include "coap-engine.h"
+#include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -73,6 +74,27 @@
   strpos += tmplen
 
 /*---------------------------------------------------------------------------*/
+#if COAP_LINK_FORMAT_FILTERING
+/*
+ * Find the first occurrence of the first substr_len bytes of substr in the
+ * NUL-terminated string. The substrings searched for are parts of the
+ * Uri-Query option, such as the attribute name before '=' or the value
+ * without its last character. strstr() would need them NUL-terminated,
+ * which would mean writing into the received message.
+ */
+static const char *
+find_substring(const char *string, const char *substr, size_t substr_len)
+{
+  for(; *string != '\0'; string++) {
+    if(strncmp(string, substr, substr_len) == 0) {
+      return string;
+    }
+  }
+
+  return NULL;
+}
+#endif /* COAP_LINK_FORMAT_FILTERING */
+/*---------------------------------------------------------------------------*/
 /*- Resource Handlers -------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 static void
@@ -91,27 +113,61 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
   const char *attrib = NULL;
   const char *found = NULL;
   const char *end = NULL;
-  char *value = NULL;
+  const char *value = NULL;
+  const char *separator = NULL;
+  size_t name_len = 0;
+  /* The value is matched without its last character, which is compared on
+     its own so that a '*' there matches anything. */
+  size_t prefix_len = 0;
+  bool at_url_start = false;
+  bool is_href = false;
   char lastchar = '\0';
   int len = coap_get_header_uri_query(request, &filter);
 
   if(len) {
-    value = strchr(filter, '=');
-    value[0] = '\0';
-    ++value;
-    len -= strlen(filter) + 1;
+    /*
+     * The filter is compared against NUL-terminated strings, so a NUL
+     * byte in it would end a match before the whole filter was compared.
+     */
+    if(memchr(filter, '\0', len) != NULL) {
+      LOG_WARN("Filter with a NUL byte\n");
+      coap_set_status_code(response, BAD_REQUEST_4_00);
+      return;
+    }
 
-    LOG_DBG("Filter %s = ", filter);
+    separator = memchr(filter, '=', len);
+    if(separator == NULL || separator + 1 >= filter + len) {
+      /* A filter is a name, an equals sign and a value. */
+      LOG_WARN("Filter without a value\n");
+      coap_set_status_code(response, BAD_REQUEST_4_00);
+      return;
+    }
+
+    name_len = separator - filter;
+    value = separator + 1;
+    len -= name_len + 1;
+
+    LOG_DBG("Filter ");
+    LOG_DBG_COAP_STRING(filter, name_len);
+    LOG_DBG_(" = ");
     LOG_DBG_COAP_STRING(value, len);
     LOG_DBG_("\n");
 
-    if(strcmp(filter, "href") == 0 && value[0] == '/') {
+    is_href = name_len == 4 && memcmp(filter, "href", 4) == 0;
+    if(is_href && value[0] == '/') {
       ++value;
       --len;
+      at_url_start = true;
+    }
+
+    if(len == 0) {
+      LOG_WARN("Filter with an empty value\n");
+      coap_set_status_code(response, BAD_REQUEST_4_00);
+      return;
     }
 
     lastchar = value[len - 1];
-    value[len - 1] = '\0';
+    prefix_len = len - 1;
   }
 #endif /* COAP_LINK_FORMAT_FILTERING */
 
@@ -120,31 +176,32 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
 #if COAP_LINK_FORMAT_FILTERING
     /* Filtering */
     if(len) {
-      if(strcmp(filter, "href") == 0) {
-        attrib = strstr(resource->url, value);
-        if(attrib == NULL || (value[-1] == '/' && attrib != resource->url)) {
+      if(is_href) {
+        attrib = find_substring(resource->url, value, prefix_len);
+        if(attrib == NULL || (at_url_start && attrib != resource->url)) {
           continue;
         }
         end = attrib + strlen(attrib);
       } else if(resource->attributes != NULL) {
-        attrib = strstr(resource->attributes, filter);
+        attrib = find_substring(resource->attributes, filter, name_len);
         if(attrib == NULL
-           || (attrib[strlen(filter)] != '='
-               && attrib[strlen(filter)] != '"')) {
+           || (attrib[name_len] != '=' && attrib[name_len] != '"')) {
           continue;
         }
-        attrib += strlen(filter) + 2;
+        attrib += name_len + 2;
         end = strchr(attrib, '"');
+      } else {
+        continue;
       }
 
-      LOG_DBG("Filter: res has attrib %s (%s)\n", attrib, value);
+      LOG_DBG("Filter: res has attrib %s\n", attrib);
       found = attrib;
-      while((found = strstr(found, value)) != NULL) {
+      while((found = find_substring(found, value, prefix_len)) != NULL) {
         if(found > end) {
           found = NULL;
           break;
         }
-        if(lastchar == found[len - 1] || lastchar == '*') {
+        if(lastchar == found[prefix_len] || lastchar == '*') {
           break;
         }
         ++found;
@@ -153,8 +210,8 @@ well_known_core_get_handler(coap_message_t *request, coap_message_t *response,
         continue;
       }
       LOG_DBG("Filter: res has prefix %s\n", found);
-      if(lastchar != '*'
-         && (found[len] != '"' && found[len] != ' ' && found[len] != '\0')) {
+      if(lastchar != '*' && found[prefix_len + 1] != '"'
+         && found[prefix_len + 1] != ' ' && found[prefix_len + 1] != '\0') {
         continue;
       }
       LOG_DBG("Filter: res has match\n");
