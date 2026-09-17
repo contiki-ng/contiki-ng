@@ -89,6 +89,17 @@
 #define RPL_OPTION_PREFIX_INFO           8
 #define RPL_OPTION_TARGET_DESC           9
 
+/*
+ * Smallest size, in bytes, of a target or transit information option,
+ * including the two-byte option header. The target prefix and the transit
+ * parent address follow these fields and are both optional.
+ */
+#define RPL_DAO_TARGET_OPTION_MIN_LEN    4
+#define RPL_DAO_TRANSIT_OPTION_MIN_LEN   6
+
+/* Size, in bytes, of the DAO ACK base object. */
+#define RPL_DAO_ACK_LEN                  4
+
 #define RPL_DAO_K_FLAG                   0x80 /* DAO ACK requested */
 #define RPL_DAO_D_FLAG                   0x40 /* DODAG ID present */
 
