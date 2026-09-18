@@ -32,7 +32,8 @@
 #include "contiki.h"
 
 #include <string.h>
-#include <strformat.h>
+#include "strformat.h"
+#include <float.h>
 /*---------------------------------------------------------------------------*/
 #define HAVE_DOUBLE
 #define HAVE_LONGLONG
@@ -55,10 +56,6 @@
 
 #ifndef POINTER_INT
 #define POINTER_INT uintptr_t
-#endif
-
-#ifndef BANKERS_ROUNDING
-#define BANKERS_ROUNDING 0
 #endif
 /*---------------------------------------------------------------------------*/
 typedef uint32_t FormatFlags;
@@ -712,17 +709,17 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
     {
       const char *prefix = 0; /* to store the prefix: '-','+' or ' '*/
       unsigned int prefix_len = 0; /* prefix length */
-      LARGEST_UNSIGNED ivalue; /* integer part */
-      unsigned int conv_len = 0; /* integer conversion length */
-      char buffer[MAXCHARS]; /* buffer for writing integer part */
-      char *conv_pos = buffer + MAXCHARS;
       unsigned int width; /* print width */
       bool print_dot = 0;
-      char pad_char = ' '; /* for padding left or right */
       double to_add = 0.5; /* for rounding */
+      char c;
+      double power = 10.0;
       /* read argument */
       double fvalue = va_arg(ap, double);
-      double fvalue2 = fvalue;
+      double int_temp;
+      double scale = 1.0;
+      int num_int_digits = 1;
+      int digit;
 
       /* precision and rounding */
       if (precision < 0) {
@@ -730,17 +727,17 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       }
       width = precision;
       
-      /* This makes sure we round to nearest. Banker's rounding rule is implemented separately */
+      /* Round to nearest: add/subtract 0.5 / 10^precision before integer extraction */
       for(int i = 0; i < precision; i++) {
         to_add /= 10;
       }
-      fvalue2 += (fvalue >= 0 ? to_add : -to_add);
+      fvalue += (fvalue >= 0 ? to_add : -to_add);
 
       /* prefix and integer part */
-      if(fvalue2 < 0) {
-        ivalue = (LARGEST_UNSIGNED)(-fvalue2);
+      if(fvalue < 0) {
         prefix = "-";
         prefix_len = 1;
+        fvalue = -fvalue;
       } else {
         switch(flags & POSITIVE_MASK) {
         case POSITIVE_SPACE:
@@ -752,31 +749,18 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
           prefix_len = 1;
           break;
         }
-        /* Integer part */
-        ivalue = (LARGEST_UNSIGNED)(fvalue2);
       }
       width += prefix_len;
-      
-      /* work with positive numbers from now on */
-      if(fvalue2 < 0) {
-        fvalue2 = -fvalue2;
+
+      /* Extract integer digits using floating-point arithmetic */
+      /* Count integer digits */
+      int_temp = fvalue;
+      while(int_temp >= 10.0) {
+        int_temp /= 10.0;
+        num_int_digits++;
       }
 
-#if BANKERS_ROUNDING
-      /* banker's rounding only implemented for precision 0 */
-      if(fvalue2 == ivalue && ivalue % 2 == 1) {
-        ivalue--;
-      }
-#endif /* BANKERS_ROUNDING */
-
-      /* integer part */
-      if(ivalue > 0) {
-        conv_len = output_uint_decimal(&conv_pos, ivalue);
-      } else { /* ivalue == 0 */
-        conv_len = 1;
-        *--conv_pos = '0';
-      }
-      width += conv_len;
+      width += num_int_digits;
 
       /* '.' only if decimal part needed */
       if (precision > 0) {
@@ -787,18 +771,19 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       /* left padding */
       if(minwidth > width) {
         if(flags & PAD_ZERO) {
-          pad_char = '0';
-          /* Sign before paddng 0's */
+          /* Sign before padding 0's */
           CHECKCB(ctxt->write_str(ctxt->user_data, prefix, prefix_len));
           written += prefix_len;
           prefix_len = 0;
         }
         if((flags & JUSTIFY_MASK) == JUSTIFY_RIGHT) {
-          /* output pad char to the left */ ///<-- TODO: USE fill_zero or fill_space, remove pad_char usage
-          for (int i = 0; i < (minwidth - width); i++) {
-            CHECKCB(ctxt->write_str(ctxt->user_data, &pad_char, 1));
-            written ++;
+          /* output pad char to the left */
+          if(flags & PAD_ZERO) {
+            fill_zero(ctxt, minwidth - width);
+          } else {
+            fill_space(ctxt, minwidth - width);
           }
+          written += minwidth - width;
         }
       }
 
@@ -808,34 +793,43 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
         written += prefix_len;
       }
       /* integer part */
-      CHECKCB(ctxt->write_str(ctxt->user_data, conv_pos, conv_len));
-      written += conv_len;
+      /* Extract digits from most to least significant */
+      for(int i = 0; i < num_int_digits - 1; i++) {
+        scale *= 10.0;
+      }
+      int_temp = fvalue;
+      for(int i = 0; i < num_int_digits; i++) {
+        digit = (int)(int_temp / scale);
+        c = digit + '0';
+        CHECKCB(ctxt->write_str(ctxt->user_data, &c, 1));
+        written++;
+        int_temp -= digit * scale;
+        scale /= 10.0;
+      }
       /* '.' only if decimal part needed */
       if (print_dot) {
         CHECKCB(ctxt->write_str(ctxt->user_data, ".", 1));
         written++;
       }
       /* write the decimal part */
-      LARGEST_UNSIGNED factor = 10;
-      char c = '\0';
-      for(int i = 0; i < precision; i++) {
-        factor = 10;
-        for(int j = 0; j < i; j++) {
-          factor *= 10;
+      if(precision > 0) {
+        for(int i = 0; i < precision; i++) {
+          c = (LARGEST_UNSIGNED)(int_temp * power) % 10 + '0';
+          CHECKCB(ctxt->write_str(ctxt->user_data, &c, 1));
+          power *= 10.0;
         }
-        c = (LARGEST_UNSIGNED)(fvalue2*factor) % 10 + '0';
-        CHECKCB(ctxt->write_str(ctxt->user_data, &c, 1));
+        written += precision;
       }
-      written += precision;
 
       /* right padding */
       if(minwidth > width) {
         if((flags & JUSTIFY_MASK) == JUSTIFY_LEFT) {
-          /* output pad char to the right */ ///<-- TODO: USE fill_zero or fill_space, remove pad_char usage
-          for (int i = 0; i < (minwidth - width); i++) {
-            CHECKCB(ctxt->write_str(ctxt->user_data, &pad_char, 1));
-            written++;
+          if(flags & PAD_ZERO) {
+            fill_zero(ctxt, minwidth - width);
+          } else {
+            fill_space(ctxt, minwidth - width);
           }
+          written += minwidth - width;
         }
       }
     } else {

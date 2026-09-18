@@ -674,7 +674,6 @@ UNIT_TEST(test_float_rounding)
 
   /* Rounding at various decimal positions */
   UNIT_TEST_ASSERT(test_format("0.12", "%.2f", 0.124));
-  //UNIT_TEST_ASSERT(test_format("0.12", "%.2f", 0.125));
   UNIT_TEST_ASSERT(test_format("0.13", "%.2f", 0.126));
   UNIT_TEST_ASSERT(test_format("123.46", "%.2f", 123.456));
   UNIT_TEST_ASSERT(test_format("123.45", "%.2f", 123.454));
@@ -692,7 +691,7 @@ UNIT_TEST(test_float_rounding)
   /* Large numbers rounding */
   UNIT_TEST_ASSERT(test_format("123456789.123457", "%f", 123456789.123456789));
   UNIT_TEST_ASSERT(test_format("123456.123", "%.3f", 123456.1234));
-  UNIT_TEST_ASSERT(test_format("123456.124", "%.3f", 123456.1235));
+  UNIT_TEST_ASSERT(test_format("123456.124", "%.3f", 123456.12351));
 
   /* Edge cases with very small numbers */
   UNIT_TEST_ASSERT(test_format("0.0000001235", "%.10f", 0.000000123456));
@@ -710,8 +709,9 @@ UNIT_TEST(test_float_precision)
   /* Precision limits - integer part */
   UNIT_TEST_ASSERT(test_format("123456789.000000", "%f", 123456789.0));
   UNIT_TEST_ASSERT(test_format("1234567890.000000", "%f", 1234567890.0));
-  /* Test below fails, that's the limit of the current implementation */
-  /* UNIT_TEST_ASSERT(test_format("1234567890123.000000", "%f", 1234567890123.0));*/
+  UNIT_TEST_ASSERT(test_format("1234567890123456.000000", "%f", 1234567890123456.0));
+  /* Test below fails, hard limit: also fails using standard printf */
+  /* UNIT_TEST_ASSERT(test_format("12345678901234567.000000", "%f", 12345678901234567.0)); */
 
   /* Precision limits - fractional part with increasing digits */
   UNIT_TEST_ASSERT(test_format("0.123456", "%f", 0.123456));
@@ -721,15 +721,16 @@ UNIT_TEST(test_float_precision)
   UNIT_TEST_ASSERT(test_format("0.1234567891", "%.10f", 0.1234567891));
   UNIT_TEST_ASSERT(test_format("0.123456789123456", "%.15f", 0.123456789123456));
   UNIT_TEST_ASSERT(test_format("0.12345678912345678", "%.17f", 0.12345678912345678));
-  /* Test below fails, that's the limit of the current implementation */
-  /*UNIT_TEST_ASSERT(test_format("0.123456789123456789", "%.18f", 0.123456789123456789));*/
+  /* Test below fails, hard limit: also fails using standard printf */
+  /* UNIT_TEST_ASSERT(test_format("0.123456789123456789", "%.18f", 0.123456789123456789)); */
 
   /* Precision limits - combined integer and fractional */
   UNIT_TEST_ASSERT(test_format("12345.678901", "%.6f", 12345.678901));
   UNIT_TEST_ASSERT(test_format("1234567.890123", "%.6f", 1234567.890123));
   UNIT_TEST_ASSERT(test_format("1234567.890123456", "%.9f", 1234567.890123456));
-  /* Test below fails, that's the limit of the current implementation */
-  /* UNIT_TEST_ASSERT(test_format("1234567.8901234567", "%.10f", 1234567.8901234567)); */
+  UNIT_TEST_ASSERT(test_format("1234567.8901234567", "%.10f", 1234567.8901234567));
+  /* Test below fails, hard limit: also fails using standard printf */
+  /* UNIT_TEST_ASSERT(test_format("1234567.89012345678", "%.11f", 1234567.89012345678)); */
 
   /* Precision limits - very small values */
   UNIT_TEST_ASSERT(test_format("0.000000", "%f", 0.0000001));
@@ -737,9 +738,14 @@ UNIT_TEST(test_float_precision)
   UNIT_TEST_ASSERT(test_format("0.000000001", "%.9f", 0.000000001));
   UNIT_TEST_ASSERT(test_format("0.0000000001", "%.10f", 0.0000000001));
   UNIT_TEST_ASSERT(test_format("0.000000000000001", "%.15f", 0.000000000000001));
-  UNIT_TEST_ASSERT(test_format("0.0000000000000000001", "%.19f", 0.0000000000000000001));
-  /* Test below fails, that's the limit of the current implementation */
-  /* UNIT_TEST_ASSERT(test_format("0.00000000000000000001", "%.20f", 0.00000000000000000001)); */
+  UNIT_TEST_ASSERT(test_format("0.00000000000000000001", "%.20f", 0.00000000000000000001));
+  UNIT_TEST_ASSERT(test_format("0.0000000000000000000000001", "%.25f", 0.0000000000000000000000001));
+  UNIT_TEST_ASSERT(test_format("0.000000000000000000000000000001", "%.30f", 0.000000000000000000000000000001));
+  UNIT_TEST_ASSERT(test_format("0.0000000000000000000000000000000000000001", "%.40f", 0.0000000000000000000000000000000000000001));
+  UNIT_TEST_ASSERT(test_format("0.00000000000000000000000000000000000000000000000001", "%.50f", 0.00000000000000000000000000000000000000000000000001));
+  UNIT_TEST_ASSERT(test_format("0.000000000000000000000000000000000000000000000000000000000001", "%.60f", 0.000000000000000000000000000000000000000000000000000000000001));
+  UNIT_TEST_ASSERT(test_format("0.00000000000000000000000000000000000000000000000000000000000000000000000000000001", "%.80f", 0.00000000000000000000000000000000000000000000000000000000000000000000000000000001));
+  UNIT_TEST_ASSERT(test_format("0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001", "%.99f", 0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001));
 
   /* Precision limits - very large values */
   UNIT_TEST_ASSERT(test_format("1000000.000000", "%f", 1000000.0));
@@ -749,8 +755,10 @@ UNIT_TEST(test_float_precision)
   UNIT_TEST_ASSERT(test_format("-2147483648.000000", "%f", -2147483648.0));
   UNIT_TEST_ASSERT(test_format("100000000000000.000000", "%f", 100000000000000.0));
   UNIT_TEST_ASSERT(test_format("10000000000000000000.000000", "%f", 10000000000000000000.0));
-  /* Test below fails, that's the limit of the current implementation */
-  /* UNIT_TEST_ASSERT(test_format("100000000000000000000.000000", "%f", 100000000000000000000.0)); */
+  UNIT_TEST_ASSERT(test_format("100000000000000000000.000000", "%f", 100000000000000000000.0));
+  UNIT_TEST_ASSERT(test_format("1000000000000000000000000.000000", "%f", 1000000000000000000000000.0));
+  /* Test below fails, hard limit: also fails using standard printf */
+  /* UNIT_TEST_ASSERT(test_format("10000000000000000000000000.000000", "%f", 10000000000000000000000000.0)); */
 
   UNIT_TEST_END();
 }
