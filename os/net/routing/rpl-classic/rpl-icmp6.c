@@ -220,6 +220,12 @@ dis_input(void)
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
   LOG_INFO_("\n");
 
+  /*
+   * Discard the received packet's lengths before a DIO reply is built in
+   * uip_buf. The IP header fields read below are left intact.
+   */
+  uipbuf_clear();
+
   for(instance = &instance_table[0], end = instance + RPL_MAX_INSTANCES;
       instance < end; ++instance) {
     if(instance->used == 1) {
@@ -523,6 +529,13 @@ dio_output(rpl_instance_t *instance, uip_ipaddr_t *uc_addr)
 
   /* DAG Information Object */
   pos = 0;
+
+  /*
+   * uip_ext_len may still describe the extension headers of a received
+   * packet, which would offset UIP_ICMP_PAYLOAD toward the end of uip_buf.
+   * Reset it so the DIO is built at the payload base.
+   */
+  uip_ext_len = 0;
 
   buffer = UIP_ICMP_PAYLOAD;
   buffer[pos++] = instance->instance_id;
