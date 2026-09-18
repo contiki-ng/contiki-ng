@@ -32,7 +32,7 @@
 #include "contiki.h"
 
 #include <string.h>
-#include "strformat.h"
+#include <strformat.h>
 /*---------------------------------------------------------------------------*/
 #define HAVE_DOUBLE
 #define HAVE_LONGLONG
