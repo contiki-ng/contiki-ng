@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Hasso-Plattner-Institut.
+ * Copyright (c) 2025, Konrad-Felix Krentz
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,39 +25,58 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
  */
+
 /**
- * \addtogroup cc2538-aes
- * @{
- *
- * \defgroup cc2538-aes-128 CC2538 AES-128
- *
- * AES-128 driver for the CC2538 SoC
+ * \addtogroup cc-crypto
  * @{
  *
  * \file
- *         Header file of the AES-128 driver for the CC2538 SoC
+ *         Implementation of general functions of the AES/SHA cryptoprocessor.
  * \author
  *         Konrad Krentz <konrad.krentz@gmail.com>
  */
-#ifndef CC2538_AES_128_H_
-#define CC2538_AES_128_H_
 
-#include "lib/aes-128.h"
+#include "dev/crypto/cc/cc-crypto.h"
+#include <ti/devices/DeviceFamily.h>
+#include DeviceFamily_constructPath(driverlib/interrupt.h)
+#include DeviceFamily_constructPath(driverlib/prcm.h)
+#include DeviceFamily_constructPath(inc/hw_ints.h)
+#include DeviceFamily_constructPath(inc/hw_memmap.h)
+#include DeviceFamily_constructPath(inc/hw_prcm.h)
+#include DeviceFamily_constructPath(inc/hw_types.h)
+
+struct cc_crypto *const cc_crypto = (struct cc_crypto *)CRYPTO_BASE;
+
 /*---------------------------------------------------------------------------*/
-#ifdef CC2538_AES_128_CONF_KEY_AREA
-#define CC2538_AES_128_KEY_AREA         CC2538_AES_128_CONF_KEY_AREA
-#else
-#define CC2538_AES_128_KEY_AREA         0
-#endif
+void
+cc_crypto_init(void)
+{
+  IntDisable(INT_CRYPTO_RESULT_AVAIL_IRQ);
+  cc_crypto_enable();
+  cc_crypto->ctrl.sw_reset = CC_CRYPTO_CTRL_SW_RESET_SW_RESET;
+}
 /*---------------------------------------------------------------------------*/
-extern const struct aes_128_driver cc2538_aes_128_driver;
+void
+cc_crypto_enable(void)
+{
+  HWREG(PRCM_BASE + PRCM_O_SECDMACLKGR) |= PRCM_SECDMACLKGR_CRYPTO_CLK_EN;
+  PRCMLoadSet();
+}
+/*---------------------------------------------------------------------------*/
+void
+cc_crypto_disable(void)
+{
+  HWREG(PRCM_BASE + PRCM_O_SECDMACLKGR) &= ~PRCM_SECDMACLKGR_CRYPTO_CLK_EN;
+  PRCMLoadSet();
+}
+/*---------------------------------------------------------------------------*/
+bool
+cc_crypto_is_enabled(void)
+{
+  return HWREG(PRCM_BASE + PRCM_O_SECDMACLKGR)
+         & PRCM_SECDMACLKGR_CRYPTO_CLK_EN;
+}
+/*---------------------------------------------------------------------------*/
 
-#endif /* CC2538_AES_128_H_ */
-
-/**
- * @}
- * @}
- */
+/** @} */
