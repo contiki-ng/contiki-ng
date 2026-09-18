@@ -424,7 +424,7 @@ sha_256_hkdf_expand(const uint8_t *prk, size_t prk_len,
   n = okm_len / SHA_256_DIGEST_LENGTH
       + (okm_len % SHA_256_DIGEST_LENGTH ? 1 : 0);
 
-  for(i = 1; i <= n; i++) {
+  for(i = 1; (i <= n) && i; i++) {
     sha_256_hmac_init(prk, prk_len);
     if(i != 1) {
       sha_256_hmac_update(t_i, sizeof(t_i));
