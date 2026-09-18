@@ -33,7 +33,6 @@
 
 #include <string.h>
 #include "strformat.h"
-#include <float.h>
 /*---------------------------------------------------------------------------*/
 #define HAVE_DOUBLE
 #define HAVE_LONGLONG
@@ -752,7 +751,6 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       }
       width += prefix_len;
 
-      /* Extract integer digits using floating-point arithmetic */
       /* Count integer digits */
       int_temp = fvalue;
       while(int_temp >= 10.0) {
