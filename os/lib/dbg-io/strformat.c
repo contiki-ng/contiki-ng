@@ -704,21 +704,32 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 #ifdef HAVE_DOUBLE
     case CONV_FLOAT:
 #if DBG_IO_FLOAT
+#pragma message("Using imprecise float formatting, use with care")
     if((flags & FLOAT_MASK) == FLOAT_NORMAL) /* Only decimal floating point supported */
     {
+      /* The method is lightweight using minimal stack, but naive and
+       * precision gets lost on the way due to floating point arithmetic
+       * It also does not implement the banker's rounding normally used by 
+       * standard printf (round to even instead of round to nearest). E.g.
+       *  printf("%.0f", 2.5) gives 2 using standard printf, 3 here.
+       * 
+       * - For best precision, use libc's routines. 
+       * - For light-weight, on target printing, this will work fine
+       */
       const char *prefix = 0; /* to store the prefix: '-','+' or ' '*/
       unsigned int prefix_len = 0; /* prefix length */
       unsigned int width; /* print width */
-      bool print_dot = 0;
+      bool print_dot = 0; /* whether '.' should be printed or not */
       double to_add = 0.5; /* for rounding */
       char c;
       double power = 10.0;
+      double ftemp;
+      double scale = 1.0;
+      int num_int_digits = 1; /* number of digits, integer part */
+      int digit;
+
       /* read argument */
       double fvalue = va_arg(ap, double);
-      double int_temp;
-      double scale = 1.0;
-      int num_int_digits = 1;
-      int digit;
 
       /* precision and rounding */
       if (precision < 0) {
@@ -752,9 +763,9 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       width += prefix_len;
 
       /* Count integer digits */
-      int_temp = fvalue;
-      while(int_temp >= 10.0) {
-        int_temp /= 10.0;
+      ftemp = fvalue;
+      while(ftemp >= 10.0) {
+        ftemp /= 10.0;
         num_int_digits++;
       }
 
@@ -795,13 +806,13 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       for(int i = 0; i < num_int_digits - 1; i++) {
         scale *= 10.0;
       }
-      int_temp = fvalue;
+      ftemp = fvalue;
       for(int i = 0; i < num_int_digits; i++) {
-        digit = (int)(int_temp / scale);
+        digit = (int)(ftemp / scale);
         c = digit + '0';
         CHECKCB(ctxt->write_str(ctxt->user_data, &c, 1));
         written++;
-        int_temp -= digit * scale;
+        ftemp -= digit * scale;
         scale /= 10.0;
       }
       /* '.' only if decimal part needed */
@@ -812,7 +823,7 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       /* write the decimal part */
       if(precision > 0) {
         for(int i = 0; i < precision; i++) {
-          c = (LARGEST_UNSIGNED)(int_temp * power) % 10 + '0';
+          c = (LARGEST_UNSIGNED)(ftemp * power) % 10 + '0';
           CHECKCB(ctxt->write_str(ctxt->user_data, &c, 1));
           power *= 10.0;
         }
