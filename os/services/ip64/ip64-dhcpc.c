@@ -31,6 +31,7 @@
  * @(#)$Id: dhcpc.c,v 1.9 2010/10/19 18:29:04 adamdunkels Exp $
  */
 
+#include <stddef.h>
 #include <string.h>
 
 #include "contiki.h"
@@ -93,6 +94,7 @@ struct dhcp_msg {
 #define DHCPNAK       6
 #define DHCPRELEASE   7
 
+#define DHCP_OPTION_PAD           0
 #define DHCP_OPTION_SUBNET_MASK   1
 #define DHCP_OPTION_ROUTER        3
 #define DHCP_OPTION_DNS_SERVER    6
@@ -207,37 +209,107 @@ send_request(void)
   uip_send(uip_appdata, (int)(end - (uint8_t *)uip_appdata));
 }
 /*---------------------------------------------------------------------------*/
-static uint8_t
-parse_options(uint8_t *optptr, int len)
+/*
+ * The option area of a received message, and how much of it the message
+ * actually holds. Everything below walks that area with the length bytes the
+ * sender chose, so both bounds have to come from the message itself.
+ */
+static const uint8_t *
+options_start(const struct dhcp_msg *m, int *len)
 {
-  uint8_t *end = optptr + len;
+  /* The options begin after the fixed fields and the 4-byte magic cookie. */
+  int offset = (int)(offsetof(struct dhcp_msg, options) + 4);
+  int datalen = (int)uip_datalen();
+
+  if(datalen <= offset) {
+    return NULL;
+  }
+
+  *len = datalen - offset;
+
+  return &m->options[4];
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * Does the option at optptr carry at least len bytes of value, with all of
+ * the value its length byte declares inside the message?
+ */
+static bool
+option_has(const uint8_t *optptr, const uint8_t *end, int len)
+{
+  /* Compared as a distance rather than as a pointer, so that a length byte
+     of 0xff cannot form a pointer outside the buffer on the way to being
+     rejected, which is what wraps the cursor on 16-bit targets. */
+  return end - optptr >= 2 && optptr[1] >= len &&
+         end - optptr >= 2 + optptr[1];
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * The option after the one at optptr, or NULL if the message ends first or
+ * the length byte would step outside it.
+ */
+static const uint8_t *
+next_option(const uint8_t *optptr, const uint8_t *end)
+{
+  if(end - optptr <= 1) {
+    return NULL;
+  }
+
+  int step = optptr[1] + 2;
+  if(step > end - optptr) {
+    return NULL;
+  }
+
+  return optptr + step;
+}
+/*---------------------------------------------------------------------------*/
+static uint8_t
+parse_options(const uint8_t *optptr, int len)
+{
+  const uint8_t *end = optptr + len;
   uint8_t type = 0;
 
-  while(optptr < end) {
+  while(optptr != NULL && optptr < end) {
     switch(*optptr) {
+    case DHCP_OPTION_PAD:
+      /* A single byte, with no length and no value. */
+      optptr++;
+      continue;
     case DHCP_OPTION_SUBNET_MASK:
-      memcpy(s.netmask.u16, optptr + 2, 4);
+      if(option_has(optptr, end, 4)) {
+        memcpy(s.netmask.u16, optptr + 2, 4);
+      }
       break;
     case DHCP_OPTION_ROUTER:
-      memcpy(s.default_router.u16, optptr + 2, 4);
+      if(option_has(optptr, end, 4)) {
+        memcpy(s.default_router.u16, optptr + 2, 4);
+      }
       break;
     case DHCP_OPTION_DNS_SERVER:
-      memcpy(s.dnsaddr.u16, optptr + 2, 4);
+      if(option_has(optptr, end, 4)) {
+        memcpy(s.dnsaddr.u16, optptr + 2, 4);
+      }
       break;
     case DHCP_OPTION_MSG_TYPE:
-      type = *(optptr + 2);
+      if(option_has(optptr, end, 1)) {
+        type = *(optptr + 2);
+      }
       break;
     case DHCP_OPTION_SERVER_ID:
-      memcpy(s.serverid, optptr + 2, 4);
+      if(option_has(optptr, end, 4)) {
+        memcpy(s.serverid, optptr + 2, 4);
+      }
       break;
     case DHCP_OPTION_LEASE_TIME:
-      memcpy(s.lease_time, optptr + 2, 4);
+      if(option_has(optptr, end, 4)) {
+        memcpy(s.lease_time, optptr + 2, 4);
+      }
       break;
     case DHCP_OPTION_END:
       return type;
     }
 
-    optptr += optptr[1] + 2;
+    optptr = next_option(optptr, end);
   }
   return type;
 }
@@ -246,12 +318,17 @@ static uint8_t
 parse_msg(void)
 {
   struct dhcp_msg *m = (struct dhcp_msg *)uip_appdata;
+  int len;
+  const uint8_t *optptr = options_start(m, &len);
+  if(optptr == NULL) {
+    return 0;
+  }
 
   if(m->op == DHCP_REPLY &&
      memcmp(m->xid, &xid, sizeof(xid)) == 0 &&
      memcmp(m->chaddr, s.mac_addr, s.mac_len) == 0) {
     memcpy(s.ipaddr.u16, m->yiaddr, 4);
-    return parse_options(&m->options[4], uip_datalen());
+    return parse_options(optptr, len);
   }
   return 0;
 }
@@ -263,19 +340,26 @@ static int
 msg_for_me(void)
 {
   struct dhcp_msg *m = (struct dhcp_msg *)uip_appdata;
-  uint8_t *optptr = &m->options[4];
-  uint8_t *end = (uint8_t*)uip_appdata + uip_datalen();
+  int len;
+  const uint8_t *optptr = options_start(m, &len);
+  if(optptr == NULL) {
+    return -1;
+  }
+  const uint8_t *end = optptr + len;
 
   if(m->op == DHCP_REPLY &&
      memcmp(m->xid, &xid, sizeof(xid)) == 0 &&
      memcmp(m->chaddr, s.mac_addr, s.mac_len) == 0) {
-    while(optptr < end) {
-      if(*optptr == DHCP_OPTION_MSG_TYPE) {
-	return *(optptr + 2);
-      } else if (*optptr == DHCP_OPTION_END) {
-	return -1;
+    while(optptr != NULL && optptr < end) {
+      if(*optptr == DHCP_OPTION_PAD) {
+        optptr++;
+        continue;
+      } else if(*optptr == DHCP_OPTION_MSG_TYPE) {
+        return option_has(optptr, end, 1) ? *(optptr + 2) : -1;
+      } else if(*optptr == DHCP_OPTION_END) {
+        return -1;
       }
-      optptr += optptr[1] + 2;
+      optptr = next_option(optptr, end);
     }
   }
   return -1;

@@ -80,6 +80,13 @@
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 #include "net/routing/routing.h"
+#if UIP_TCP
+#include "lib/csprng.h"
+#include "lib/random.h"
+#if CSPRNG_ENABLED
+#include "lib/aes-128.h"
+#endif /* CSPRNG_ENABLED */
+#endif /* UIP_TCP */
 
 #if UIP_ND6_SEND_NS
 #include "net/ipv6/uip-ds6-nbr.h"
@@ -212,9 +219,145 @@ struct uip_conn uip_conns[UIP_TCP_CONNS];
 /* The uip_listenports list all currently listning ports. */
 uint16_t uip_listenports[UIP_LISTENPORTS];
 
-/* The iss variable is used for the TCP initial sequence number. */
-static uint8_t iss[4];
+/*
+ * The M term of RFC 6528's ISN = M + F: an RFC 793 ISN clock advancing
+ * 250,000 per second, approximated from elapsed clock ticks.
+ */
+static uint32_t iss;
+static clock_time_t iss_last_update;
 
+#define ISS_PER_TICK (250000 / CLOCK_SECOND)
+static_assert(ISS_PER_TICK > 0, "CLOCK_SECOND too large for the ISN clock");
+
+static void
+update_iss(void)
+{
+  clock_time_t now = clock_time();
+  iss += (now - iss_last_update) * ISS_PER_TICK;
+  iss_last_update = now;
+}
+/*---------------------------------------------------------------------------*/
+#if CSPRNG_ENABLED
+static bool
+isn_prf(uint32_t *f, const uip_ipaddr_t *localipaddr,
+        const struct uip_conn *conn)
+{
+  static uint8_t secret[AES_128_KEY_LENGTH];
+  static bool secret_set;
+
+  /* Until the CSPRNG is seeded, use the fallback and retry next time. */
+  if(!secret_set) {
+    secret_set = csprng_rand(secret, sizeof(secret));
+    if(!secret_set) {
+      static bool fallback_warned;
+      if(!fallback_warned) {
+        fallback_warned = true;
+        LOG_WARN("TCP ISN: CSPRNG unseeded, using non-cryptographic ISN\n");
+      }
+      return false;
+    }
+  }
+
+  /*
+   * Fold the ports into the key by XOR (a bijection, so the key keeps
+   * the secret's full 128-bit entropy).
+   */
+  uint8_t derived_key[AES_128_KEY_LENGTH];
+  memcpy(derived_key, secret, AES_128_KEY_LENGTH);
+  derived_key[0] ^= (uint8_t)(conn->lport >> 8);
+  derived_key[1] ^= (uint8_t)(conn->lport);
+  derived_key[2] ^= (uint8_t)(conn->rport >> 8);
+  derived_key[3] ^= (uint8_t)(conn->rport);
+
+  /* CBC-MAC over the local address followed by the remote address. */
+  uint8_t block[AES_128_BLOCK_SIZE];
+  static_assert(sizeof(conn->ripaddr) == AES_128_BLOCK_SIZE,
+                "IPv6 address size must match AES-128 block size");
+  memcpy(block, localipaddr->u8, AES_128_BLOCK_SIZE);
+  AES_128.set_key(derived_key);
+  AES_128.encrypt(block);
+  for(int i = 0; i < AES_128_BLOCK_SIZE; i++) {
+    block[i] ^= conn->ripaddr.u8[i];
+  }
+  AES_128.encrypt(block);
+
+  /* Use the first 4 bytes of the AES output. */
+  *f = ((uint32_t)block[0] << 24) | ((uint32_t)block[1] << 16) |
+    ((uint32_t)block[2] << 8) | block[3];
+  return true;
+}
+#else /* CSPRNG_ENABLED */
+static bool
+isn_prf(uint32_t *f, const uip_ipaddr_t *localipaddr,
+        const struct uip_conn *conn)
+{
+  return false;
+}
+#endif /* CSPRNG_ENABLED */
+/*---------------------------------------------------------------------------*/
+/* Jenkins one-at-a-time hash rounds; isn_hash() adds the final mix. */
+static uint32_t
+isn_hash_bytes(uint32_t h, const uint8_t *data, size_t len)
+{
+  for(size_t i = 0; i < len; i++) {
+    h += data[i];
+    h += h << 10;
+    h ^= h >> 6;
+  }
+  return h;
+}
+/*---------------------------------------------------------------------------*/
+static uint32_t
+isn_hash(const uip_ipaddr_t *localipaddr, const struct uip_conn *conn)
+{
+  static uint32_t secret;
+  static bool secret_set;
+
+  if(!secret_set) {
+    secret = (uint32_t)random_rand() << 16 | random_rand();
+    secret_set = true;
+  }
+
+  uint32_t h = isn_hash_bytes(secret, localipaddr->u8, sizeof(localipaddr->u8));
+  h = isn_hash_bytes(h, conn->ripaddr.u8, sizeof(conn->ripaddr.u8));
+  h = isn_hash_bytes(h, (const uint8_t *)&conn->lport, sizeof(conn->lport));
+  h = isn_hash_bytes(h, (const uint8_t *)&conn->rport, sizeof(conn->rport));
+  h += h << 3;
+  h ^= h >> 11;
+  h += h << 15;
+  return h;
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * Generate an initial sequence number as ISN = M + F (RFC 6528).
+ *
+ * With CSPRNG, F is an AES-128 CBC-MAC over the local and remote
+ * addresses, keyed by a per-boot secret with the ports folded in.
+ * Without it, F is a non-cryptographic hash over the tuple mixed with
+ * a per-boot secret from random_rand(), so it is not unpredictable.
+ *
+ * F is fixed per tuple, so a new incarnation's ISN advances with M,
+ * ahead of stale segments from the previous one.
+ */
+static void
+generate_isn(uint8_t *isn_out, const uip_ipaddr_t *localipaddr,
+             const struct uip_conn *conn)
+{
+  update_iss();
+
+  uint32_t f;
+  if(!isn_prf(&f, localipaddr, conn)) {
+    f = isn_hash(localipaddr, conn);
+  }
+  uint32_t isn = iss + f;
+
+  /* Write ISN in network byte order. */
+  isn_out[0] = (uint8_t)(isn >> 24);
+  isn_out[1] = (uint8_t)(isn >> 16);
+  isn_out[2] = (uint8_t)(isn >> 8);
+  isn_out[3] = (uint8_t)(isn);
+}
+/*---------------------------------------------------------------------------*/
 /* Temporary variables. */
 uint8_t uip_acc32[4];
 #endif /* UIP_TCP */
@@ -502,11 +645,6 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
 
   conn->tcpstateflags = UIP_SYN_SENT;
 
-  conn->snd_nxt[0] = iss[0];
-  conn->snd_nxt[1] = iss[1];
-  conn->snd_nxt[2] = iss[2];
-  conn->snd_nxt[3] = iss[3];
-
   conn->rcv_nxt[0] = 0;
   conn->rcv_nxt[1] = 0;
   conn->rcv_nxt[2] = 0;
@@ -523,6 +661,11 @@ uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
   conn->lport = uip_htons(lastport);
   conn->rport = rport;
   uip_ipaddr_copy(&conn->ripaddr, ripaddr);
+
+  /* The ISN depends on the full tuple, so generate it last. */
+  uip_ipaddr_t localipaddr;
+  uip_ds6_select_src(&localipaddr, &conn->ripaddr);
+  generate_isn(conn->snd_nxt, &localipaddr, conn);
 
   return conn;
 }
@@ -1085,15 +1228,6 @@ uip_process(uint8_t flag)
 #if UIP_TCP
     uipbuf_clear();
     uip_slen = 0;
-
-    /* Increase the initial sequence number. */
-    if(++iss[3] == 0) {
-      if(++iss[2] == 0) {
-        if(++iss[1] == 0) {
-          ++iss[0];
-        }
-      }
-    }
 
     /*
      * Check if the connection is in a state in which we simply wait
@@ -1863,10 +1997,11 @@ uip_process(uint8_t flag)
   uip_ipaddr_copy(&uip_connr->ripaddr, &UIP_IP_BUF->srcipaddr);
   uip_connr->tcpstateflags = UIP_SYN_RCVD;
 
-  uip_connr->snd_nxt[0] = iss[0];
-  uip_connr->snd_nxt[1] = iss[1];
-  uip_connr->snd_nxt[2] = iss[2];
-  uip_connr->snd_nxt[3] = iss[3];
+  /*
+   * The local address is the destination of the incoming SYN, still
+   * present in the buffer before the source/destination swap.
+   */
+  generate_isn(uip_connr->snd_nxt, &UIP_IP_BUF->destipaddr, uip_connr);
   uip_connr->len = 1;
 
   /* rcv_nxt should be the seqno from the incoming packet + 1. */
