@@ -43,6 +43,7 @@
 #include "sys/etimer.h"
 #include "sys/process.h"
 #include "sys/energest.h"
+#include "dev/radio.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "net/mac/mac.h"

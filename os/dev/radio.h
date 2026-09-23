@@ -57,7 +57,109 @@
 #ifndef RADIO_H_
 #define RADIO_H_
 
+#include "contiki.h"
 #include <stddef.h>
+#include <stdbool.h>
+
+/*---------------------------------------------------------------------------*/
+/** \name PHY-specific constants and macros
+ * @{
+ */
+
+/**
+ * TX-to-RX turnaround time in symbol periods - 12 for most PHYs.
+ */
+#ifdef RADIO_CONF_RECEIVE_CALIBRATION_SYMBOL_PERIODS
+#define RADIO_RECEIVE_CALIBRATION_SYMBOL_PERIODS \
+  RADIO_CONF_RECEIVE_CALIBRATION_SYMBOL_PERIODS
+#else /* RADIO_CONF_RECEIVE_CALIBRATION_SYMBOL_PERIODS */
+#define RADIO_RECEIVE_CALIBRATION_SYMBOL_PERIODS (12)
+#endif /* RADIO_CONF_RECEIVE_CALIBRATION_SYMBOL_PERIODS */
+
+/**
+ * RX-to-TX turnaround time in symbol periods - 12 for most PHYs.
+ */
+#ifdef RADIO_CONF_TRANSMIT_CALIBRATION_SYMBOL_PERIODS
+#define RADIO_TRANSMIT_CALIBRATION_SYMBOL_PERIODS \
+  RADIO_CONF_TRANSMIT_CALIBRATION_SYMBOL_PERIODS
+#else /* RADIO_CONF_TRANSMIT_CALIBRATION_SYMBOL_PERIODS */
+#define RADIO_TRANSMIT_CALIBRATION_SYMBOL_PERIODS (12)
+#endif /* RADIO_CONF_TRANSMIT_CALIBRATION_SYMBOL_PERIODS */
+
+/**
+ * \brief Length of the synchronization header in bytes.
+ */
+#ifdef RADIO_CONF_SHR_LEN
+#define RADIO_SHR_LEN RADIO_CONF_SHR_LEN
+#else /* RADIO_CONF_SHR_LEN */
+#define RADIO_SHR_LEN (5)
+#endif /* RADIO_CONF_SHR_LEN */
+
+/**
+ * \brief The number of symbols per byte.
+ */
+#ifdef RADIO_CONF_SYMBOLS_PER_BYTE
+#define RADIO_SYMBOLS_PER_BYTE RADIO_CONF_SYMBOLS_PER_BYTE
+#else /* RADIO_CONF_SYMBOLS_PER_BYTE */
+#define RADIO_SYMBOLS_PER_BYTE 2
+#endif /* RADIO_CONF_SYMBOLS_PER_BYTE */
+
+/**
+ * \brief Air time of a symbol in microseconds.
+ */
+#ifdef RADIO_CONF_SYMBOL_PERIOD
+#define RADIO_SYMBOL_PERIOD RADIO_CONF_SYMBOL_PERIOD
+#else /* RADIO_CONF_SYMBOL_PERIOD */
+#define RADIO_SYMBOL_PERIOD 16
+#endif /* RADIO_CONF_SYMBOL_PERIOD */
+
+/**
+ * \brief Maximum length of the PHY payload in bytes.
+ */
+#ifdef RADIO_CONF_MAX_PAYLOAD
+#define RADIO_MAX_PAYLOAD RADIO_CONF_MAX_PAYLOAD
+#else /* RADIO_CONF_MAX_PAYLOAD */
+#define RADIO_MAX_PAYLOAD 127
+#endif /* RADIO_CONF_MAX_PAYLOAD */
+
+/**
+ * \brief Length of the PHY header in bytes.
+ */
+#ifdef RADIO_CONF_HEADER_LEN
+#define RADIO_HEADER_LEN RADIO_CONF_HEADER_LEN
+#else /* RADIO_CONF_HEADER_LEN */
+#define RADIO_HEADER_LEN 1
+#endif /* RADIO_CONF_HEADER_LEN */
+
+/** @} */
+/*---------------------------------------------------------------------------*/
+/** \name PHY-independent constants and macros
+ * @{
+ */
+
+#define RADIO_BYTE_PERIOD (RADIO_SYMBOL_PERIOD * RADIO_SYMBOLS_PER_BYTE)
+#define RADIO_TIME_TO_TRANSMIT(symbols) \
+  ((rtimer_clock_t)(((((uint64_t)(symbols)) \
+                      * RADIO_SYMBOL_PERIOD \
+                      * RTIMER_SECOND) \
+                     / 1000000) \
+                    + 1))
+#define RADIO_SHR_TIME \
+  RADIO_TIME_TO_TRANSMIT(RADIO_SHR_LEN * RADIO_SYMBOLS_PER_BYTE)
+#define RADIO_CCA_TIME \
+  RADIO_TIME_TO_TRANSMIT(8)
+#define RADIO_RECEIVE_CALIBRATION_TIME \
+  RADIO_TIME_TO_TRANSMIT(RADIO_RECEIVE_CALIBRATION_SYMBOL_PERIODS)
+#define RADIO_TRANSMIT_CALIBRATION_TIME \
+  RADIO_TIME_TO_TRANSMIT(RADIO_TRANSMIT_CALIBRATION_SYMBOL_PERIODS)
+
+/**
+ * Maximum number of untransmitted bytes in a back-to-back sequence of frames.
+ */
+#define RADIO_MAX_SEQUENCE_LEN (128)
+
+/** @} */
+/*---------------------------------------------------------------------------*/
 
 /**
  * Each radio has a set of parameters that designate the current
@@ -87,6 +189,11 @@
 
 typedef int radio_value_t;
 typedef unsigned radio_param_t;
+
+typedef void (* radio_shr_callback_t)(void);
+typedef void (* radio_fifop_callback_t)(void);
+typedef void (* radio_rxoverf_callback_t)(void);
+typedef void (* radio_txdone_callback_t)(void);
 
 /**
  * \brief Radio parameters and constants
@@ -303,6 +410,20 @@ enum radio_param_e {
    */
   RADIO_PARAM_SHR_SEARCH,
 
+  /**
+   * For tuning the SHR search.
+   *
+   * Setting this param to `RADIO_SHR_SENSITIVITY_LOW` increases the chances of
+   * detecting an SHR, raising the chances of catching transmissions.
+   *
+   * Setting this param to `RADIO_SHR_SENSITIVITY_HIGH` lowers the chances of
+   * detecting an SHR, reducing the chances of unwanted receptions.
+   *
+   * Setting this param to `RADIO_SHR_SENSITIVITY_MEDIUM` restores the default
+   * settings.
+   */
+  RADIO_PARAM_SHR_SENSITIVITY,
+
   /* Constants (read only) */
 
   /**
@@ -419,6 +540,16 @@ enum radio_shr_search_e {
   RADIO_SHR_SEARCH_EN = 1,  /**< Enable SHR search or SHR search is enabled */
 };
 
+/**
+ * Possible values of the `get_value()` / `set_value()` `value` argument when
+ * the `param` argument is `RADIO_PARAM_SHR_SENSITIVITY`.
+ */
+enum radio_shr_sensitivity_e {
+  RADIO_SHR_SENSITIVITY_MEDIUM = 0, /**< Default settings */
+  RADIO_SHR_SENSITIVITY_LOW, /**< Higher chances of detecting an SHR */
+  RADIO_SHR_SENSITIVITY_HIGH, /**< Lower chances of detecting an SHR */
+};
+
 /*---------------------------------------------------------------------------*/
 /**
  * \name Radio RX mode
@@ -515,6 +646,17 @@ enum radio_tx_e {
    */
   RADIO_TX_NOACK,
 };
+
+/**
+ * Return values of various async* functions.
+ */
+typedef enum radio_async_result_t {
+  RADIO_ASYNC_OK = 0,
+  RADIO_ASYNC_REDUNDANT_CALL,
+  RADIO_ASYNC_INVALID_PARAMETER,
+  RADIO_ASYNC_ERROR,
+  RADIO_ASYNC_UNSUPPORTED,
+} radio_async_result_t;
 /*---------------------------------------------------------------------------*/
 /**
  * \name The Contiki-NG RF driver API
@@ -786,9 +928,140 @@ struct radio_driver {
    */
   radio_result_t (* set_object)(radio_param_t param, const void *src,
                                 size_t size);
+
+  /**
+   * \brief Enables the asynchronous mode.
+   *
+   * Once the asynchronous mode is enabled, only functions that are prepended
+   * with "async_" may be called, except for get_value, set_value, get_object,
+   * and set_object.
+   */
+  radio_async_result_t (* async_enter)(void);
+
+  /**
+   * \brief             Sets the next frame that shall be transmitted
+   * \param payload     Pointer to the frame's payload
+   * \param payload_len Length of the frame's payload
+   */
+  radio_async_result_t (* async_prepare)(uint8_t *payload,
+                                         uint_fast16_t payload_len);
+
+  /**
+   * \brief Overwrites parts of a prepared frame
+   */
+  radio_async_result_t (* async_reprepare)(uint_fast16_t offset,
+                                           uint8_t *patch,
+                                           uint_fast16_t patch_len);
+
+  /**
+   * \brief                         Transmits the prepared frame
+   * \param shall_enter_rx_after_tx Non-zero if the receive mode shall be
+   *                                enabled after the transmission has ended
+   */
+  radio_async_result_t (* async_transmit)(bool shall_enter_rx_after_tx);
+
+  /**
+   * \brief Enables the receive mode
+   */
+  radio_async_result_t (* async_on)(void);
+
+  /**
+   * \brief Disables the receive or transmit mode, whichever is active
+   */
+  radio_async_result_t (* async_off)(void);
+
+  /**
+   * \brief              Registers a callback for incoming and outgoing SHRs
+   * \param shr_callback The callback function or NULL
+   */
+  void (* async_set_shr_callback)(radio_shr_callback_t shr_callback);
+
+  /**
+   * \brief              Registers a callback for a some number of unread bytes
+   * \param shr_callback The callback function or NULL
+   * \param threshold    The number of unread bytes
+   */
+  void (* async_set_fifop_callback)(radio_fifop_callback_t fifop_callback,
+                                    uint_fast16_t threshold);
+
+  /**
+   * \brief              Registers a callback for complete frame transmissions
+   * \param shr_callback The callback function or NULL
+   */
+  void (* async_set_rxoverf_callback)(radio_rxoverf_callback_t rxoverf_callback);
+
+  /**
+   * \brief              Registers a callback for complete frame transmissions
+   * \param shr_callback The callback function or NULL
+   */
+  void (* async_set_txdone_callback)(radio_txdone_callback_t txdone_callback);
+
+  /**
+   * \brief  Reads the physical layer (PHY) header
+   * \return The frame's length in bytes
+   */
+  uint_fast16_t (* async_read_phy_header)(void);
+
+  /**
+   * \brief        Reads payload bytes to the specified memory location
+   */
+  radio_async_result_t (* async_read_payload)(uint8_t *buf,
+                                              uint_fast16_t bytes);
+
+  /**
+   * \brief Provides the number of payload bytes that were read already
+   */
+  uint_fast16_t (* async_read_payload_bytes)(void);
+
+  /**
+   * \brief Prepares for transmitting a back-to-back sequence of frames
+   */
+  radio_async_result_t (* async_prepare_sequence)(uint8_t *sequence,
+                                                  uint_fast16_t sequence_len);
+
+  /**
+   * \brief Appends one or more frames that shall be transmitted
+   * \note  All frames except for the first one must contain an SHR.
+   */
+  radio_async_result_t (* async_append_to_sequence)(uint8_t *appendix,
+                                                    uint_fast16_t appendix_len);
+
+  /**
+   * \brief Starts the transmission of a back-to-back sequence of frames
+   */
+  radio_async_result_t (* async_transmit_sequence)(void);
+
+  /**
+   * \brief Busy-waits until all appended frames have been transmitted
+   */
+  radio_async_result_t (* async_finish_sequence)(void);
 };
 /** @} */
 /*---------------------------------------------------------------------------*/
+
+extern const uint8_t radio_shr[RADIO_SHR_LEN];
+
+/**
+ * \brief Gets the current RSSI.
+ */
+radio_value_t radio_get_rssi(void);
+
+/**
+ * \brief  Reads the PHY header and initializes the packetbuf's datalen.
+ * \return The frame's length in bytes.
+ */
+uint_fast16_t radio_read_phy_header_to_packetbuf(void);
+
+/**
+ * \brief Reads payload bytes and appends them to the packetbuf.
+ */
+radio_async_result_t radio_read_payload_to_packetbuf(uint_fast16_t bytes);
+
+/**
+ * \brief Provides the number of payload bytes that were not read, yet.
+ */
+uint_fast16_t radio_remaining_payload_bytes(void);
+
 #endif /* RADIO_H_ */
 /*---------------------------------------------------------------------------*/
 /** @} */

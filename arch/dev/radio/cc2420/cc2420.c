@@ -37,7 +37,7 @@
 
 #include "contiki.h"
 #include "sys/energest.h"
-
+#include "dev/nullradio.h"
 #include "dev/leds.h"
 #include "dev/spi-legacy.h"
 #include "dev/radio/cc2420/cc2420.h"
@@ -324,23 +324,39 @@ set_object(radio_param_t param, const void *src, size_t size)
   return RADIO_RESULT_NOT_SUPPORTED;
 }
 
-const struct radio_driver cc2420_driver =
-  {
-    cc2420_init,
-    cc2420_prepare,
-    cc2420_transmit,
-    cc2420_send,
-    cc2420_read,
-    cc2420_cca,
-    cc2420_receiving_packet,
-    pending_packet,
-    cc2420_on,
-    cc2420_off,
-    get_value,
-    set_value,
-    get_object,
-    set_object
-  };
+const struct radio_driver cc2420_driver = {
+  cc2420_init,
+  cc2420_prepare,
+  cc2420_transmit,
+  cc2420_send,
+  cc2420_read,
+  cc2420_cca,
+  cc2420_receiving_packet,
+  pending_packet,
+  cc2420_on,
+  cc2420_off,
+  get_value,
+  set_value,
+  get_object,
+  set_object,
+  nullradio_async_enter,
+  nullradio_async_prepare,
+  nullradio_async_reprepare,
+  nullradio_async_transmit,
+  nullradio_async_on,
+  nullradio_async_off,
+  nullradio_async_set_shr_callback,
+  nullradio_async_set_fifop_callback,
+  nullradio_async_set_rxoverf_callback,
+  nullradio_async_set_txdone_callback,
+  nullradio_async_read_phy_header,
+  nullradio_async_read_payload,
+  nullradio_async_read_payload_bytes,
+  nullradio_async_prepare_sequence,
+  nullradio_async_append_to_sequence,
+  nullradio_async_transmit_sequence,
+  nullradio_async_finish_sequence
+};
 
 /*---------------------------------------------------------------------------*/
 /* Sends a strobe */
@@ -560,18 +576,19 @@ init_security(void)
   setreg(CC2420_SECCTRL1, 0);
 }
 /*---------------------------------------------------------------------------*/
-static void
-set_key(const uint8_t *key)
+static bool
+set_key(const uint8_t key[static AES_128_KEY_LENGTH])
 {
   GET_LOCK();
 
   write_ram(key, CC2420RAM_KEY0, 16, WRITE_RAM_REVERSE);
 
   RELEASE_LOCK();
+  return true;
 }
 /*---------------------------------------------------------------------------*/
-static void
-encrypt(uint8_t *plaintext_and_result)
+static bool
+encrypt(uint8_t plaintext_and_result[static AES_128_BLOCK_SIZE])
 {
   GET_LOCK();
 
@@ -586,11 +603,14 @@ encrypt(uint8_t *plaintext_and_result)
   read_ram(plaintext_and_result, CC2420RAM_SABUF, 16);
 
   RELEASE_LOCK();
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 const struct aes_128_driver cc2420_aes_128_driver = {
   set_key,
-  encrypt
+  encrypt,
+  aes_128_get_lock,
+  aes_128_release_lock
 };
 /*---------------------------------------------------------------------------*/
 static void

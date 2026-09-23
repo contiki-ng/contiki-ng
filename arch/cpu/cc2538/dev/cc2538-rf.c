@@ -76,11 +76,6 @@
 #define LOG_MODULE "cc2538-rf"
 #define LOG_LEVEL LOG_LEVEL_NONE
 /*---------------------------------------------------------------------------*/
-/* Local RF Flags */
-#define RX_ACTIVE     0x80
-#define RF_MUST_RESET 0x40
-#define RF_ON         0x01
-
 /* Bit Masks for the last byte in the RX FIFO */
 #define CRC_BIT_MASK 0x80
 #define LQI_BIT_MASK 0x7F
@@ -106,18 +101,32 @@
 			while ( !(REG(SYS_CTRL_CLOCK_STA) & (SYS_CTRL_CLOCK_STA_XOSC_STB)));	\
 		} while(0)
 /*---------------------------------------------------------------------------*/
-/* Are we currently in poll mode? Disabled by default */
-static uint8_t volatile poll_mode = 0;
 /* Do we perform a CCA before sending? Enabled by default. */
 static uint8_t send_on_cca = 1;
 static int8_t rssi;
 static uint8_t crc_corr;
+static uint_fast16_t frame_length;
+static uint_fast16_t read_bytes;
+static bool enter_rx_after_tx;
+static radio_shr_callback_t shr_callback;
+static radio_fifop_callback_t fifop_callback;
+static radio_rxoverf_callback_t rxoverf_callback;
+static radio_txdone_callback_t txdone_callback;
 /*---------------------------------------------------------------------------*/
-static uint8_t rf_flags;
+static struct {
+  bool ran_init:1;
+  bool in_rx_mode:1;
+  bool in_tx_mode:1;
+  bool in_poll_mode:1;
+  bool in_async_mode:1;
+  bool must_reset:1;
+} rf_flags;
 static uint8_t rf_channel = IEEE802154_DEFAULT_CHANNEL;
 
 static int on(void);
 static int off(void);
+static radio_async_result_t async_append_to_sequence(
+    uint8_t *appendix, uint_fast16_t appendix_len);
 /*---------------------------------------------------------------------------*/
 /* TX Power dBm lookup table. Values from SmartRF Studio v1.16.0 */
 typedef struct output_config {
@@ -165,6 +174,51 @@ is_transmitting(void)
   return REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_TX_ACTIVE;
 }
 /*---------------------------------------------------------------------------*/
+static void
+prepare_raw(const uint8_t *src, uint_fast16_t len)
+{
+  if(CC2538_RF_CONF_TX_USE_DMA) {
+    /* Set the transfer source's end address */
+    udma_set_channel_src(CC2538_RF_CONF_TX_DMA_CHAN,
+        (uint32_t)(src) + (len - 1));
+    /* Configure the control word */
+    udma_set_channel_control_word(CC2538_RF_CONF_TX_DMA_CHAN,
+        UDMA_TX_FLAGS | udma_xfer_size(len));
+    /* Enable the RF TX uDMA channel */
+    udma_channel_enable(CC2538_RF_CONF_TX_DMA_CHAN);
+    /* Trigger the uDMA transfer */
+    udma_channel_sw_request(CC2538_RF_CONF_TX_DMA_CHAN);
+  } else {
+    for(uint_fast16_t i = 0; i < len; i++) {
+      REG(RFCORE_SFR_RFDATA) = src[i];
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+read_raw(uint8_t *dst, uint_fast16_t len)
+{
+  /* Don't bother with uDMA for short frames (e.g. ACKs) */
+  if(CC2538_RF_CONF_RX_USE_DMA && (len > UDMA_RX_SIZE_THRESHOLD)) {
+    /* Set the transfer destination's end address */
+    udma_set_channel_dst(CC2538_RF_CONF_RX_DMA_CHAN,
+        (uint32_t)(dst) + len - 1);
+    /* Configure the control word */
+    udma_set_channel_control_word(CC2538_RF_CONF_RX_DMA_CHAN,
+        UDMA_RX_FLAGS | udma_xfer_size(len));
+    /* Enabled the RF RX uDMA channel */
+    udma_channel_enable(CC2538_RF_CONF_RX_DMA_CHAN);
+    /* Trigger the uDMA transfer */
+    udma_channel_sw_request(CC2538_RF_CONF_RX_DMA_CHAN);
+    /* Wait for the transfer to complete. */
+    while(udma_channel_get_mode(CC2538_RF_CONF_RX_DMA_CHAN));
+  } else {
+    for(uint_fast16_t i = 0; i < len; ++i) {
+      dst[i] = REG(RFCORE_SFR_RFDATA);
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
 /**
  * \brief Get the current operating channel
  * \return Returns a value in [11,26] representing the current channel
@@ -189,7 +243,7 @@ set_channel(uint8_t channel)
   /* Changes to FREQCTRL take effect after the next recalibration */
 
   /* If we are off, save state, otherwise switch off and save state */
-  if(rf_flags & RX_ACTIVE) {
+  if(rf_flags.in_rx_mode) {
     was_on = 1;
     off();
   }
@@ -244,7 +298,7 @@ get_rssi(void)
   uint8_t was_off = 0;
 
   /* If we are off, turn on first */
-  if(!(rf_flags & RX_ACTIVE)) {
+  if(!rf_flags.in_rx_mode) {
     was_off = 1;
     on();
   }
@@ -278,7 +332,7 @@ get_iq_lsbs(radio_value_t *value)
   uint8_t was_off = 0;
 
   /* If we are off, turn on first */
-  if(!(rf_flags & RX_ACTIVE)) {
+  if(!rf_flags.in_rx_mode) {
     was_off = 1;
     on();
   }
@@ -385,9 +439,9 @@ mac_timer_init(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
-set_poll_mode(uint8_t enable)
+set_poll_mode(bool enable)
 {
-  poll_mode = enable;
+  rf_flags.in_poll_mode = enable;
 
   if(enable) {
     mac_timer_init();
@@ -497,7 +551,7 @@ channel_clear(void)
   LOG_INFO("CCA\n");
 
   /* If we are off, turn on first */
-  if(!(rf_flags & RX_ACTIVE)) {
+  if(!rf_flags.in_rx_mode) {
     was_off = 1;
     on();
   }
@@ -524,11 +578,11 @@ on(void)
 {
   LOG_INFO("On\n");
 
-  if(!(rf_flags & RX_ACTIVE)) {
+  if(!rf_flags.in_rx_mode) {
     CC2538_RF_CSP_ISFLUSHRX();
     CC2538_RF_CSP_ISRXON();
 
-    rf_flags |= RX_ACTIVE;
+    rf_flags.in_rx_mode = true;
   }
 
   ENERGEST_ON(ENERGEST_TYPE_LISTEN);
@@ -552,7 +606,7 @@ off(void)
     CC2538_RF_CSP_ISRFOFF();
   }
 
-  rf_flags &= ~RX_ACTIVE;
+  rf_flags.in_rx_mode = false;
 
   ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
   return 1;
@@ -563,7 +617,7 @@ init(void)
 {
   LOG_INFO("Init\n");
 
-  if(rf_flags & RF_ON) {
+  if(rf_flags.ran_init) {
     return 0;
   }
 
@@ -634,7 +688,7 @@ init(void)
     udma_set_channel_src(CC2538_RF_CONF_RX_DMA_CHAN, RFCORE_SFR_RFDATA);
   }
 
-  set_poll_mode(poll_mode);
+  set_poll_mode(rf_flags.in_poll_mode);
 
 #if CSPRNG_ENABLED
   if(!iq_seeder_seed()) {
@@ -645,7 +699,7 @@ init(void)
 
   process_start(&cc2538_rf_process, NULL);
 
-  rf_flags |= RF_ON;
+  rf_flags.ran_init = true;
 
   return 1;
 }
@@ -653,8 +707,6 @@ init(void)
 static int
 prepare(const void *payload, unsigned short payload_len)
 {
-  uint8_t i;
-
   if(payload_len > MAX_PAYLOAD_LEN) {
     return RADIO_TX_ERR;
   }
@@ -667,45 +719,16 @@ prepare(const void *payload, unsigned short payload_len)
    */
   while(is_transmitting());
 
-  if((rf_flags & RX_ACTIVE) == 0) {
+  if(!rf_flags.in_rx_mode) {
     on();
   }
 
   CC2538_RF_CSP_ISFLUSHTX();
 
-  LOG_INFO("data = ");
   /* Send the phy length byte first */
   REG(RFCORE_SFR_RFDATA) = payload_len + CHECKSUM_LEN;
 
-  if(CC2538_RF_CONF_TX_USE_DMA) {
-    LOG_INFO_("<uDMA payload>");
-
-    /* Set the transfer source's end address */
-    udma_set_channel_src(CC2538_RF_CONF_TX_DMA_CHAN,
-                         (uint32_t)(payload) + payload_len - 1);
-
-    /* Configure the control word */
-    udma_set_channel_control_word(CC2538_RF_CONF_TX_DMA_CHAN,
-                                  UDMA_TX_FLAGS | udma_xfer_size(payload_len));
-
-    /* Enabled the RF TX uDMA channel */
-    udma_channel_enable(CC2538_RF_CONF_TX_DMA_CHAN);
-
-    /* Trigger the uDMA transfer */
-    udma_channel_sw_request(CC2538_RF_CONF_TX_DMA_CHAN);
-
-    /*
-     * No need to wait for this to end. Even if transmit() gets called
-     * immediately, the uDMA controller will stream the frame to the TX FIFO
-     * faster than transmit() can empty it
-     */
-  } else {
-    for(i = 0; i < payload_len; i++) {
-      REG(RFCORE_SFR_RFDATA) = ((unsigned char *)(payload))[i];
-      LOG_INFO_("%02x", ((unsigned char *)(payload))[i]);
-    }
-  }
-  LOG_INFO_("\n");
+  prepare_raw(payload, payload_len);
 
   return 0;
 }
@@ -724,7 +747,7 @@ transmit(unsigned short transmit_len)
     return RADIO_TX_ERR;
   }
 
-  if(!(rf_flags & RX_ACTIVE)) {
+  if(!rf_flags.in_rx_mode) {
     t0 = RTIMER_NOW();
     on();
     was_off = 1;
@@ -783,7 +806,6 @@ send(const void *payload, unsigned short payload_len)
 static int
 read(void *buf, unsigned short bufsize)
 {
-  uint8_t i;
   uint8_t len;
 
   LOG_INFO("Read\n");
@@ -819,41 +841,13 @@ read(void *buf, unsigned short bufsize)
   }
 
   /* If we reach here, chances are the FIFO is holding a valid frame */
-  LOG_INFO("read (0x%02x bytes) = ", len);
   len -= CHECKSUM_LEN;
 
-  /* Don't bother with uDMA for short frames (e.g. ACKs) */
-  if(CC2538_RF_CONF_RX_USE_DMA && len > UDMA_RX_SIZE_THRESHOLD) {
-    LOG_INFO_("<uDMA payload>");
-
-    /* Set the transfer destination's end address */
-    udma_set_channel_dst(CC2538_RF_CONF_RX_DMA_CHAN,
-                         (uint32_t)(buf) + len - 1);
-
-    /* Configure the control word */
-    udma_set_channel_control_word(CC2538_RF_CONF_RX_DMA_CHAN,
-                                  UDMA_RX_FLAGS | udma_xfer_size(len));
-
-    /* Enabled the RF RX uDMA channel */
-    udma_channel_enable(CC2538_RF_CONF_RX_DMA_CHAN);
-
-    /* Trigger the uDMA transfer */
-    udma_channel_sw_request(CC2538_RF_CONF_RX_DMA_CHAN);
-
-    /* Wait for the transfer to complete. */
-    while(udma_channel_get_mode(CC2538_RF_CONF_RX_DMA_CHAN));
-  } else {
-    for(i = 0; i < len; ++i) {
-      ((unsigned char *)(buf))[i] = REG(RFCORE_SFR_RFDATA);
-      LOG_INFO_("%02x", ((unsigned char *)(buf))[i]);
-    }
-  }
+  read_raw(buf, len);
 
   /* Read the RSSI and CRC/Corr bytes */
   rssi = ((int8_t)REG(RFCORE_SFR_RFDATA)) - RSSI_OFFSET;
   crc_corr = REG(RFCORE_SFR_RFDATA);
-
-  LOG_INFO_("%02x%02x\n", (uint8_t)rssi, crc_corr);
 
   /* MS bit CRC OK/Not OK, 7 LS Bits, Correlation value */
   if(crc_corr & CRC_BIT_MASK) {
@@ -865,7 +859,7 @@ read(void *buf, unsigned short bufsize)
     return 0;
   }
 
-  if(!poll_mode) {
+  if(!rf_flags.in_poll_mode) {
     /* If FIFOP==1 and FIFO==0 then we had a FIFO overflow at some point. */
     if(REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFOP) {
       if(REG(RFCORE_XREG_FSMSTAT1) & RFCORE_XREG_FSMSTAT1_FIFO) {
@@ -936,7 +930,7 @@ get_value(radio_param_t param, radio_value_t *value)
     if(REG(RFCORE_XREG_FRMCTRL0) & RFCORE_XREG_FRMCTRL0_AUTOACK) {
       *value |= RADIO_RX_MODE_AUTOACK;
     }
-    if(poll_mode) {
+    if(rf_flags.in_poll_mode) {
       *value |= RADIO_RX_MODE_POLL_MODE;
     }
     return RADIO_RESULT_OK;
@@ -1065,6 +1059,25 @@ set_value(radio_param_t param, radio_value_t value)
     }
     set_shr_search(value);
     return RADIO_RESULT_OK;
+  case RADIO_PARAM_SHR_SENSITIVITY: {
+    uint_fast8_t demodulation_zeroes;
+    switch(value) {
+    case RADIO_SHR_SENSITIVITY_MEDIUM:
+      demodulation_zeroes = 2;
+      break;
+    case RADIO_SHR_SENSITIVITY_LOW:
+      demodulation_zeroes = 1;
+      break;
+    case RADIO_SHR_SENSITIVITY_HIGH:
+      demodulation_zeroes = 3;
+      break;
+    default:
+      return RADIO_RESULT_INVALID_VALUE;
+    }
+    REG(RFCORE_XREG_MDMCTRL0) &= ~RFCORE_XREG_MDMCTRL0_DEM_NUM_ZEROS;
+    REG(RFCORE_XREG_MDMCTRL0) |= demodulation_zeroes << 6;
+    return RADIO_RESULT_OK;
+  }
   default:
     return RADIO_RESULT_NOT_SUPPORTED;
   }
@@ -1130,6 +1143,223 @@ set_object(radio_param_t param, const void *src, size_t size)
   return RADIO_RESULT_NOT_SUPPORTED;
 }
 /*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_enter(void)
+{
+  rf_flags.in_async_mode = true;
+
+  /* Disable disabling of SFD detection after frame reception */
+  REG(RFCORE_XREG_FSMCTRL) |= RFCORE_XREG_FSMCTRL_RX2RX_TIME_OFF;
+
+  /* Disable frame filtering */
+  REG(RFCORE_XREG_FRMFILT0) &= ~RFCORE_XREG_FRMFILT0_FRAME_FILTER_EN;
+
+  /* Disable AUTOCRC */
+  REG(RFCORE_XREG_FRMCTRL0) &= ~RFCORE_XREG_FRMCTRL0_AUTOCRC;
+
+  /* Disable AUTOACK */
+  REG(RFCORE_XREG_FRMCTRL0) &= ~RFCORE_XREG_FRMCTRL0_AUTOACK;
+
+  /* Configure interrupts */
+  REG(RFCORE_XREG_RFIRQM0) = 0;
+  REG(RFCORE_XREG_RFIRQM1) = RFCORE_XREG_RFIRQM1_TXDONE;
+  NVIC_EnableIRQ(RF_TX_RX_IRQn);
+  REG(RFCORE_XREG_RFERRM) = 0;
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_prepare(uint8_t *payload, uint_fast16_t payload_len)
+{
+  if(payload_len > CC2538_RF_MAX_PACKET_LEN) {
+    return RADIO_ASYNC_INVALID_PARAMETER;
+  }
+  CC2538_RF_CSP_ISFLUSHTX();
+  REG(RFCORE_XREG_FRMCTRL0) &= ~RFCORE_XREG_FRMCTRL0_TX_MODE_LOOP;
+  REG(RFCORE_SFR_RFDATA) = payload_len;
+  prepare_raw(payload, payload_len);
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_reprepare(uint_fast16_t offset, uint8_t *patch, uint_fast16_t patch_len)
+{
+  if((offset + patch_len) > CC2538_RF_MAX_PACKET_LEN) {
+    return RADIO_ASYNC_INVALID_PARAMETER;
+  }
+  for(uint_fast16_t i = 0; i < patch_len; i++) {
+    REG(RFCORE_FFSM_TX_FIFO + 4 * (offset + RADIO_HEADER_LEN + i)) = patch[i];
+  }
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_transmit(bool shall_enter_rx_after_tx)
+{
+  if(rf_flags.in_tx_mode) {
+    LOG_WARN("already transmitting\n");
+    return RADIO_ASYNC_REDUNDANT_CALL;
+  }
+  rf_flags.in_rx_mode = false;
+  rf_flags.in_tx_mode = true;
+
+  enter_rx_after_tx = shall_enter_rx_after_tx;
+  CC2538_RF_CSP_ISTXON();
+  ENERGEST_SWITCH(ENERGEST_TYPE_LISTEN, ENERGEST_TYPE_TRANSMIT);
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_on(void)
+{
+  if(rf_flags.in_rx_mode) {
+    LOG_WARN("already receiving\n");
+    return RADIO_ASYNC_REDUNDANT_CALL;
+  }
+  rf_flags.in_rx_mode = true;
+
+  CC2538_RF_CSP_ISRXON();
+  CC2538_RF_CSP_ISFLUSHRX();
+  ENERGEST_ON(ENERGEST_TYPE_LISTEN);
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_off(void)
+{
+  if(!rf_flags.in_rx_mode && !rf_flags.in_tx_mode) {
+    LOG_WARN("already off\n");
+    return RADIO_ASYNC_REDUNDANT_CALL;
+  }
+  rf_flags.in_rx_mode = false;
+  rf_flags.in_tx_mode = false;
+
+  CC2538_RF_CSP_ISRFOFF();
+  ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
+  ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static void
+async_set_shr_callback(radio_shr_callback_t cb)
+{
+  shr_callback = cb;
+  if(shr_callback) {
+    REG(RFCORE_XREG_RFIRQM0) |= RFCORE_XREG_RFIRQM0_SFD;
+  } else {
+    REG(RFCORE_XREG_RFIRQM0) &= ~RFCORE_XREG_RFIRQM0_SFD;
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+async_set_fifop_callback(radio_fifop_callback_t cb, uint_fast16_t threshold)
+{
+  fifop_callback = cb;
+  if(threshold > CC2538_RF_MAX_PACKET_LEN) {
+    LOG_WARN("truncating FIFOP threshold\n");
+    threshold = CC2538_RF_MAX_PACKET_LEN;
+  }
+  if(cb || (threshold == CC2538_RF_MAX_PACKET_LEN)) {
+    REG(RFCORE_XREG_FIFOPCTRL) = threshold;
+    REG(RFCORE_XREG_RFIRQM0) |= RFCORE_XREG_RFIRQM0_FIFOP;
+  } else {
+    REG(RFCORE_XREG_RFIRQM0) &= ~RFCORE_XREG_RFIRQM0_FIFOP;
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+async_set_rxoverf_callback(radio_rxoverf_callback_t cb)
+{
+  rxoverf_callback = cb;
+  if(rxoverf_callback) {
+    REG(RFCORE_XREG_RFERRM) |= RFCORE_XREG_RFERRM_RXOVERF;
+  } else {
+    REG(RFCORE_XREG_RFERRM) &= ~RFCORE_XREG_RFERRM_RXOVERF;
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
+async_set_txdone_callback(radio_txdone_callback_t cb)
+{
+  txdone_callback = cb;
+}
+/*---------------------------------------------------------------------------*/
+static uint_fast16_t
+async_read_phy_header(void)
+{
+  while(!REG(RFCORE_XREG_RXFIFOCNT));
+  frame_length = REG(RFCORE_SFR_RFDATA) & 0x7F /* ignore reserved bits */;
+  read_bytes = 0;
+  return frame_length;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_read_payload(uint8_t *buf, uint_fast16_t bytes)
+{
+  if(frame_length < bytes) {
+    return RADIO_ASYNC_INVALID_PARAMETER;
+  }
+  while(REG(RFCORE_XREG_RXFIFOCNT) < bytes);
+  read_raw(buf, bytes);
+  read_bytes += bytes;
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static uint_fast16_t
+async_read_payload_bytes(void)
+{
+  return read_bytes;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_prepare_sequence(uint8_t *sequence, uint_fast16_t sequence_len)
+{
+  if(sequence_len > RADIO_MAX_SEQUENCE_LEN) {
+    return RADIO_ASYNC_INVALID_PARAMETER;
+  }
+  CC2538_RF_CSP_ISFLUSHTX();
+  REG(RFCORE_XREG_FRMCTRL0) |= RFCORE_XREG_FRMCTRL0_TX_MODE_LOOP;
+  prepare_raw(sequence
+              + RADIO_SHR_LEN /* the first SHR is transmitted automatically */,
+              sequence_len - RADIO_SHR_LEN);
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_append_to_sequence(uint8_t *appendix, uint_fast16_t appendix_len)
+{
+  if(!is_transmitting()) {
+    LOG_ERR("TX underflow?\n");
+    return RADIO_ASYNC_ERROR;
+  }
+  if(appendix_len > RADIO_MAX_SEQUENCE_LEN) {
+    return RADIO_ASYNC_INVALID_PARAMETER;
+  }
+  prepare_raw(appendix, appendix_len);
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_transmit_sequence(void)
+{
+  return async_transmit(false);
+}
+/*---------------------------------------------------------------------------*/
+static radio_async_result_t
+async_finish_sequence(void)
+{
+  if(!is_transmitting()) {
+    LOG_WARN("am not looping\n");
+    return RADIO_ASYNC_ERROR;
+  }
+
+  uint_fast8_t end_pos = (REG(RFCORE_XREG_TXLAST_PTR) + 1) & 0x7F;
+  while((REG(RFCORE_XREG_TXFIRST_PTR) & 0x7F) != end_pos);
+  while((REG(RFCORE_XREG_TXFIRST_PTR) & 0x7F) == end_pos);
+  async_off();
+  return RADIO_ASYNC_OK;
+}
+/*---------------------------------------------------------------------------*/
 const struct radio_driver cc2538_rf_driver = {
   init,
   prepare,
@@ -1144,7 +1374,24 @@ const struct radio_driver cc2538_rf_driver = {
   get_value,
   set_value,
   get_object,
-  set_object
+  set_object,
+  async_enter,
+  async_prepare,
+  async_reprepare,
+  async_transmit,
+  async_on,
+  async_off,
+  async_set_shr_callback,
+  async_set_fifop_callback,
+  async_set_rxoverf_callback,
+  async_set_txdone_callback,
+  async_read_phy_header,
+  async_read_payload,
+  async_read_payload_bytes,
+  async_prepare_sequence,
+  async_append_to_sequence,
+  async_transmit_sequence,
+  async_finish_sequence
 };
 /*---------------------------------------------------------------------------*/
 /**
@@ -1165,7 +1412,7 @@ PROCESS_THREAD(cc2538_rf_process, ev, data)
   while(1) {
     PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
 
-    if(!poll_mode) {
+    if(!rf_flags.in_poll_mode) {
       packetbuf_clear();
       len = read(packetbuf_dataptr(), PACKETBUF_SIZE);
 
@@ -1177,10 +1424,10 @@ PROCESS_THREAD(cc2538_rf_process, ev, data)
     }
 
     /* If we were polled due to an RF error, reset the transceiver */
-    if(rf_flags & RF_MUST_RESET) {
+    if(rf_flags.must_reset) {
       /* save state so we know if to switch on again after re-init */
-      bool was_on = rf_flags & RX_ACTIVE;
-      rf_flags = 0;
+      bool was_on = rf_flags.in_rx_mode;
+      memset(&rf_flags, 0, sizeof(rf_flags));
       off();
       init();
       if(was_on) {
@@ -1203,7 +1450,39 @@ PROCESS_THREAD(cc2538_rf_process, ev, data)
 void
 cc2538_rf_rx_tx_isr(void)
 {
-  if(!poll_mode) {
+  if(rf_flags.in_async_mode) {
+    if(REG(RFCORE_SFR_RFIRQF0) & RFCORE_SFR_RFIRQF0_SFD) {
+      NVIC_ClearPendingIRQ(RF_TX_RX_IRQn);
+      REG(RFCORE_SFR_RFIRQF0) &= ~RFCORE_SFR_RFIRQF0_SFD;
+      if(shr_callback) {
+        shr_callback();
+      }
+    }
+    if(REG(RFCORE_SFR_RFIRQF0) & RFCORE_SFR_RFIRQF0_FIFOP) {
+      NVIC_ClearPendingIRQ(RF_TX_RX_IRQn);
+      REG(RFCORE_SFR_RFIRQF0) &= ~RFCORE_SFR_RFIRQF0_FIFOP;
+      if(fifop_callback) {
+        fifop_callback();
+      }
+    }
+    if(REG(RFCORE_SFR_RFIRQF1) & RFCORE_SFR_RFIRQF1_TXDONE) {
+      NVIC_ClearPendingIRQ(RF_TX_RX_IRQn);
+      REG(RFCORE_SFR_RFIRQF1) &= ~RFCORE_SFR_RFIRQF1_TXDONE;
+      if(enter_rx_after_tx) {
+        CC2538_RF_CSP_ISFLUSHRX();
+        rf_flags.in_tx_mode = false;
+        rf_flags.in_rx_mode = true;
+        ENERGEST_SWITCH(ENERGEST_TYPE_TRANSMIT, ENERGEST_TYPE_LISTEN);
+      } else {
+        async_off();
+      }
+      if(txdone_callback) {
+        txdone_callback();
+      }
+    }
+    return;
+  }
+  if(!rf_flags.in_poll_mode) {
     process_poll(&cc2538_rf_process);
   }
 
@@ -1230,11 +1509,23 @@ cc2538_rf_rx_tx_isr(void)
 void
 cc2538_rf_err_isr(void)
 {
+  if(rf_flags.in_async_mode) {
+    if(REG(RFCORE_SFR_RFERRF) & RFCORE_SFR_RFERRF_RXOVERF) {
+      NVIC_ClearPendingIRQ(RF_ERR_IRQn);
+      REG(RFCORE_SFR_RFERRF) &= ~RFCORE_SFR_RFERRF_RXOVERF;
+      if(rxoverf_callback) {
+        rxoverf_callback();
+      }
+      LOG_ERR("RX FIFO overflowed\n");
+    }
+    return;
+  }
+
   LOG_ERR("Error 0x%08lx occurred\n", REG(RFCORE_SFR_RFERRF));
 
   /* If the error is not an RX FIFO overflow, set a flag */
   if(REG(RFCORE_SFR_RFERRF) != RFCORE_SFR_RFERRF_RXOVERF) {
-    rf_flags |= RF_MUST_RESET;
+    rf_flags.must_reset = true;
   }
 
   REG(RFCORE_SFR_RFERRF) = 0;

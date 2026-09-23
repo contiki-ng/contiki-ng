@@ -30,6 +30,7 @@
  *
  */
 
+#include <assert.h>
 #include <signal.h>
 #include <sys/time.h>
 #include <stddef.h>
@@ -55,17 +56,64 @@ rtimer_clock_t simRtimerCurrentTicks;
 
 /*---------------------------------------------------------------------------*/
 void
+rtimer_arch_busy_wait_until_timeout(rtimer_clock_t timeout)
+{
+  while(!rtimer_has_timed_out(timeout)) {
+    assert(!simRtimerPending);
+    simRtimerNextExpirationTime = timeout + 1;
+    simRtimerPending = 1;
+    simProcessRunValue = 1;
+    cooja_mt_yield();
+    simRtimerPending = 0;
+  }
+}
+/*---------------------------------------------------------------------------*/
+void
 rtimer_arch_init(void)
 {
   simRtimerNextExpirationTime = 0;
   simRtimerPending = 0;
 }
 /*---------------------------------------------------------------------------*/
+static int
+schedule(rtimer_clock_t t, bool auto_delay)
+{
+  if(!RTIMER_CLOCK_LT(simRtimerCurrentTicks, t - RTIMER_GUARD_TIME)) {
+    if(auto_delay) {
+      t = simRtimerCurrentTicks + RTIMER_GUARD_TIME;
+    } else {
+      return RTIMER_ERR_TIME;
+    }
+  }
+  simRtimerNextExpirationTime = t;
+  simRtimerPending = 1;
+  return RTIMER_OK;
+}
+/*---------------------------------------------------------------------------*/
 void
 rtimer_arch_schedule(rtimer_clock_t t)
 {
-  simRtimerNextExpirationTime = t;
-  simRtimerPending = 1;
+  schedule(t, true);
+}
+/*---------------------------------------------------------------------------*/
+int
+rtimer_arch_schedule_precise(rtimer_clock_t t)
+{
+  return schedule(t, false);
+}
+/*---------------------------------------------------------------------------*/
+bool
+rtimer_arch_cancel(void)
+{
+  if(!simRtimerPending) {
+    return false;
+  }
+  rtimer_clock_t soonest_cancelation = RTIMER_NOW() + RTIMER_GUARD_TIME;
+  if(RTIMER_CLOCK_LT(soonest_cancelation, simRtimerNextExpirationTime)) {
+    simRtimerNextExpirationTime = soonest_cancelation;
+    return true;
+  }
+  return false;
 }
 /*---------------------------------------------------------------------------*/
 rtimer_clock_t
@@ -83,7 +131,7 @@ rtimer_arch_pending(void)
 int
 rtimer_arch_check(void)
 {
-  if (simRtimerCurrentTicks == simRtimerNextExpirationTime) {
+  if(simRtimerCurrentTicks >= simRtimerNextExpirationTime) {
     /* Execute rtimer */
     simRtimerPending = 0;
     rtimer_run_next();

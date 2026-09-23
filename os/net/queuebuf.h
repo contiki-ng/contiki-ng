@@ -54,7 +54,9 @@
 #define QUEUEBUF_H_
 
 #include "net/packetbuf.h"
-#include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 #ifdef QUEUEBUF_CONF_ENABLED
 #define QUEUEBUF_ENABLED QUEUEBUF_CONF_ENABLED
@@ -113,6 +115,10 @@ int queuebuf_datalen(struct queuebuf *b);
 
 linkaddr_t *queuebuf_addr(struct queuebuf *b, uint8_t type);
 packetbuf_attr_t queuebuf_attr(struct queuebuf *b, uint8_t type);
+
+bool queuebuf_holds_data_frame(struct queuebuf *b);
+bool queuebuf_holds_cmd_frame(struct queuebuf *b);
+uint8_t queuebuf_get_dispatch_byte(struct queuebuf *b);
 
 void queuebuf_debug_print(void);
 

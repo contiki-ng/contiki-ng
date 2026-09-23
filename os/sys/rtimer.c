@@ -74,6 +74,20 @@ rtimer_set(struct rtimer *rtimer, rtimer_clock_t time,
   return RTIMER_OK;
 }
 /*---------------------------------------------------------------------------*/
+int
+rtimer_set_precise(struct rtimer *rtimer)
+{
+  if(next_rtimer) {
+    return RTIMER_ERR_ALREADY_SCHEDULED;
+  }
+
+  int result = rtimer_arch_schedule_precise(rtimer->time);
+  if(result == RTIMER_OK) {
+    next_rtimer = rtimer;
+  }
+  return result;
+}
+/*---------------------------------------------------------------------------*/
 void
 rtimer_run_next(void)
 {
@@ -84,6 +98,21 @@ rtimer_run_next(void)
   t = next_rtimer;
   next_rtimer = NULL;
   t->func(t, t->ptr);
+}
+/*---------------------------------------------------------------------------*/
+bool
+rtimer_has_timed_out(rtimer_clock_t timeout)
+{
+  return RTIMER_CLOCK_LT(timeout, RTIMER_NOW());
+}
+/*---------------------------------------------------------------------------*/
+bool
+rtimer_cancel(void)
+{
+  if(next_rtimer == NULL) {
+    return false;
+  }
+  return rtimer_arch_cancel();
 }
 /*---------------------------------------------------------------------------*/
 

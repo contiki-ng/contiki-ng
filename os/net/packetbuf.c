@@ -45,22 +45,12 @@
 #include <string.h>
 
 #include "contiki-net.h"
+#include "net/mac/framer/frame802154.h"
 #include "net/packetbuf.h"
 #include "sys/cc.h"
 
-struct packetbuf_attr packetbuf_attrs[PACKETBUF_NUM_ATTRS];
-struct packetbuf_addr packetbuf_addrs[PACKETBUF_NUM_ADDRS];
-
-
-static uint16_t buflen, bufptr;
-static uint8_t hdrlen;
-
-/* The declarations below ensure that the packet buffer is aligned on
-   an even 32-bit boundary. On some platforms (most notably the
-   msp430 or OpenRISC), having a potentially misaligned packet buffer may lead to
-   problems when accessing words. */
-static uint32_t packetbuf_aligned[(PACKETBUF_SIZE + 3) / 4];
-static uint8_t *packetbuf = (uint8_t *)packetbuf_aligned;
+static struct packetbuf temp;
+struct packetbuf *packetbuf = &temp;
 
 #define DEBUG 0
 #if DEBUG
@@ -74,9 +64,9 @@ static uint8_t *packetbuf = (uint8_t *)packetbuf_aligned;
 void
 packetbuf_clear(void)
 {
-  buflen = bufptr = 0;
-  hdrlen = 0;
-
+  packetbuf->datalen = 0;
+  packetbuf->bufptr = 0;
+  packetbuf->hdrlen = 0;
   packetbuf_attr_clear();
 }
 /*---------------------------------------------------------------------------*/
@@ -87,20 +77,20 @@ packetbuf_copyfrom(const void *from, uint16_t len)
 
   packetbuf_clear();
   l = MIN(PACKETBUF_SIZE, len);
-  memcpy(packetbuf, from, l);
-  buflen = l;
+  memcpy(packetbuf->data, from, l);
+  packetbuf->datalen = l;
   return l;
 }
 /*---------------------------------------------------------------------------*/
 int
 packetbuf_copyto(void *to)
 {
-  if(hdrlen + buflen > PACKETBUF_SIZE) {
+  if(packetbuf->hdrlen + packetbuf->datalen > PACKETBUF_SIZE) {
     return 0;
   }
-  memcpy(to, packetbuf_hdrptr(), hdrlen);
-  memcpy((uint8_t *)to + hdrlen, packetbuf_dataptr(), buflen);
-  return hdrlen + buflen;
+  memcpy(to, packetbuf_hdrptr(), packetbuf->hdrlen);
+  memcpy((uint8_t *)to + packetbuf->hdrlen, packetbuf_dataptr(), packetbuf->datalen);
+  return packetbuf->hdrlen + packetbuf->datalen;
 }
 /*---------------------------------------------------------------------------*/
 int
@@ -114,21 +104,21 @@ packetbuf_hdralloc(int size)
 
   /* shift data to the right */
   for(i = packetbuf_totlen() - 1; i >= 0; i--) {
-    packetbuf[i + size] = packetbuf[i];
+    packetbuf->data[i + size] = packetbuf->data[i];
   }
-  hdrlen += size;
+  packetbuf->hdrlen += size;
   return 1;
 }
 /*---------------------------------------------------------------------------*/
 int
 packetbuf_hdrreduce(int size)
 {
-  if(buflen < size) {
+  if(size > packetbuf->datalen) {
     return 0;
   }
 
-  bufptr += size;
-  buflen -= size;
+  packetbuf->bufptr += size;
+  packetbuf->datalen -= size;
   return 1;
 }
 /*---------------------------------------------------------------------------*/
@@ -136,31 +126,31 @@ void
 packetbuf_set_datalen(uint16_t len)
 {
   PRINTF("packetbuf_set_len: len %d\n", len);
-  buflen = len;
+  packetbuf->datalen = len;
 }
 /*---------------------------------------------------------------------------*/
 void *
 packetbuf_dataptr(void)
 {
-  return packetbuf + packetbuf_hdrlen();
+  return packetbuf->data + packetbuf_hdrlen();
 }
 /*---------------------------------------------------------------------------*/
 void *
 packetbuf_hdrptr(void)
 {
-  return packetbuf;
+  return packetbuf->data;
 }
 /*---------------------------------------------------------------------------*/
 uint16_t
 packetbuf_datalen(void)
 {
-  return buflen;
+  return packetbuf->datalen;
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
 packetbuf_hdrlen(void)
 {
-  return bufptr + hdrlen;
+  return packetbuf->bufptr + packetbuf->hdrlen;
 }
 /*---------------------------------------------------------------------------*/
 uint16_t
@@ -179,9 +169,9 @@ void
 packetbuf_attr_clear(void)
 {
   int i;
-  memset(packetbuf_attrs, 0, sizeof(packetbuf_attrs));
+  memset(packetbuf->attrs, 0, sizeof(packetbuf->attrs));
   for(i = 0; i < PACKETBUF_NUM_ADDRS; ++i) {
-    linkaddr_copy(&packetbuf_addrs[i].addr, &linkaddr_null);
+    linkaddr_copy(&packetbuf->addrs[i].addr, &linkaddr_null);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -189,46 +179,66 @@ void
 packetbuf_attr_copyto(struct packetbuf_attr *attrs,
                       struct packetbuf_addr *addrs)
 {
-  memcpy(attrs, packetbuf_attrs, sizeof(packetbuf_attrs));
-  memcpy(addrs, packetbuf_addrs, sizeof(packetbuf_addrs));
+  memcpy(attrs, packetbuf->attrs, sizeof(packetbuf->attrs));
+  memcpy(addrs, packetbuf->addrs, sizeof(packetbuf->addrs));
 }
 /*---------------------------------------------------------------------------*/
 void
 packetbuf_attr_copyfrom(struct packetbuf_attr *attrs,
                         struct packetbuf_addr *addrs)
 {
-  memcpy(packetbuf_attrs, attrs, sizeof(packetbuf_attrs));
-  memcpy(packetbuf_addrs, addrs, sizeof(packetbuf_addrs));
+  memcpy(packetbuf->attrs, attrs, sizeof(packetbuf->attrs));
+  memcpy(packetbuf->addrs, addrs, sizeof(packetbuf->addrs));
 }
 /*---------------------------------------------------------------------------*/
 void
 packetbuf_set_attr(uint8_t type, const packetbuf_attr_t val)
 {
-  packetbuf_attrs[type].val = val;
+  packetbuf->attrs[type].val = val;
 }
 /*---------------------------------------------------------------------------*/
 packetbuf_attr_t
 packetbuf_attr(uint8_t type)
 {
-  return packetbuf_attrs[type].val;
+  return packetbuf->attrs[type].val;
 }
 /*---------------------------------------------------------------------------*/
 void
 packetbuf_set_addr(uint8_t type, const linkaddr_t *addr)
 {
-  linkaddr_copy(&packetbuf_addrs[type - PACKETBUF_ADDR_FIRST].addr, addr);
+  linkaddr_copy(&packetbuf->addrs[type - PACKETBUF_ADDR_FIRST].addr, addr);
 }
 /*---------------------------------------------------------------------------*/
 const linkaddr_t *
 packetbuf_addr(uint8_t type)
 {
-  return &packetbuf_addrs[type - PACKETBUF_ADDR_FIRST].addr;
+  return &packetbuf->addrs[type - PACKETBUF_ADDR_FIRST].addr;
 }
 /*---------------------------------------------------------------------------*/
 bool
 packetbuf_holds_broadcast(void)
 {
-  return linkaddr_cmp(&packetbuf_addrs[PACKETBUF_ADDR_RECEIVER - PACKETBUF_ADDR_FIRST].addr, &linkaddr_null);
+  return linkaddr_cmp(
+      &packetbuf->addrs[PACKETBUF_ADDR_RECEIVER - PACKETBUF_ADDR_FIRST].addr,
+      &linkaddr_null);
+}
+/*---------------------------------------------------------------------------*/
+bool
+packetbuf_holds_data_frame(void)
+{
+  return packetbuf_attr(PACKETBUF_ATTR_FRAME_TYPE) == FRAME802154_DATAFRAME;
+}
+/*---------------------------------------------------------------------------*/
+bool
+packetbuf_holds_cmd_frame(void)
+{
+  return packetbuf_attr(PACKETBUF_ATTR_FRAME_TYPE) == FRAME802154_CMDFRAME;
+}
+/*---------------------------------------------------------------------------*/
+uint8_t
+packetbuf_get_dispatch_byte(void)
+{
+  return ((uint8_t *)packetbuf_dataptr())[0];
 }
 /*---------------------------------------------------------------------------*/
 

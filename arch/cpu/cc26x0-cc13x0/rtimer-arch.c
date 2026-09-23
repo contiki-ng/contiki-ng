@@ -69,6 +69,19 @@ rtimer_arch_schedule(rtimer_clock_t t)
   soc_rtc_schedule_one_shot(AON_RTC_CH0, t);
 }
 /*---------------------------------------------------------------------------*/
+bool
+rtimer_arch_cancel(void)
+{
+  return false;
+}
+/*---------------------------------------------------------------------------*/
+int
+rtimer_arch_schedule_precise(rtimer_clock_t t)
+{
+  rtimer_arch_schedule(t);
+  return RTIMER_OK;
+}
+/*---------------------------------------------------------------------------*/
 /**
  * \brief Returns the current real-time clock time
  * \return The current rtimer time in ticks

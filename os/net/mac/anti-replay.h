@@ -44,17 +44,33 @@
 #define ANTI_REPLAY_H
 
 #include "contiki.h"
+#include "net/mac/framer/frame802154.h"
 #include <stdbool.h>
+
+#ifdef ANTI_REPLAY_CONF_WITH_SUPPRESSION
+#define ANTI_REPLAY_WITH_SUPPRESSION ANTI_REPLAY_CONF_WITH_SUPPRESSION
+#else /* ANTI_REPLAY_CONF_WITH_SUPPRESSION */
+#define ANTI_REPLAY_WITH_SUPPRESSION 0
+#endif /* ANTI_REPLAY_CONF_WITH_SUPPRESSION */
 
 struct anti_replay_info {
   uint32_t last_broadcast_counter;
   uint32_t last_unicast_counter;
+#if ANTI_REPLAY_WITH_SUPPRESSION
+  uint32_t my_unicast_counter;
+#endif /* ANTI_REPLAY_WITH_SUPPRESSION */
 };
 
+#if ANTI_REPLAY_WITH_SUPPRESSION
+extern uint32_t anti_replay_my_broadcast_counter;
+extern uint32_t anti_replay_my_unicast_counter;
+#endif /* ANTI_REPLAY_WITH_SUPPRESSION */
+
 /**
- * \brief Sets the frame counter packetbuf attributes.
+ * \brief      Sets the frame counter packetbuf attributes.
+ * \param info Anti-replay information about the receiver (NULL if broadcast)
  */
-void anti_replay_set_counter(void);
+void anti_replay_set_counter(struct anti_replay_info *info);
 
 /**
  * \brief Gets the frame counter from packetbuf.
@@ -77,6 +93,40 @@ bool anti_replay_was_replayed(struct anti_replay_info *info);
  * \brief Parses the frame counter to packetbuf attributes
  */
 void anti_replay_parse_counter(const uint8_t *p);
+
+/**
+ * \brief Writes the frame counter of packetbuf to dst
+ */
+void anti_replay_write_counter(uint8_t *dst);
+
+/**
+ * \brief Reads the frame counter from the specified destination.
+ */
+uint32_t anti_replay_read_counter(const uint8_t *src);
+
+/**
+ * \brief Gets the LSBs of the packetbuf's frame counter
+ */
+uint8_t anti_replay_get_counter_lsbs(void);
+
+#if ANTI_REPLAY_WITH_SUPPRESSION
+/**
+ * \brief Writes my broadcast frame counter to the specified destination.
+ */
+void anti_replay_write_my_broadcast_counter(uint8_t *dst);
+
+/**
+ * \brief             Restores suppressed frame counter
+ * \param sender_info Anti-replay information about the sender
+ */
+void anti_replay_restore_counter(const struct anti_replay_info *sender_info,
+                                 uint8_t lsbs);
+#else /* ANTI_REPLAY_WITH_SUPPRESSION */
+/**
+ * \brief Increments frame counter and stores it in counter
+ */
+void anti_replay_set_counter_to(frame802154_frame_counter_t *counter);
+#endif /* ANTI_REPLAY_WITH_SUPPRESSION */
 
 #endif /* ANTI_REPLAY_H */
 

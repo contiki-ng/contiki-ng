@@ -170,6 +170,16 @@ int rtimer_set(struct rtimer *task, rtimer_clock_t time,
 	       rtimer_clock_t duration, rtimer_callback_t func, void *ptr);
 
 /**
+ * \brief      Schedules a real-time task for a given instant
+ * \param task metadata about the real-time task
+ *
+ *             This variant does not auto-delay real-time tasks that
+ *             lie less than RTIMER_GUARD_TIME ticks in the future,
+ *             but returns an error code in such cases.
+ */
+int rtimer_set_precise(struct rtimer *task);
+
+/**
  * \brief      Execute the next real-time task and schedule the next task, if any
  *
  *             This function is called by the architecture dependent
@@ -177,6 +187,13 @@ int rtimer_set(struct rtimer *task, rtimer_clock_t time,
  *
  */
 void rtimer_run_next(void);
+
+/**
+ * \brief      Tells if a timestamp lies in the past
+ * \param t    The timestamp
+ * \return     true if the timeout lies in the past
+ */
+bool rtimer_has_timed_out(rtimer_clock_t t);
 
 /**
  * \brief      Get the current clock time
@@ -223,6 +240,11 @@ void rtimer_run_next(void);
 /** \brief Busy-wait for a fixed duration */
 #define RTIMER_BUSYWAIT(duration) RTIMER_BUSYWAIT_UNTIL(0, duration)
 
+#ifndef RTIMER_BUSYWAIT_UNTIL_TIMEOUT
+#define RTIMER_BUSYWAIT_UNTIL_TIMEOUT(timeout) \
+  while(!rtimer_has_timed_out(timeout))
+#endif /* RTIMER_BUSYWAIT_UNTIL_TIMEOUT */
+
 /*---------------------------------------------------------------------------*/
 
 /**
@@ -257,6 +279,24 @@ void rtimer_arch_init(void);
  *
  */
 void rtimer_arch_schedule(rtimer_clock_t t);
+
+/**
+ * \brief      This variant does not auto-delay real-time tasks that
+ *             lie less than RTIMER_GUARD_TIME ticks in the future,
+ *             but returns an error code in such cases.
+ */
+int rtimer_arch_schedule_precise(rtimer_clock_t t);
+
+/**
+ * \brief      Executes the next real-time task as soon as possible
+ * \return     false if the current real-time task could not be canceled
+ */
+bool rtimer_cancel(void);
+
+/**
+ * \brief      Platform-specific implementation of rtimer_cancel()
+ */
+bool rtimer_arch_cancel(void);
 
 /*
  * Return the current time in rtimer ticks.

@@ -110,6 +110,7 @@ hello-world/nrf:BOARD=nrf52840/dongle:NRF_NATIVE_USB=1 \
 hello-world/nrf:BOARD=nrf5340/dk/application:NRF_NATIVE_USB=1 \
 hello-world/gecko:BOARD=brd4162a \
 hello-world/gecko:BOARD=brd4166a \
+libs/crypto/zoul \
 libs/data-structures/zoul \
 libs/deployment/openmote \
 libs/ecc/zoul \
@@ -155,7 +156,6 @@ mqtt-client/zoul:BOARD=firefly:DEFINES=MQTT_CONF_VERSION=5 \
 multicast/zoul \
 nullnet/zoul \
 platform-specific/cc2538-common/cc2538dk \
-platform-specific/cc2538-common/crypto/zoul \
 platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
 platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc1350 \
 platform-specific/cc26x0-cc13x0/base-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \

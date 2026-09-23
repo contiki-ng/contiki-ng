@@ -85,3 +85,16 @@ rtimer_arch_schedule(rtimer_clock_t t)
   setitimer(ITIMER_REAL, &val, NULL);
 }
 /*---------------------------------------------------------------------------*/
+int
+rtimer_arch_schedule_precise(rtimer_clock_t t)
+{
+  rtimer_arch_schedule(t);
+  return RTIMER_OK;
+}
+/*---------------------------------------------------------------------------*/
+bool
+rtimer_arch_cancel(void)
+{
+  return false;
+}
+/*---------------------------------------------------------------------------*/

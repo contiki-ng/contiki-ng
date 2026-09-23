@@ -37,6 +37,7 @@
  *
  */
 #include "contiki.h"
+#include "sys/atomic.h"
 #include "sys/rtimer.h"
 #include "dev/nvic.h"
 #include "dev/smwdthrosc.h"
@@ -44,8 +45,14 @@
 #include "lpm.h"
 
 #include <stdint.h>
+#include <stdbool.h>
+
+static int schedule(rtimer_clock_t t, bool auto_delay);
+static void set_sleep_timer_value(rtimer_clock_t);
+
 /*---------------------------------------------------------------------------*/
 static volatile rtimer_clock_t next_trigger;
+static uint8_t busy;
 /*---------------------------------------------------------------------------*/
 /**
  * \brief We don't need to explicitly initialise anything but this
@@ -64,10 +71,20 @@ rtimer_arch_init(void)
 void
 rtimer_arch_schedule(rtimer_clock_t t)
 {
+  schedule(t, true);
+}
+/*---------------------------------------------------------------------------*/
+int
+rtimer_arch_schedule_precise(rtimer_clock_t t)
+{
+  return schedule(t, false);
+}
+/*---------------------------------------------------------------------------*/
+static int
+schedule(rtimer_clock_t t, bool auto_delay)
+{
+  int result = RTIMER_OK;
   rtimer_clock_t now;
-
-  /* STLOAD must be 1 */
-  while((REG(SMWDTHROSC_STLOAD) & SMWDTHROSC_STLOAD_STLOAD) != 1);
 
   INTERRUPTS_DISABLE();
 
@@ -78,8 +95,59 @@ rtimer_arch_schedule(rtimer_clock_t t)
    * writing the registers. We play it safe here and we add a bit of leeway
    */
   if(!RTIMER_CLOCK_LT(now, t - RTIMER_GUARD_TIME)) {
-    t = now + RTIMER_GUARD_TIME;
+    if(auto_delay) {
+      t = now + RTIMER_GUARD_TIME;
+    } else {
+      result = RTIMER_ERR_TIME;
+    }
   }
+
+  if(result == RTIMER_OK) {
+    set_sleep_timer_value(t);
+  }
+
+  INTERRUPTS_ENABLE();
+
+  if(result != RTIMER_OK) {
+    return result;
+  }
+
+  /* Store the value. The LPM module will query us for it */
+  next_trigger = t;
+
+  NVIC_EnableIRQ(SMT_IRQn);
+  return RTIMER_OK;
+}
+/*---------------------------------------------------------------------------*/
+bool
+rtimer_arch_cancel(void)
+{
+  INTERRUPTS_DISABLE();
+
+  rtimer_clock_t soonest_cancelation = RTIMER_NOW() + RTIMER_GUARD_TIME;
+  bool result = RTIMER_CLOCK_LT(soonest_cancelation, next_trigger);
+  if(result) {
+    /* clear STCS so as to enable setting a new sleep timer value */
+    REG(SMWDTHROSC_STCS) = 0;
+    set_sleep_timer_value(soonest_cancelation);
+  }
+
+  INTERRUPTS_ENABLE();
+
+  if(result) {
+    next_trigger = soonest_cancelation;
+  }
+
+  return result;
+}
+/*---------------------------------------------------------------------------*/
+static void
+set_sleep_timer_value(rtimer_clock_t t)
+{
+  atomic_cas_uint8(&busy, 0, 1);
+
+  /* STLOAD must be 1 */
+  while((REG(SMWDTHROSC_STLOAD) & SMWDTHROSC_STLOAD_STLOAD) != 1);
 
   /* ST0 latches ST[1:3] and must be written last */
   REG(SMWDTHROSC_ST3) = (t >> 24) & 0x000000FF;
@@ -87,12 +155,7 @@ rtimer_arch_schedule(rtimer_clock_t t)
   REG(SMWDTHROSC_ST1) = (t >> 8) & 0x000000FF;
   REG(SMWDTHROSC_ST0) = t & 0x000000FF;
 
-  INTERRUPTS_ENABLE();
-
-  /* Store the value. The LPM module will query us for it */
-  next_trigger = t;
-
-  NVIC_EnableIRQ(SMT_IRQn);
+  atomic_cas_uint8(&busy, 1, 0);
 }
 /*---------------------------------------------------------------------------*/
 rtimer_clock_t
@@ -110,11 +173,20 @@ rtimer_arch_now()
 {
   rtimer_clock_t rv;
 
-  /* SMWDTHROSC_ST0 latches ST[1:3] and must be read first */
-  rv = REG(SMWDTHROSC_ST0);
-  rv |= (REG(SMWDTHROSC_ST1) << 8);
-  rv |= (REG(SMWDTHROSC_ST2) << 16);
-  rv |= (REG(SMWDTHROSC_ST3) << 24);
+  do {
+    atomic_cas_uint8(&busy, 0, 1);
+
+    /* waiting for STLOAD helps avoid some timer issues */
+    while((REG(SMWDTHROSC_STLOAD) & SMWDTHROSC_STLOAD_STLOAD) != 1);
+
+    /* SMWDTHROSC_ST0 latches ST[1:3] and must be read first */
+    rv = REG(SMWDTHROSC_ST0);
+    rv |= (REG(SMWDTHROSC_ST1) << 8);
+    rv |= (REG(SMWDTHROSC_ST2) << 16);
+    rv |= (REG(SMWDTHROSC_ST3) << 24);
+
+    /* repeat if we were interrupted */
+  } while(!atomic_cas_uint8(&busy, 1, 0));
 
   return rv;
 }

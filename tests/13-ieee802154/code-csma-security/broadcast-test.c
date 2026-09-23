@@ -34,6 +34,7 @@
 #include "contiki-net.h"
 #include "net/ipv6/simple-udp.h"
 #include "net/ipv6/uip.h"
+#include "sys/node-id.h"
 #include <stdio.h>
 
 #define UDP_SERVER_PORT 5678
@@ -102,7 +103,7 @@ PROCESS_THREAD(broadcast_test_process, ev, data)
                       UDP_SERVER_PORT,
                       client_callback);
 
-  if(linkaddr_node_addr.u8[1] == 1) {
+  if(node_id == 1) {
     for(; counter < 8; counter++) {
       etimer_set(&timer, CLOCK_SECOND);
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&timer));

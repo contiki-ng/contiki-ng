@@ -1690,6 +1690,7 @@ output(const linkaddr_t *localdest)
 #endif /*  LLSEC802154_USES_AUX_HEADER */
 
   /* Calculate NETSTACK_FRAMER's header length, that will be added in the NETSTACK_MAC */
+  packetbuf_set_attr(PACKETBUF_ATTR_FRAME_TYPE, FRAME802154_DATAFRAME);
   mac_max_payload = NETSTACK_MAC.max_payload();
 
   if(mac_max_payload <= 0) {

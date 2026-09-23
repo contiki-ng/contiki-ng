@@ -52,6 +52,32 @@ PROCESS(test_process, "test");
 AUTOSTART_PROCESSES(&test_process);
 
 /*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(test_anti_replay, "Test anti-replay module");
+UNIT_TEST(test_anti_replay)
+{
+  uint8_t written_counter[4];
+  const uint8_t written_counter_oracle[] = { 0x00, 0x11, 0x22, 0x33 };
+  const uint8_t five_written[] = { 0x05, 0x00, 0x00, 0x00 };
+  const uint32_t five = 5;
+
+  UNIT_TEST_BEGIN();
+
+  printf("Testing anti-replay ... ");
+
+  anti_replay_parse_counter(written_counter_oracle);
+  anti_replay_write_counter(written_counter);
+  UNIT_TEST_ASSERT(!memcmp(written_counter, written_counter_oracle, 4));
+
+  UNIT_TEST_ASSERT(!memcmp(five_written, &five, 4));
+  UNIT_TEST_ASSERT(anti_replay_read_counter(five_written) == 5);
+
+  anti_replay_parse_counter(five_written);
+  UNIT_TEST_ASSERT(anti_replay_get_counter() == five);
+  UNIT_TEST_ASSERT(anti_replay_get_counter_lsbs() == 0x05);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 UNIT_TEST_REGISTER(test_aes_128,
                    "Test vector C.1 from FIPS Pub 197");
 UNIT_TEST(test_aes_128)
@@ -73,8 +99,8 @@ UNIT_TEST(test_aes_128)
 
   printf("Testing AES-128 ... ");
 
-  AES_128.set_key(key);
-  AES_128.encrypt(data);
+  UNIT_TEST_ASSERT(AES_128.set_key(key));
+  UNIT_TEST_ASSERT(AES_128.encrypt(data));
 
   UNIT_TEST_ASSERT(!memcmp(data, oracle, 16));
 
@@ -122,16 +148,17 @@ UNIT_TEST(test_sec_lvl_2)
   packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, sec_lvl);
   packetbuf_hdrreduce(18);
 
-  CCM_STAR.set_key(key);
+  UNIT_TEST_ASSERT(CCM_STAR.set_key(key));
   ccm_star_packetbuf_set_nonce(nonce, 1);
-  CCM_STAR.aead(nonce,
-                NULL,
-                0,
-                packetbuf_hdrptr(),
-                packetbuf_totlen(),
-                ((uint8_t *)packetbuf_dataptr()) + packetbuf_datalen(),
-                LLSEC802154_MIC_LEN(sec_lvl),
-                true);
+  UNIT_TEST_ASSERT(CCM_STAR.aead(nonce,
+                                 NULL,
+                                 0,
+                                 packetbuf_hdrptr(),
+                                 packetbuf_totlen(),
+                                 ((uint8_t *)packetbuf_dataptr())
+                                 + packetbuf_datalen(),
+                                 LLSEC802154_MIC_LEN(sec_lvl),
+                                 true));
 
   UNIT_TEST_ASSERT(!memcmp(
                        ((uint8_t *)packetbuf_dataptr()) + packetbuf_datalen(),
@@ -187,16 +214,16 @@ UNIT_TEST(test_sec_lvl_6)
   packetbuf_set_attr(PACKETBUF_ATTR_SECURITY_LEVEL, sec_lvl);
   packetbuf_hdrreduce(29);
 
-  CCM_STAR.set_key(key);
+  UNIT_TEST_ASSERT(CCM_STAR.set_key(key));
   ccm_star_packetbuf_set_nonce(nonce, 1);
-  CCM_STAR.aead(nonce,
-                packetbuf_dataptr(),
-                packetbuf_datalen(),
-                packetbuf_hdrptr(),
-                packetbuf_hdrlen(),
-                ((uint8_t *)packetbuf_hdrptr()) + 30,
-                LLSEC802154_MIC_LEN(sec_lvl),
-                true);
+  UNIT_TEST_ASSERT(CCM_STAR.aead(nonce,
+                                 packetbuf_dataptr(),
+                                 packetbuf_datalen(),
+                                 packetbuf_hdrptr(),
+                                 packetbuf_hdrlen(),
+                                 ((uint8_t *)packetbuf_hdrptr()) + 30,
+                                 LLSEC802154_MIC_LEN(sec_lvl),
+                                 true));
 
   UNIT_TEST_ASSERT(!memcmp(
                        ((uint8_t *)packetbuf_hdrptr()) + 30,
@@ -210,14 +237,14 @@ UNIT_TEST(test_sec_lvl_6)
   printf("Testing decryption ... ");
   packetbuf_set_addr(PACKETBUF_ADDR_SENDER, &source_address);
   ccm_star_packetbuf_set_nonce(nonce, 0);
-  CCM_STAR.aead(nonce,
-                packetbuf_dataptr(),
-                packetbuf_datalen(),
-                packetbuf_hdrptr(),
-                packetbuf_hdrlen(),
-                ((uint8_t *)packetbuf_hdrptr()) + 30,
-                LLSEC802154_MIC_LEN(sec_lvl),
-                false);
+  UNIT_TEST_ASSERT(CCM_STAR.aead(nonce,
+                                 packetbuf_dataptr(),
+                                 packetbuf_datalen(),
+                                 packetbuf_hdrptr(),
+                                 packetbuf_hdrlen(),
+                                 ((uint8_t *)packetbuf_hdrptr()) + 30,
+                                 LLSEC802154_MIC_LEN(sec_lvl),
+                                 false));
   UNIT_TEST_ASSERT(((uint8_t *)packetbuf_hdrptr())[29] == 0xCE);
 
   UNIT_TEST_END();
@@ -230,11 +257,13 @@ PROCESS_THREAD(test_process, ev, data)
   printf("Run unit-test\n");
   printf("---\n");
 
+  UNIT_TEST_RUN(test_anti_replay);
   UNIT_TEST_RUN(test_aes_128);
   UNIT_TEST_RUN(test_sec_lvl_2);
   UNIT_TEST_RUN(test_sec_lvl_6);
 
-  if(!UNIT_TEST_PASSED(test_aes_128)
+  if(!UNIT_TEST_PASSED(test_anti_replay)
+     || !UNIT_TEST_PASSED(test_aes_128)
      || !UNIT_TEST_PASSED(test_sec_lvl_2)
      || !UNIT_TEST_PASSED(test_sec_lvl_6)) {
     printf("=check-me= FAILED\n");

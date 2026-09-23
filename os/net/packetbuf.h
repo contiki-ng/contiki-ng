@@ -67,6 +67,24 @@
 #define PACKETBUF_SIZE 128
 #endif
 
+#ifdef PACKETBUF_CONF_WITH_UNENCRYPTED_BYTES
+#define PACKETBUF_WITH_UNENCRYPTED_BYTES PACKETBUF_CONF_WITH_UNENCRYPTED_BYTES
+#else /* PACKETBUF_CONF_WITH_UNENCRYPTED_BYTES */
+#define PACKETBUF_WITH_UNENCRYPTED_BYTES 0
+#endif /* PACKETBUF_CONF_WITH_UNENCRYPTED_BYTES */
+
+#ifdef PACKETBUF_CONF_WITH_BURST_INDEX
+#define PACKETBUF_WITH_BURST_INDEX PACKETBUF_CONF_WITH_BURST_INDEX
+#else /* PACKETBUF_CONF_WITH_BURST_INDEX */
+#define PACKETBUF_WITH_BURST_INDEX 0
+#endif /* PACKETBUF_CONF_WITH_BURST_INDEX */
+
+#ifdef PACKETBUF_CONF_WITH_PENDING
+#define PACKETBUF_WITH_PENDING PACKETBUF_CONF_WITH_PENDING
+#else /* PACKETBUF_CONF_WITH_PENDING */
+#define PACKETBUF_WITH_PENDING 0
+#endif /* PACKETBUF_CONF_WITH_PENDING */
+
 /**
  * \brief      Clear and reset the packetbuf
  *
@@ -222,6 +240,9 @@ enum {
   PACKETBUF_ATTR_TSCH_TIMESLOT,
   PACKETBUF_ATTR_TSCH_CHANNEL_OFFSET,
 #endif /* TSCH_WITH_LINK_SELECTOR */
+#if PACKETBUF_WITH_BURST_INDEX
+  PACKETBUF_ATTR_BURST_INDEX,
+#endif /* PACKETBUF_WITH_BURST_INDEX */
 
   /* Scope 1 attributes: used between two neighbors only. */
   PACKETBUF_ATTR_FRAME_TYPE,
@@ -232,6 +253,12 @@ enum {
   PACKETBUF_ATTR_KEY_ID_MODE,
   PACKETBUF_ATTR_KEY_INDEX,
 #endif /* LLSEC802154_USES_EXPLICIT_KEYS */
+#if PACKETBUF_WITH_PENDING
+  PACKETBUF_ATTR_PENDING,
+#endif /* PACKETBUF_WITH_PENDING */
+#if PACKETBUF_WITH_UNENCRYPTED_BYTES
+  PACKETBUF_ATTR_UNENCRYPTED_BYTES,
+#endif /* PACKETBUF_WITH_UNENCRYPTED_BYTES */
 
 #if LLSEC802154_USES_FRAME_COUNTER
   PACKETBUF_ATTR_FRAME_COUNTER_BYTES_0_1,
@@ -252,6 +279,27 @@ enum {
 
 #define PACKETBUF_IS_ADDR(type) ((type) >= PACKETBUF_ADDR_FIRST)
 
+struct packetbuf {
+  struct packetbuf_attr attrs[PACKETBUF_NUM_ATTRS];
+  struct packetbuf_addr addrs[PACKETBUF_NUM_ADDRS];
+
+  union {
+    /**
+     * The declarations below ensure that the packet buffer is aligned on
+     * an even 32-bit boundary. On some platforms (most notably the
+     * msp430 or OpenRISC), having a potentially misaligned packet buffer may lead to
+     * problems when accessing words.
+     */
+    uint32_t aligned[(PACKETBUF_SIZE + 3) / 4];
+    uint8_t data[PACKETBUF_SIZE];
+  };
+
+  uint16_t datalen;
+  uint8_t hdrlen;
+  uint16_t bufptr;
+};
+extern struct packetbuf *packetbuf;
+
 void              packetbuf_set_attr(uint8_t type, const packetbuf_attr_t val);
 packetbuf_attr_t packetbuf_attr(uint8_t type);
 void              packetbuf_set_addr(uint8_t type, const linkaddr_t *addr);
@@ -262,6 +310,23 @@ const linkaddr_t *packetbuf_addr(uint8_t type);
  * \retval true iff the current packet is a broadcast
  */
 bool              packetbuf_holds_broadcast(void);
+
+/**
+ * \brief       Checks whether the current packet is a data frame.
+ * \retval true iff the current packet is a data frame
+ */
+bool              packetbuf_holds_data_frame(void);
+
+/**
+ * \brief       Checks whether the current packet is a MAC command frame.
+ * \retval true iff the current packet is a MAC command frame
+ */
+bool              packetbuf_holds_cmd_frame(void);
+
+/**
+ * \brief Returns the first byte of the payload.
+ */
+uint8_t           packetbuf_get_dispatch_byte(void);
 
 void              packetbuf_attr_clear(void);
 
