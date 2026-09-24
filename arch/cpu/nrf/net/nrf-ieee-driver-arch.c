@@ -153,6 +153,15 @@ PROCESS(nrf_ieee_rf_process, "nRF IEEE RF driver");
 #define SYMBOL_DURATION_RTIMER         1
 #define BYTE_DURATION_RTIMER          (SYMBOL_DURATION_RTIMER * 2)
 #define TXRU_DURATION_TIMER            3
+/*
+ * The RX FRAMESTART event does not fire exactly one byte after the RMARKER:
+ * the receive pipeline of the radio adds 20.7 us. The value was measured with
+ * a logic analyser (Salae Logic Pro 16), by anchoring on PHYEND, the last bit
+ * on air, and a known PSDU length:
+ * (FRAMESTART - PHYEND) + T_PHR + RADIO_BYTE_AIR_TIME * len.
+ */
+#define RADIO_RX_FRAMESTART_DELAY_USEC 21
+#define RADIO_RX_FRAMESTART_DELAY     US_TO_RTIMERTICKS(RADIO_RX_FRAMESTART_DELAY_USEC)
 /*---------------------------------------------------------------------------*/
 #define NRF_PPI_FRAMESTART_CHANNEL     1
 #define NRF_PPI_END_CHANNEL            2
@@ -725,11 +734,12 @@ read_frame(void *buf, unsigned short bufsize)
   timestamps.mpdu_duration = rx_buf.phr * BYTE_DURATION_RTIMER;
 
   /*
-   * Timestamp in rtimer ticks of the reception of the SFD. The SFD was
-   * received 1 byte before the PHR, therefore all we need to do is subtract
-   * 2 symbols (2 rtimer ticks) from the PPI FRAMESTART timestamp.
+   * Timestamp in rtimer ticks of the end of the SFD, the RMARKER. The PPI
+   * FRAMESTART timestamp is one byte after the RMARKER, plus the delay of the
+   * receive pipeline.
    */
-  timestamps.sfd = timestamps.framestart - BYTE_DURATION_RTIMER;
+  timestamps.sfd = timestamps.framestart - BYTE_DURATION_RTIMER
+                   - RADIO_RX_FRAMESTART_DELAY;
 
   LOG_DBG("Read frame: len=%d, RSSI=%d, LQI=0x%02x\n", payload_len, last_rssi,
           last_lqi);
