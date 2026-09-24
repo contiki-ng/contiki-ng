@@ -65,17 +65,36 @@
 #define ATOMIC_CONF_ARCH_HEADER_PATH         "atomic-cortex.h"
 #define MEMORY_BARRIER_CONF_ARCH_HEADER_PATH "memory-barrier-cortex.h"
 /*---------------------------------------------------------------------------*/
-/* Do the math in 32bits to save precision.
- * Round to nearest integer rather than truncate. */
+#ifndef RTIMER_ARCH_SECOND
+#define RTIMER_ARCH_SECOND     62500
+#endif
+/*---------------------------------------------------------------------------*/
+/* Microsecond/tick conversion.
+ *
+ * RTIMER_ARCH_SECOND either divides 1000000 or is a multiple of it, so the
+ * ratio is reduced at compile time and each conversion is a single divide or
+ * multiply.*/
+#if (1000000UL % (RTIMER_ARCH_SECOND)) == 0
+
+#define RTIMER_ARCH_US_PER_TICK  ((int32_t)(1000000UL / (RTIMER_ARCH_SECOND)))
 #define US_TO_RTIMERTICKS(US)  ((US) >= 0 ? \
-                                (((int32_t)(US)*(RTIMER_ARCH_SECOND)+500000) / 1000000L) : \
-                                ((int32_t)(US)*(RTIMER_ARCH_SECOND)-500000) / 1000000L)
+    (((int32_t)(US) + RTIMER_ARCH_US_PER_TICK / 2) / RTIMER_ARCH_US_PER_TICK) : \
+   -((-(int32_t)(US) + RTIMER_ARCH_US_PER_TICK / 2) / RTIMER_ARCH_US_PER_TICK))
+#define RTIMERTICKS_TO_US(T)   ((int32_t)(T) * RTIMER_ARCH_US_PER_TICK)
 
+#elif ((RTIMER_ARCH_SECOND) % 1000000UL) == 0
+
+#define RTIMER_ARCH_TICKS_PER_US ((int32_t)((RTIMER_ARCH_SECOND) / 1000000UL))
+#define US_TO_RTIMERTICKS(US)  ((int32_t)(US) * RTIMER_ARCH_TICKS_PER_US)
 #define RTIMERTICKS_TO_US(T)   ((T) >= 0 ? \
-                                (((int32_t)(T) * 1000000L + ((RTIMER_ARCH_SECOND) / 2)) / (RTIMER_ARCH_SECOND)) : \
-                                ((int32_t)(T) * 1000000L - ((RTIMER_ARCH_SECOND) / 2)) / (RTIMER_ARCH_SECOND))
+    (((int32_t)(T) + RTIMER_ARCH_TICKS_PER_US / 2) / RTIMER_ARCH_TICKS_PER_US) : \
+   -((-(int32_t)(T) + RTIMER_ARCH_TICKS_PER_US / 2) / RTIMER_ARCH_TICKS_PER_US))
 
-/* A 64-bit version because the 32-bit one cannot handle T >= 4295 ticks.
+#else
+#error "RTIMER_ARCH_SECOND must divide, or be a multiple of, 1000000"
+#endif
+
+/* A 64-bit version, for tick counts that do not fit the 32-bit form above.
    Intended only for positive values of T. */
 #define RTIMERTICKS_TO_US_64(T)  ((uint32_t)(((uint64_t)(T) * 1000000 + ((RTIMER_ARCH_SECOND) / 2)) / (RTIMER_ARCH_SECOND)))
 /*---------------------------------------------------------------------------*/
@@ -99,8 +118,6 @@
                                RADIO_TX_LAUNCH_LATENCY_USEC))
 #define RADIO_DELAY_BEFORE_RX         ((unsigned)US_TO_RTIMERTICKS(250))
 #define RADIO_DELAY_BEFORE_DETECT     0
-/*---------------------------------------------------------------------------*/
-#define RTIMER_ARCH_SECOND 62500
 /*---------------------------------------------------------------------------*/
 #define GPIO_HAL_CONF_ARCH_HDR_PATH          "gpio-hal-arch.h"
 #define GPIO_HAL_CONF_ARCH_SW_TOGGLE         0
