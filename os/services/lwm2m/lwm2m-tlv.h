@@ -83,7 +83,7 @@ size_t lwm2m_tlv_write_int32(uint8_t type, int16_t id, int32_t value, uint8_t *b
 /* write a float converted from fixpoint as a TLV to the buffer */
 size_t lwm2m_tlv_write_float32(uint8_t type, int16_t id, int32_t value, int bits, uint8_t *buffer, size_t len);
 
-/* convert TLV with float32 to fixpoint */
+/* convert a Float TLV, binary32 or binary64, to fixpoint */
 size_t lwm2m_tlv_float32_to_fix(const lwm2m_tlv_t *tlv, int32_t *value, int bits);
 
 #endif /* LWM2M_TLV_H_ */
