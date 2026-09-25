@@ -26,55 +26,51 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+
 /**
- * \addtogroup cc26xx
- * @{
- *
- * \defgroup cc26xx-aes CC26x0/CC13x0 AES-128
- *
- * AES-128 driver for the CC26x0/CC13x0 SoC
+ * \addtogroup cc-crypto
  * @{
  *
  * \file
- *         Header file of the AES-128 driver for the CC26xx SoC
+ *         Implementation of general functions of the AES/SHA cryptoprocessor.
  * \author
- *         Atis Elsts <atis.elsts@gmail.com>
+ *         Konrad Krentz <konrad.krentz@gmail.com>
  */
-#ifndef CC2538_AES_H_
-#define CC2538_AES_H_
 
-#include "lib/aes-128.h"
+#include "dev/crypto/cc/cc-crypto.h"
+#include "ti-lib.h"
 
-/**
- * \brief Set a key to use in subsequent encryption & decryption operations.
- * \param key The key to use
- *
- * The size of the key must be AES_128_KEY_LENGTH.
- */
-void cc26xx_aes_set_key(const uint8_t *key);
+struct cc_crypto *const cc_crypto = (struct cc_crypto *)CRYPTO_BASE;
 
-/**
- * \brief Encrypt a message using the SoC AES-128 hardware implementation
- * \param plaintext_and_result In: message to encrypt, out: the encrypted message.
- *
- * The size of the message must be AES_128_BLOCK_SIZE.
- * The key to use in the encryption must be set before calling this function.
- */
-void cc26xx_aes_encrypt(uint8_t *plaintext_and_result);
+/*---------------------------------------------------------------------------*/
+void
+cc_crypto_init(void)
+{
+  IntDisable(INT_CRYPTO_RESULT_AVAIL_IRQ);
+  cc_crypto_enable();
+  cc_crypto->ctrl.sw_reset = CC_CRYPTO_CTRL_SW_RESET_SW_RESET;
+}
+/*---------------------------------------------------------------------------*/
+void
+cc_crypto_enable(void)
+{
+  ti_lib_prcm_peripheral_run_enable(PRCM_PERIPH_CRYPTO);
+  ti_lib_prcm_load_set();
+}
+/*---------------------------------------------------------------------------*/
+void
+cc_crypto_disable(void)
+{
+  ti_lib_prcm_peripheral_run_disable(PRCM_PERIPH_CRYPTO);
+  ti_lib_prcm_load_set();
+}
+/*---------------------------------------------------------------------------*/
+bool
+cc_crypto_is_enabled(void)
+{
+  return HWREG(PRCM_BASE + PRCM_O_SECDMACLKGR)
+         & PRCM_SECDMACLKGR_CRYPTO_CLK_EN;
+}
+/*---------------------------------------------------------------------------*/
 
-/**
- * \brief Decrypt a message using the SoC AES-128 hardware implementation
- * \param cyphertext_and_result In: message to decrypt, out: the decrypted message.
- *
- * The size of the message must be AES_128_BLOCK_SIZE.
- * The key to use in the decryption must be set before calling this function.
- */
-void cc26xx_aes_decrypt(uint8_t *cyphertext_and_result);
-
-extern const struct aes_128_driver cc26xx_aes_128_driver;
-
-#endif /* CC2538_AES_H_ */
-/**
- * @}
- * @}
- */
+/** @} */
