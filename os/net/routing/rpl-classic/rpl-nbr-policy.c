@@ -113,15 +113,20 @@ rpl_nbr_can_accept_new(const linkaddr_t *new,
        neighbors, regardless of whether the table if full or not. */
     accept = rpl_nbr_policy_get_free_nexthop_neighbors() > 0;
     break;
+  case NBR_TABLE_REASON_MAC:
+    /* The MAC layer needs to add neighbors even if the table is full, e.g.
+     * with TSCH to ensure that the node can (re)associate to a network. */
+    accept = candidate_for_removal == NULL
+             || get_rank(candidate_for_removal) == RPL_INFINITE_RANK;
+    break;
   case NBR_TABLE_REASON_RPL_DIS:
   case NBR_TABLE_REASON_UNDEFINED:
   case NBR_TABLE_REASON_IPV6_ND:
-  case NBR_TABLE_REASON_MAC:
   case NBR_TABLE_REASON_LLSEC:
   case NBR_TABLE_REASON_LINK_STATS:
   case NBR_TABLE_REASON_IPV6_ND_AUTOFILL:
   default:
-    /* Behavior for all but new RPL parents/children: accept anything
+    /* Behavior for all but MAC and RPL parents/children: accept anything
        until table is full. */
     accept = (candidate_for_removal == NULL);
     break;
