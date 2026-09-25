@@ -92,15 +92,9 @@ neighbor_has_uc_link(const linkaddr_t *linkaddr)
     return 0;
   }
 
-  if(!ORCHESTRA_UNICAST_SENDER_BASED) {
-    /* With the receiver-based Orchestra,
-     * all nodes have a link installed at their own timeslot */
-    return 1;
-  }
-
   if(linkaddr_cmp(&orchestra_parent_linkaddr, linkaddr)) {
-    /* The node is our parent */
-    return orchestra_parent_knows_us ? 1 : 0;
+    /* Our parent node. It has a link if it knows us, or is receiver-based */
+    return orchestra_parent_knows_us || (!ORCHESTRA_UNICAST_SENDER_BASED ? 1 : 0);
   }
 
   if(nbr_table_get_from_lladdr(nbr_routes, (linkaddr_t *)linkaddr) != NULL) {
