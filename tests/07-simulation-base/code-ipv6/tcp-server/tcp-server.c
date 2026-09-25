@@ -54,14 +54,27 @@ static struct tcp_socket server_sock;
 static uint8_t in_buf[SOCKET_BUF_SIZE];
 static uint8_t out_buf[SOCKET_BUF_SIZE];
 static size_t bytes_received;
+static bool validation_failed;
 /*****************************************************************************/
 static int
 data_callback(struct tcp_socket *sock, void *ptr, const uint8_t *input, int len)
 {
   if(len >= 0) {
+    /* Validate each received byte matches expected pattern: (index % 256) */
+    for(int i = 0; i < len; i++) {
+      uint8_t expected = (uint8_t)((bytes_received + i) % 256);
+      if(input[i] != expected) {
+        LOG_ERR("Validation failed at byte %zu: expected 0x%02x, got 0x%02x\n",
+                bytes_received + i, expected, input[i]);
+        LOG_ERR("Test FAILED\n");
+        validation_failed = true;
+        tcp_socket_close(sock);
+        return 0;
+      }
+    }
     bytes_received += len;
   }
-  LOG_INFO("RECV %d bytes (total %zu)\n", len, bytes_received);
+  LOG_INFO("RECV %d bytes (total %zu) - validation OK\n", len, bytes_received);
 
   return 0;
 }
@@ -76,6 +89,11 @@ event_callback(struct tcp_socket *sock, void *ptr, tcp_socket_event_t event)
     break;
   case TCP_SOCKET_CLOSED:
     LOG_INFO_("CLOSED\n");
+    if(validation_failed) {
+      LOG_ERR("Test FAILED - byte validation error\n");
+    } else {
+      LOG_INFO("All %zu bytes validated successfully\n", bytes_received);
+    }
     break;
   case TCP_SOCKET_TIMEDOUT:
     LOG_INFO_("TIMED OUT\n");
@@ -96,6 +114,8 @@ event_callback(struct tcp_socket *sock, void *ptr, tcp_socket_event_t event)
 PROCESS_THREAD(test_tcp_server, ev, data)
 {
   PROCESS_BEGIN();
+
+  validation_failed = false;
 
   LOG_INFO("Listening for TCP connections on port %d\n", TCP_TEST_PORT);
 
