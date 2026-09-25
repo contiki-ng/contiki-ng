@@ -46,6 +46,14 @@
 #define ECC_CURVE (&ecc_curve_p_256)
 #define ECC_CURVE_SIZE (ECC_CURVE_P_256_SIZE)
 
+/*
+ * Set by the Makefile from ECC_HW_BACKEND so the log says which backend ran.
+ * Defaults to the portable software (uECC) backend.
+ */
+#ifndef ECC_BACKEND_LABEL
+#define ECC_BACKEND_LABEL "software (uECC)"
+#endif
+
 PROCESS(ecdsa_process, "ecdsa_process");
 AUTOSTART_PROCESSES(&ecdsa_process);
 static rtimer_clock_t t1, t2;
@@ -68,10 +76,21 @@ PROCESS_THREAD(ecdsa_process, ev, data)
 
   PROCESS_BEGIN();
 
+  LOG_INFO("ECC backend: %s\n", ECC_BACKEND_LABEL);
+
+  /*
+   * Begin an ECC session. A hardware backend (e.g. nRF52840 CC310) holds
+   * accelerator power and performs a one-time RNG instantiation here; the
+   * software backend treats it as a no-op. Always paired with ecc_session_end()
+   * so the same source works with or without hardware acceleration.
+   */
+  ecc_session_begin();
+
   /* enable ECC driver */
   PROCESS_WAIT_UNTIL(process_mutex_try_lock(ecc_get_mutex()));
   if(ecc_enable(ECC_CURVE)) {
     LOG_ERR("enable failed\n");
+    ecc_session_end();
     PROCESS_EXIT();
   }
 
@@ -114,6 +133,7 @@ PROCESS_THREAD(ecdsa_process, ev, data)
 
 exit:
   ecc_disable();
+  ecc_session_end();
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
