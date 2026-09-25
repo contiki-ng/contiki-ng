@@ -155,7 +155,7 @@ static const uint32_t K[64] = {
                    + s0(W[i + ii + 1]) \
                    + W[i + ii]
 
-static sha_256_checkpoint_t checkpoint;
+sha_256_checkpoint_t sha_256_checkpoint;
 
 /*---------------------------------------------------------------------------*/
 /*
@@ -173,7 +173,7 @@ transform(const uint8_t block[static SHA_256_BLOCK_SIZE])
   be32dec_vect(W, block, 64);
 
   /* 2. Initialize working variables. */
-  memcpy(S, checkpoint.state, 32);
+  memcpy(S, sha_256_checkpoint.state, 32);
 
   /* 3. Mix. */
   for(i = 0; i < 64; i += 16) {
@@ -217,7 +217,7 @@ transform(const uint8_t block[static SHA_256_BLOCK_SIZE])
 
   /* 4. Mix local working variables into global state */
   for(i = 0; i < 8; i++) {
-    checkpoint.state[i] += S[i];
+    sha_256_checkpoint.state[i] += S[i];
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -233,24 +233,24 @@ sha_256_pad(void)
   };
 
   /* Pad to 56 mod 64, transforming if we finish a block en route. */
-  if(checkpoint.buf_len < 56) {
+  if(sha_256_checkpoint.buf_len < 56) {
     /* Pad to 56 mod 64. */
-    memcpy(&checkpoint.buf[checkpoint.buf_len], PAD, 56 - checkpoint.buf_len);
+    memcpy(&sha_256_checkpoint.buf[sha_256_checkpoint.buf_len], PAD, 56 - sha_256_checkpoint.buf_len);
   } else {
     /* Finish the current block and mix. */
-    memcpy(&checkpoint.buf[checkpoint.buf_len], PAD,
-           SHA_256_BLOCK_SIZE - checkpoint.buf_len);
-    transform(checkpoint.buf);
+    memcpy(&sha_256_checkpoint.buf[sha_256_checkpoint.buf_len], PAD,
+           SHA_256_BLOCK_SIZE - sha_256_checkpoint.buf_len);
+    transform(sha_256_checkpoint.buf);
 
     /* The start of the final block is all zeroes. */
-    memset(&checkpoint.buf[0], 0, 56);
+    memset(&sha_256_checkpoint.buf[0], 0, 56);
   }
 
   /* Add the terminating bit-count. */
-  be64enc(&checkpoint.buf[56], checkpoint.bit_count);
+  be64enc(&sha_256_checkpoint.buf[56], sha_256_checkpoint.bit_count);
 
   /* Mix in the final block. */
-  transform(checkpoint.buf);
+  transform(sha_256_checkpoint.buf);
 }
 /*---------------------------------------------------------------------------*/
 /* SHA-256 initialization. Begins a SHA-256 operation. */
@@ -258,18 +258,18 @@ static void
 init(void)
 {
   /* Zero bits processed so far */
-  checkpoint.bit_count = 0;
-  checkpoint.buf_len = 0;
+  sha_256_checkpoint.bit_count = 0;
+  sha_256_checkpoint.buf_len = 0;
 
   /* Magic initialization constants */
-  checkpoint.state[0] = 0x6A09E667;
-  checkpoint.state[1] = 0xBB67AE85;
-  checkpoint.state[2] = 0x3C6EF372;
-  checkpoint.state[3] = 0xA54FF53A;
-  checkpoint.state[4] = 0x510E527F;
-  checkpoint.state[5] = 0x9B05688C;
-  checkpoint.state[6] = 0x1F83D9AB;
-  checkpoint.state[7] = 0x5BE0CD19;
+  sha_256_checkpoint.state[0] = 0x6A09E667;
+  sha_256_checkpoint.state[1] = 0xBB67AE85;
+  sha_256_checkpoint.state[2] = 0x3C6EF372;
+  sha_256_checkpoint.state[3] = 0xA54FF53A;
+  sha_256_checkpoint.state[4] = 0x510E527F;
+  sha_256_checkpoint.state[5] = 0x9B05688C;
+  sha_256_checkpoint.state[6] = 0x1F83D9AB;
+  sha_256_checkpoint.state[7] = 0x5BE0CD19;
 }
 /*---------------------------------------------------------------------------*/
 /* Add bytes into the hash */
@@ -282,23 +282,23 @@ update(const uint8_t *data, size_t len)
   bitlen = len << 3;
 
   /* Update number of bits */
-  checkpoint.bit_count += bitlen;
+  sha_256_checkpoint.bit_count += bitlen;
 
   /* Handle the case where we don't need to perform any transforms */
-  if(len < SHA_256_BLOCK_SIZE - checkpoint.buf_len) {
-    memcpy(&checkpoint.buf[checkpoint.buf_len], data, len);
-    checkpoint.buf_len += len;
+  if(len < SHA_256_BLOCK_SIZE - sha_256_checkpoint.buf_len) {
+    memcpy(&sha_256_checkpoint.buf[sha_256_checkpoint.buf_len], data, len);
+    sha_256_checkpoint.buf_len += len;
     return;
   }
 
   /* Finish the current block */
-  memcpy(&checkpoint.buf[checkpoint.buf_len],
+  memcpy(&sha_256_checkpoint.buf[sha_256_checkpoint.buf_len],
          data,
-         SHA_256_BLOCK_SIZE - checkpoint.buf_len);
-  transform(checkpoint.buf);
-  data += SHA_256_BLOCK_SIZE - checkpoint.buf_len;
-  len -= SHA_256_BLOCK_SIZE - checkpoint.buf_len;
-  checkpoint.buf_len = 0;
+         SHA_256_BLOCK_SIZE - sha_256_checkpoint.buf_len);
+  transform(sha_256_checkpoint.buf);
+  data += SHA_256_BLOCK_SIZE - sha_256_checkpoint.buf_len;
+  len -= SHA_256_BLOCK_SIZE - sha_256_checkpoint.buf_len;
+  sha_256_checkpoint.buf_len = 0;
 
   /* Perform complete blocks */
   while(len >= 64) {
@@ -308,47 +308,53 @@ update(const uint8_t *data, size_t len)
   }
 
   /* Copy left over data into buffer */
-  memcpy(checkpoint.buf, data, len);
-  checkpoint.buf_len += len;
+  memcpy(sha_256_checkpoint.buf, data, len);
+  sha_256_checkpoint.buf_len += len;
+}
+/*---------------------------------------------------------------------------*/
+static void
+cancel(void)
+{
 }
 /*---------------------------------------------------------------------------*/
 /*
  * SHA-256 finalization.  Pads the input data, exports the hash value,
  * and clears the context state.
  */
-static void
+static bool
 finalize(uint8_t digest[static SHA_256_DIGEST_LENGTH])
 {
   /* Add padding */
   sha_256_pad();
 
   /* Write the hash */
-  be32enc_vect(digest, checkpoint.state, SHA_256_DIGEST_LENGTH);
+  be32enc_vect(digest, sha_256_checkpoint.state, SHA_256_DIGEST_LENGTH);
 
   /* Clear the context state */
-  memset(&checkpoint.buf, 0, sizeof(checkpoint.buf));
-  memset(&checkpoint.state, 0, sizeof(checkpoint.state));
+  memset(&sha_256_checkpoint.buf, 0, sizeof(sha_256_checkpoint.buf));
+  memset(&sha_256_checkpoint.state, 0, sizeof(sha_256_checkpoint.state));
+  return true;
 }
 /*---------------------------------------------------------------------------*/
 static void
 create_checkpoint(sha_256_checkpoint_t *cp)
 {
-  memcpy(cp, &checkpoint, sizeof(*cp));
+  memcpy(cp, &sha_256_checkpoint, sizeof(*cp));
 }
 /*---------------------------------------------------------------------------*/
 static void
 restore_checkpoint(const sha_256_checkpoint_t *cp)
 {
-  memcpy(&checkpoint, cp, sizeof(checkpoint));
+  memcpy(&sha_256_checkpoint, cp, sizeof(sha_256_checkpoint));
 }
 /*---------------------------------------------------------------------------*/
-void
+bool
 sha_256_hash(const uint8_t *data, size_t len,
              uint8_t digest[static SHA_256_DIGEST_LENGTH])
 {
   SHA_256.init();
   SHA_256.update(data, len);
-  SHA_256.finalize(digest);
+  return SHA_256.finalize(digest);
 }
 /*---------------------------------------------------------------------------*/
 void
@@ -359,17 +365,22 @@ sha_256_hmac_init(const uint8_t *key, size_t key_len)
   uint_fast8_t i;
 
   if(key_len > SHA_256_BLOCK_SIZE) {
-    SHA_256.hash(key, key_len, hashed_key);
+    sha_256_checkpoint.is_error_free = SHA_256.hash(key, key_len, hashed_key);
+    if(!sha_256_checkpoint.is_error_free) {
+      return;
+    }
     key_len = SHA_256_DIGEST_LENGTH;
     key = hashed_key;
+  } else {
+    sha_256_checkpoint.is_error_free = true;
   }
   for(i = 0; i < key_len; i++) {
     ipad[i] = key[i] ^ 0x36;
-    checkpoint.opad[i] = key[i] ^ 0x5c;
+    sha_256_checkpoint.opad[i] = key[i] ^ 0x5c;
   }
   for(; i < SHA_256_BLOCK_SIZE; i++) {
     ipad[i] = 0x36;
-    checkpoint.opad[i] = 0x5c;
+    sha_256_checkpoint.opad[i] = 0x5c;
   }
 
   SHA_256.init();
@@ -379,39 +390,45 @@ sha_256_hmac_init(const uint8_t *key, size_t key_len)
 void
 sha_256_hmac_update(const uint8_t *data, size_t data_len)
 {
+  if(!sha_256_checkpoint.is_error_free) {
+    return;
+  }
   SHA_256.update(data, data_len);
 }
 /*---------------------------------------------------------------------------*/
-void
+bool
 sha_256_hmac_finish(uint8_t hmac[SHA_256_DIGEST_LENGTH])
 {
-  SHA_256.finalize(hmac);
+  if(!sha_256_checkpoint.is_error_free || !SHA_256.finalize(hmac)) {
+    return false;
+  }
   SHA_256.init();
-  SHA_256.update(checkpoint.opad, sizeof(checkpoint.opad));
+  SHA_256.update(sha_256_checkpoint.opad, sizeof(sha_256_checkpoint.opad));
   SHA_256.update(hmac, SHA_256_DIGEST_LENGTH);
-  SHA_256.finalize(hmac);
-  memset(&checkpoint.opad, 0, sizeof(checkpoint.opad));
+  sha_256_checkpoint.is_error_free = SHA_256.finalize(hmac);
+  memset(&sha_256_checkpoint.opad, 0, sizeof(sha_256_checkpoint.opad));
+  return sha_256_checkpoint.is_error_free;
 }
 /*---------------------------------------------------------------------------*/
-void
+bool
 sha_256_hmac(const uint8_t *key, size_t key_len,
              const uint8_t *data, size_t data_len,
              uint8_t hmac[static SHA_256_DIGEST_LENGTH])
 {
   sha_256_hmac_init(key, key_len);
   sha_256_hmac_update(data, data_len);
-  sha_256_hmac_finish(hmac);
+  return sha_256_hmac_finish(hmac);
 }
 /*---------------------------------------------------------------------------*/
-void
+bool
 sha_256_hkdf_extract(const uint8_t *salt, size_t salt_len,
                      const uint8_t *ikm, size_t ikm_len,
                      uint8_t prk[static SHA_256_DIGEST_LENGTH])
 {
-  sha_256_hmac(salt, salt_len, ikm, ikm_len, prk);
+  return sha_256_hmac(salt, salt_len, ikm, ikm_len, prk);
 }
 /*---------------------------------------------------------------------------*/
-void
+bool
 sha_256_hkdf_expand(const uint8_t *prk, size_t prk_len,
                     const uint8_t *info, size_t info_len,
                     uint8_t *okm, uint_fast16_t okm_len)
@@ -420,7 +437,9 @@ sha_256_hkdf_expand(const uint8_t *prk, size_t prk_len,
   uint8_t i;
   uint8_t t_i[SHA_256_DIGEST_LENGTH];
 
-  okm_len = MIN(okm_len, 255 * SHA_256_DIGEST_LENGTH);
+  if(okm_len > (255 * SHA_256_DIGEST_LENGTH)) {
+    return false;
+  }
   n = okm_len / SHA_256_DIGEST_LENGTH
       + (okm_len % SHA_256_DIGEST_LENGTH ? 1 : 0);
 
@@ -431,15 +450,18 @@ sha_256_hkdf_expand(const uint8_t *prk, size_t prk_len,
     }
     sha_256_hmac_update(info, info_len);
     sha_256_hmac_update(&i, sizeof(i));
-    sha_256_hmac_finish(t_i);
+    if(!sha_256_hmac_finish(t_i)) {
+      return false;
+    }
     memcpy(okm + ((i - 1) * SHA_256_DIGEST_LENGTH),
            t_i,
            MIN(SHA_256_DIGEST_LENGTH, okm_len));
     okm_len -= SHA_256_DIGEST_LENGTH;
   }
+  return true;
 }
 /*---------------------------------------------------------------------------*/
-void
+bool
 sha_256_hkdf(const uint8_t *salt, size_t salt_len,
              const uint8_t *ikm, size_t ikm_len,
              const uint8_t *info, size_t info_len,
@@ -447,13 +469,16 @@ sha_256_hkdf(const uint8_t *salt, size_t salt_len,
 {
   uint8_t prk[SHA_256_DIGEST_LENGTH];
 
-  sha_256_hkdf_extract(salt, salt_len, ikm, ikm_len, prk);
-  sha_256_hkdf_expand(prk, sizeof(prk), info, info_len, okm, okm_len);
+  return sha_256_hkdf_extract(salt, salt_len, ikm, ikm_len, prk)
+         && sha_256_hkdf_expand(prk, sizeof(prk),
+                                info, info_len,
+                                okm, okm_len);
 }
 /*---------------------------------------------------------------------------*/
 const struct sha_256_driver sha_256_driver = {
   init,
   update,
+  cancel,
   finalize,
   create_checkpoint,
   restore_checkpoint,

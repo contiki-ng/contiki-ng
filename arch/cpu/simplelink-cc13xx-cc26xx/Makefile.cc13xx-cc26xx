@@ -57,6 +57,9 @@ CONTIKI_CPU_SOURCEFILES += uart0-arch.c     slip-arch.c
 CONTIKI_CPU_SOURCEFILES += gpio-hal-arch.c  int-master-arch.c
 CONTIKI_CPU_SOURCEFILES += trng-arch.c
 CONTIKI_CPU_SOURCEFILES += spi-arch.c       i2c-arch.c
+CONTIKI_CPU_SOURCEFILES += cc-crypto.c
+
+MODULES += $(CONTIKI_NG_DRIVERS_CRYPTO_DIR)/cc
 
 # RF source files
 CONTIKI_CPU_SOURCEFILES += sched.c          data-queue.c
