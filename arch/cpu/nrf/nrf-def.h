@@ -82,8 +82,21 @@
 #define RADIO_PHY_OVERHEAD            3
 #define RADIO_BYTE_AIR_TIME          32
 #define RADIO_SHR_LEN                 5 /* Synch word + SFD */
+/*
+ * Delay between the moment TSCH releases transmit() and the RMARKER, that is
+ * the first symbol of the PHR, on air. Two terms:
+ *
+ * - the SHR, RADIO_SHR_LEN * RADIO_BYTE_AIR_TIME = 160 us;
+ * - the launch latency of the driver: the rtimer wake-up, TASKS_TXEN issued
+ *   from RXIDLE, TXRU, and the start of the modulator. Measured at 27.3 us.
+ *
+ * See RADIO_RX_FRAMESTART_DELAY_USEC in net/nrf-ieee-driver-arch.c for the
+ * measurement method.
+ */
+#define RADIO_TX_LAUNCH_LATENCY_USEC 27
 #define RADIO_DELAY_BEFORE_TX \
-  ((unsigned)US_TO_RTIMERTICKS(RADIO_SHR_LEN * RADIO_BYTE_AIR_TIME))
+  ((unsigned)US_TO_RTIMERTICKS(RADIO_SHR_LEN * RADIO_BYTE_AIR_TIME + \
+                               RADIO_TX_LAUNCH_LATENCY_USEC))
 #define RADIO_DELAY_BEFORE_RX         ((unsigned)US_TO_RTIMERTICKS(250))
 #define RADIO_DELAY_BEFORE_DETECT     0
 /*---------------------------------------------------------------------------*/
