@@ -1650,8 +1650,7 @@ fragment_copy_payload_and_send(uint16_t uip_offset)
  *  packet/fragments are put in packetbuf and delivered to the 802.15.4
  *  MAC.
  */
-static uint8_t
-output(const linkaddr_t *localdest)
+uint8_t sicslowpan_output(const linkaddr_t *localdest)
 {
   int frag_needed;
 
@@ -1877,8 +1876,7 @@ output(const linkaddr_t *localdest)
  * \note We do not check for overlapping sicslowpan fragments
  * (it is a SHALL in the RFC 4944 and should never happen)
  */
-static void
-input(void)
+void sicslowpan_input(void)
 {
   /* size of the IP packet (read from fragment) */
   uint16_t frag_size = 0;
@@ -2206,8 +2204,8 @@ sicslowpan_init(void)
 const struct network_driver sicslowpan_driver = {
   "sicslowpan",
   sicslowpan_init,
-  input,
-  output
+  sicslowpan_input,
+  sicslowpan_output
 };
 /*--------------------------------------------------------------------*/
 /** @} */
