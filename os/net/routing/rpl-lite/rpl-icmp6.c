@@ -169,6 +169,22 @@ rpl_icmp6_dis_output(uip_ipaddr_t *addr)
   uip_icmp6_send(addr, ICMP6_RPL, RPL_CODE_DIS, 2);
 }
 /*---------------------------------------------------------------------------*/
+/*
+ * Check that a DIO interval received in a DAG Configuration option is within
+ * the range that the Trickle timer supports. The bound is the same on every
+ * platform, so that nodes agree on which DAGs they can join.
+ *
+ * The bound also keeps the sum of the two fields within reach of the
+ * eight-bit counter that is compared against it while the interval grows.
+ * A larger sum would leave that counter wrapping instead of stopping, and
+ * passing an invalid shift count on every cycle.
+ */
+static bool
+dio_interval_is_valid(uint8_t intmin, uint8_t intdoubl)
+{
+  return (unsigned)intmin + intdoubl <= RPL_DIO_INTERVAL_MAX_EXP;
+}
+/*---------------------------------------------------------------------------*/
 static void
 dio_input(void)
 {
@@ -312,6 +328,21 @@ dio_input(void)
         /* buffer + 12 is reserved */
         dio.default_lifetime = buffer[i + 13];
         dio.lifetime_unit = get16(buffer, i + 14);
+
+        /*
+         * Reject these before they are copied into the instance. A
+         * MinHopRankIncrease of zero would divide by zero in DAG_RANK().
+         */
+        if(dio.dag_min_hoprankinc == 0) {
+          LOG_WARN("dio_input: MinHopRankIncrease is 0, discard\n");
+          goto discard;
+        }
+
+        if(!dio_interval_is_valid(dio.dag_intmin, dio.dag_intdoubl)) {
+          LOG_WARN("dio_input: DIO interval %u is out of range, discard\n",
+                   (unsigned)dio.dag_intmin + dio.dag_intdoubl);
+          goto discard;
+        }
         break;
       case RPL_OPTION_PREFIX_INFO:
         if(len != 32) {
@@ -484,15 +515,6 @@ dao_input(void)
 
   memset(&dao, 0, sizeof(dao));
 
-  dao.instance_id = UIP_ICMP_PAYLOAD[0];
-  if(!curr_instance.used || curr_instance.instance_id != dao.instance_id) {
-    LOG_ERR("dao_input: unknown RPL instance %u, discard\n", dao.instance_id);
-    goto discard;
-  }
-
-  uip_ipaddr_copy(&from, &UIP_IP_BUF->srcipaddr);
-  memset(&dao.parent_addr, 0, 16);
-
   buffer = UIP_ICMP_PAYLOAD;
   buffer_length = uip_len - uip_l3_icmp_hdr_len;
 
@@ -501,6 +523,28 @@ dao_input(void)
              buffer_length);
     goto discard;
   }
+
+  dao.instance_id = buffer[0];
+  if(!curr_instance.used || curr_instance.instance_id != dao.instance_id) {
+    LOG_ERR("dao_input: unknown RPL instance %u, discard\n", dao.instance_id);
+    goto discard;
+  }
+
+  /*
+   * A multicast advertisement belongs to the mode of operation that stores
+   * routes and carries multicast groups, which this implementation neither
+   * runs nor joins, so it has nothing to do with one. Declining it here also
+   * keeps the requirements below, which RFC 6550, Section 9.4, states for a
+   * unicast advertisement, from being applied to a message that the same
+   * section forbids to carry a parent address.
+   */
+  if(uip_is_addr_mcast(&UIP_IP_BUF->destipaddr)) {
+    LOG_WARN("dao_input: multicast DAO, discard\n");
+    goto discard;
+  }
+
+  uip_ipaddr_copy(&from, &UIP_IP_BUF->srcipaddr);
+  memset(&dao.parent_addr, 0, 16);
 
   pos = 0;
   pos++; /* instance ID */
@@ -525,6 +569,9 @@ dao_input(void)
     pos += 16;
   }
 
+  bool target_received = false;
+  bool parent_received = false;
+
   /* Check if there are any RPL options present. */
   for(i = pos; i < buffer_length; i += len) {
     subopt_type = buffer[i];
@@ -547,7 +594,7 @@ dao_input(void)
     switch(subopt_type) {
       case RPL_OPTION_TARGET:
         /* Handle the target option. */
-        if(len < 4) {
+        if(len < RPL_DAO_TARGET_OPTION_MIN_LEN) {
           LOG_WARN("dao_input: invalid target option, len %u, discard\n", len);
           goto discard;
         }
@@ -564,23 +611,60 @@ dao_input(void)
         }
         memset(&dao.prefix, 0, sizeof(dao.prefix));
         memcpy(&dao.prefix, buffer + i + 4, (dao.prefixlen + 7) / CHAR_BIT);
+        target_received = true;
         break;
       case RPL_OPTION_TRANSIT:
         /* The path sequence and control are ignored. */
-        if(len < 6) {
-          LOG_WARN("dao_input: invalid transit option, len %"PRIu16", discard\n",
-                   buffer_length);
+        if(len < RPL_DAO_TRANSIT_OPTION_MIN_LEN) {
+          LOG_WARN("dao_input: invalid transit option, len %d, discard\n",
+                   len);
           goto discard;
         }
         dao.lifetime = buffer[i + 5];
-        if(len >= 20) {
-          memcpy(&dao.parent_addr, buffer + i + 6, 16);
+        /*
+         * RFC 6550, Section 6.7.8: the option length is used to determine
+         * whether or not the parent address is present, and the whole of it
+         * must be within the option to be read from its offset.
+         */
+        if(len >= RPL_DAO_TRANSIT_OPTION_PARENT_LEN) {
+          memcpy(&dao.parent_addr, buffer + i + RPL_DAO_TRANSIT_OPTION_MIN_LEN,
+                 sizeof(dao.parent_addr));
+          parent_received = true;
         }
         break;
     }
   }
 
   /* Destination Advertisement Object */
+  /*
+   * RFC 6550, Section 9.4: a unicast DAO carries one or more target options
+   * followed by one or more transit information options, and in this mode of
+   * operation the transit option names the parent. Both are required here,
+   * and neither the parent nor the source may be the unspecified address, or
+   * that address would enter the source routing graph in an entry that never
+   * expires. A multicast advertisement, which that section exempts, is
+   * declined above.
+   *
+   * The advertised targets are not used. The graph is keyed by the source
+   * address of the advertisement instead, so a DAO only ever records a route
+   * to the address that it is sent from.
+   */
+  if(!target_received) {
+    LOG_WARN("dao_input: no target option, discard\n");
+    goto discard;
+  }
+
+  if(!parent_received) {
+    LOG_WARN("dao_input: no transit option carrying a parent, discard\n");
+    goto discard;
+  }
+
+  if(uip_is_addr_unspecified(&dao.parent_addr) ||
+     uip_is_addr_unspecified(&from)) {
+    LOG_WARN("dao_input: unspecified parent or child address, discard\n");
+    goto discard;
+  }
+
   LOG_INFO("received a %sDAO from ", dao.lifetime == 0 ? "No-path " : "");
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
   LOG_INFO_(", seqno %u, lifetime %u, prefix ", dao.sequence, dao.lifetime);
@@ -682,6 +766,12 @@ dao_ack_input(void)
   uint8_t instance_id;
   uint8_t sequence;
   uint8_t status;
+
+  if(uip_len < uip_l3_icmp_hdr_len + RPL_DAO_ACK_LEN) {
+    LOG_WARN("dao_ack_input: invalid DAO ACK header, len %u, discard\n",
+             (unsigned)uip_len);
+    goto discard;
+  }
 
   buffer = UIP_ICMP_PAYLOAD;
 

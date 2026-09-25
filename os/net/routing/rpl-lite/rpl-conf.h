@@ -46,6 +46,7 @@
 #define RPL_CONF_H
 
 #include "contiki.h"
+#include "net/routing/rpl-lite/rpl-const.h"
 
 /******************************************************************************/
 /*********************** Enabling/disabling features **************************/
@@ -227,6 +228,23 @@
 #define RPL_DIO_INTERVAL_DOUBLINGS  RPL_CONF_DIO_INTERVAL_DOUBLINGS
 #else
 #define RPL_DIO_INTERVAL_DOUBLINGS  8
+#endif
+
+#if RPL_DIO_INTERVAL_MIN + RPL_DIO_INTERVAL_DOUBLINGS > RPL_DIO_INTERVAL_MAX_EXP
+#error "RPL_DIO_INTERVAL_MIN + RPL_DIO_INTERVAL_DOUBLINGS is too large"
+#endif
+
+/*
+ * Shortest DIO interval, in milliseconds, that the Trickle timer uses.
+ * Shorter intervals, including those received in a DAG Configuration
+ * option, are raised to this one. RFC 6550 allows a minimum interval of
+ * 1 ms, which would otherwise make a node send DIOs continuously if no
+ * doublings are configured.
+ */
+#ifdef RPL_CONF_DIO_INTERVAL_FLOOR
+#define RPL_DIO_INTERVAL_FLOOR      RPL_CONF_DIO_INTERVAL_FLOOR
+#else
+#define RPL_DIO_INTERVAL_FLOOR      256
 #endif
 
 /*

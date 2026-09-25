@@ -120,13 +120,32 @@ new_dio_interval(void)
   clock_time_t ticks;
 
   time = 1UL << curr_instance.dag.dio_intcurrent;
+  if(time < RPL_DIO_INTERVAL_FLOOR) {
+    time = RPL_DIO_INTERVAL_FLOOR;
+  }
 
-  /* Convert from milliseconds to CLOCK_TICKS. */
-  ticks = (time * CLOCK_SECOND) / 1000;
-  curr_instance.dag.dio_next_delay = ticks;
+  /*
+   * Convert from milliseconds to CLOCK_TICKS. An interval of up to
+   * 2^RPL_DIO_INTERVAL_MAX_EXP ms is accepted, so convert whole seconds and
+   * the remainder separately to stay within 32 bits. At least two ticks are
+   * needed, or the random point below could be zero and the timer would
+   * expire immediately, cycle after cycle.
+   */
+  time = (time / 1000) * CLOCK_SECOND + (time % 1000) * CLOCK_SECOND / 1000;
+  if(time < 2) {
+    time = 2;
+  }
+  curr_instance.dag.dio_next_delay = time;
 
-  /* random number between I/2 and I */
-  ticks = ticks / 2 + (ticks / 2 * (uint32_t)random_rand()) / RANDOM_RAND_MAX;
+  /*
+   * A random number between I/2 and I. The product of I/2 and a random
+   * number does not fit in 32 bits for long intervals, so split I/2 at
+   * RANDOM_RAND_MAX, where each part does.
+   */
+  uint32_t half = time / 2;
+  uint16_t r = random_rand();
+  ticks = half + (half / RANDOM_RAND_MAX) * r +
+    (half % RANDOM_RAND_MAX) * r / RANDOM_RAND_MAX;
 
   /*
    * The intervals must be equally long among the nodes for Trickle to
@@ -142,7 +161,7 @@ new_dio_interval(void)
   ctimer_set(&curr_instance.dag.dio_timer, ticks, &handle_dio_timer, NULL);
 
 #ifdef RPL_CALLBACK_NEW_DIO_INTERVAL
-  RPL_CALLBACK_NEW_DIO_INTERVAL((CLOCK_SECOND * 1UL << curr_instance.dag.dio_intcurrent) / 1000);
+  RPL_CALLBACK_NEW_DIO_INTERVAL(time);
 #endif /* RPL_CALLBACK_NEW_DIO_INTERVAL */
 }
 /*---------------------------------------------------------------------------*/
