@@ -130,17 +130,6 @@ select_packet(uint16_t *slotframe, uint16_t *timeslot, uint16_t *channel_offset)
 }
 /*---------------------------------------------------------------------------*/
 static void
-new_time_source(const struct tsch_neighbor *old, const struct tsch_neighbor *new)
-{
-  if(new != old) {
-    const linkaddr_t *old_addr = tsch_queue_get_nbr_address(old);
-    const linkaddr_t *new_addr = tsch_queue_get_nbr_address(new);
-    remove_uc_link(old_addr);
-    add_uc_link(new_addr);
-  }
-}
-/*---------------------------------------------------------------------------*/
-static void
 init(uint16_t sf_handle)
 {
   uint16_t rx_timeslot;
@@ -159,7 +148,7 @@ init(uint16_t sf_handle)
 /*---------------------------------------------------------------------------*/
 struct orchestra_rule unicast_per_neighbor_rpl_ns = {
   init,
-  new_time_source,
+  NULL,
   select_packet,
   NULL,
   NULL,

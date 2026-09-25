@@ -1,0 +1,21 @@
+CONTIKI_PROJECT = node
+all: $(CONTIKI_PROJECT)
+
+CONTIKI = ../../..
+
+MAKE_WITH_STORING_ROUTING ?= 0
+
+MAKE_MAC = MAKE_MAC_TSCH
+MODULES += $(CONTIKI_NG_SERVICES_DIR)/orchestra
+
+ORCHESTRA_UNICAST_RULE = &unicast_per_neighbor_rpl_ns
+
+ifeq ($(MAKE_WITH_STORING_ROUTING),1)
+MAKE_ROUTING = MAKE_ROUTING_RPL_CLASSIC
+CFLAGS += -DRPL_CONF_MOP=RPL_MOP_STORING_NO_MULTICAST
+ORCHESTRA_UNICAST_RULE = &unicast_per_neighbor_rpl_storing
+endif
+
+CFLAGS += -DORCHESTRA_CONF_RULES="{&eb_per_time_source,$(ORCHESTRA_UNICAST_RULE),&default_common}"
+
+include $(CONTIKI)/Makefile.include
