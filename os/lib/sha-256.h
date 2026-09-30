@@ -107,6 +107,7 @@ struct sha_256_driver {
 };
 
 extern const struct sha_256_driver SHA_256;
+extern sha_256_checkpoint_t sha_256_checkpoint;
 
 /**
  * \brief Generic implementation of sha_256_driver#hash.

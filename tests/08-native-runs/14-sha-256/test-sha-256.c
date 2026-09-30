@@ -201,6 +201,48 @@ static const struct {
       0x88, 0x1d, 0xc2, 0x00, 0xc9, 0x83, 0x3d, 0xa7,
       0x26, 0xe9, 0x37, 0x6c, 0x2e, 0x32, 0xcf, 0xf7
     }
+  },
+  {
+    {
+      0x4a, 0x65, 0x66, 0x65,
+    },
+    4,
+    {
+      0x77, 0x68, 0x61, 0x74, 0x20, 0x64, 0x6f, 0x20,
+      0x79, 0x61, 0x20, 0x77, 0x61, 0x6e, 0x74, 0x20,
+      0x66, 0x6f, 0x72, 0x20, 0x6e, 0x6f, 0x74, 0x68,
+      0x69, 0x6e, 0x67, 0x3f
+    },
+    28,
+    {
+      0x5b, 0xdc, 0xc1, 0x46, 0xbf, 0x60, 0x75, 0x4e,
+      0x6a, 0x04, 0x24, 0x26, 0x08, 0x95, 0x75, 0xc7,
+      0x5a, 0x00, 0x3f, 0x08, 0x9d, 0x27, 0x39, 0x83,
+      0x9d, 0xec, 0x58, 0xb9, 0x64, 0xec, 0x38, 0x43
+    }
+  },
+  {
+    {
+      0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
+      0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA
+    },
+    16,
+    {
+      0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD,
+      0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD,
+      0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD,
+      0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD,
+      0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD,
+      0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD,
+      0xDD, 0xDD
+    },
+    50,
+    {
+      0x7d, 0xda, 0x3c, 0xc1, 0x69, 0x74, 0x3a, 0x64,
+      0x84, 0x64, 0x9f, 0x94, 0xf0, 0xed, 0xa0, 0xf9,
+      0xf2, 0xff, 0x49, 0x6a, 0x97, 0x33, 0xfb, 0x79,
+      0x6e, 0xd5, 0xad, 0xb4, 0x0a, 0x44, 0xc3, 0xc1
+    }
   }
 };
 static const struct {
@@ -426,6 +468,76 @@ UNIT_TEST(sha_256_hmac)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(sha_256_hmac_stepwise, "Stepwise SHA-256 HMAC");
+UNIT_TEST(sha_256_hmac_stepwise)
+{
+  UNIT_TEST_BEGIN();
+
+  for(size_t i = 0; i < CC_ARRAY_LENGTH(hmacs); i++) {
+    uint8_t hmac[SHA_256_DIGEST_LENGTH];
+    sha_256_hmac_init(hmacs[i].key, hmacs[i].keylen);
+    sha_256_hmac_update(hmacs[i].data, hmacs[i].datalen / 2);
+    sha_256_hmac_update(hmacs[i].data + hmacs[i].datalen / 2,
+                        hmacs[i].datalen - (hmacs[i].datalen / 2));
+    sha_256_hmac_finish(hmac);
+    UNIT_TEST_ASSERT(!memcmp(hmac, hmacs[i].hmac, sizeof(hmac)));
+  }
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(sha_256_hmac_checkpoint, "SHA-256 HMAC with checkpoint");
+UNIT_TEST(sha_256_hmac_checkpoint)
+{
+  UNIT_TEST_BEGIN();
+
+  for(size_t i = 0; i < CC_ARRAY_LENGTH(hmacs); i++) {
+    uint8_t hmac[SHA_256_DIGEST_LENGTH];
+    sha_256_hmac_init(hmacs[i].key, hmacs[i].keylen);
+    sha_256_hmac_update(hmacs[i].data, hmacs[i].datalen / 2);
+    sha_256_checkpoint_t checkpoint;
+    SHA_256.create_checkpoint(&checkpoint);
+    SHA_256.restore_checkpoint(&checkpoint);
+    sha_256_hmac_update(hmacs[i].data + hmacs[i].datalen / 2,
+                        hmacs[i].datalen - (hmacs[i].datalen / 2));
+    sha_256_hmac_finish(hmac);
+    UNIT_TEST_ASSERT(!memcmp(hmac, hmacs[i].hmac, sizeof(hmac)));
+  }
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(sha_256_hmac_interleaved, "Interleaved SHA-256 HMACs");
+UNIT_TEST(sha_256_hmac_interleaved)
+{
+  UNIT_TEST_BEGIN();
+
+  sha_256_hmac_init(hmacs[0].key, hmacs[0].keylen);
+  sha_256_hmac_update(hmacs[0].data, hmacs[0].datalen / 2);
+  sha_256_checkpoint_t checkpoint1;
+  SHA_256.create_checkpoint(&checkpoint1);
+
+  sha_256_hmac_init(hmacs[1].key, hmacs[1].keylen);
+  sha_256_hmac_update(hmacs[1].data, hmacs[1].datalen / 2);
+  sha_256_checkpoint_t checkpoint2;
+  SHA_256.create_checkpoint(&checkpoint2);
+
+  SHA_256.restore_checkpoint(&checkpoint1);
+  sha_256_hmac_update(hmacs[0].data + hmacs[0].datalen / 2,
+                      hmacs[0].datalen - (hmacs[0].datalen / 2));
+  uint8_t hmac[SHA_256_DIGEST_LENGTH];
+  sha_256_hmac_finish(hmac);
+  UNIT_TEST_ASSERT(!memcmp(hmac, hmacs[0].hmac, sizeof(hmac)));
+
+  SHA_256.restore_checkpoint(&checkpoint2);
+  sha_256_hmac_update(hmacs[1].data + hmacs[1].datalen / 2,
+                      hmacs[1].datalen - (hmacs[1].datalen / 2));
+  sha_256_hmac_finish(hmac);
+  UNIT_TEST_ASSERT(!memcmp(hmac, hmacs[1].hmac, sizeof(hmac)));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 UNIT_TEST_REGISTER(sha_256_hkdf, "SHA-256 HKDF");
 UNIT_TEST(sha_256_hkdf)
 {
@@ -447,6 +559,23 @@ UNIT_TEST(sha_256_hkdf)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(sha_256_hkdf_shorthand, "SHA-256 HKDF shorthand");
+UNIT_TEST(sha_256_hkdf_shorthand)
+{
+  UNIT_TEST_BEGIN();
+
+  for(size_t i = 0; i < CC_ARRAY_LENGTH(keys); i++) {
+    uint8_t okm[128];
+    sha_256_hkdf(keys[i].salt, keys[i].salt_len,
+                 keys[i].ikm, keys[i].ikm_len,
+                 keys[i].info, keys[i].info_len,
+                 okm, keys[i].okm_len);
+    UNIT_TEST_ASSERT(!memcmp(okm, keys[i].okm, keys[i].okm_len));
+  }
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(test_process, ev, data)
 {
   PROCESS_BEGIN();
@@ -458,13 +587,21 @@ PROCESS_THREAD(test_process, ev, data)
   UNIT_TEST_RUN(sha_256_hash_with_checkpoint);
   UNIT_TEST_RUN(sha_256_hash_shorthand);
   UNIT_TEST_RUN(sha_256_hmac);
+  UNIT_TEST_RUN(sha_256_hmac_stepwise);
+  UNIT_TEST_RUN(sha_256_hmac_checkpoint);
+  UNIT_TEST_RUN(sha_256_hmac_interleaved);
   UNIT_TEST_RUN(sha_256_hkdf);
+  UNIT_TEST_RUN(sha_256_hkdf_shorthand);
 
   if(!UNIT_TEST_PASSED(sha_256_hash_stepwise)
      || !UNIT_TEST_PASSED(sha_256_hash_with_checkpoint)
      || !UNIT_TEST_PASSED(sha_256_hash_shorthand)
      || !UNIT_TEST_PASSED(sha_256_hmac)
-     || !UNIT_TEST_PASSED(sha_256_hkdf)) {
+     || !UNIT_TEST_PASSED(sha_256_hmac_stepwise)
+     || !UNIT_TEST_PASSED(sha_256_hmac_checkpoint)
+     || !UNIT_TEST_PASSED(sha_256_hmac_interleaved)
+     || !UNIT_TEST_PASSED(sha_256_hkdf)
+     || !UNIT_TEST_PASSED(sha_256_hkdf_shorthand)) {
     printf("=check-me= FAILED\n");
     printf("---\n");
   }
