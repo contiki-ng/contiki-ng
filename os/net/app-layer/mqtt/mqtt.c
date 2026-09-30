@@ -59,6 +59,8 @@
 #include "lib/list.h"
 #include "sys/cc.h"
 
+#include <inttypes.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -383,6 +385,7 @@ mqtt_decode_var_byte_int(const uint8_t *input_data_ptr,
   uint8_t read_bytes = 0;
   uint8_t byte_in;
   uint32_t multiplier = 1;
+  uint32_t value = 0;
   uint32_t input_pos_0 = 0;
 
   if(input_pos == NULL) {
@@ -391,8 +394,29 @@ mqtt_decode_var_byte_int(const uint8_t *input_data_ptr,
 
   *dest = 0;
 
+  /*
+   * A caller that has fewer bytes than it expected can compute a negative
+   * length. The bounds check below is made in the unsigned domain, where such
+   * a length would become a very large bound and admit reads past the input,
+   * so reject it here instead.
+   */
+  if(input_data_len <= 0) {
+    DBG("MQTT - No input to decode a Variable Byte Integer from\n");
+    return 0;
+  }
+
   do {
-    if(*input_pos >= input_data_len) {
+    /*
+     * A Variable Byte Integer is encoded using at most four bytes. Stop
+     * before consuming a fifth one, so that a rejected integer does not
+     * advance the parse position past the bytes it was encoded in.
+     */
+    if(read_bytes == MQTT_MAX_REMAINING_LENGTH_BYTES) {
+      DBG("MQTT - Received more than 4 byte 'Variable Byte Integer'\n");
+      return 0;
+    }
+
+    if(*input_pos >= (uint32_t)input_data_len) {
       return 0;
     }
 
@@ -404,14 +428,23 @@ mqtt_decode_var_byte_int(const uint8_t *input_data_ptr,
     read_bytes++;
     DBG("MQTT - Read Variable Byte Integer byte %i\n", byte_in);
 
-    if(read_bytes > 4) {
-      DBG("Received more than 4 byte 'Variable Byte Integer'.");
-      return 0;
-    }
-
-    *dest += (byte_in & 127) * multiplier;
+    value += (uint32_t)(byte_in & 127) * multiplier;
     multiplier *= 128;
   } while((byte_in & 128) != 0);
+
+  /*
+   * A Variable Byte Integer encodes values up to 268435455, whereas the
+   * destination holds 16 bits. Report a value that does not fit as an error
+   * rather than storing a truncated one, which would make the peer appear to
+   * have sent a much shorter packet than it did.
+   */
+  if(value > UINT16_MAX) {
+    DBG("MQTT - Variable Byte Integer %" PRIu32 " exceeds the supported "
+        "maximum of %u\n", value, (unsigned)UINT16_MAX);
+    return 0;
+  }
+
+  *dest = (uint16_t)value;
 
   return read_bytes;
 }
@@ -1312,6 +1345,10 @@ handle_auth(struct mqtt_connection *conn)
 static void
 parse_vhdr(struct mqtt_connection *conn)
 {
+#if MQTT_5
+  uint16_t vhdr_len;
+#endif
+
   conn->in_packet.payload_start = conn->in_packet.payload;
 
   /* Some message types include a packet identifier */
@@ -1331,6 +1368,8 @@ parse_vhdr(struct mqtt_connection *conn)
   }
 
 #if MQTT_5
+  vhdr_len = conn->in_packet.payload_start - conn->in_packet.payload;
+
   /* CONNACK, PUBACK, PUBREC, PUBREL, PUBCOMP, DISCONNECT and AUTH have a single
    * Reason Code as part of the Variable Header.
    * SUBACK and UNSUBACK contain a list of one or more Reason Codes in the Payload.
@@ -1343,9 +1382,22 @@ parse_vhdr(struct mqtt_connection *conn)
   case MQTT_FHDR_MSG_TYPE_PUBCOMP:
   case MQTT_FHDR_MSG_TYPE_DISCONNECT:
   case MQTT_FHDR_MSG_TYPE_AUTH:
-    conn->in_packet.reason_code = conn->in_packet.payload_start[0];
+    /*
+     * The Reason Code is omitted when it is 0x00 and there are no properties,
+     * in which case the packet ends after the preceding Variable Header
+     * fields. A PUBACK acknowledging an ordinary QoS 1 publication is the
+     * common case; see Section 3.4.2.1 of the MQTT 5.0 specification. Reading
+     * a Reason Code that the peer did not send would take it from a byte that
+     * was never received.
+     */
+    if(conn->in_packet.remaining_length > vhdr_len) {
+      conn->in_packet.reason_code = conn->in_packet.payload_start[0];
+      conn->in_packet.payload_start += 1;
+      vhdr_len += 1;
+    } else {
+      conn->in_packet.reason_code = MQTT_VHDR_RC_SUCCES_OR_NORMAL;
+    }
     conn->in_packet.has_reason_code = 1;
-    conn->in_packet.payload_start += 1;
     break;
 
   default:
@@ -1353,7 +1405,13 @@ parse_vhdr(struct mqtt_connection *conn)
     break;
   }
 
-  if(!conn->in_packet.has_props) {
+  /*
+   * The Property Length is omitted along with the Reason Code, and is then
+   * taken to be zero. Decoding it in that case would read past the end of the
+   * packet as well.
+   */
+  if(!conn->in_packet.has_props &&
+     conn->in_packet.remaining_length > vhdr_len) {
     mqtt_prop_decode_input_props(conn);
   }
 #endif
@@ -1427,7 +1485,16 @@ parse_next:
                                &conn->in_packet.remaining_length);
 
     if(remaining_length_bytes == 0) {
+      /*
+       * The length of this packet is not known, so where the next one starts
+       * is not known either: everything that follows would be parsed as
+       * arbitrary packets. Nothing can be recovered from the connection, and
+       * the parse position cannot be resumed on the next segment, so close it
+       * and let the application reconnect on a known state.
+       */
+      PRINTF("MQTT - Error, could not decode the remaining length\n");
       call_event(conn, MQTT_EVENT_ERROR, NULL);
+      abort_connection(conn);
       return 0;
     }
 
@@ -1513,6 +1580,13 @@ parse_next:
 
 #if MQTT_5
       if(!conn->in_packet.has_props) {
+        /*
+         * The Variable Header of a PUBLISH is consumed from the input stream
+         * without being buffered, so the properties start at the first
+         * buffered byte. parse_vhdr() has not run at this point, because the
+         * packet continues past this full buffer.
+         */
+        conn->in_packet.payload_start = conn->in_packet.payload;
         mqtt_prop_decode_input_props(conn);
       }
 

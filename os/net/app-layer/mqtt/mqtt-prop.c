@@ -252,6 +252,7 @@ void
 mqtt_prop_decode_input_props(struct mqtt_connection *conn)
 {
   uint8_t prop_len_bytes;
+  uint32_t vhdr_len;
 
   DBG("MQTT - Parsing input properties\n");
 
@@ -263,9 +264,22 @@ mqtt_prop_decode_input_props(struct mqtt_connection *conn)
 
   DBG("MQTT - Getting length\n");
 
+  /*
+   * The property length can only be decoded from the bytes that have actually
+   * been received into the input buffer. The remaining length does not
+   * describe those: it counts the whole packet, of which a PUBLISH topic is
+   * consumed from the input stream without being buffered here, and of which
+   * a large PUBLISH arrives one buffer at a time.
+   */
+  vhdr_len = conn->in_packet.payload_start - conn->in_packet.payload;
+  if(conn->in_packet.payload_pos <= vhdr_len) {
+    DBG("MQTT - Error, no input property bytes received\n");
+    return;
+  }
+
   prop_len_bytes =
     mqtt_decode_var_byte_int(conn->in_packet.payload_start,
-                             conn->in_packet.remaining_length - (conn->in_packet.payload_start - conn->in_packet.payload),
+                             conn->in_packet.payload_pos - vhdr_len,
                              NULL, NULL, &conn->in_packet.properties_len);
 
   if(prop_len_bytes == 0) {
