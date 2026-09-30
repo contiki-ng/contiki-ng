@@ -150,9 +150,18 @@ PROCESS(nrf_ieee_rf_process, "nRF IEEE RF driver");
 #define CRC_IEEE802154_INIT            0
 /*---------------------------------------------------------------------------*/
 #define SYMBOL_DURATION_USEC          16
-#define SYMBOL_DURATION_RTIMER         1
+#define SYMBOL_DURATION_RTIMER        US_TO_RTIMERTICKS(SYMBOL_DURATION_USEC)
 #define BYTE_DURATION_RTIMER          (SYMBOL_DURATION_RTIMER * 2)
-#define TXRU_DURATION_TIMER            3
+/*
+ * Time from TASKS_TXEN to state TX. The datasheet gives 40 us for a fast
+ * ramp-up from DISABLED; transmit() ramps from RXIDLE, which is shorter, so
+ * 40 us is an upper bound.
+ */
+#define TXRU_DURATION_USEC            40
+#define TXRU_DURATION_TIMER           (US_TO_RTIMERTICKS(TXRU_DURATION_USEC) + 1)
+/* Errata 91 asks for 10 us more during ramp-up. Same rounding rule. */
+#define ERRATA_91_EXTRA_USEC          10
+#define ERRATA_91_EXTRA_TIMER         (US_TO_RTIMERTICKS(ERRATA_91_EXTRA_USEC) + 1)
 /*
  * The RX FRAMESTART event does not fire exactly one byte after the RMARKER:
  * the receive pipeline of the radio adds 20.7 us. The value was measured with
@@ -661,18 +670,13 @@ transmit(unsigned short transmit_len)
   nrf_radio_task_trigger(NRF_RADIO, NRF_RADIO_TASK_TXEN);
 
   /*
-   * With fast rampup, the transition between TX and READY (TXRU duration)
-   * takes 40us. This means we will be in TX mode in less than 3 rtimer ticks
-   * (3x16=42 us). After this duration, we can busy wait for TX to finish.
+   * Wait for the ramp-up to finish before polling the state.
    */
   RTIMER_BUSYWAIT(TXRU_DURATION_TIMER);
 
-  /*
-   * The workaround for errata 91 is to wait 10us more during ramp-up
-   * (1x16 = 16us)
-   */
+  /* The workaround for errata 91 is to wait 10us more during ramp-up. */
   if(nrf53_errata_91()) {
-    RTIMER_BUSYWAIT(1);
+    RTIMER_BUSYWAIT(ERRATA_91_EXTRA_TIMER);
   }
 
   LOG_DBG_("--->%u\n", nrf_radio_state_get(NRF_RADIO));
@@ -1062,7 +1066,8 @@ PROCESS_THREAD(nrf_ieee_rf_process, ev, data)
         LOG_DBG("     MPDU=%" PRIu32 " (Duration)\n", timestamps.mpdu_duration);
         LOG_DBG("      END=%" PRIu32 " (PPI)\n", timestamps.end);
         LOG_DBG(" Expected=%" PRIu32 " + %u + %" PRIu32 " = %" PRIu32 "\n",
-                timestamps.sfd, BYTE_DURATION_RTIMER, timestamps.mpdu_duration,
+                timestamps.sfd, (unsigned)BYTE_DURATION_RTIMER,
+                timestamps.mpdu_duration,
                 timestamps.sfd + BYTE_DURATION_RTIMER + timestamps.mpdu_duration);
       }
     }
