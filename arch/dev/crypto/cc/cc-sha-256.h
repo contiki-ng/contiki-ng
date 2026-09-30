@@ -37,29 +37,22 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 /**
- * \addtogroup cc2538-crypto
- * @{
- *
- * \defgroup cc2538-sha-256 cc2538 SHA-256
- *
- * Driver for the cc2538 SHA-256 mode of the security core
+ * \addtogroup cc-crypto
  * @{
  *
  * \file
- * Header file for the cc2538 SHA-256 driver
+ *       Header file for the SHA-256 driver for CCXXXX MCUs.
  */
 
-#ifndef CC2538_SHA_256_H_
-#define CC2538_SHA_256_H_
+#ifndef CC_SHA_256_H_
+#define CC_SHA_256_H_
 
 #include "lib/sha-256.h"
 
-extern const struct sha_256_driver cc2538_sha_256_driver;
+extern const struct sha_256_driver cc_sha_256_driver;
 
-#endif /* CC2538_SHA_256_H_ */
+#endif /* CC_SHA_256_H_ */
 
-/**
- * @}
- * @}
- */
+/** @} */
