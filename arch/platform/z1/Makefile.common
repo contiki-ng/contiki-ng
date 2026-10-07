@@ -43,13 +43,13 @@ ifeq ($(HOST_OS),Darwin)
       BSL_FILETYPE = -I
       MOTES = $(shell $(MOTELIST) -b z1 -c 2>&- | \
               cut -f 2 -d ,)
+      # Only accept a purely numeric serial number: with no mote attached
+      # the motelist output can be a message whose last characters are not
+      # a number, and they would end up in CFLAGS and break the build.
       REFNUM = $(shell $(MOTELIST) -c 2>&- | \
-               cut -f 1 -d , | tail -c5 | sed 's/^0*//')
+               cut -f 1 -d , | tail -c5 | sed 's/^0*//' | grep -E '^[0-9]+$$')
       ifneq (,$(REFNUM))
-        # No device fo-und
-        ifeq (,$(findstring und, $(REFNUM)))
-          CFLAGS += -DSERIALNUM=$(REFNUM:0%=%)
-        endif
+        CFLAGS += -DSERIALNUM=$(REFNUM)
       endif
   endif
 else
@@ -65,12 +65,9 @@ else
               perl -ne 'print $$1 . " " if(m-(/dev/\w+)-);')
       CMOTES=$(MOTES)
       REFNUM = $(shell $(MOTELIST) -c 2>&- | \
-               cut -f 1 -d , | tail -c5 | sed 's/^0*//')
+               cut -f 1 -d , | tail -c5 | sed 's/^0*//' | grep -E '^[0-9]+$$')
       ifneq (,$(REFNUM))
-        # No device fo-und
-        ifeq (,$(findstring und, $(REFNUM)))
-          CFLAGS += -DSERIALNUM=$(REFNUM)
-        endif
+        CFLAGS += -DSERIALNUM=$(REFNUM)
       endif
     endif
 endif
