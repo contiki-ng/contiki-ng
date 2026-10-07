@@ -1,5 +1,15 @@
-# Include uECC
+# Include uECC.
+# Kept linked even with a hardware backend: the CC310 backend reuses
+# uECC_decompress for EC point decompression (nrf_crypto has none).
 MODULES += os/net/security/micro-ecc
+
+# ECC_HW_BACKEND=cc310 routes lib/ecc.h onto the nRF52840 CryptoCell-310
+# (arch/cpu/nrf52840/dev/nrf52840-cc310-ecc.c, wired via
+# arch/cpu/nrf52840/Makefile.cc310-crypto).  Exclude the software lib/ecc.h
+# backend so its ecc_* symbols don't clash with the hardware backend's.
+ifeq ($(ECC_HW_BACKEND),cc310)
+  CONTIKI_SOURCES_EXCLUDES += ecc.c
+endif
 
 # Disable hardware-accelerated ECC
 CONTIKI_SOURCES_EXCLUDES += cc2538-ecc.c
