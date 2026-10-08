@@ -210,19 +210,25 @@ client_block2_handler(coap_message_t *response, uint8_t *target,
   const uint8_t *payload = NULL;
   int pay_len = coap_get_payload(response, &payload);
 
-  if(response->block2_offset + pay_len > max_len) {
-    LOG_ERR("EDHOC message size (%d) exceeds max buffer (%d)\n", (int)pay_len, EDHOC_MAX_BUFFER);
-    coap_status_code = REQUEST_ENTITY_TOO_LARGE_4_13;
-    coap_error_message = "Message too big";
+  if(pay_len <= 0) {
+    return 0;
+  }
+
+  /*
+   * The callback API passes the blocks of a response in order, so each
+   * one is appended to what has been received so far. The offset in the
+   * Block2 option is not used, since it comes from the server.
+   */
+  if((size_t)pay_len > max_len - *len) {
+    LOG_ERR("EDHOC message exceeds the receive buffer of %u bytes\n",
+            (unsigned)max_len);
     return -1;
   }
 
-  if(target && len) {
-    memcpy(target + response->block2_offset, payload, pay_len);
-    *len = response->block2_offset + pay_len;
-    LOG_DBG_BYTES((uint8_t *)payload, (unsigned long)pay_len);
-    LOG_DBG_("\n");
-  }
+  memcpy(target + *len, payload, pay_len);
+  *len += pay_len;
+  LOG_DBG_BYTES((uint8_t *)payload, (unsigned long)pay_len);
+  LOG_DBG_("\n");
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -265,8 +271,13 @@ client_response_handler(coap_callback_request_state_t *callback_state)
 
   coap_set_option(callback_state->state.response, COAP_OPTION_BLOCK2);
 
-  client_block2_handler(callback_state->state.response,
-                        rx_ptr, &rx_sz, EDHOC_MAX_PAYLOAD_LEN);
+  if(client_block2_handler(callback_state->state.response,
+                           rx_ptr, &rx_sz, EDHOC_MAX_PAYLOAD_LEN) < 0) {
+    edhoc_state.val = EVT_RESTART;
+    coap_timer_stop(&timer);
+    process_post(&edhoc_client, edhoc_event, &edhoc_state);
+    return;
+  }
   if(!callback_state->state.more) {
     edhoc_ctx->buffers.rx_sz = rx_sz;
     edhoc_state.val = EVT_BLOCKING;
