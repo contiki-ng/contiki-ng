@@ -59,16 +59,28 @@
  */
 #define COAP_MAX_PACKET_SIZE  (COAP_MAX_HEADER_SIZE + COAP_MAX_CHUNK_SIZE)
 
-/* COAP_MAX_CHUNK_SIZE can be different from 2^x so we need to get next lower 2^x for COAP_MAX_BLOCK_SIZE */
+/*
+ * COAP_MAX_CHUNK_SIZE can be different from 2^x so we need to get next
+ * lower 2^x for COAP_MAX_BLOCK_SIZE. RFC 7959 allows blocks of at most
+ * 1024 bytes.
+ */
 #ifndef COAP_MAX_BLOCK_SIZE
 #define COAP_MAX_BLOCK_SIZE           (COAP_MAX_CHUNK_SIZE < 32 ? 16 : \
                                        (COAP_MAX_CHUNK_SIZE < 64 ? 32 : \
                                         (COAP_MAX_CHUNK_SIZE < 128 ? 64 : \
                                          (COAP_MAX_CHUNK_SIZE < 256 ? 128 : \
                                           (COAP_MAX_CHUNK_SIZE < 512 ? 256 : \
-                                          (COAP_MAX_CHUNK_SIZE < 1024 ? 512 : \
-                                          (COAP_MAX_CHUNK_SIZE < 2048 ? 1024 : 2048)))))))
+                                          (COAP_MAX_CHUNK_SIZE < 1024 ? 512 : 1024))))))
 #endif /* COAP_MAX_BLOCK_SIZE */
+
+/*
+ * RFC 7959 allows blocks of at most 1024 bytes. A larger value has no valid
+ * encoding, so the block-option setters would reject it and the engine would
+ * send responses without a Block option. Catch such a definition here.
+ */
+#if COAP_MAX_BLOCK_SIZE > 1024
+#error "COAP_MAX_BLOCK_SIZE must not exceed 1024 (RFC 7959, Section 2.2)"
+#endif
 
 /* bitmap for set options */
 #define COAP_OPTION_MAP_SIZE  (sizeof(uint8_t) * 8)
