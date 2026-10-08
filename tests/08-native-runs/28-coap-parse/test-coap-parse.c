@@ -36,6 +36,7 @@
 #include "contiki.h"
 #include "unit-test.h"
 #include "coap.h"
+#include "coap-block1.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -82,6 +83,89 @@ build_message(size_t payload_len)
   buffer[len] = CANARY;
 
   return len;
+}
+/*
+ * Builds a CoAP POST request with a Block1 option whose value is
+ * block1, encoded in the fewest bytes, followed by payload_len payload
+ * bytes. Returns the message length.
+ */
+static uint16_t
+build_block1_message(uint32_t block1, size_t payload_len)
+{
+  uint16_t len = 0;
+  uint8_t value_len;
+  size_t i;
+
+  for(value_len = 0; value_len < 4 && (block1 >> (8 * value_len)); value_len++);
+
+  buffer[len++] = (1 << 6);          /* Version 1, type CON, token length 0. */
+  buffer[len++] = COAP_POST;         /* Code. */
+  buffer[len++] = 0x12;              /* Message ID, high byte. */
+  buffer[len++] = 0x34;              /* Message ID, low byte. */
+
+  /* Option delta 27 is encoded as 13 plus an extended byte of 14. */
+  buffer[len++] = (13 << 4) | value_len;
+  buffer[len++] = COAP_OPTION_BLOCK1 - 13;
+  for(i = value_len; i > 0; i--) {
+    buffer[len++] = block1 >> (8 * (i - 1));
+  }
+
+  buffer[len++] = 0xFF;              /* Payload marker. */
+
+  payload_start = len;
+  for(i = 0; i < payload_len; i++) {
+    buffer[len++] = 'a' + (i % 26);
+  }
+
+  return len;
+}
+/*---------------------------------------------------------------------------*/
+#define BLOCK1_TARGET_LEN 64
+#define BLOCK1_GUARD_LEN  32
+
+/*
+ * The reassembly buffer handed to coap_block1_handler(), with guard
+ * areas before and after it to detect a write outside the buffer.
+ */
+static uint8_t block1_area[BLOCK1_GUARD_LEN + BLOCK1_TARGET_LEN +
+                           BLOCK1_GUARD_LEN];
+#define BLOCK1_TARGET (&block1_area[BLOCK1_GUARD_LEN])
+
+static bool
+block1_guards_intact(void)
+{
+  size_t i;
+
+  for(i = 0; i < BLOCK1_GUARD_LEN; i++) {
+    if(block1_area[i] != CANARY ||
+       block1_area[BLOCK1_GUARD_LEN + BLOCK1_TARGET_LEN + i] != CANARY) {
+      return false;
+    }
+  }
+  return true;
+}
+/*
+ * Parses a request with the given Block1 option value and payload length
+ * and passes it to coap_block1_handler(). Returns the handler's result.
+ */
+static int
+run_block1(uint32_t block1, size_t payload_len, size_t *assembled_len)
+{
+  coap_message_t request;
+  coap_message_t response;
+  uint16_t len;
+
+  memset(block1_area, CANARY, sizeof(block1_area));
+  *assembled_len = 0;
+
+  len = build_block1_message(block1, payload_len);
+  if(coap_parse_message(&request, buffer, len) != NO_ERROR) {
+    return -2;
+  }
+
+  coap_init_message(&response, COAP_TYPE_ACK, CONTENT_2_05, request.mid);
+  return coap_block1_handler(&request, &response, BLOCK1_TARGET,
+                             assembled_len, BLOCK1_TARGET_LEN);
 }
 /*---------------------------------------------------------------------------*/
 /* The parser must report the payload without writing past the message. */
@@ -172,6 +256,50 @@ UNIT_TEST(test_parse_rejects_empty_payload)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+/*
+ * A Block1 value of 0xFFFFFFF0 gives an offset of 0xFFFFFFF0, and adding
+ * a 16-byte payload to that wraps to zero in 32-bit arithmetic. The
+ * request must be rejected rather than copied to that offset.
+ */
+UNIT_TEST_REGISTER(test_block1_offset_wrap_is_rejected,
+                   "a Block1 offset that wraps with the payload is rejected");
+UNIT_TEST(test_block1_offset_wrap_is_rejected)
+{
+  size_t assembled_len;
+
+  UNIT_TEST_BEGIN();
+
+  UNIT_TEST_ASSERT(run_block1(0xFFFFFFF0, 16, &assembled_len) == -1);
+  UNIT_TEST_ASSERT(coap_status_code == REQUEST_ENTITY_TOO_LARGE_4_13);
+  UNIT_TEST_ASSERT(assembled_len == 0);
+  UNIT_TEST_ASSERT(block1_guards_intact());
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+/* A final block that ends exactly at the end of the buffer is accepted. */
+UNIT_TEST_REGISTER(test_block1_last_block_fills_buffer,
+                   "a final Block1 block that fills the buffer is accepted");
+UNIT_TEST(test_block1_last_block_fills_buffer)
+{
+  size_t assembled_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Block number 3 of size 16, no more blocks: offset 48, 16 bytes. */
+  UNIT_TEST_ASSERT(run_block1(3 << 4, 16, &assembled_len) == 0);
+  UNIT_TEST_ASSERT(assembled_len == BLOCK1_TARGET_LEN);
+  UNIT_TEST_ASSERT(memcmp(BLOCK1_TARGET + 48, &buffer[payload_start], 16)
+                   == 0);
+  UNIT_TEST_ASSERT(block1_guards_intact());
+
+  /* One more byte would not fit. */
+  UNIT_TEST_ASSERT(run_block1(3 << 4, 17, &assembled_len) == -1);
+  UNIT_TEST_ASSERT(block1_guards_intact());
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(run_tests, ev, data)
 {
   PROCESS_BEGIN();
@@ -182,11 +310,15 @@ PROCESS_THREAD(run_tests, ev, data)
   UNIT_TEST_RUN(test_parse_oversized_payload_is_truncated);
   UNIT_TEST_RUN(test_parse_payload_with_null_bytes);
   UNIT_TEST_RUN(test_parse_rejects_empty_payload);
+  UNIT_TEST_RUN(test_block1_offset_wrap_is_rejected);
+  UNIT_TEST_RUN(test_block1_last_block_fills_buffer);
 
   if(!UNIT_TEST_PASSED(test_parse_payload_keeps_canary) ||
      !UNIT_TEST_PASSED(test_parse_oversized_payload_is_truncated) ||
      !UNIT_TEST_PASSED(test_parse_payload_with_null_bytes) ||
-     !UNIT_TEST_PASSED(test_parse_rejects_empty_payload)) {
+     !UNIT_TEST_PASSED(test_parse_rejects_empty_payload) ||
+     !UNIT_TEST_PASSED(test_block1_offset_wrap_is_rejected) ||
+     !UNIT_TEST_PASSED(test_block1_last_block_fills_buffer)) {
     printf("=check-me= FAILED\n");
   } else {
     printf("=check-me= DONE\n");
