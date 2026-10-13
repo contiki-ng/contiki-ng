@@ -1,0 +1,60 @@
+################################################################################
+### CC13x2x7/CC26x2x7 CPU makefile
+#
+# The CC13x2x7/CC26x2x7 (CC1312R7, CC1352R7, CC1352P7, CC2652R7, ...) is the
+# CC13x2/CC26x2 core with 704 KB flash, 144 KB SRAM and its own ROM. The
+# Core SDK ships no pre-compiled TI Drivers, NoRTOS or RF driver libraries for
+# it, so the sources used by Contiki-NG are compiled here into one static
+# library, against the CC13x2x7/CC26x2x7 driverlib. DeviceFamily_CC13X2X7 and
+# DeviceFamily_CC26X2X7 map to the CC13X2/CC26X2 family IDs and parent, so the
+# driver sources take the same paths as for the CC13x2/CC26x2.
+
+TI_X7_SOURCES  = $(addprefix source/ti/drivers/, \
+  ADCBuf.c adcbuf/ADCBufCC26X2.c adc/ADCCC26XX.c \
+  cryptoutils/cryptokey/CryptoKeyPlaintextCC26XX.c \
+  timer/GPTimerCC26XX.c I2C.c i2c/I2CCC26XX.c pin/PINCC26XX.c \
+  PWM.c pwm/PWMTimerCC26XX.c \
+  power/PowerCC26X2.c power/PowerCC26X2_calibrateRCOSC.c \
+  SPI.c spi/SPICC26X2DMA.c TRNG.c trng/TRNGCC26XX.c \
+  UART.c uart/UARTCC26XX.c dma/UDMACC26XX.c \
+  Watchdog.c watchdog/WatchdogCC26XX.c \
+  utils/List.c utils/RingBuf.c \
+  rf/RFCC26X2_multiMode.c)
+TI_X7_SOURCES += $(addprefix kernel/nortos/, NoRTOS.c \
+  dpl/ClockPTimer_nortos.c dpl/HwiPCC26XX_nortos.c dpl/PowerCC26X2_nortos.c \
+  dpl/QueueP_nortos.c dpl/SemaphoreP_nortos.c dpl/SwiP_nortos.c \
+  dpl/TimerPCC26XX_nortos.c)
+TI_X7_SOURCES += $(patsubst $(CORE_SDK)/%,%,$(wildcard $(SDK_DEVICES)/rf_patches/*.c))
+# SDK 7.x builds the RF core helpers into the RF driver library, not into
+# driverlib.lib: compile them here.
+TI_X7_SOURCES += $(patsubst $(CORE_SDK)/%,%,$(SDK_DEVICES)/driverlib/rfc.c)
+
+# Objects live in their own directory: some TI basenames (List.c, UART.c)
+# collide with Contiki-NG's on case-insensitive file systems.
+TI_X7_OBJDIR = $(OBJECTDIR)/coresdk
+TI_X7_OBJS   = $(patsubst %.c,$(TI_X7_OBJDIR)/%.o,$(TI_X7_SOURCES))
+TI_X7_LIB    = $(OBJECTDIR)/libcoresdk_$(SDK_LIB_NAME).a
+
+TI_X7_CFLAGS = $(filter-out -Wall -Werror -I%,$(CFLAGS)) -w
+TI_X7_CFLAGS += -I$(CONTIKI_CPU)/$(SUBFAMILY)/compat
+TI_X7_CFLAGS += -include $(CONTIKI_CPU)/$(SUBFAMILY)/compat/coresdk-compat.h
+TI_X7_CFLAGS += -I$(SDK_SOURCE) -I$(SDK_NORTOS) -I$(SDK_NORTOS)/posix
+
+$(TI_X7_OBJDIR)/%.o: $(CORE_SDK)/%.c | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)mkdir -p $(@D)
+	$(Q)$(CC) $(TI_X7_CFLAGS) -c $< -o $@
+
+$(TI_X7_LIB): $(TI_X7_OBJS)
+	$(TRACE_AR)
+	$(Q)$(AR) rcs $@ $^
+
+INTERNAL_DEPS   += $(TI_X7_LIB)
+TARGET_LIBFILES += $(TI_X7_LIB)
+TARGET_LIBFILES += $(SDK_DEVICES)/driverlib/bin/gcc/driverlib.lib
+
+# The CMSIS header (cc13x2-cc26x2-cm4.h) is shared with the CC13x2/CC26x2.
+CONTIKI_CPU_DIRS += cc13x2-cc26x2
+
+# CC13x2x7/CC26x2x7 is a Cortex-M4 architecture
+include $(CONTIKI)/$(CONTIKI_NG_CM4_DIR)/Makefile.cm4

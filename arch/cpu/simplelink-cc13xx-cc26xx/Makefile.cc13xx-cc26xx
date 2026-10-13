@@ -36,6 +36,11 @@ endif
 ifeq ($(SUBFAMILY),cc13x2-cc26x2)
   SDK_DEVICES_NAME := cc13x2_cc26x2
   SDK_LIB_NAME := $(DEVICE_FAMILY_LC)
+# CC13x2x7/CC26x2x7 likewise shares one devices folder. Its TI Drivers are
+# built from source (cc13x2x7-cc26x2x7/Makefile.cc13x2x7-cc26x2x7).
+else ifeq ($(SUBFAMILY),cc13x2x7-cc26x2x7)
+  SDK_DEVICES_NAME := cc13x2x7_cc26x2x7
+  SDK_LIB_NAME := $(DEVICE_FAMILY_LC)
 # CC13x0/CC26x0 does not have this, with both its devices name and library
 # name the same as its own device family name.
 else

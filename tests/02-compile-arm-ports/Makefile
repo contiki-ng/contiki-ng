@@ -85,6 +85,7 @@ hello-world/zoul:BOARD=firefly-reva:DEFINES=ZOUL_CONF_USE_CC1200_RADIO=1,CC1200_
 hello-world/simplelink:BOARD=srf06/cc13x0 \
 hello-world/simplelink:BOARD=launchpad/cc1310 \
 hello-world/simplelink:BOARD=launchpad/cc1312r1 \
+hello-world/simplelink:BOARD=launchpad/cc1312r7 \
 hello-world/simplelink:BOARD=launchpad/cc1350 \
 hello-world/simplelink:BOARD=launchpad/cc1350-4 \
 hello-world/simplelink:BOARD=launchpad/cc1352p-2 \
@@ -136,6 +137,7 @@ libs/stack-check/openmote \
 libs/stack-check/simplelink:BOARD=srf06/cc13x0 \
 libs/stack-check/simplelink:BOARD=launchpad/cc1310 \
 libs/stack-check/simplelink:BOARD=launchpad/cc1312r1 \
+libs/stack-check/simplelink:BOARD=launchpad/cc1312r7 \
 libs/stack-check/simplelink:BOARD=launchpad/cc1350 \
 libs/stack-check/simplelink:BOARD=launchpad/cc1350-4 \
 libs/stack-check/simplelink:BOARD=launchpad/cc1352p-2 \
