@@ -47,7 +47,7 @@ static void res_get_handler(coap_message_t *request, coap_message_t *response, u
  * and split their responses by themselves. To transfer the complete resource through a TCP stream or CoAP's blockwise transfer,
  * the byte offset where to continue is provided to the handler as int32_t pointer.
  * These chunk-wise resources must set the offset value to its new position or -1 of the end is reached.
- * (The offset for CoAP's blockwise transfer can go up to 2'147'481'600 = ~2047 M for block size 2048 (reduced to 1024 in observe-03.)
+ * (The offset for CoAP's blockwise transfer can go up to 1'073'740'800 = ~1 GiB for the maximum block size of 1024.)
  */
 RESOURCE(res_chunks,
          "title=\"Blockwise demo\";rt=\"Data\"",
