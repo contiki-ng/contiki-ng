@@ -60,10 +60,19 @@
                                                   ? 0 : 1)
 #define gpio_hal_arch_write_pin(port, pin, v)   PINCC26XX_setOutputValue(pin, v)
 
-#define gpio_hal_arch_set_pins(port, pin)       GPIO_setMultiDio(pin)
-#define gpio_hal_arch_clear_pins(port, pin)     GPIO_clearMultiDio(pin)
-#define gpio_hal_arch_toggle_pins(port, pin)    GPIO_toggleMultiDio(pin)
-#define gpio_hal_arch_write_pins(port, pin, v)  GPIO_writeMultiDio(pin, v)
+/*
+ * Multi-pin access goes straight to the GPIO registers: the CC13x2x7/CC26x2x7
+ * driverlib no longer has the GPIO_*MultiDio() helpers.
+ */
+#define gpio_hal_arch_set_pins(port, pin) \
+  (HWREG(GPIO_BASE + GPIO_O_DOUTSET31_0) = (pin))
+#define gpio_hal_arch_clear_pins(port, pin) \
+  (HWREG(GPIO_BASE + GPIO_O_DOUTCLR31_0) = (pin))
+#define gpio_hal_arch_toggle_pins(port, pin) \
+  (HWREG(GPIO_BASE + GPIO_O_DOUTTGL31_0) = (pin))
+#define gpio_hal_arch_write_pins(port, pin, v) \
+  (HWREG(GPIO_BASE + GPIO_O_DOUT31_0) = \
+     (HWREG(GPIO_BASE + GPIO_O_DOUT31_0) & ~(pin)) | ((v) & (pin)))
 /*---------------------------------------------------------------------------*/
 #endif /* GPIO_HAL_ARCH_H_ */
 /*---------------------------------------------------------------------------*/
