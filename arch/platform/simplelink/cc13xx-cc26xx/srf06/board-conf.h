@@ -54,10 +54,10 @@
 
 #define LEDS_CONF_COUNT             4
 
-#define LEDS_CONF_RED               0
-#define LEDS_CONF_YELLOW            1
-#define LEDS_CONF_GREEN             2
-#define LEDS_CONF_ORANGE            3
+#define LEDS_CONF_RED               0x01
+#define LEDS_CONF_YELLOW            0x02
+#define LEDS_CONF_GREEN             0x04
+#define LEDS_CONF_ORANGE            0x08
 
 #define LEDS_CONF_ALL               ((1 << LEDS_CONF_COUNT) - 1)
 /** @} */
