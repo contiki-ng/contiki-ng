@@ -58,7 +58,11 @@
 #include <NoRTOS.h>
 
 #include <ti/devices/DeviceFamily.h>
+/* The CC13x2x7/CC26x2x7 driverlib (SDK 7.x) no longer has a release header. */
+#if !defined(DeviceFamily_CC13X2X7) && !defined(DeviceFamily_CC26X2X7)
+#define HAVE_DRIVERLIB_RELEASE 1
 #include DeviceFamily_constructPath(driverlib/driverlib_release.h)
+#endif
 #include DeviceFamily_constructPath(driverlib/chipinfo.h)
 #include DeviceFamily_constructPath(driverlib/vims.h)
 
@@ -146,7 +150,9 @@ set_rf_params(void)
 void
 platform_init_stage_one(void)
 {
+#ifdef HAVE_DRIVERLIB_RELEASE
   DRIVERLIB_ASSERT_CURR_RELEASE();
+#endif
 
   /* Enable flash cache */
   VIMSModeSet(VIMS_BASE, VIMS_MODE_ENABLED);
@@ -236,8 +242,10 @@ platform_init_stage_three(void)
 
   set_rf_params();
 
+#ifdef HAVE_DRIVERLIB_RELEASE
   LOG_DBG("With DriverLib v%u.%u\n", DRIVERLIB_RELEASE_GROUP,
           DRIVERLIB_RELEASE_BUILD);
+#endif
   LOG_DBG("IEEE 802.15.4: %s, Sub-1 GHz: %s, BLE: %s\n",
           ChipInfo_SupportsIEEE_802_15_4() ? "Yes" : "No",
           ChipInfo_SupportsPROPRIETARY() ? "Yes" : "No",

@@ -248,12 +248,12 @@ gpio_hal_pin_mask_t
 gpio_hal_arch_no_port_read_pins(gpio_hal_pin_mask_t pins)
 {
   /* For pins configured as output we need to read DOUT31_0 */
-  gpio_hal_pin_mask_t oe_pins = GPIO_getOutputEnableMultiDio(pins);
+  gpio_hal_pin_mask_t oe_pins = HWREG(GPIO_BASE + GPIO_O_DOE31_0) & pins;
 
   pins &= ~oe_pins;
 
   return (HWREG(GPIO_BASE + GPIO_O_DOUT31_0) & oe_pins) |
-         GPIO_readMultiDio(pins);
+         (HWREG(GPIO_BASE + GPIO_O_DIN31_0) & pins);
 }
 /*---------------------------------------------------------------------------*/
 uint8_t
