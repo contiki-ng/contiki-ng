@@ -61,7 +61,8 @@ The platform has the following key features:
   same as the CC13x2/CC26x2, and the PIN and RF drivers have been taught the
   x7 chip types. On an LP-CC1312R7, boot, UART, and sub-GHz receive and
   transmit work. Power modes, standby current and the XOSC handling are
-  not yet verified.
+  not yet verified, and the TX power levels (1 to 14 dBm) come from TI's
+  LP-CC1312R7 PA table rather than from measurements on the board.
 * Deep Sleep support with RAM retention for ultra-low energy consumption.
 * Support for CC13xx prop mode: IEEE 802.15.4g-compliant Sub-1 GHz operation.
 * Support for CC26xx ieee mode: IEEE 802.15.4-compliant 2.4 GHz operation.

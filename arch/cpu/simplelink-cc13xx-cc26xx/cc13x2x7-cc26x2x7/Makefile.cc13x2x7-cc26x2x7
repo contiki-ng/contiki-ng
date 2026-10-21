@@ -42,7 +42,9 @@ TI_X7_SOURCES += $(addprefix kernel/nortos/, NoRTOS.c \
   dpl/ClockPTimer_nortos.c dpl/HwiPCC26XX_nortos.c dpl/PowerCC26X2_nortos.c \
   dpl/QueueP_nortos.c dpl/SemaphoreP_nortos.c dpl/SwiP_nortos.c \
   dpl/TimerPCC26XX_nortos.c)
-TI_X7_SOURCES += $(patsubst $(CORE_SDK)/%,%,$(wildcard $(SDK_DEVICES)/rf_patches/*.c))
+# Only the RF core patch rf-settings/cc13x2x7 uses (prop mode, setting_tc106).
+# The SDK holds 15 more; settings that need one add it here.
+TI_X7_SOURCES += $(patsubst $(CORE_SDK)/%,%,$(SDK_DEVICES)/rf_patches/rf_patch_cpe_prop.c)
 # SDK 7.x builds the RF core helpers into the RF driver library, not into
 # driverlib.lib: compile them here.
 TI_X7_SOURCES += $(patsubst $(CORE_SDK)/%,%,$(SDK_DEVICES)/driverlib/rfc.c)
