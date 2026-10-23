@@ -62,8 +62,8 @@
 
 #define LEDS_CONF_COUNT             2
 
-#define LEDS_CONF_RED               0
-#define LEDS_CONF_GREEN             1
+#define LEDS_CONF_RED               0x01
+#define LEDS_CONF_GREEN             0x02
 
 #define LEDS_CONF_ALL               ((1 << LEDS_CONF_COUNT) - 1)
 /** @} */
