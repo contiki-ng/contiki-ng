@@ -293,6 +293,41 @@ platform_init_stage_three()
   setvbuf(stdout, (char *)NULL, _IONBF, 0);
 }
 /*---------------------------------------------------------------------------*/
+static void
+set_select_timeout(struct timeval *tv, int events_pending)
+{
+  uint64_t usec;
+
+  if(events_pending) {
+    usec = 1;
+  } else {
+    usec = (uint64_t)SELECT_TIMEOUT * 1000;
+
+    /*
+     * Nothing wakes select() when an event timer expires, so do not sleep
+     * past the next expiration. Otherwise any etimer shorter than
+     * SELECT_TIMEOUT expires up to SELECT_TIMEOUT late.
+     */
+    if(etimer_pending()) {
+      clock_time_t now = clock_time();
+      clock_time_t next = etimer_next_expiration_time();
+
+      if(CLOCK_LT(now, next)) {
+        uint64_t left = (uint64_t)(clock_time_t)(next - now) * 1000000 /
+          CLOCK_SECOND;
+        if(left < usec) {
+          usec = left;
+        }
+      } else {
+        usec = 0;
+      }
+    }
+  }
+
+  tv->tv_sec = usec / 1000000;
+  tv->tv_usec = usec % 1000000;
+}
+/*---------------------------------------------------------------------------*/
 void
 platform_main_loop()
 {
@@ -309,8 +344,7 @@ platform_main_loop()
 
     retval = process_run();
 
-    tv.tv_sec = retval ? 0 : SELECT_TIMEOUT / 1000;
-    tv.tv_usec = retval ? 1 : (SELECT_TIMEOUT * 1000) % 1000000;
+    set_select_timeout(&tv, retval);
 
     FD_ZERO(&fdr);
     FD_ZERO(&fdw);
