@@ -1287,6 +1287,16 @@ dao_input(void)
   LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
   LOG_INFO_("\n");
 
+  /*
+   * A DAO may be forwarded to the preferred parent or answered with a
+   * DAO ACK from uip_buf. Both are sent with uip_icmp6_send(), which
+   * does not account for extension headers of the received packet, so
+   * remove them first.
+   */
+  if(!uip_remove_ext_hdr()) {
+    goto discard;
+  }
+
   if(uip_len <= uip_l3_icmp_hdr_len) {
     LOG_WARN("Ignoring DAO ICMPv6 message without DAO header\n");
     goto discard;
@@ -1566,6 +1576,16 @@ dao_ack_input(void)
   uint8_t status;
   rpl_instance_t *instance;
   rpl_parent_t *parent;
+
+  /*
+   * A DAO ACK may be forwarded from uip_buf with uip_icmp6_send(), which
+   * does not account for extension headers of the received packet, so
+   * remove them first.
+   */
+  if(!uip_remove_ext_hdr()) {
+    uipbuf_clear();
+    return;
+  }
 
   if(uip_len < uip_l3_icmp_hdr_len + RPL_DAO_ACK_LEN) {
     LOG_WARN("Dropping incomplete DAO ACK (%u < %u)\n",
