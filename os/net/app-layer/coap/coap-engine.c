@@ -154,6 +154,8 @@ coap_receive(const coap_endpoint_t *src,
 
   coap_status_code = coap_parse_message(message, payload, payload_length);
   coap_set_src_endpoint(message, src);
+  /* Only a 4.13 from the parser has COAP_MAX_CHUNK_SIZE as its limit. */
+  bool payload_too_large = coap_status_code == REQUEST_ENTITY_TOO_LARGE_4_13;
 
   if(coap_status_code == NO_ERROR) {
 
@@ -395,6 +397,10 @@ coap_receive(const coap_endpoint_t *src,
       /* A response carries the token of the message it answers. A reset is
          an empty message and carries none. */
       coap_set_token(message, token, token_len);
+    }
+    if(payload_too_large) {
+      /* Let the sender retry with block-wise transfers (RFC 7959). */
+      coap_set_header_size1(message, COAP_MAX_CHUNK_SIZE);
     }
 #if COAP_MESSAGE_ON_ERROR
     coap_set_payload(message, coap_error_message,
