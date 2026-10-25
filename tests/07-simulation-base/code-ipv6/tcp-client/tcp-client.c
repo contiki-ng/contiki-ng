@@ -143,8 +143,6 @@ PROCESS_THREAD(test_tcp_client, ev, data)
     PROCESS_EXIT();
   }
 
-  memset(buf, 0xca, sizeof(buf));
-
   LOG_INFO("Sending %u bytes to the server...\n", TEST_STREAM_LENGTH);
 
   for(;;) {
@@ -158,6 +156,10 @@ PROCESS_THREAD(test_tcp_client, ev, data)
     } else if(can_send) {
       size_t bytes_to_send = TEST_STREAM_LENGTH < sizeof(buf) + bytes_sent ?
 	TEST_STREAM_LENGTH - bytes_sent : sizeof(buf);
+      /* Fill buffer with pattern: byte value = (global_index % 256) */
+      for(size_t i = 0; i < bytes_to_send; i++) {
+        buf[i] = (uint8_t)((bytes_sent + i) % 256);
+      }
       int ret = tcp_socket_send(&client_sock, buf, bytes_to_send);
       if(ret < 0) {
         LOG_ERR("Failed to send %zu bytes\n", sizeof(buf));
