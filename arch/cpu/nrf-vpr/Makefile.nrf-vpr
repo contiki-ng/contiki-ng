@@ -50,7 +50,10 @@ ASFLAGS += $(CFLAGS) -c
 LDFLAGS += -march=$(VPR_MARCH) -mabi=$(VPR_MABI)
 LDFLAGS += -nostartfiles -nostdlib
 LDFLAGS += -Wl,--gc-sections,--sort-section=alignment
-LDFLAGS += -Wl,--no-warn-rwx-segments
+### binutils >= 2.39 warns about RWX load segments; silence it there. Older ld
+### (e.g. the Zephyr SDK's 2.38) does not recognise the flag and errors out, so
+### only pass it when ld actually advertises support.
+LDFLAGS += $(shell $(TOOLCHAIN_BIN)ld --help 2>/dev/null | grep -q -- --no-warn-rwx-segments && echo -Wl,--no-warn-rwx-segments)
 LDFLAGS += -Wl,-eReset_Handler
 LDFLAGS += -Wl,--defsym=_stack=__StackTop
 LDFLAGS += -Wl,--defsym=_stack_origin=__StackTop
