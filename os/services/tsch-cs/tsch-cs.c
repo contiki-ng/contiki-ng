@@ -46,6 +46,15 @@
 #error tsch-cs requires periodic RSSI sampling. Please enable TSCH_STATS_CONF_SAMPLE_NOISE_RSSI.
 #endif /* ! TSCH_STATS_SAMPLE_NOISE_RSSI */
 
+/* One bitmap bit per tracked channel, and every channel in the tracked
+   window has to be representable in the uint8_t that holds it. */
+#if TSCH_STATS_NUM_CHANNELS > 16
+#error tsch-cs: TSCH_STATS_NUM_CHANNELS does not fit in tsch_cs_bitmap_t.
+#endif /* TSCH_STATS_NUM_CHANNELS > 16 */
+#if TSCH_STATS_FIRST_CHANNEL + TSCH_STATS_NUM_CHANNELS > 256
+#error tsch-cs: the tracked channel window does not fit in a uint8_t channel.
+#endif /* TSCH_STATS_FIRST_CHANNEL + TSCH_STATS_NUM_CHANNELS > 256 */
+
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "TSCH CS"
@@ -112,9 +121,42 @@ tsch_cs_bitmap_calc(void)
   return result;
 }
 /*---------------------------------------------------------------------------*/
+/*
+ * The per-channel arrays and the bitmap bits are indexed by a channel's
+ * offset from TSCH_STATS_FIRST_CHANNEL, and the quality array is sized by
+ * the tracked window rather than by the hopping sequence. Nothing makes the
+ * configured sequence fit either, so check it before indexing anything by it.
+ */
+static bool
+tsch_cs_sequence_is_usable(void)
+{
+  int i;
+
+  if(tsch_hopping_sequence_length.val > TSCH_STATS_NUM_CHANNELS) {
+    LOG_ERR("hopping sequence too long: %u channels, %u tracked\n",
+            (unsigned)tsch_hopping_sequence_length.val,
+            (unsigned)TSCH_STATS_NUM_CHANNELS);
+    return false;
+  }
+
+  for(i = 0; i < tsch_hopping_sequence_length.val; ++i) {
+    uint8_t channel = tsch_hopping_sequence[i];
+    if(channel < TSCH_STATS_FIRST_CHANNEL
+       || channel >= TSCH_STATS_FIRST_CHANNEL + TSCH_STATS_NUM_CHANNELS) {
+      LOG_ERR("channel %u is not tracked by tsch-stats\n", channel);
+      return false;
+    }
+  }
+
+  return true;
+}
+/*---------------------------------------------------------------------------*/
 void
 tsch_cs_adaptations_init(void)
 {
+  if(!tsch_cs_sequence_is_usable()) {
+    return;
+  }
   tsch_cs_initial_bitmap = tsch_cs_bitmap_calc();
   tsch_cs_current_bitmap = tsch_cs_initial_bitmap;
 }
@@ -220,6 +262,10 @@ tsch_cs_process(void)
 
   /* reset the flag */
   recaculation_requested = false;
+
+  if(!tsch_cs_sequence_is_usable()) {
+    return false;
+  }
 
   for(i = 0; i < TSCH_STATS_NUM_CHANNELS; ++i) {
     qualities[i].channel = i + TSCH_STATS_FIRST_CHANNEL;
