@@ -38,6 +38,20 @@
 
 #include <stdio.h>
 
+/* Default no color - change to 1 to colorize output */
+#define COLORIZE_UT_OUTPUT 0
+#if COLORIZE_UT_OUTPUT
+#define RED_BEGIN "\033[31m"
+#define RED_END "\033[0m"
+#define GREEN_BEGIN "\033[32m"
+#define GREEN_END "\033[0m"
+#else
+#define RED_BEGIN
+#define RED_END
+#define GREEN_BEGIN
+#define GREEN_END
+#endif
+
 struct pt unit_test_pt;
 
 /*---------------------------------------------------------------------------*/
@@ -50,7 +64,7 @@ void
 unit_test_print_report(const unit_test_t *utp)
 {
   printf("\nUnit test: %s\n", utp->descr);
-  printf("Result: %s\n", utp->passed ? "success" : "failure");
+  printf("Result: %s\n", utp->passed ? GREEN_BEGIN "success" GREEN_END : RED_BEGIN "failure" RED_END);
   printf("Exit point: %s:%u\n", utp->test_file, utp->exit_line);
   printf("Assertions executed: %"PRIu32"\n", utp->assertions);
   printf("Start: %"CLOCK_PRI"\n", utp->start);
