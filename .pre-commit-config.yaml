@@ -1,0 +1,19 @@
+repos:
+-   repo: https://github.com/igrr/astyle_py.git
+    rev: v1.0.5
+    hooks:
+    -   id: astyle_py
+        args: ['--style=1tbs',
+               '--align-pointer=name',
+               '--align-reference=name',
+               '--attach-closing-while',
+               '--attach-return-type-decl',
+               '--break-one-line-headers',
+               '--break-return-type',
+               '--convert-tabs',
+               '--indent-continuation=2',
+               '--indent-preproc-define',
+               '--indent=spaces=2',
+               '--max-code-length=80',
+               '--min-conditional-indent=0',
+               '--unpad-paren']
