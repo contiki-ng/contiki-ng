@@ -69,14 +69,54 @@
 #error Unsupported timer for rtimer
 #endif
 
+/*
+ * The TIMER counts at 16 MHz >> PRESCALER, with PRESCALER in 0..9. Derive it
+ * from RTIMER_ARCH_SECOND so that the two can not disagree.
+ */
+#if RTIMER_ARCH_SECOND == 16000000
+#define NRF_RTIMER_PRESCALER 0
+#elif RTIMER_ARCH_SECOND == 8000000
+#define NRF_RTIMER_PRESCALER 1
+#elif RTIMER_ARCH_SECOND == 4000000
+#define NRF_RTIMER_PRESCALER 2
+#elif RTIMER_ARCH_SECOND == 2000000
+#define NRF_RTIMER_PRESCALER 3
+#elif RTIMER_ARCH_SECOND == 1000000
+#define NRF_RTIMER_PRESCALER 4
+#elif RTIMER_ARCH_SECOND == 500000
+#define NRF_RTIMER_PRESCALER 5
+#elif RTIMER_ARCH_SECOND == 250000
+#define NRF_RTIMER_PRESCALER 6
+#elif RTIMER_ARCH_SECOND == 125000
+#define NRF_RTIMER_PRESCALER 7
+#elif RTIMER_ARCH_SECOND == 62500
+#define NRF_RTIMER_PRESCALER 8
+#elif RTIMER_ARCH_SECOND == 31250
+#define NRF_RTIMER_PRESCALER 9
+#else
+#error "RTIMER_ARCH_SECOND is not 16 MHz divided by a power of two in 1..512"
+#endif
+
+/*
+ * Smallest interval, in ticks, that is programmed into CC0. A compare value
+ * that the counter has already passed produces no event until the counter
+ * wraps. 
+ *
+ */
+#ifndef RTIMER_ARCH_MIN_DELAY
+#define RTIMER_ARCH_MIN_DELAY \
+  (US_TO_RTIMERTICKS(4) > 1 ? US_TO_RTIMERTICKS(4) : 1)
+#endif
+
 /*---------------------------------------------------------------------------*/
 void
 rtimer_arch_init(void)
 {
   nrf_timer_event_clear(NRF_RTIMER_TIMER, NRF_TIMER_EVENT_COMPARE0);
 
-  /* 16 MHz / 2^8 = 62500 Hz. Newer nrfx removed nrf_timer_frequency_set(). */
-  nrf_timer_prescaler_set(NRF_RTIMER_TIMER, 8);
+  /* 16 MHz >> NRF_RTIMER_PRESCALER, see above.
+     Newer nrfx removed nrf_timer_frequency_set(). */
+  nrf_timer_prescaler_set(NRF_RTIMER_TIMER, NRF_RTIMER_PRESCALER);
   nrf_timer_bit_width_set(NRF_RTIMER_TIMER, NRF_TIMER_BIT_WIDTH_32);
   nrf_timer_mode_set(NRF_RTIMER_TIMER, NRF_TIMER_MODE_TIMER);
   nrf_timer_int_enable(NRF_RTIMER_TIMER, NRF_TIMER_INT_COMPARE0_MASK);
@@ -88,9 +128,18 @@ rtimer_arch_init(void)
 void
 rtimer_arch_schedule(rtimer_clock_t t)
 {
-  /* 
-   * This function schedules a one-shot event with the nRF RTC.
+  rtimer_clock_t now = rtimer_arch_now();
+
+  /*
+   * This function schedules a one-shot event on CC0. Refuse to program a
+   * value the counter is about to reach, or has already passed: the compare
+   * would only match after a full wrap of the 32-bit counter.
    */
+  if(!RTIMER_CLOCK_LT(now + RTIMER_ARCH_MIN_DELAY, t)) {
+    t = now + RTIMER_ARCH_MIN_DELAY;
+  }
+
+  nrf_timer_event_clear(NRF_RTIMER_TIMER, NRF_TIMER_EVENT_COMPARE0);
   nrf_timer_cc_set(NRF_RTIMER_TIMER, NRF_TIMER_CC_CHANNEL0, t);
 }
 /*---------------------------------------------------------------------------*/
