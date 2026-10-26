@@ -20,6 +20,7 @@ are supported:
 * **LaunchPads**, relevant files and drivers are under `launchpad/`
     * [CC1310 LaunchPad][cc1310-lp]
     * [CC1312R1 LaunchPad][cc1312r1-lp]
+    * [CC1312R7 LaunchPad][cc1312r7-lp]
     * [CC1350 LaunchPad][cc1350-lp]
     * [CC1350 LaunchPad for 433 MHz][cc1350-4-lp]
     * [CC1352R1 LaunchPad][cc1352r1-lp]
@@ -51,7 +52,17 @@ The platform has the following key features:
     * NoRTOS integration
     * TI drivers
     * SimpleLink middleware plugins
-* Support for both CC13x0/CC26x0 and CC13x2/CC26x2 devices.
+* Support for both CC13x0/CC26x0 and CC13x2/CC26x2 devices, and for the
+  CC1312R7 of the CC13x2x7/CC26x2x7 family. The x7 parts have no prebuilt TI
+  Drivers in the Core SDK, so for them the drivers are built from source
+  against the CC13x2x7/CC26x2x7 driverlib (SDK 7.10.01.24); the CC13x2x7 RF
+  settings cover the CC1312R7 only. These are the Core SDK's 4.10 drivers,
+  which predate the x7 parts: they run on them where the hardware is the
+  same as the CC13x2/CC26x2, and the PIN and RF drivers have been taught the
+  x7 chip types. On an LP-CC1312R7, boot, UART, and sub-GHz receive and
+  transmit work. Power modes, standby current and the XOSC handling are
+  not yet verified, and the TX power levels (1 to 14 dBm) come from TI's
+  LP-CC1312R7 PA table rather than from measurements on the board.
 * Deep Sleep support with RAM retention for ultra-low energy consumption.
 * Support for CC13xx prop mode: IEEE 802.15.4g-compliant Sub-1 GHz operation.
 * Support for CC26xx ieee mode: IEEE 802.15.4-compliant 2.4 GHz operation.
@@ -136,6 +147,7 @@ CC26X0EM) if not specified. Currently, the following boards are supported:
 |:------------------------------------------- |:-------------------- |
 | [CC1310 LaunchPad][cc1310-lp]               | `launchpad/cc1310`   |
 | [CC1312R1 LaunchPad][cc1312r1-lp]           | `launchpad/cc1312r1` |
+| [CC1312R7 LaunchPad][cc1312r7-lp]           | `launchpad/cc1312r7` |
 | [CC1350 LaunchPad][cc1350-lp]               | `launchpad/cc1350`   |
 | [CC1350 LaunchPad for 433 MHz][cc1350-4-lp] | `launchpad/cc1350-4` |
 | [CC1352R1 LaunchPad][cc1352r1-lp]           | `launchpad/cc1352r1` |
@@ -185,6 +197,23 @@ use:
   `*.elf` and `*.hex`.
 * TI's [Uniflash][uniflash]. Linux, OS X and Windows. Supports `*.bin`,
   `*.elf` and `*.hex`.
+
+On a LaunchPad, OpenOCD can also program the device through the on-board
+XDS110 (`board/ti_cc13x2_launchpad.cfg` for CC13x2/CC26x2 parts). For
+CC13x2x7/CC26x2x7 parts such as the CC1312R7, that file does not work as is:
+OpenOCD's `target/ti_cc13x2.cfg` expects the CC13x2 ICEPick ID `0x0BB4102F`,
+while the x7 parts report `0x0BB7702F`. Use a board file that sets
+`JRC_TAPID` before sourcing `target/ti_cc26x0.cfg`:
+
+```
+source [find interface/xds110.cfg]
+adapter speed 5500
+transport select jtag
+set CHIPNAME cc13x2
+set JRC_TAPID 0x0BB7702F
+set WORKAREASIZE 0x7000
+source [find target/ti_cc26x0.cfg]
+```
 
 
 ### Using the ROM bootloader
@@ -693,6 +722,7 @@ In CCS, do the following steps:
 [ti-simplelink-overview]: https://www.ti.com/wireless-connectivity/simplelink-solutions/overview/overview.html
 [cc1310-lp]:              https://www.ti.com/tool/LAUNCHXL-CC1310
 [cc1312r1-lp]:            https://www.ti.com/tool/LAUNCHXL-CC1312R1
+[cc1312r7-lp]:            https://www.ti.com/tool/LP-CC1312R7
 [cc1350-lp]:              https://www.ti.com/tool/LAUNCHXL-CC1350
 [cc1350-4-lp]:            https://www.ti.com/tool/LAUNCHXL-CC1350-4
 [cc1352r1-lp]:            https://www.ti.com/tool/LAUNCHXL-CC1352R1
