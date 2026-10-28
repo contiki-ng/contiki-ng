@@ -97,6 +97,33 @@ coap_parse_int_option(const uint8_t *bytes, size_t length)
   return var;
 }
 /*---------------------------------------------------------------------------*/
+/*
+ * Checks a Block1 or Block2 option value against RFC 7959, Section 2.2,
+ * and returns the status code for the reply, or NO_ERROR when the value
+ * is acceptable. The two defects call for different codes: a value longer
+ * than three bytes is out of the range RFC 7252, Section 5.4.3, defines
+ * for the option, so it is treated as an unrecognized critical option and
+ * answered with 4.02 (Section 5.4.1); the reserved block size exponent 7
+ * is a format error in an otherwise valid option, answered with 4.00.
+ */
+static coap_status_t
+block_option_error(const uint8_t *value, size_t length)
+{
+  if(length > 3) {
+#if COAP_MESSAGE_ON_ERROR
+    coap_error_message = "Block option too long";
+#endif
+    return BAD_OPTION_4_02;
+  }
+  if(length > 0 && (value[length - 1] & 0x07) == 7) {
+#if COAP_MESSAGE_ON_ERROR
+    coap_error_message = "Block size exponent 7 is reserved";
+#endif
+    return BAD_REQUEST_4_00;
+  }
+  return NO_ERROR;
+}
+/*---------------------------------------------------------------------------*/
 static uint8_t
 coap_option_nibble(unsigned int value)
 {
@@ -694,7 +721,13 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
                                                 option_length);
       LOG_DBG_("Observe [%"PRId32"]\n", coap_pkt->observe);
       break;
-    case COAP_OPTION_BLOCK2:
+    case COAP_OPTION_BLOCK2: {
+      coap_status_t block_status =
+        block_option_error(current_option, option_length);
+      if(block_status != NO_ERROR) {
+        LOG_WARN("rejecting a malformed Block2 option\n");
+        return block_status;
+      }
       coap_pkt->block2_num = coap_parse_int_option(current_option,
                                                    option_length);
       coap_pkt->block2_more = (coap_pkt->block2_num & 0x08) >> 3;
@@ -706,7 +739,14 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
                (unsigned long)coap_pkt->block2_num,
                coap_pkt->block2_more ? "+" : "", coap_pkt->block2_size);
       break;
-    case COAP_OPTION_BLOCK1:
+    }
+    case COAP_OPTION_BLOCK1: {
+      coap_status_t block_status =
+        block_option_error(current_option, option_length);
+      if(block_status != NO_ERROR) {
+        LOG_WARN("rejecting a malformed Block1 option\n");
+        return block_status;
+      }
       coap_pkt->block1_num = coap_parse_int_option(current_option,
                                                    option_length);
       coap_pkt->block1_more = (coap_pkt->block1_num & 0x08) >> 3;
@@ -718,6 +758,7 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
                (unsigned long)coap_pkt->block1_num,
                coap_pkt->block1_more ? "+" : "", coap_pkt->block1_size);
       break;
+    }
     case COAP_OPTION_SIZE2:
       coap_pkt->size2 = coap_parse_int_option(current_option, option_length);
       LOG_DBG_("Size2 [%"PRIu32"]\n", coap_pkt->size2);
@@ -1081,7 +1122,8 @@ coap_set_header_block2(coap_message_t *coap_pkt, uint32_t num, uint8_t more,
   if(size < 16) {
     return 0;
   }
-  if(size > 2048) {
+  if(size > 1024) {
+    /* RFC 7959 reserves the block size exponent for 2048. */
     return 0;
   }
   if(num > 0x0FFFFF) {
@@ -1124,7 +1166,8 @@ coap_set_header_block1(coap_message_t *coap_pkt, uint32_t num, uint8_t more,
   if(size < 16) {
     return 0;
   }
-  if(size > 2048) {
+  if(size > 1024) {
+    /* RFC 7959 reserves the block size exponent for 2048. */
     return 0;
   }
   if(num > 0x0FFFFF) {

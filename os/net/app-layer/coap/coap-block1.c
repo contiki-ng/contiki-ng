@@ -95,7 +95,13 @@ coap_block1_handler(coap_message_t *request, coap_message_t *response,
     return -1;
   }
 
-  if(request->block1_offset + pay_len > max_len) {
+  /*
+   * The offset comes from the Block1 option and can be close to
+   * UINT32_MAX, so adding the payload length to it can wrap. Compare
+   * against the space left after the offset instead.
+   */
+  if(request->block1_offset > max_len ||
+     (size_t)pay_len > max_len - request->block1_offset) {
     coap_status_code = REQUEST_ENTITY_TOO_LARGE_4_13;
 #if COAP_MESSAGE_ON_ERROR
     coap_error_message = "Message to big";

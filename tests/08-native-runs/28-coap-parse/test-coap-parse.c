@@ -36,6 +36,7 @@
 #include "contiki.h"
 #include "unit-test.h"
 #include "coap.h"
+#include "coap-block1.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -82,6 +83,116 @@ build_message(size_t payload_len)
   buffer[len] = CANARY;
 
   return len;
+}
+/*
+ * Builds a CoAP POST request with a single option, numbered from 13 to
+ * 268, whose value is the value_len bytes at value, followed by
+ * payload_len payload bytes. Returns the message length.
+ */
+static uint16_t
+build_option_message(uint16_t option, const uint8_t *value,
+                     uint8_t value_len, size_t payload_len)
+{
+  uint16_t len = 0;
+  size_t i;
+
+  buffer[len++] = (1 << 6);          /* Version 1, type CON, token length 0. */
+  buffer[len++] = COAP_POST;         /* Code. */
+  buffer[len++] = 0x12;              /* Message ID, high byte. */
+  buffer[len++] = 0x34;              /* Message ID, low byte. */
+
+  /* The option delta is encoded as 13 plus an extended byte. */
+  buffer[len++] = (13 << 4) | value_len;
+  buffer[len++] = option - 13;
+  memcpy(&buffer[len], value, value_len);
+  len += value_len;
+
+  buffer[len++] = 0xFF;              /* Payload marker. */
+
+  payload_start = len;
+  for(i = 0; i < payload_len; i++) {
+    buffer[len++] = 'a' + (i % 26);
+  }
+
+  return len;
+}
+/*
+ * Builds a CoAP POST request with a Block1 option whose value is
+ * block1, encoded in the fewest bytes, followed by payload_len payload
+ * bytes. Returns the message length.
+ */
+static uint16_t
+build_block1_message(uint32_t block1, size_t payload_len)
+{
+  uint8_t value[4];
+  uint8_t value_len;
+  uint8_t i;
+
+  for(value_len = 0; value_len < 4 && (block1 >> (8 * value_len)); value_len++);
+  for(i = 0; i < value_len; i++) {
+    value[i] = block1 >> (8 * (value_len - 1 - i));
+  }
+
+  return build_option_message(COAP_OPTION_BLOCK1, value, value_len,
+                              payload_len);
+}
+/*---------------------------------------------------------------------------*/
+#define BLOCK1_TARGET_LEN 64
+#define BLOCK1_GUARD_LEN  32
+
+/*
+ * The reassembly buffer handed to coap_block1_handler(), with guard
+ * areas before and after it to detect a write outside the buffer.
+ */
+static uint8_t block1_area[BLOCK1_GUARD_LEN + BLOCK1_TARGET_LEN +
+                           BLOCK1_GUARD_LEN];
+#define BLOCK1_TARGET (&block1_area[BLOCK1_GUARD_LEN])
+
+static bool
+block1_guards_intact(void)
+{
+  size_t i;
+
+  for(i = 0; i < BLOCK1_GUARD_LEN; i++) {
+    if(block1_area[i] != CANARY ||
+       block1_area[BLOCK1_GUARD_LEN + BLOCK1_TARGET_LEN + i] != CANARY) {
+      return false;
+    }
+  }
+  return true;
+}
+/*
+ * Passes a parsed request to coap_block1_handler(), with fresh guard
+ * areas around the target. Returns the handler's result.
+ */
+static int
+call_block1_handler(coap_message_t *request, size_t *assembled_len)
+{
+  coap_message_t response;
+
+  memset(block1_area, CANARY, sizeof(block1_area));
+  *assembled_len = 0;
+
+  coap_init_message(&response, COAP_TYPE_ACK, CONTENT_2_05, request->mid);
+  return coap_block1_handler(request, &response, BLOCK1_TARGET,
+                             assembled_len, BLOCK1_TARGET_LEN);
+}
+/*
+ * Parses a request with the given Block1 option value and payload length
+ * and passes it to coap_block1_handler(). Returns the handler's result.
+ */
+static int
+run_block1(uint32_t block1, size_t payload_len, size_t *assembled_len)
+{
+  coap_message_t request;
+  uint16_t len;
+
+  len = build_block1_message(block1, payload_len);
+  if(coap_parse_message(&request, buffer, len) != NO_ERROR) {
+    return -2;
+  }
+
+  return call_block1_handler(&request, assembled_len);
 }
 /*---------------------------------------------------------------------------*/
 /* The parser must report the payload without writing past the message. */
@@ -172,6 +283,105 @@ UNIT_TEST(test_parse_rejects_empty_payload)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+/*
+ * An offset of 0xFFFFFFF0 plus a 16-byte payload wraps to zero in 32-bit
+ * arithmetic. The parser no longer produces such an offset, so it is set
+ * directly to test the handler's own check.
+ */
+UNIT_TEST_REGISTER(test_block1_offset_wrap_is_rejected,
+                   "a Block1 offset that wraps with the payload is rejected");
+UNIT_TEST(test_block1_offset_wrap_is_rejected)
+{
+  coap_message_t request;
+  size_t assembled_len;
+  uint16_t len;
+
+  UNIT_TEST_BEGIN();
+
+  len = build_block1_message(1 << 4, 16);
+  UNIT_TEST_ASSERT(coap_parse_message(&request, buffer, len) == NO_ERROR);
+  request.block1_offset = 0xFFFFFFF0;
+
+  UNIT_TEST_ASSERT(call_block1_handler(&request, &assembled_len) == -1);
+  UNIT_TEST_ASSERT(coap_status_code == REQUEST_ENTITY_TOO_LARGE_4_13);
+  UNIT_TEST_ASSERT(assembled_len == 0);
+  UNIT_TEST_ASSERT(block1_guards_intact());
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+/* A final block that ends exactly at the end of the buffer is accepted. */
+UNIT_TEST_REGISTER(test_block1_last_block_fills_buffer,
+                   "a final Block1 block that fills the buffer is accepted");
+UNIT_TEST(test_block1_last_block_fills_buffer)
+{
+  size_t assembled_len;
+
+  UNIT_TEST_BEGIN();
+
+  /* Block number 3 of size 16, no more blocks: offset 48, 16 bytes. */
+  UNIT_TEST_ASSERT(run_block1(3 << 4, 16, &assembled_len) == 0);
+  UNIT_TEST_ASSERT(assembled_len == BLOCK1_TARGET_LEN);
+  UNIT_TEST_ASSERT(memcmp(BLOCK1_TARGET + 48, &buffer[payload_start], 16)
+                   == 0);
+  UNIT_TEST_ASSERT(block1_guards_intact());
+
+  /* One more byte would not fit. */
+  UNIT_TEST_ASSERT(run_block1(3 << 4, 17, &assembled_len) == -1);
+  UNIT_TEST_ASSERT(block1_guards_intact());
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * RFC 7959 limits a Block option value to three bytes, and reserves the
+ * block size exponent 7. Both Block1 and Block2 are checked.
+ */
+UNIT_TEST_REGISTER(test_parse_rejects_malformed_block_options,
+                   "an over-long Block option or SZX 7 is rejected");
+UNIT_TEST(test_parse_rejects_malformed_block_options)
+{
+  static const uint8_t four_bytes[] = { 0xFF, 0xFF, 0xFF, 0xF0 };
+  static const uint8_t four_bytes_small[] = { 0x00, 0x00, 0x00, 0x10 };
+  static const uint8_t szx_7[] = { 0x17 };
+  static const uint8_t three_bytes[] = { 0xFF, 0xFF, 0xF6 };
+  coap_message_t message;
+  uint16_t len;
+
+  UNIT_TEST_BEGIN();
+
+  /* The longest value allowed, with the largest block size. */
+  len = build_option_message(COAP_OPTION_BLOCK1, three_bytes, 3, 1);
+  UNIT_TEST_ASSERT(coap_parse_message(&message, buffer, len) == NO_ERROR);
+  UNIT_TEST_ASSERT(message.block1_offset == 0xFFFFF0UL << 6);
+
+  /*
+   * A value longer than three bytes is outside the range the option is
+   * defined over, so it is an unrecognized critical option: 4.02.
+   */
+  len = build_option_message(COAP_OPTION_BLOCK1, four_bytes, 4, 16);
+  UNIT_TEST_ASSERT(coap_parse_message(&message, buffer, len)
+                   == BAD_OPTION_4_02);
+  len = build_option_message(COAP_OPTION_BLOCK2, four_bytes, 4, 16);
+  UNIT_TEST_ASSERT(coap_parse_message(&message, buffer, len)
+                   == BAD_OPTION_4_02);
+
+  /* The length is checked, not just the value it encodes. */
+  len = build_option_message(COAP_OPTION_BLOCK1, four_bytes_small, 4, 1);
+  UNIT_TEST_ASSERT(coap_parse_message(&message, buffer, len)
+                   == BAD_OPTION_4_02);
+
+  /* The reserved block size exponent 7 is a format error: 4.00. */
+  len = build_option_message(COAP_OPTION_BLOCK1, szx_7, 1, 1);
+  UNIT_TEST_ASSERT(coap_parse_message(&message, buffer, len)
+                   == BAD_REQUEST_4_00);
+  len = build_option_message(COAP_OPTION_BLOCK2, szx_7, 1, 1);
+  UNIT_TEST_ASSERT(coap_parse_message(&message, buffer, len)
+                   == BAD_REQUEST_4_00);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(run_tests, ev, data)
 {
   PROCESS_BEGIN();
@@ -182,11 +392,17 @@ PROCESS_THREAD(run_tests, ev, data)
   UNIT_TEST_RUN(test_parse_oversized_payload_is_truncated);
   UNIT_TEST_RUN(test_parse_payload_with_null_bytes);
   UNIT_TEST_RUN(test_parse_rejects_empty_payload);
+  UNIT_TEST_RUN(test_block1_offset_wrap_is_rejected);
+  UNIT_TEST_RUN(test_block1_last_block_fills_buffer);
+  UNIT_TEST_RUN(test_parse_rejects_malformed_block_options);
 
   if(!UNIT_TEST_PASSED(test_parse_payload_keeps_canary) ||
      !UNIT_TEST_PASSED(test_parse_oversized_payload_is_truncated) ||
      !UNIT_TEST_PASSED(test_parse_payload_with_null_bytes) ||
-     !UNIT_TEST_PASSED(test_parse_rejects_empty_payload)) {
+     !UNIT_TEST_PASSED(test_parse_rejects_empty_payload) ||
+     !UNIT_TEST_PASSED(test_block1_offset_wrap_is_rejected) ||
+     !UNIT_TEST_PASSED(test_block1_last_block_fills_buffer) ||
+     !UNIT_TEST_PASSED(test_parse_rejects_malformed_block_options)) {
     printf("=check-me= FAILED\n");
   } else {
     printf("=check-me= DONE\n");
