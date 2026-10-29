@@ -46,6 +46,7 @@
 #include "sys/platform.h"
 #include "sys/energest.h"
 #include "dev/button-hal.h"
+#include "dev/crypto/cc/cc-crypto.h"
 #include "dev/gpio-hal.h"
 #include "dev/serial-line.h"
 #include "dev/leds.h"
@@ -188,6 +189,11 @@ platform_init_stage_one(void)
 #endif
 
   TRNG_init();
+
+#if CC_CRYPTO_ENABLED
+  cc_crypto_init();
+  cc_crypto_disable();
+#endif /* CC_CRYPTO_ENABLED */
 
   fade(Board_PIN_LED1);
 
