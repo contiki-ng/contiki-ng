@@ -25,6 +25,11 @@ CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 LDFLAGS += -L$(NRFX_ROOT)/mdk
 LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
+# Opt-in CryptoCell-310 hardware ECC backend for lib/ecc.h (nrfxlib cc3xx).
+ifeq ($(ECC_HW_BACKEND),cc310)
+  include $(CONTIKI_CPU)/Makefile.cc310-crypto
+endif
+
 include $(CONTIKI)/$(CONTIKI_NG_CM4_DIR)/Makefile.cm4
 
 include $(CONTIKI_CPU)/Makefile.nrf

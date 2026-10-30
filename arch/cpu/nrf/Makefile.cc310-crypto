@@ -1,0 +1,50 @@
+# CryptoCell-310 (CC310) hardware ECC backend for lib/ecc.h, built on nrfxlib's
+# cc3xx PSA transparent-driver. Opt-in: included from Makefile.nrf52840 only when
+# ECC_HW_BACKEND=cc310 (nRF52840 only; other nRF SoCs use different engines).
+#
+# The nrfxlib CC310 libraries and headers are NOT vendored; they come from the
+# in-tree sdk-nrfxlib submodule (init once with
+# `git submodule update --init arch/cpu/nrf/lib/sdk-nrfxlib`). Only our glue and
+# mbedTLS config source live here (lib/nrf_cc310); no binaries are committed.
+
+# Our glue sources + mbedTLS config (source only, no blobs).
+NRF_CC310_DIR      := $(CONTIKI_CPU)/lib/nrf_cc310
+
+# nrfxlib CC310 crypto from the submodule. SDK_NRFXLIB may be overridden to an
+# external checkout; it defaults to the in-tree submodule.
+SDK_NRFXLIB        ?= $(CONTIKI_CPU)/lib/sdk-nrfxlib
+NRF_CC310_CRYPTO   := $(SDK_NRFXLIB)/crypto/nrf_cc310_mbedcrypto
+NRF_CC310_PLATFORM := $(SDK_NRFXLIB)/crypto/nrf_cc310_platform
+NRF_CC310_VARIANT  := cortex-m4/hard-float/no-interrupts
+
+# Fail early with a clear message if the submodule has not been checked out.
+ifeq ($(wildcard $(NRF_CC310_CRYPTO)/include/cc3xx.h),)
+  $(error sdk-nrfxlib submodule not found at $(SDK_NRFXLIB). Run: \
+    git submodule update --init arch/cpu/nrf/lib/sdk-nrfxlib \
+    (or set SDK_NRFXLIB=<path to an existing checkout>))
+endif
+
+# The lib/ecc.h CC310 backend source + the Contiki PSA-RNG/platform/alloc glue.
+CONTIKI_CPU_DIRS        += dev lib/nrf_cc310/src
+CONTIKI_CPU_SOURCEFILES += nrf52840-cc310-ecc.c nrf_cc3xx_platform_contiki.c
+CONTIKI_CPU_SOURCEFILES += nrf_cc3xx_alloc_contiki.c
+
+# cc3xx PSA driver + platform headers (from the submodule), and mbedTLS PSA
+# headers (from Contiki's in-tree mbedTLS).
+CFLAGS += -I$(NRF_CC310_CRYPTO)/include
+CFLAGS += -I$(NRF_CC310_PLATFORM)/include
+CFLAGS += -I$(CONTIKI)/os/net/security/mbedtls/include
+CFLAGS += -I$(CONTIKI)/os/net/security/mbedtls/tf-psa-crypto/include
+
+# NOTE: the cc3xx PSA driver calls back into the mbedTLS PSA core
+# (psa_generate_random, mbedtls_calloc/free, psa_driver_wrapper_hash_*), so that
+# core (tf-psa-crypto) must be linked. Because MODULES added from a CPU makefile
+# are expanded too late, the application Makefile pulls those modules in when
+# ECC_HW_BACKEND=cc310 -- see examples/libs/ecc/Makefile.
+
+# nrfxlib CC310 static libs. Link order: psa_crypto (driver) -> core -> platform.
+NRF_CC310_LIBDIR  := $(NRF_CC310_CRYPTO)/lib/$(NRF_CC310_VARIANT)
+NRF_CC310_PLATLIB := $(NRF_CC310_PLATFORM)/lib/$(NRF_CC310_VARIANT)
+TARGET_LIBFILES += $(NRF_CC310_LIBDIR)/libnrf_cc310_psa_crypto_0.9.19.a
+TARGET_LIBFILES += $(NRF_CC310_LIBDIR)/libnrf_cc310_core_0.9.19.a
+TARGET_LIBFILES += $(NRF_CC310_PLATLIB)/libnrf_cc310_platform_0.9.19.a
