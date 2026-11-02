@@ -51,6 +51,11 @@ CONTIKI_CPU_SOURCEFILES += clock.c rtimer-arch.c uart0.c dbg.c watchdog.c
 CONTIKI_CPU_SOURCEFILES += int-master.c slip-arch.c gpio-hal-arch.c
 CONTIKI_CPU_SOURCEFILES += nrf52840-ieee.c
 
+# CryptoCell-310 hardware ECC backend (opt-in via ECC_HW_BACKEND=cc310).
+ifeq ($(ECC_HW_BACKEND),cc310)
+  include $(CONTIKI_CPU)/Makefile.cc310-crypto
+endif
+
 CONTIKI_SOURCEFILES += $(CONTIKI_CPU_SOURCEFILES)
 
 CFLAGS += -DNRF52840_XXAA
