@@ -54,7 +54,7 @@
 #include "cpu.h"
 #include "dev/gptimer.h"
 #include "dev/sys-ctrl.h"
-
+#include "sys/atomic.h"
 #include "sys/energest.h"
 #include "sys/etimer.h"
 #include "sys/rtimer.h"
@@ -76,7 +76,13 @@
 #endif
 #define SYSTICK_PERIOD          (SYS_CTRL_SYS_CLOCK / CLOCK_SECOND)
 
-static volatile uint64_t rt_ticks_startup = 0, rt_ticks_epoch = 0;
+static void update_ticks(void);
+void clock_isr(void);
+
+PROCESS(clock_process, "clock_process");
+static uint64_t rt_ticks_startup = 0, rt_ticks_epoch = 0;
+static uint8_t pending_update;
+
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Arch-specific implementation of clock_init for the cc2538
@@ -92,6 +98,8 @@ static volatile uint64_t rt_ticks_startup = 0, rt_ticks_epoch = 0;
 void
 clock_init(void)
 {
+  process_start(&clock_process, NULL);
+
   SysTick_Config(SYSTICK_PERIOD);
 
   /*
@@ -117,6 +125,7 @@ clock_init(void)
 clock_time_t
 clock_time(void)
 {
+  update_ticks();
   return rt_ticks_startup / RTIMER_CLOCK_TICK_RATIO;
 }
 /*---------------------------------------------------------------------------*/
@@ -129,6 +138,7 @@ clock_set_seconds(unsigned long sec)
 unsigned long
 clock_seconds(void)
 {
+  update_ticks();
   return rt_ticks_epoch / RTIMER_SECOND;
 }
 /*---------------------------------------------------------------------------*/
@@ -186,6 +196,9 @@ clock_delay(unsigned int i)
 static void
 update_ticks(void)
 {
+  if(!atomic_cas_uint8(&pending_update, 1, 0)) {
+    return;
+  }
   rtimer_clock_t now;
   uint64_t prev_rt_ticks_startup, cur_rt_ticks_startup;
   uint32_t cur_rt_ticks_startup_hi;
@@ -223,25 +236,37 @@ update_ticks(void)
 void
 clock_adjust(void)
 {
-  /* Halt the SysTick while adjusting */
-  SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
-
-  update_ticks();
-
-  /* Re-Start the SysTick */
-  SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
+  clock_isr();
 }
 /*---------------------------------------------------------------------------*/
 /**
  * \brief The clock Interrupt Service Routine
- *
- * It polls the etimer process if an etimer has expired. It also updates the
- * software clock tick and seconds counter.
  */
 void
 clock_isr(void)
 {
-  update_ticks();
+  if(atomic_cas_uint8(&pending_update, 0, 1)) {
+    process_poll(&clock_process);
+  }
+}
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Updates ticks upon request, which then triggers the etimer process.
+ *
+ * While we could poll the etimer process directly, we might miss "wraparounds"
+ * if no process called clock_time() or clock_seconds() for a while.
+ */
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(clock_process, ev, data)
+{
+  PROCESS_BEGIN();
+
+  while(1) {
+    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
+    update_ticks();
+  }
+
+  PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
 

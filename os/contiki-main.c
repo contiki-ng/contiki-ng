@@ -197,9 +197,9 @@ main(void)
 #endif /* PLATFORM_MAIN_ACCEPTS_ARGS */
   platform_init_stage_one();
 
+  process_init();
   clock_init();
   rtimer_init();
-  process_init();
   process_start(&etimer_process, NULL);
   ctimer_init();
   watchdog_init();
