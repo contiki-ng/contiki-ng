@@ -511,8 +511,23 @@ coap_parse_message(coap_message_t *coap_pkt, uint8_t *data, uint16_t data_len)
       coap_pkt->payload = current_option;
       coap_pkt->payload_len = data_len - (coap_pkt->payload - data);
 
-      /* also for receiving, the Erbium upper bound is COAP_MAX_CHUNK_SIZE */
       if(coap_pkt->payload_len > COAP_MAX_CHUNK_SIZE) {
+        LOG_WARN("Payload of %u bytes exceeds the %u-byte limit\n",
+                 coap_pkt->payload_len, (unsigned)COAP_MAX_CHUNK_SIZE);
+        if(coap_pkt->code >= COAP_GET && coap_pkt->code <= COAP_DELETE) {
+          /*
+           * Refuse the request instead of giving the resource a payload
+           * that looks complete but is not (RFC 7252, Section 4.6).
+           */
+#if COAP_MESSAGE_ON_ERROR
+          coap_error_message = "PayloadTooLarge";
+#endif
+          return REQUEST_ENTITY_TOO_LARGE_4_13;
+        }
+        /*
+         * A response is truncated instead, since a client can only
+         * acknowledge or reset it (RFC 7252, Sections 4.2 and 4.3).
+         */
         coap_pkt->payload_len = COAP_MAX_CHUNK_SIZE;
       }
 
