@@ -4,7 +4,7 @@ This page shows you how to create a virtual machine image provisioned with all t
 
 ## Instructions
 
-* Install a virtualization platform such as [VirtualBox](https://www.virtualbox.org)
+* Install  [VirtualBox](https://www.virtualbox.org) as is the only provider for the ubuntu/bionic stock image used for contiki-ng
 * Install Vagrant from [www.vagrantup.com/downloads](https://www.vagrantup.com/downloads.html)
 * Get the Contiki-NG repository
 ```bash
