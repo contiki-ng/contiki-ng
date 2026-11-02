@@ -99,11 +99,24 @@
 
 #define CSMA_CONF_SEND_SOFT_ACK              0
 #endif /* CC13XX_CONF_PROP_MODE */
+/** @} */
+/*---------------------------------------------------------------------------*/
+/**
+ * \name Security
+ *
+ * @{
+ */
+#ifndef CC_CRYPTO_CONF_ENABLED
+#define CC_CRYPTO_CONF_ENABLED 1
+#endif
 
-/* Platform-specific (H/W) AES implementation */
 #ifndef AES_128_CONF
-#define AES_128_CONF cc26xx_aes_128_driver
-#endif /* AES_128_CONF */
+#define AES_128_CONF cc_aes_128_driver
+#endif
+
+#ifndef CCM_STAR_CONF
+#define CCM_STAR_CONF cc_ccm_star_driver
+#endif
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

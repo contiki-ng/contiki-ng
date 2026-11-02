@@ -304,20 +304,20 @@
  *
  * @{
  */
-#ifndef CRYPTO_CONF_INIT
-#define CRYPTO_CONF_INIT        1 /**< Whether to init cryptoprocessor */
+#ifndef CC_CRYPTO_CONF_ENABLED
+#define CC_CRYPTO_CONF_ENABLED  1 /**< Whether to init cryptoprocessor */
 #endif
 
 #ifndef AES_128_CONF
-#define AES_128_CONF            cc2538_aes_128_driver /**< AES-128 driver */
+#define AES_128_CONF            cc_aes_128_driver /**< AES-128 driver */
 #endif
 
 #ifndef CCM_STAR_CONF
-#define CCM_STAR_CONF           cc2538_ccm_star_driver /**< AES-CCM* driver */
+#define CCM_STAR_CONF           cc_ccm_star_driver /**< AES-CCM* driver */
 #endif
 
 #ifndef SHA_256_CONF
-#define SHA_256_CONF            cc2538_sha_256_driver /**< SHA-256 driver */
+#define SHA_256_CONF            cc_sha_256_driver /**< SHA-256 driver */
 #endif
 /** @} */
 /*---------------------------------------------------------------------------*/
