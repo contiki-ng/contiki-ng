@@ -52,20 +52,24 @@ extern int main(void);
  * addresses/markers below mirror flpr-shared.h (a naked asm body cannot use the
  * C macros): 0x2003F000 = FLPR_SHARED_COUNTER_ADDR (+4 = FLPR_FAULT_PC_ADDR),
  * 0xFA110000 = FLPR_MARK_FAULT_BASE. */
-__attribute__((naked,aligned(8)))
+extern void clock_grtc_tick_isr(void);
+__attribute__((interrupt("machine"), aligned(8)))
 void my_trap_handler(void)
 {
-  __asm__ volatile (
-    "csrr  t0, mcause           \n"
-    "csrr  t1, mepc             \n"
-    "li    t2, 0x2003F000       \n"   /* FLPR_SHARED_COUNTER_ADDR   */
-    "li    a4, 0xFA110000       \n"   /* FLPR_MARK_FAULT_BASE       */
-    "andi  t0, t0, 0xFF         \n"
-    "or    a4, a4, t0           \n"
-    "sw    a4, 0(t2)            \n"   /* counter = 0xFA1100|cause   */
-    "sw    t1, 4(t2)            \n"   /* +4      = faulting PC      */
-    "1: j  1b                   \n"
-  );
+  uint32_t mcause;
+  __asm__ volatile("csrr %0, mcause" : "=r"(mcause));
+  if(mcause & 0x80000000u) {
+    /* Asynchronous interrupt — the GRTC system tick (machine external). */
+    clock_grtc_tick_isr();
+  } else {
+    /* Synchronous fault: report cause + faulting PC to the M33 and halt,
+     * exactly as before (the M33 keeps printing both so faults aren't silent). */
+    uint32_t mepc;
+    __asm__ volatile("csrr %0, mepc" : "=r"(mepc));
+    FLPR_SHARED_COUNTER = 0xFA110000u | (mcause & 0xFFu);
+    *(volatile uint32_t *)FLPR_FAULT_PC_ADDR = mepc;
+    for(;;) { }
+  }
 }
 
 void _start(void) {
