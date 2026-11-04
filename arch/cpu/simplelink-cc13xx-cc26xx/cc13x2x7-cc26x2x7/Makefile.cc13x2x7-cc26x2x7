@@ -1,0 +1,92 @@
+################################################################################
+### CC13x2x7/CC26x2x7 CPU makefile
+#
+# The CC13x2x7/CC26x2x7 (CC1312R7, CC1352R7, CC1352P7, CC2652R7, ...) is the
+# CC13x2/CC26x2 core with 704 KB flash, 144 KB SRAM and its own ROM. The
+# Core SDK ships no pre-compiled TI Drivers, NoRTOS or RF driver libraries for
+# it, so the sources used by Contiki-NG are compiled here into one static
+# library, against the CC13x2x7/CC26x2x7 driverlib. DeviceFamily_CC13X2X7 and
+# DeviceFamily_CC26X2X7 map to the CC13X2/CC26X2 family IDs and parent, so the
+# driver sources take the same paths as for the CC13x2/CC26x2.
+
+# The same TI Drivers as the prebuilt CC13x2/CC26x2 library
+# (drivers_cc13x2.am4fg) holds, less the PDM audio driver and its Codec1 and
+# pdm2pcm pieces, which TI ships only in binary form, and SDFatFS, which needs
+# FatFS (not in the Core SDK, and Contiki-NG does not use it). Unreferenced
+# members are not linked, so an image only carries the drivers it calls; the
+# point is that a driver the configuration
+# enables (TI_NVS_CONF_ENABLE, TI_SD_CONF_ENABLE, ...) links here as it does
+# on the CC13x2/CC26x2.
+TI_X7_SOURCES  = $(addprefix source/ti/drivers/, \
+  ADC.c adc/ADCCC26XX.c ADCBuf.c adcbuf/ADCBufCC26X2.c \
+  AESCBC.c aescbc/AESCBCCC26XX.c AESCCM.c aesccm/AESCCMCC26XX.c \
+  AESCTR.c aesctr/AESCTRCC26XX.c AESCTRDRBG.c aesctrdrbg/AESCTRDRBGXX.c \
+  AESECB.c aesecb/AESECBCC26XX.c AESGCM.c aesgcm/AESGCMCC26XX.c \
+  cryptoutils/cryptokey/CryptoKeyPlaintextCC26XX.c \
+  cryptoutils/ecc/ECCParamsCC26X2.c \
+  cryptoutils/sharedresources/CryptoResourceCC26XX.c \
+  cryptoutils/sharedresources/PKAResourceCC26XX.c \
+  dma/UDMACC26XX.c ECDH.c ecdh/ECDHCC26X2.c ECDSA.c ecdsa/ECDSACC26X2.c \
+  ECJPAKE.c ecjpake/ECJPAKECC26X2.c gpio/GPIOCC26XX.c \
+  I2C.c i2c/I2CCC26XX.c I2S.c i2s/I2SCC26XX.c \
+  NVS.c nvs/NVSCC26XX.c nvs/NVSRAM.c nvs/NVSSPI25X.c pin/PINCC26XX.c \
+  power/PowerCC26X2.c power/PowerCC26X2_calibrateRCOSC.c \
+  PWM.c pwm/PWMTimerCC26XX.c SD.c sd/SDSPI.c \
+  SHA2.c sha2/SHA2CC26X2.c SPI.c spi/SPICC26X2DMA.c spi/SPICC26XXDMA.c \
+  timer/GPTimerCC26XX.c TRNG.c trng/TRNGCC26XX.c \
+  UART.c uart/UARTCC26X2.c uart/UARTCC26XX.c \
+  utils/List.c utils/Random.c utils/RingBuf.c \
+  Watchdog.c watchdog/WatchdogCC26XX.c \
+  rf/RFCC26X2_multiMode.c)
+TI_X7_SOURCES += $(addprefix kernel/nortos/, NoRTOS.c \
+  dpl/ClockPTimer_nortos.c dpl/HwiPCC26XX_nortos.c dpl/PowerCC26X2_nortos.c \
+  dpl/QueueP_nortos.c dpl/SemaphoreP_nortos.c dpl/SwiP_nortos.c \
+  dpl/TimerPCC26XX_nortos.c)
+# Only the RF core patch rf-settings/cc13x2x7 uses (prop mode, setting_tc106).
+# The SDK holds 15 more; settings that need one add it here.
+TI_X7_SOURCES += $(patsubst $(CORE_SDK)/%,%,$(SDK_DEVICES)/rf_patches/rf_patch_cpe_prop.c)
+# SDK 7.x builds the RF core helpers into the RF driver library, not into
+# driverlib.lib: compile them here.
+TI_X7_SOURCES += $(patsubst $(CORE_SDK)/%,%,$(SDK_DEVICES)/driverlib/rfc.c)
+
+# Objects live in their own directory: some TI basenames (List.c, UART.c)
+# collide with Contiki-NG's on case-insensitive file systems.
+TI_X7_OBJDIR = $(OBJECTDIR)/coresdk
+TI_X7_OBJS   = $(patsubst %.c,$(TI_X7_OBJDIR)/%.o,$(TI_X7_SOURCES))
+TI_X7_LIB    = $(OBJECTDIR)/libcoresdk_$(SDK_LIB_NAME).a
+
+# TI's code builds warning-free with -Wall (the 4.10 PIN driver's chip-type
+# switch needed the x7 cases, coresdk_cc13xx_cc26xx 40be443). -Werror stays
+# off for it: a newer compiler's new warning in vendor code should not break
+# the build.
+TI_X7_CFLAGS = $(filter-out -Werror -I%,$(CFLAGS))
+TI_X7_CFLAGS += -I$(CONTIKI_CPU)/$(SUBFAMILY)/compat
+TI_X7_CFLAGS += -include $(CONTIKI_CPU)/$(SUBFAMILY)/compat/coresdk-compat.h
+TI_X7_CFLAGS += -I$(SDK_SOURCE) -I$(SDK_NORTOS) -I$(SDK_NORTOS)/posix
+
+$(TI_X7_OBJDIR)/%.o: $(CORE_SDK)/%.c | $(OBJECTDIR)
+	$(TRACE_CC)
+	$(Q)mkdir -p $(@D)
+	$(Q)$(CC) $(TI_X7_CFLAGS) -MMD -MP -c $< -o $@
+
+# One condition in I2SCC26XX.c's interrupt handler mixes && and || without
+# parentheses (TI's code, as in the prebuilt library).
+$(TI_X7_OBJDIR)/source/ti/drivers/i2s/I2SCC26XX.o: TI_X7_CFLAGS += -Wno-parentheses
+
+# Header dependencies (coresdk-compat.h, the SDK headers), so an edit to one
+# rebuilds the objects that include it.
+-include $(TI_X7_OBJS:.o=.d)
+
+$(TI_X7_LIB): $(TI_X7_OBJS)
+	$(TRACE_AR)
+	$(Q)$(AR) rcs $@ $^
+
+INTERNAL_DEPS   += $(TI_X7_LIB)
+TARGET_LIBFILES += $(TI_X7_LIB)
+TARGET_LIBFILES += $(SDK_DEVICES)/driverlib/bin/gcc/driverlib.lib
+
+# The CMSIS header (cc13x2-cc26x2-cm4.h) is shared with the CC13x2/CC26x2.
+CONTIKI_CPU_DIRS += cc13x2-cc26x2
+
+# CC13x2x7/CC26x2x7 is a Cortex-M4 architecture
+include $(CONTIKI)/$(CONTIKI_NG_CM4_DIR)/Makefile.cm4
