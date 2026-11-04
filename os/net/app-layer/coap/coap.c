@@ -393,8 +393,8 @@ coap_serialize_message(coap_message_t *coap_pkt, uint8_t *buffer)
     if(coap_pkt->payload_len) {
       *option = 0xFF;
       ++option;
+      memmove(option, coap_pkt->payload, coap_pkt->payload_len);
     }
-    memmove(option, coap_pkt->payload, coap_pkt->payload_len);
   } else {
     /* an error occurred: caller must check for !=0 */
     coap_pkt->buffer = NULL;
