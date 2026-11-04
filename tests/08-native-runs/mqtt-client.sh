@@ -23,13 +23,23 @@ CLIENT_TESTLOG=$TEST_NAME.testlog
 CLIENT_ERR=$TEST_NAME.err
 MOSQ_SUB_LOG=mosquitto_sub.log
 MOSQ_SUB_ERR=mosquitto_sub.err
+MOSQ_ERR=mosquitto.err
 PUB_PAYLD=1
 
 # Start mosquitto server
+#
+# Run a copy of the broker. Ubuntu 26.04 has an AppArmor profile for
+# /usr/sbin/mosquitto that only allows configuration from /etc/mosquitto.
+# The profile also applies in privileged containers on such hosts.
 echo "Starting mosquitto daemon"
+MOSQ_PATH=$(command -v mosquitto) || { echo "mosquitto not found"; exit 1; }
 echo "listener 1883" > mosquitto.conf
 echo "allow_anonymous true" >> mosquitto.conf
-mosquitto -c mosquitto.conf &> /dev/null &
+MOSQ_BIN=$(mktemp -t mosquitto.XXXXXX)
+trap 'rm -f "$MOSQ_BIN"' EXIT
+cp "$MOSQ_PATH" "$MOSQ_BIN"
+chmod 755 "$MOSQ_BIN"
+"$MOSQ_BIN" -c mosquitto.conf &> $MOSQ_ERR &
 MOSQID=$!
 sleep 2
 
@@ -81,10 +91,11 @@ else
   echo "==== $CLIENT_ERR ====" ; cat $CLIENT_ERR;
   echo "==== $MOSQ_SUB_LOG ====" ; cat $MOSQ_SUB_LOG;
   echo "==== $MOSQ_SUB_ERR ====" ; cat $MOSQ_SUB_ERR;
+  echo "==== $MOSQ_ERR ====" ; cat $MOSQ_ERR;
 
   printf "%-32s TEST FAIL\n" "$TEST_NAME" | tee $CLIENT_TESTLOG;
-  rm -f $CLIENT_LOG $CLIENT_ERR $MOSQ_SUB_LOG $MOSQ_SUB_ERR mosquitto.conf
+  rm -f $CLIENT_LOG $CLIENT_ERR $MOSQ_SUB_LOG $MOSQ_SUB_ERR $MOSQ_ERR mosquitto.conf
   exit 1
 fi
 
-rm -f $CLIENT_LOG $CLIENT_ERR $MOSQ_SUB_LOG $MOSQ_SUB_ERR mosquitto.conf
+rm -f $CLIENT_LOG $CLIENT_ERR $MOSQ_SUB_LOG $MOSQ_SUB_ERR $MOSQ_ERR mosquitto.conf
