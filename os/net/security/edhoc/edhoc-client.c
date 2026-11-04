@@ -299,18 +299,18 @@ edhoc_client_post(void)
 static int
 edhoc_client_post_blocks(void)
 {
-  if(edhoc_ctx->buffers.tx_sz - send_sz > COAP_MAX_CHUNK_SIZE) {
+  if(edhoc_ctx->buffers.tx_sz - send_sz > COAP_MAX_BLOCK_SIZE) {
     coap_set_payload(state.state.request,
                      (uint8_t *)edhoc_ctx->buffers.msg_tx + send_sz,
-                     COAP_MAX_CHUNK_SIZE);
+                     COAP_MAX_BLOCK_SIZE);
     coap_set_header_block1(state.state.request, msg_num,
-                           1, COAP_MAX_CHUNK_SIZE);
+                           1, COAP_MAX_BLOCK_SIZE);
     msg_num++;
-    send_sz += COAP_MAX_CHUNK_SIZE;
+    send_sz += COAP_MAX_BLOCK_SIZE;
     coap_send_request(&state, state.state.remote_endpoint,
                       state.state.request, client_chunk_handler);
     return 0;
-  } else if(edhoc_ctx->buffers.tx_sz < COAP_MAX_CHUNK_SIZE) {
+  } else if(edhoc_ctx->buffers.tx_sz < COAP_MAX_BLOCK_SIZE) {
     coap_set_payload(state.state.request,
                      (uint8_t *)edhoc_ctx->buffers.msg_tx,
                      edhoc_ctx->buffers.tx_sz);
@@ -325,7 +325,7 @@ edhoc_client_post_blocks(void)
                      (uint8_t *)edhoc_ctx->buffers.msg_tx + send_sz,
                      edhoc_ctx->buffers.tx_sz - send_sz);
     coap_set_header_block1(state.state.request, msg_num, 0,
-                           COAP_MAX_CHUNK_SIZE);
+                           COAP_MAX_BLOCK_SIZE);
     send_sz += (edhoc_ctx->buffers.tx_sz - send_sz);
     rx_ptr = edhoc_ctx->buffers.msg_rx;
     rx_sz = 0;
