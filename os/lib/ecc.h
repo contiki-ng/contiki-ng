@@ -166,6 +166,23 @@ PT_THREAD(ecc_generate_shared_secret(const uint8_t *public_key,
  */
 void ecc_disable(void);
 
+/**
+ * \brief Begins a session covering multiple ecc_enable()/ecc_disable() pairs
+ *        (e.g. a whole handshake's worth of keygen/sign/verify/ECDH calls).
+ *
+ * Hardware backends with accelerator power-gating and/or RNG/DRBG state that
+ * does not survive a power-down (e.g. nRF52840 CC310) use this to hold power
+ * (and re-seed any RNG once) across the whole session, instead of repeating
+ * that work for every individual operation. No-op on backends without such
+ * state (e.g. the software uECC backend) -- always safe to call.
+ */
+void ecc_session_begin(void);
+
+/**
+ * \brief Ends a session started with ecc_session_begin().
+ */
+void ecc_session_end(void);
+
 #endif /* ECC_H_ */
 
 /** @} */
