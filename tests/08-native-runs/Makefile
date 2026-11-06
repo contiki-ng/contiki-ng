@@ -40,5 +40,6 @@ tests/08-native-runs/31-coap-link-format/native:./31-coap-link-format.sh \
 tests/08-native-runs/32-lwm2m-tlv/native:./32-lwm2m-tlv.sh \
 tests/08-native-runs/33-etimer/native:./33-etimer.sh \
 tests/08-native-runs/34-tcp-rst/native:./34-tcp-rst.sh \
+tests/08-native-runs/35-nat64-tcp-rst/native:./35-nat64-tcp-rst.sh \
 
 include ../Makefile.compile-test
