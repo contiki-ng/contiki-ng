@@ -207,34 +207,77 @@ static int
 client_block2_handler(coap_message_t *response, uint8_t *target,
                       size_t *len, size_t max_len)
 {
-  const uint8_t *payload = NULL;
-  int pay_len = coap_get_payload(response, &payload);
-
-  if(response->block2_offset + pay_len > max_len) {
-    LOG_ERR("EDHOC message size (%d) exceeds max buffer (%d)\n", (int)pay_len, EDHOC_MAX_BUFFER);
-    coap_status_code = REQUEST_ENTITY_TOO_LARGE_4_13;
-    coap_error_message = "Message too big";
+  if(target == NULL || len == NULL) {
     return -1;
   }
 
-  if(target && len) {
-    memcpy(target + response->block2_offset, payload, pay_len);
-    *len = response->block2_offset + pay_len;
-    LOG_DBG_BYTES((uint8_t *)payload, (unsigned long)pay_len);
-    LOG_DBG_("\n");
+  const uint8_t *payload = NULL;
+  int pay_len = coap_get_payload(response, &payload);
+
+  if(pay_len <= 0) {
+    return 0;
   }
+
+  /*
+   * The callback API passes the blocks of a response in order, and
+   * validate_response() rejects a transfer whose blocks arrived out of
+   * order, so each block is appended to what has been received so far.
+   * The offset in the Block2 option is not used, since it comes from
+   * the server.
+   */
+  if((size_t)pay_len > max_len - *len) {
+    LOG_ERR("EDHOC message exceeds the receive buffer of %u bytes\n",
+            (unsigned)max_len);
+    return -1;
+  }
+
+  memcpy(target + *len, payload, pay_len);
+  *len += pay_len;
+  LOG_DBG_BYTES((uint8_t *)payload, (unsigned long)pay_len);
+  LOG_DBG_("\n");
   return 0;
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * Abandon the current exchange and restart the protocol. The callback
+ * API reads the more flag again after the callback returns, and requests
+ * the next block only while the flag is set. Clearing it ends the
+ * transfer, so that no further blocks arrive during the retry delay.
+ * This matters only for a block received with more data to follow; after
+ * a block error, the callback API has already ended the transfer.
+ */
+static void
+restart_exchange(coap_callback_request_state_t *callback_state)
+{
+  callback_state->state.more = 0;
+  edhoc_state.val = EVT_RESTART;
+  coap_timer_stop(&timer);
+  process_post(&edhoc_client, edhoc_event, &edhoc_state);
 }
 /*---------------------------------------------------------------------------*/
 static bool
 validate_response(coap_callback_request_state_t *callback_state)
 {
   if(callback_state->state.response == NULL) {
-    LOG_WARN("Request timed out\n");
+    /*
+     * The callback API calls back without a response both when a
+     * request has timed out and when a transfer has finished. A transfer
+     * also finishes when its last block arrives with an unexpected block
+     * number, leaving the message incomplete. The client timeout
+     * restarts the protocol after either of these. A CoAP transaction
+     * times out long after the client timeout, so the timed-out request
+     * may belong to an earlier attempt, and restarting here would abort
+     * the current one.
+     */
+    if(callback_state->state.status == COAP_REQUEST_STATUS_TIMEOUT) {
+      LOG_WARN("Request timed out\n");
+    }
     return false;
   }
 
-  if(memcmp(callback_state->state.request->token,
+  if(callback_state->state.status == COAP_REQUEST_STATUS_BLOCK_ERROR) {
+    LOG_ERR("Block2 retry limit reached: blocks received out of order\n");
+  } else if(memcmp(callback_state->state.request->token,
             callback_state->state.response->token,
             callback_state->state.request->token_len) != 0) {
     LOG_ERR("Response token mismatch\n");
@@ -246,9 +289,7 @@ validate_response(coap_callback_request_state_t *callback_state)
     return true;
   }
 
-  edhoc_state.val = EVT_RESTART;
-  coap_timer_stop(&timer);
-  process_post(&edhoc_client, edhoc_event, &edhoc_state);
+  restart_exchange(callback_state);
   return false;
 }
 /*---------------------------------------------------------------------------*/
@@ -265,8 +306,11 @@ client_response_handler(coap_callback_request_state_t *callback_state)
 
   coap_set_option(callback_state->state.response, COAP_OPTION_BLOCK2);
 
-  client_block2_handler(callback_state->state.response,
-                        rx_ptr, &rx_sz, EDHOC_MAX_PAYLOAD_LEN);
+  if(client_block2_handler(callback_state->state.response,
+                           rx_ptr, &rx_sz, EDHOC_MAX_PAYLOAD_LEN) < 0) {
+    restart_exchange(callback_state);
+    return;
+  }
   if(!callback_state->state.more) {
     edhoc_ctx->buffers.rx_sz = rx_sz;
     edhoc_state.val = EVT_BLOCKING;
