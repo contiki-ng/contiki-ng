@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Benoît Thébaudeau <benoit.thebaudeau.dev@gmail.com>
+ * Copyright (c) 2013, ADVANSEE - http://www.advansee.com/
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,50 +28,56 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 /**
- * \addtogroup cc2538-ctr
+ * \addtogroup cc-crypto
  * @{
  *
  * \file
- * Implementation of the cc2538 AES-CTR driver
+ *         Implementation of general functions of the AES/SHA cryptoprocessor.
+ * \author
+ *         Konrad Krentz <konrad.krentz@gmail.com>
  */
-#include "contiki.h"
-#include "dev/rom-util.h"
-#include "dev/ctr.h"
 
-#include <stdbool.h>
-#include <stdint.h>
+#include "dev/crypto/cc/cc-crypto.h"
+#include "dev/sys-ctrl.h"
+#include "reg.h"
+
+struct cc_crypto *const cc_crypto = (struct cc_crypto *)0x4008B000;
+
 /*---------------------------------------------------------------------------*/
-uint8_t
-ctr_crypt_start(uint8_t encrypt, uint8_t key_area, const void *nonce,
-                const void *ictr, uint8_t ctr_len, const void *mdata_in,
-                void *mdata_out, uint16_t mdata_len, struct process *process)
+void
+cc_crypto_init(void)
 {
-  uint32_t ctrl;
-  uint32_t iv[AES_IV_LEN / sizeof(uint32_t)];
-  uint8_t nonce_len;
+  volatile int i;
 
-  /* Program AES-CTR crypto operation */
-  ctrl = (((ctr_len >> 2) - 1) << AES_AES_CTRL_CTR_WIDTH_S) | /* CTR width */
-    AES_AES_CTRL_CTR |                                        /* CTR */
-    (encrypt ? AES_AES_CTRL_DIRECTION_ENCRYPT : 0);           /* En/decryption */
+  cc_crypto_enable();
 
-  /* Prepare the crypto initialization vector */
-  nonce_len = AES_IV_LEN - ctr_len;
-  /* Nonce */
-  rom_util_memcpy(&((uint8_t *)iv)[0], nonce, nonce_len);
-  /* Initial counter */
-  rom_util_memcpy(&((uint8_t *)iv)[nonce_len], ictr, ctr_len);
-
-  return aes_auth_crypt_start(ctrl, key_area, iv, NULL, 0,
-                              mdata_in, mdata_out, mdata_len, process);
+  /* Reset the AES/SHA cryptoprocessor */
+  REG(SYS_CTRL_SRSEC) |= SYS_CTRL_SRSEC_AES;
+  for(i = 0; i < 16; i++);
+  REG(SYS_CTRL_SRSEC) &= ~SYS_CTRL_SRSEC_AES;
 }
 /*---------------------------------------------------------------------------*/
-int8_t
-ctr_crypt_check_status(void)
+void
+cc_crypto_enable(void)
 {
-  return aes_auth_crypt_check_status() ? aes_auth_crypt_get_result(NULL, NULL) :
-                                         CRYPTO_PENDING;
+  /* Enable the clock for the AES/SHA cryptoprocessor */
+  REG(SYS_CTRL_RCGCSEC) |= SYS_CTRL_RCGCSEC_AES;
 }
+/*---------------------------------------------------------------------------*/
+void
+cc_crypto_disable(void)
+{
+  /* Gate the clock for the AES/SHA cryptoprocessor */
+  REG(SYS_CTRL_RCGCSEC) &= ~SYS_CTRL_RCGCSEC_AES;
+}
+/*---------------------------------------------------------------------------*/
+bool
+cc_crypto_is_enabled(void)
+{
+  return REG(SYS_CTRL_RCGCSEC) & SYS_CTRL_RCGCSEC_AES;
+}
+/*---------------------------------------------------------------------------*/
 
 /** @} */

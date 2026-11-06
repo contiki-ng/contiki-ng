@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Benoît Thébaudeau <benoit.thebaudeau.dev@gmail.com>
+ * Copyright (c) 2015, Benoît Thébaudeau <benoit.thebaudeau.dev@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,64 +28,22 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 /**
- * \addtogroup cc2538-cbc-mac
+ * \addtogroup cc-crypto
  * @{
  *
  * \file
- * Implementation of the cc2538 AES-CBC-MAC driver
+ *       Header file of the AES-CCM* driver for CCXXXX MCUs.
  */
-#include "contiki.h"
-#include "dev/rom-util.h"
-#include "dev/cbc-mac.h"
 
-#include <stdbool.h>
-#include <stdint.h>
-/*---------------------------------------------------------------------------*/
-uint8_t
-cbc_mac_auth_start(uint8_t key_area, const void *mdata, uint16_t mdata_len,
-                   struct process *process)
-{
-  uint32_t ctrl;
-  uint32_t iv[AES_IV_LEN / sizeof(uint32_t)];
+#ifndef CC_CCM_STAR_H_
+#define CC_CCM_STAR_H_
 
-  /* Program AES-CBC-MAC authentication operation */
-  ctrl = AES_AES_CTRL_SAVE_CONTEXT | /* Save context */
-    AES_AES_CTRL_CBC_MAC |           /* CBC-MAC */
-    AES_AES_CTRL_DIRECTION_ENCRYPT;  /* Encryption */
+#include "lib/ccm-star.h"
 
-  /* Prepare the crypto initialization vector
-   * Set initialization vector to 0 */
-  rom_util_memset(iv, 0, AES_IV_LEN);
+extern const struct ccm_star_driver cc_ccm_star_driver;
 
-  return aes_auth_crypt_start(ctrl, key_area, iv, NULL, 0,
-                              mdata, NULL, mdata_len, process);
-}
-/*---------------------------------------------------------------------------*/
-uint8_t
-cbc_mac_auth_get_result(const void *mac_in, void *mac_out)
-{
-  uint32_t tag[AES_TAG_LEN / sizeof(uint32_t)];
-  uint8_t ret;
-
-  ret = aes_auth_crypt_get_result(NULL, tag);
-  if(ret != CRYPTO_SUCCESS) {
-    return ret;
-  }
-
-  if(mac_in != NULL) {
-    /* Check MAC */
-    if(rom_util_memcmp(tag, mac_in, CBC_MAC_MAC_LEN)) {
-      ret = AES_AUTHENTICATION_FAILED;
-    }
-  }
-
-  if(mac_out != NULL) {
-    /* Copy tag to MAC */
-    rom_util_memcpy(mac_out, tag, CBC_MAC_MAC_LEN);
-  }
-
-  return ret;
-}
+#endif /* CC_CCM_STAR_H_ */
 
 /** @} */
