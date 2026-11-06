@@ -561,15 +561,17 @@ insert_srh_header(void)
           path_len, cmpri, cmpre, ext_len, padding);
 
   /* Check if there is enough space to store the extension header. */
-  if(uip_len + ext_len > UIP_LINK_MTU) {
+  if(uip_len + ext_len > MIN(UIP_LINK_MTU, UIP_BUFSIZE)) {
     LOG_ERR("Too long packet: impossible to add SRH (%u bytes)\n", ext_len);
     return 0;
   }
 
-  /* Move existing ext headers and payload ext_len further. */
-  memmove(uip_buf + UIP_IPH_LEN + uip_ext_len + ext_len,
-          uip_buf + UIP_IPH_LEN + uip_ext_len, uip_len - UIP_IPH_LEN);
-  memset(uip_buf + UIP_IPH_LEN + uip_ext_len, 0, ext_len);
+  /*
+   * Move the existing extension headers and the payload ext_len
+   * further, so that the SRH goes right after the IPv6 header.
+   */
+  memmove(UIP_IP_PAYLOAD(ext_len), UIP_IP_PAYLOAD(0), uip_len - UIP_IPH_LEN);
+  memset(UIP_IP_PAYLOAD(0), 0, ext_len);
 
   /* Insert source routing header (as first ext header). */
   rh_hdr->next = UIP_IP_BUF->proto;
@@ -698,7 +700,7 @@ insert_hbh_header(const rpl_instance_t *instance)
 
   /* Insert hop-by-hop header. */
   LOG_DBG("Creating hop-by-hop option\n");
-  if(uip_len + RPL_HOP_BY_HOP_LEN > UIP_LINK_MTU) {
+  if(uip_len + RPL_HOP_BY_HOP_LEN > MIN(UIP_LINK_MTU, UIP_BUFSIZE)) {
     LOG_ERR("Too long packet: impossible to add hop-by-hop option\n");
     return 0;
   }
