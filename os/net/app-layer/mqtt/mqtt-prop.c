@@ -686,19 +686,29 @@ mqtt_prop_parse_auth_props(struct mqtt_connection *conn, struct mqtt_prop_auth_e
   DBG("MQTT - Parsing CONNACK properties for server capabilities\n");
 
   event->auth_data.len = 0;
+  event->auth_method.string = event->auth_method_buf;
+  event->auth_method.string[0] = '\0';
   event->auth_method.length = 0;
 
+  /*
+   * The decoders leave the 2-byte length prefix at the start of data and
+   * count it in prop_len. They keep prop_len below
+   * MQTT_PROP_MAX_PROP_LENGTH for a string, which leaves room for the NUL.
+   */
   prop_len = mqtt_get_next_in_prop(conn, &prop_id, data);
   while(prop_len) {
     switch(prop_id) {
     case MQTT_VHDR_PROP_AUTH_DATA: {
-      event->auth_data.len = prop_len - 2; /* 2 bytes are used to encode len */
-      memcpy(event->auth_data.data, data, prop_len - 2);
+      event->auth_data.len = prop_len - MQTT_STRING_LEN_SIZE;
+      memcpy(event->auth_data.data, data + MQTT_STRING_LEN_SIZE,
+             event->auth_data.len);
       break;
     }
     case MQTT_VHDR_PROP_AUTH_METHOD: {
-      event->auth_method.length = prop_len - 2; /* 2 bytes are used to encode len */
-      memcpy(event->auth_method.string, data, prop_len - 2);
+      event->auth_method.length = prop_len - MQTT_STRING_LEN_SIZE;
+      memcpy(event->auth_method.string, data + MQTT_STRING_LEN_SIZE,
+             event->auth_method.length);
+      event->auth_method.string[event->auth_method.length] = '\0';
       break;
     }
     default:
