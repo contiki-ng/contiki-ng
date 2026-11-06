@@ -474,6 +474,74 @@ advance_snd_nxt_for_rst(struct uip_conn *conn)
   memcpy(conn->snd_nxt, uip_acc32, sizeof(conn->snd_nxt));
   conn->len = 0;
 }
+/*---------------------------------------------------------------------------*/
+static clock_time_t challenge_ack_period_start;
+static uint16_t challenge_ack_count;
+
+/*
+ * Limit challenge ACKs to UIP_TCP_CHALLENGE_ACK_LIMIT per second for
+ * all connections together, as RFC 5961 Section 7 recommends.
+ */
+static bool
+challenge_ack_allowed(void)
+{
+  clock_time_t now = clock_time();
+
+  if(now - challenge_ack_period_start >= CLOCK_SECOND) {
+    challenge_ack_period_start = now;
+    challenge_ack_count = 0;
+  }
+  if(challenge_ack_count >= UIP_TCP_CHALLENGE_ACK_LIMIT) {
+    return false;
+  }
+  challenge_ack_count++;
+  return true;
+}
+/*---------------------------------------------------------------------------*/
+/* What to do with a received RST, per RFC 9293 Section 3.10.7. */
+enum rst_action {
+  RST_IGNORE,
+  RST_CHALLENGE,
+  RST_ACCEPT
+};
+
+/*
+ * Check a received RST against the connection it matches.
+ *
+ * In SYN-SENT, the RST is acceptable only if it acknowledges our SYN.
+ * In the other states, it is acceptable only if its sequence number
+ * is exactly RCV.NXT. A sequence number elsewhere in the receive
+ * window asks for a challenge ACK, so that the peer can send a reset
+ * with the right number if the connection is really gone, and one
+ * outside the window is ignored (RFC 5961 Section 3.2).
+ */
+static enum rst_action
+check_rst(struct uip_conn *conn)
+{
+  uint16_t window;
+
+#if UIP_ACTIVE_OPEN
+  if((conn->tcpstateflags & UIP_TS_MASK) == UIP_SYN_SENT) {
+    if((UIP_TCP_BUF->flags & TCP_ACK) &&
+       seq_to_uint32(UIP_TCP_BUF->ackno) ==
+       seq_to_uint32(conn->snd_nxt) + conn->len) {
+      return RST_ACCEPT;
+    }
+    return RST_IGNORE;
+  }
+#endif /* UIP_ACTIVE_OPEN */
+
+  if(seq_to_uint32(UIP_TCP_BUF->seqno) == seq_to_uint32(conn->rcv_nxt)) {
+    return RST_ACCEPT;
+  }
+
+  /* The window advertised to the peer, as set in tcp_send. */
+  window = (conn->tcpstateflags & UIP_STOPPED) ? 0 : UIP_RECEIVE_WINDOW;
+  if(seg_in_window(UIP_TCP_BUF->seqno, 0, conn->rcv_nxt, window)) {
+    return RST_CHALLENGE;
+  }
+  return RST_IGNORE;
+}
 #endif /* UIP_TCP */
 
 #if ! UIP_ARCH_CHKSUM
@@ -2057,11 +2125,20 @@ uip_process(uint8_t flag)
   LOG_DBG("In found\n");
   uip_conn = uip_connr;
   uip_flags = 0;
-  /* We do a very naive form of TCP reset processing; we just accept
-     any RST and kill our connection. We should in fact check if the
-     sequence number of this reset is wihtin our advertised window
-     before we accept the reset. */
   if(UIP_TCP_BUF->flags & TCP_RST) {
+    switch(check_rst(uip_connr)) {
+    case RST_IGNORE:
+      LOG_DBG("tcp: ignoring an unacceptable reset\n");
+      goto drop;
+    case RST_CHALLENGE:
+      if(!challenge_ack_allowed()) {
+        goto drop;
+      }
+      LOG_DBG("tcp: sending a challenge ACK for a reset in the window\n");
+      goto tcp_send_ack;
+    case RST_ACCEPT:
+      break;
+    }
     uip_connr->tcpstateflags = UIP_CLOSED;
     LOG_WARN("tcp: got reset, aborting connection.");
     uip_flags = UIP_ABORT;
