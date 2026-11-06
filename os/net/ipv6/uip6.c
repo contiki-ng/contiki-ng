@@ -458,6 +458,22 @@ seg_in_window(uint8_t *seq, uint16_t seg_len, uint8_t *rcv_nxt,
   int32_t end_diff = start_diff + (int32_t)(seg_len - 1);
   return end_diff >= 0 && end_diff < (int32_t)window;
 }
+/*---------------------------------------------------------------------------*/
+/*
+ * Move snd_nxt past the outstanding data before sending an RST.
+ *
+ * uIP's snd_nxt is the first unacknowledged byte, while an RST must
+ * carry SND.NXT (RFC 9293 Section 3.10.7), which includes the
+ * outstanding data. A peer that has received that data expects the
+ * higher number, and would ignore a reset that carries the lower one.
+ */
+static void
+advance_snd_nxt_for_rst(struct uip_conn *conn)
+{
+  uip_add32(conn->snd_nxt, conn->len);
+  memcpy(conn->snd_nxt, uip_acc32, sizeof(conn->snd_nxt));
+  conn->len = 0;
+}
 #endif /* UIP_TCP */
 
 #if ! UIP_ARCH_CHKSUM
@@ -1264,6 +1280,7 @@ uip_process(uint8_t flag)
             UIP_APPCALL();
 
             /* We also send a reset packet to the remote host. */
+            advance_snd_nxt_for_rst(uip_connr);
             UIP_TCP_BUF->flags = TCP_RST | TCP_ACK;
             goto tcp_send_nodata;
           }
@@ -2349,6 +2366,7 @@ uip_process(uint8_t flag)
       if(uip_flags & UIP_ABORT) {
         uip_slen = 0;
         uip_connr->tcpstateflags = UIP_CLOSED;
+        advance_snd_nxt_for_rst(uip_connr);
         UIP_TCP_BUF->flags = TCP_RST | TCP_ACK;
         goto tcp_send_nodata;
       }
