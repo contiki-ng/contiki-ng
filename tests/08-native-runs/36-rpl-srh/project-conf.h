@@ -31,6 +31,9 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
+/* Room for the root and a chain of 32 nodes below it. */
+#define NETSTACK_MAX_ROUTE_ENTRIES 40
+
 #if ROUTING_CONF_RPL_CLASSIC
 #define RPL_CONF_WITH_NON_STORING 1
 #define RPL_CONF_MOP RPL_MOP_NON_STORING

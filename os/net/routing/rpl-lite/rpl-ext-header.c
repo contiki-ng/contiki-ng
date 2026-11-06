@@ -319,8 +319,8 @@ static int
 insert_srh_header(void)
 {
   /* Implementation of RFC6554 */
-  uint8_t path_len;
-  uint8_t ext_len;
+  uint16_t path_len;
+  uint16_t ext_len;
   uint8_t cmpri, cmpre; /* ComprI and ComprE fields of the RPL Source Routing Header */
   uint8_t *hop_ptr;
   uint8_t padding;

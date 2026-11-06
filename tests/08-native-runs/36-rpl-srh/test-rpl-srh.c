@@ -60,6 +60,9 @@ AUTOSTART_PROCESSES(&run_tests);
 /* Extension headers in the packets to b, smaller with a small buffer. */
 #define EXT_TO_B_LEN (UIP_BUFSIZE >= 1280 ? 480 : 48)
 
+/* The number of nodes in the chain below the root in the long-path test. */
+#define CHAIN_LEN 32
+
 static uip_ipaddr_t root_addr;
 static uip_ipaddr_t a, b;
 static void *graph;
@@ -166,6 +169,45 @@ UNIT_TEST(test_srh_buffer_full)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+#if UIP_BUFSIZE >= UIP_IPH_LEN + 256 + 64
+UNIT_TEST_REGISTER(test_srh_long_path,
+                   "an SRH longer than 255 bytes is not truncated");
+UNIT_TEST(test_srh_long_path)
+{
+  uip_ipaddr_t addr[CHAIN_LEN];
+  struct uip_routing_hdr *rh;
+  uint8_t *last_hop;
+  unsigned i;
+
+  UNIT_TEST_BEGIN();
+
+  /*
+   * Each address differs from the destination's in its first IID
+   * byte, so each of the 31 intermediate hops takes 8 bytes and the
+   * SRH 256.
+   */
+  for(i = 0; i < CHAIN_LEN; i++) {
+    uip_ip6addr(&addr[i], 0xfd00, 0, 0, 0, (i + 1) << 8, 0, 0, 0);
+    UNIT_TEST_ASSERT(add_node(&addr[i], i == 0 ? &root_addr : &addr[i - 1]));
+  }
+
+  build_packet(&addr[CHAIN_LEN - 1], 0, 64);
+  UNIT_TEST_ASSERT(NETSTACK_ROUTING.ext_header_update());
+
+  rh = (struct uip_routing_hdr *)UIP_IP_PAYLOAD(0);
+  UNIT_TEST_ASSERT(uip_len == original_len + 256);
+  UNIT_TEST_ASSERT(rh->len == (256 - 8) / 8);
+  UNIT_TEST_ASSERT(rh->seg_left == CHAIN_LEN - 1);
+  UNIT_TEST_ASSERT(uip_ipaddr_cmp(&UIP_IP_BUF->destipaddr, &addr[0]));
+  /* The last address is the destination's, without the 8 common bytes. */
+  last_hop = UIP_IP_PAYLOAD(256 - 8);
+  UNIT_TEST_ASSERT(memcmp(last_hop, &addr[CHAIN_LEN - 1].u8[8], 8) == 0);
+  UNIT_TEST_ASSERT(memcmp(UIP_IP_PAYLOAD(256), &original[UIP_IPH_LEN],
+                          original_len - UIP_IPH_LEN) == 0);
+
+  UNIT_TEST_END();
+}
+#endif /* UIP_BUFSIZE >= UIP_IPH_LEN + 256 + 64 */
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(run_tests, ev, data)
 {
@@ -205,6 +247,13 @@ PROCESS_THREAD(run_tests, ev, data)
      || !UNIT_TEST_PASSED(test_srh_buffer_full)) {
     printf("=check-me= FAILED\n");
   }
+
+#if UIP_BUFSIZE >= UIP_IPH_LEN + 256 + 64
+  UNIT_TEST_RUN(test_srh_long_path);
+  if(!UNIT_TEST_PASSED(test_srh_long_path)) {
+    printf("=check-me= FAILED\n");
+  }
+#endif /* UIP_BUFSIZE >= UIP_IPH_LEN + 256 + 64 */
 
   printf("=check-me= DONE\n");
 
