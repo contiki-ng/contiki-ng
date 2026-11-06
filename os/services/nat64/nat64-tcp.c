@@ -110,6 +110,18 @@
 #define NAT64_TCP_MAX_RETRIES 5
 #endif
 
+/* The receive window advertised to the IoT node. */
+#define NAT64_TCP_WINDOW 4096
+
+/*
+ * The maximum number of challenge ACKs sent per second, for all
+ * sessions together, in answer to RSTs from the IoT side that are in
+ * the window but not at its start (RFC 5961 Section 7).
+ */
+#ifndef NAT64_TCP_CHALLENGE_ACK_LIMIT
+#define NAT64_TCP_CHALLENGE_ACK_LIMIT 10
+#endif
+
 struct v6hdr {
   uint8_t vtc, tcflow;
   uint16_t flow;
@@ -238,9 +250,29 @@ struct tcp_seqstate {
 static struct tcp_seqstate tcp_seq[NAT64_MAX_TCP_SESSIONS];
 static uint8_t isn_key[16];
 
+static clock_time_t challenge_ack_period_start;
+static uint16_t challenge_ack_count;
+
 static void nat64_tcp_send_pending(struct tcp_seqstate *ts);
 static void nat64_tcp_ack_confirmed(struct tcp_seqstate *ts);
 static void nat64_tcp_deliver_pending(struct tcp_seqstate *ts);
+/*---------------------------------------------------------------------------*/
+/* Limit challenge ACKs to NAT64_TCP_CHALLENGE_ACK_LIMIT per second. */
+static bool
+challenge_ack_allowed(void)
+{
+  clock_time_t now = clock_time();
+
+  if(now - challenge_ack_period_start >= CLOCK_SECOND) {
+    challenge_ack_period_start = now;
+    challenge_ack_count = 0;
+  }
+  if(challenge_ack_count >= NAT64_TCP_CHALLENGE_ACK_LIMIT) {
+    return false;
+  }
+  challenge_ack_count++;
+  return true;
+}
 /*---------------------------------------------------------------------------*/
 static struct tcp_seqstate *
 find_seqstate(const struct nat64_session *s)
@@ -386,7 +418,7 @@ inject_tcp(const struct nat64_session *s, struct tcp_seqstate *ts,
   put32(tcp->ackno, ts->peer_next);
   tcp->offset = (TCP_HDRLEN / 4) << 4;
   tcp->flags = flags;
-  put16(tcp->wnd, 4096);
+  put16(tcp->wnd, NAT64_TCP_WINDOW);
   tcp->tchksum = 0;
   put16(tcp->urgp, 0);
 
@@ -478,6 +510,27 @@ nat64_tcp_output(const uint8_t *pkt, uint16_t len)
   struct nat64_session *s = ts->session;
 
   if(tcp->flags & TCP_RST) {
+    int32_t offset = (int32_t)(seq - ts->peer_next);
+
+    /*
+     * Anyone able to send a packet with the node's address and port
+     * could send this RST, so accept it only if its sequence number is
+     * the next one expected (RFC 5961 Section 3.2). One elsewhere in
+     * the window gets a challenge ACK, so that the node can answer with
+     * an exact reset if it really has dropped the connection, and one
+     * outside the window is ignored.
+     */
+    if(offset != 0) {
+      if(offset > 0 && offset < NAT64_TCP_WINDOW &&
+         challenge_ack_allowed()) {
+        LOG_DBG("TCP RST in the window, sending a challenge ACK\n");
+        ts->pending_ack = true;
+      } else {
+        LOG_DBG("TCP RST not at the next sequence number, ignoring it\n");
+      }
+      return 1;
+    }
+
     LOG_INFO("TCP RST from IoT, aborting session\n");
     /* Full teardown: the IPv4 socket is closed with SO_LINGER=0 so
      * the upstream server sees an equivalent RST instead of a
