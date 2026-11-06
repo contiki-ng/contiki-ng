@@ -214,6 +214,8 @@ dis_input(void)
 {
   rpl_instance_t *instance;
   rpl_instance_t *end;
+  uip_ipaddr_t from;
+  bool is_multicast;
 
   /* DAG Information Solicitation */
   LOG_INFO("Received a DIS from ");
@@ -221,15 +223,18 @@ dis_input(void)
   LOG_INFO_("\n");
 
   /*
-   * Discard the received packet's lengths before a DIO reply is built in
-   * uip_buf. The IP header fields read below are left intact.
+   * A unicast DIO reply is built in uip_buf, and sending it overwrites
+   * the IP header of the DIS. Keep the fields needed to answer the DIS
+   * in every instance, and discard the received packet's lengths.
    */
+  uip_ipaddr_copy(&from, &UIP_IP_BUF->srcipaddr);
+  is_multicast = uip_is_addr_mcast(&UIP_IP_BUF->destipaddr);
   uipbuf_clear();
 
   for(instance = &instance_table[0], end = instance + RPL_MAX_INSTANCES;
       instance < end; ++instance) {
     if(instance->used == 1) {
-      if(uip_is_addr_mcast(&UIP_IP_BUF->destipaddr)) {
+      if(is_multicast) {
 #if RPL_LEAF_ONLY
         LOG_INFO("LEAF ONLY Multicast DIS will NOT reset DIO timer\n");
 #else /* !RPL_LEAF_ONLY */
@@ -238,16 +243,16 @@ dis_input(void)
 #endif /* !RPL_LEAF_ONLY */
       } else {
         /* Check if this neighbor should be added according to the policy. */
-        if(rpl_icmp6_update_nbr_table(&UIP_IP_BUF->srcipaddr,
+        if(rpl_icmp6_update_nbr_table(&from,
                                       NBR_TABLE_REASON_RPL_DIS, NULL) == NULL) {
           LOG_ERR("Out of Memory, not sending unicast DIO, DIS from ");
-          LOG_ERR_6ADDR(&UIP_IP_BUF->srcipaddr);
+          LOG_ERR_6ADDR(&from);
           LOG_ERR_(", ");
           LOG_ERR_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
           LOG_ERR_("\n");
         } else {
           LOG_DBG("Unicast DIS, reply to sender\n");
-          dio_output(instance, &UIP_IP_BUF->srcipaddr);
+          dio_output(instance, &from);
         }
       }
     }
