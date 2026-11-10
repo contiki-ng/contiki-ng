@@ -35,6 +35,7 @@
 #include "ip64/ip64.h"
 #include "ip64/ip64-eth.h"
 #include "ip64/ip64-arp.h"
+#include "sys/ctimer.h"
 
 #include <string.h>
 
@@ -97,6 +98,15 @@ static struct arp_entry arp_table[UIP_ARPTAB_SIZE];
 static uint8_t arptime;
 static uint8_t tmpage;
 
+/*
+ * ip64_arp_timer() ages the table in steps of this interval, so an entry
+ * expires UIP_ARP_MAXAGE intervals after it was last refreshed.
+ */
+#define ARP_TIMER_INTERVAL (10 * CLOCK_SECOND)
+
+static struct ctimer arp_ctimer;
+static void arp_timer_callback(void *ptr);
+
 /*---------------------------------------------------------------------------*/
 
 #include "sys/log.h"
@@ -120,18 +130,19 @@ ip64_arp_init(void)
   for(i = 0; i < UIP_ARPTAB_SIZE; ++i) {
     memset(&arp_table[i].ipaddr, 0, 4);
   }
+
+  ctimer_set(&arp_ctimer, ARP_TIMER_INTERVAL, arp_timer_callback, NULL);
 }
 /*---------------------------------------------------------------------------*/
 /**
  * Periodic ARP processing function.
  *
- * This function performs periodic timer processing in the ARP module
- * and should be called at regular intervals. The recommended interval
- * is 10 seconds between the calls.
+ * Ages the ARP table by one step. Runs every ARP_TIMER_INTERVAL from
+ * a callback timer started by ip64_arp_init().
  *
  */
 /*---------------------------------------------------------------------------*/
-void
+static void
 ip64_arp_timer(void)
 {
   struct arp_entry *tabptr;
@@ -140,12 +151,19 @@ ip64_arp_timer(void)
   ++arptime;
   for(i = 0; i < UIP_ARPTAB_SIZE; ++i) {
     tabptr = &arp_table[i];
-    if(uip_ip4addr_cmp(&tabptr->ipaddr, &uip_all_zeroes_addr) &&
-       arptime - tabptr->time >= UIP_ARP_MAXAGE) {
+    if(!uip_ip4addr_cmp(&tabptr->ipaddr, &uip_all_zeroes_addr) &&
+       (uint8_t)(arptime - tabptr->time) >= UIP_ARP_MAXAGE) {
       memset(&tabptr->ipaddr, 0, 4);
     }
   }
 
+}
+/*---------------------------------------------------------------------------*/
+static void
+arp_timer_callback(void *ptr)
+{
+  ip64_arp_timer();
+  ctimer_reset(&arp_ctimer);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -196,7 +214,7 @@ arp_update(uip_ip4addr_t *ipaddr, struct uip_eth_addr *ethaddr)
     c = 0;
     for(i = 0; i < UIP_ARPTAB_SIZE; ++i) {
       tabptr = &arp_table[i];
-      if(arptime - tabptr->time > tmpage) {
+      if((uint8_t)(arptime - tabptr->time) > tmpage) {
 	tmpage = arptime - tabptr->time;
 	c = i;
       }

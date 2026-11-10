@@ -149,6 +149,7 @@ static void
 init(void)
 {
   LOG_INFO("ip64-eth-interface: init\n");
+  ip64_arp_init();
 }
 /*---------------------------------------------------------------------------*/
 static int
