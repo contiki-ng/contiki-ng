@@ -138,6 +138,8 @@ typedef struct {
 
   uint16_t payload_len;
   uint8_t *payload;
+  /* Set by the parser when it cut the payload to COAP_MAX_CHUNK_SIZE. */
+  uint8_t payload_truncated;
 } coap_message_t;
 
 /*
