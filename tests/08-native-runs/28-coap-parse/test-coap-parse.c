@@ -30,18 +30,22 @@
 
 /**
  * \file
- *         Unit tests for the CoAP message parser.
+ *         Unit tests for the CoAP message parser, block handling and
+ *         client APIs.
  */
 
 #include "contiki.h"
 #include "unit-test.h"
 #include "coap.h"
 #include "coap-block1.h"
+#include "coap-request-state.h"
+#include "coap-callback-api.h"
+#include "test-transport.h"
 
 #include <stdio.h>
 #include <string.h>
 
-PROCESS(run_tests, "CoAP parser unit tests");
+PROCESS(run_tests, "CoAP unit tests");
 AUTOSTART_PROCESSES(&run_tests);
 
 #define CANARY 0xAA
@@ -417,11 +421,315 @@ UNIT_TEST(test_block_setters_reject_2048)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+/*
+ * Serializes into buffer a 2.05 response with the given message ID,
+ * carrying a Block2 option, unless size is 0, and payload_len bytes of
+ * payload. The payload is set directly, as a remote server could send
+ * more than COAP_MAX_CHUNK_SIZE. Returns the message length, or 0 on
+ * failure.
+ */
+#define MAX_TEST_PAYLOAD (2 * COAP_MAX_BLOCK_SIZE)
+
+static size_t
+serialize_block2_response(uint16_t mid, uint32_t num, uint8_t more,
+                          uint16_t size, uint16_t payload_len)
+{
+  static uint8_t payload[MAX_TEST_PAYLOAD];
+  coap_message_t message;
+
+  if(payload_len > sizeof(payload)) {
+    return 0;
+  }
+  coap_init_message(&message, COAP_TYPE_ACK, CONTENT_2_05, mid);
+  if(size > 0 && !coap_set_header_block2(&message, num, more, size)) {
+    return 0;
+  }
+  memset(payload, 'b', payload_len);
+  message.payload = payload;
+  message.payload_len = payload_len;
+  return coap_serialize_message(&message, buffer);
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * Builds a response as serialize_block2_response() does, and parses it
+ * into response as the client APIs receive it.
+ */
+static bool
+build_block2_response_len(coap_message_t *response, uint32_t num,
+                          uint8_t more, uint16_t size, uint16_t payload_len)
+{
+  size_t len = serialize_block2_response(0x1234, num, more, size,
+                                         payload_len);
+
+  return len > 0 &&
+    coap_parse_message(response, buffer, len) == NO_ERROR;
+}
+/*---------------------------------------------------------------------------*/
+/* As above, with a full block of payload, up to MAX_TEST_PAYLOAD bytes. */
+static bool
+build_block2_response(coap_message_t *response, uint32_t num, uint8_t more,
+                      uint16_t size)
+{
+  return build_block2_response_len(response, num, more, size,
+                                   MIN(size, MAX_TEST_PAYLOAD));
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * A client that can take larger blocks than the server sends must
+ * request the following blocks in the server's block size, since block
+ * numbers depend on it.
+ */
+UNIT_TEST_REGISTER(test_block2_follows_server_size,
+                   "the client requests blocks in the server's block size");
+UNIT_TEST(test_block2_follows_server_size)
+{
+  coap_request_state_t state;
+  coap_message_t response;
+
+  UNIT_TEST_BEGIN();
+
+  coap_request_state_init_block2(&state);
+  state.block_size = 1024;
+
+  UNIT_TEST_ASSERT(build_block2_response(&response, 0, 1, 64));
+  UNIT_TEST_ASSERT(coap_request_state_next_block2(&state, &response));
+  UNIT_TEST_ASSERT(state.block_size == 64);
+  UNIT_TEST_ASSERT(state.block_num == 1);
+  UNIT_TEST_ASSERT(state.more == 1);
+
+  UNIT_TEST_ASSERT(build_block2_response(&response, 1, 0, 64));
+  UNIT_TEST_ASSERT(coap_request_state_next_block2(&state, &response));
+  UNIT_TEST_ASSERT(state.block_num == 2);
+  UNIT_TEST_ASSERT(state.more == 0);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+/* A block at another offset than the next one is not accepted. */
+UNIT_TEST_REGISTER(test_block2_rejects_wrong_offset,
+                   "the client rejects a block at the wrong offset");
+UNIT_TEST(test_block2_rejects_wrong_offset)
+{
+  coap_request_state_t state;
+  coap_message_t response;
+
+  UNIT_TEST_BEGIN();
+
+  coap_request_state_init_block2(&state);
+  state.block_size = 64;
+
+  UNIT_TEST_ASSERT(build_block2_response(&response, 0, 1, 64));
+  UNIT_TEST_ASSERT(coap_request_state_next_block2(&state, &response));
+
+  /* Block 1 of 1024 bytes starts at 1024, not at 64. */
+  UNIT_TEST_ASSERT(build_block2_response(&response, 1, 1, 1024));
+  UNIT_TEST_ASSERT(!coap_request_state_next_block2(&state, &response));
+  UNIT_TEST_ASSERT(build_block2_response(&response, 2, 1, 64));
+  UNIT_TEST_ASSERT(!coap_request_state_next_block2(&state, &response));
+  UNIT_TEST_ASSERT(state.block_num == 1);
+  UNIT_TEST_ASSERT(state.block_size == 64);
+
+  /* Nor is a block that has already been received. */
+  UNIT_TEST_ASSERT(build_block2_response(&response, 0, 1, 64));
+  UNIT_TEST_ASSERT(!coap_request_state_next_block2(&state, &response));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * A block larger than requested is accepted, but the parser keeps only
+ * COAP_MAX_CHUNK_SIZE bytes of it. The client must deliver the requested
+ * size and request the rest of the block, rather than skip to the end of
+ * the server's block.
+ */
+#if MAX_TEST_PAYLOAD <= COAP_MAX_CHUNK_SIZE
+#error "test_block2_accepts_larger_block needs a payload that gets truncated"
+#endif
+UNIT_TEST_REGISTER(test_block2_accepts_larger_block,
+                   "the client keeps the requested part of a larger block");
+UNIT_TEST(test_block2_accepts_larger_block)
+{
+  coap_request_state_t state;
+  coap_message_t response;
+
+  UNIT_TEST_BEGIN();
+
+  coap_request_state_init_block2(&state);
+  UNIT_TEST_ASSERT(state.block_size == COAP_MAX_BLOCK_SIZE);
+
+  UNIT_TEST_ASSERT(build_block2_response(&response, 0, 1,
+                                         2 * COAP_MAX_BLOCK_SIZE));
+  UNIT_TEST_ASSERT(coap_request_state_next_block2(&state, &response));
+  UNIT_TEST_ASSERT(response.payload_len == COAP_MAX_BLOCK_SIZE);
+  UNIT_TEST_ASSERT(state.block_size == COAP_MAX_BLOCK_SIZE);
+  UNIT_TEST_ASSERT(state.block_num == 1);
+  UNIT_TEST_ASSERT(state.more == 1);
+
+  /* The rest of a larger final block is requested as well. */
+  coap_request_state_init_block2(&state);
+  UNIT_TEST_ASSERT(build_block2_response(&response, 0, 0,
+                                         2 * COAP_MAX_BLOCK_SIZE));
+  UNIT_TEST_ASSERT(coap_request_state_next_block2(&state, &response));
+  UNIT_TEST_ASSERT(response.payload_len == COAP_MAX_BLOCK_SIZE);
+  UNIT_TEST_ASSERT(state.block_num == 1);
+  UNIT_TEST_ASSERT(state.more == 1);
+
+  /*
+   * A larger final block that fits the requested size ends the transfer,
+   * also when it fills the requested size exactly.
+   */
+  coap_request_state_init_block2(&state);
+  UNIT_TEST_ASSERT(build_block2_response_len(&response, 0, 0,
+                                             2 * COAP_MAX_BLOCK_SIZE, 10));
+  UNIT_TEST_ASSERT(coap_request_state_next_block2(&state, &response));
+  UNIT_TEST_ASSERT(response.payload_len == 10);
+  UNIT_TEST_ASSERT(state.more == 0);
+
+  coap_request_state_init_block2(&state);
+  UNIT_TEST_ASSERT(build_block2_response_len(&response, 0, 0,
+                                             2 * COAP_MAX_BLOCK_SIZE,
+                                             COAP_MAX_BLOCK_SIZE));
+  UNIT_TEST_ASSERT(coap_request_state_next_block2(&state, &response));
+  UNIT_TEST_ASSERT(response.payload_len == COAP_MAX_BLOCK_SIZE);
+  UNIT_TEST_ASSERT(state.more == 0);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+/* A block that is not the last must fill its size. */
+UNIT_TEST_REGISTER(test_block2_rejects_short_block,
+                   "the client rejects a short block that is not the last");
+UNIT_TEST(test_block2_rejects_short_block)
+{
+  coap_request_state_t state;
+  coap_message_t response;
+
+  UNIT_TEST_BEGIN();
+
+  coap_request_state_init_block2(&state);
+  UNIT_TEST_ASSERT(build_block2_response_len(&response, 0, 1, 32, 20));
+  UNIT_TEST_ASSERT(!coap_request_state_next_block2(&state, &response));
+  UNIT_TEST_ASSERT(state.block_num == 0);
+
+  /* The last block may be shorter. */
+  UNIT_TEST_ASSERT(build_block2_response_len(&response, 0, 0, 32, 20));
+  UNIT_TEST_ASSERT(coap_request_state_next_block2(&state, &response));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+/* A response without a Block2 option can only be the first block. */
+UNIT_TEST_REGISTER(test_block2_without_option,
+                   "a response without Block2 is accepted only first");
+UNIT_TEST(test_block2_without_option)
+{
+  coap_request_state_t state;
+  coap_message_t response;
+
+  UNIT_TEST_BEGIN();
+
+  coap_request_state_init_block2(&state);
+  UNIT_TEST_ASSERT(build_block2_response(&response, 0, 0, 0));
+  UNIT_TEST_ASSERT(coap_request_state_next_block2(&state, &response));
+  UNIT_TEST_ASSERT(state.more == 0);
+  UNIT_TEST_ASSERT(!coap_request_state_next_block2(&state, &response));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+/* The statuses that the callback API passed to the test callback. */
+#define MAX_CALLBACKS 4
+static coap_request_status_t callback_status[MAX_CALLBACKS];
+static unsigned callback_count;
+
+static void
+record_callback(coap_callback_request_state_t *callback_state)
+{
+  if(callback_count < MAX_CALLBACKS) {
+    callback_status[callback_count] = callback_state->state.status;
+  }
+  callback_count++;
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * Parses the last message that the engine sent into message. Returns
+ * true if it is a request.
+ */
+static bool
+parse_sent_request(coap_message_t *message)
+{
+  static uint8_t copy[COAP_MAX_PACKET_SIZE];
+
+  if(test_transport_sent_len == 0) {
+    return false;
+  }
+  memcpy(copy, test_transport_sent, test_transport_sent_len);
+  return coap_parse_message(message, copy, test_transport_sent_len)
+    == NO_ERROR && message->code == COAP_GET;
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * When the server sends smaller blocks than the client can take, the
+ * callback API must request the next block in the server's block size.
+ */
+UNIT_TEST_REGISTER(test_block2_callback_api_follows_server,
+                   "the callback API requests the server's block size");
+UNIT_TEST(test_block2_callback_api_follows_server)
+{
+  static coap_callback_request_state_t callback_state;
+  static coap_message_t request;
+  static coap_endpoint_t ep;
+  coap_message_t sent;
+  size_t len;
+
+  UNIT_TEST_BEGIN();
+
+  memset(&ep, 0, sizeof(ep));
+  uip_ip6addr(&ep.ipaddr, 0xfd00, 0, 0, 0, 0, 0, 0, 1);
+  ep.port = UIP_HTONS(COAP_DEFAULT_PORT);
+  callback_count = 0;
+
+  /* The first request carries no Block2 option. */
+  test_transport_sent_len = 0;
+  coap_init_message(&request, COAP_TYPE_CON, COAP_GET, 0);
+  coap_set_header_uri_path(&request, "chunked");
+  UNIT_TEST_ASSERT(coap_send_request(&callback_state, &ep, &request,
+                                     record_callback));
+  UNIT_TEST_ASSERT(parse_sent_request(&sent));
+  UNIT_TEST_ASSERT(!coap_is_option(&sent, COAP_OPTION_BLOCK2));
+
+  /* The server answers with 16-byte blocks. */
+  len = serialize_block2_response(sent.mid, 0, 1, 16, 16);
+  UNIT_TEST_ASSERT(len > 0);
+  test_transport_sent_len = 0;
+  coap_receive(&ep, buffer, len);
+  UNIT_TEST_ASSERT(callback_count == 1);
+  UNIT_TEST_ASSERT(callback_status[0] == COAP_REQUEST_STATUS_MORE);
+
+  /* The next request asks for block 1 of 16 bytes, at offset 16. */
+  UNIT_TEST_ASSERT(parse_sent_request(&sent));
+  UNIT_TEST_ASSERT(coap_is_option(&sent, COAP_OPTION_BLOCK2));
+  UNIT_TEST_ASSERT(sent.block2_num == 1);
+  UNIT_TEST_ASSERT(sent.block2_size == 16);
+
+  /* The last block completes the transfer. */
+  len = serialize_block2_response(sent.mid, 1, 0, 16, 16);
+  UNIT_TEST_ASSERT(len > 0);
+  coap_receive(&ep, buffer, len);
+  UNIT_TEST_ASSERT(callback_count == 3);
+  UNIT_TEST_ASSERT(callback_status[1] == COAP_REQUEST_STATUS_RESPONSE);
+  UNIT_TEST_ASSERT(callback_status[2] == COAP_REQUEST_STATUS_FINISHED);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(run_tests, ev, data)
 {
   PROCESS_BEGIN();
 
-  printf("\nRunning CoAP parser unit tests\n");
+  printf("\nRunning CoAP unit tests\n");
+
+  coap_engine_init();
 
   UNIT_TEST_RUN(test_parse_payload_keeps_canary);
   UNIT_TEST_RUN(test_parse_oversized_payload_is_truncated);
@@ -431,6 +739,12 @@ PROCESS_THREAD(run_tests, ev, data)
   UNIT_TEST_RUN(test_block1_last_block_fills_buffer);
   UNIT_TEST_RUN(test_parse_rejects_malformed_block_options);
   UNIT_TEST_RUN(test_block_setters_reject_2048);
+  UNIT_TEST_RUN(test_block2_follows_server_size);
+  UNIT_TEST_RUN(test_block2_rejects_wrong_offset);
+  UNIT_TEST_RUN(test_block2_accepts_larger_block);
+  UNIT_TEST_RUN(test_block2_rejects_short_block);
+  UNIT_TEST_RUN(test_block2_without_option);
+  UNIT_TEST_RUN(test_block2_callback_api_follows_server);
 
   if(!UNIT_TEST_PASSED(test_parse_payload_keeps_canary) ||
      !UNIT_TEST_PASSED(test_parse_oversized_payload_is_truncated) ||
@@ -439,7 +753,13 @@ PROCESS_THREAD(run_tests, ev, data)
      !UNIT_TEST_PASSED(test_block1_offset_wrap_is_rejected) ||
      !UNIT_TEST_PASSED(test_block1_last_block_fills_buffer) ||
      !UNIT_TEST_PASSED(test_parse_rejects_malformed_block_options) ||
-     !UNIT_TEST_PASSED(test_block_setters_reject_2048)) {
+     !UNIT_TEST_PASSED(test_block_setters_reject_2048) ||
+     !UNIT_TEST_PASSED(test_block2_follows_server_size) ||
+     !UNIT_TEST_PASSED(test_block2_rejects_wrong_offset) ||
+     !UNIT_TEST_PASSED(test_block2_accepts_larger_block) ||
+     !UNIT_TEST_PASSED(test_block2_rejects_short_block) ||
+     !UNIT_TEST_PASSED(test_block2_without_option) ||
+     !UNIT_TEST_PASSED(test_block2_callback_api_follows_server)) {
     printf("=check-me= FAILED\n");
   } else {
     printf("=check-me= DONE\n");
