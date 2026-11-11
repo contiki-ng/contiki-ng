@@ -71,7 +71,7 @@ progress_request(coap_callback_request_state_t *callback_state) {
 
     if(state->block_num > 0) {
       coap_set_header_block2(request, state->block_num, 0,
-                             COAP_MAX_CHUNK_SIZE);
+                             COAP_MAX_BLOCK_SIZE);
     }
     state->transaction->message_len =
       coap_serialize_message(request, state->transaction->message);

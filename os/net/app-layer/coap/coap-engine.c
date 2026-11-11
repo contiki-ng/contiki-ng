@@ -201,6 +201,11 @@ coap_receive(const coap_endpoint_t *src,
           new_offset = block_offset;
         }
 
+        /*
+         * The parser limits a Block2 value to three bytes and the block
+         * size to 1024, so the offset is at most 0x3FFFFC00 and cannot be
+         * negative. The check is kept as a safety net.
+         */
         if(new_offset < 0) {
           LOG_DBG("Blockwise: block request offset overflow\n");
           coap_status_code = BAD_OPTION_4_02;
