@@ -41,6 +41,7 @@
 #include "coap-request-state.h"
 #include "coap-callback-api.h"
 #include "test-transport.h"
+#include "coap-separate.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -723,6 +724,124 @@ UNIT_TEST(test_block2_callback_api_follows_server)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+/* A blockwise resource whose byte at offset i is (i >> 4) & 0xFF. */
+#define CHUNKED_LEN 2048
+
+static void
+chunked_get_handler(coap_message_t *request, coap_message_t *response,
+                    uint8_t *buffer, uint16_t preferred_size,
+                    int32_t *offset)
+{
+  int32_t len = MIN(preferred_size, CHUNKED_LEN - *offset);
+  int32_t i;
+
+  for(i = 0; i < len; i++) {
+    buffer[i] = ((*offset + i) >> 4) & 0xFF;
+  }
+  coap_set_payload(response, buffer, len);
+  *offset += len;
+  if(*offset >= CHUNKED_LEN) {
+    *offset = -1;
+  }
+}
+
+RESOURCE(res_chunked, "", chunked_get_handler, NULL, NULL, NULL);
+/*---------------------------------------------------------------------------*/
+/*
+ * A server that sends smaller blocks than requested must number the
+ * block with its own size, so that the number still identifies the
+ * requested offset.
+ */
+#if COAP_MAX_BLOCK_SIZE >= 1024
+#error "test_block2_server_renumbers needs blocks smaller than 1024 bytes"
+#endif
+UNIT_TEST_REGISTER(test_block2_server_renumbers,
+                   "the server numbers a reduced block by its offset");
+UNIT_TEST(test_block2_server_renumbers)
+{
+  static uint8_t request_buf[COAP_MAX_PACKET_SIZE];
+  coap_message_t request;
+  coap_message_t response;
+  coap_endpoint_t ep;
+  size_t len;
+
+  UNIT_TEST_BEGIN();
+
+  memset(&ep, 0, sizeof(ep));
+  uip_ip6addr(&ep.ipaddr, 0xfd00, 0, 0, 0, 0, 0, 0, 1);
+  ep.port = UIP_HTONS(COAP_DEFAULT_PORT);
+
+  coap_init_message(&request, COAP_TYPE_CON, COAP_GET, 0x4321);
+  coap_set_header_uri_path(&request, "chunked");
+  UNIT_TEST_ASSERT(coap_set_header_block2(&request, 1, 0, 1024));
+  len = coap_serialize_message(&request, request_buf);
+  UNIT_TEST_ASSERT(len > 0);
+
+  test_transport_sent_len = 0;
+  coap_receive(&ep, request_buf, len);
+  UNIT_TEST_ASSERT(test_transport_sent_len > 0);
+
+  UNIT_TEST_ASSERT(coap_parse_message(&response, test_transport_sent,
+                                      test_transport_sent_len) == NO_ERROR);
+  UNIT_TEST_ASSERT(response.code == CONTENT_2_05);
+  UNIT_TEST_ASSERT(response.block2_size == COAP_MAX_BLOCK_SIZE);
+  UNIT_TEST_ASSERT(response.block2_num == 1024 / COAP_MAX_BLOCK_SIZE);
+  UNIT_TEST_ASSERT(response.block2_offset == 1024);
+  UNIT_TEST_ASSERT(response.block2_more == 1);
+  UNIT_TEST_ASSERT(response.payload_len == COAP_MAX_BLOCK_SIZE);
+  UNIT_TEST_ASSERT(response.payload[0] == (1024 >> 4));
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+/* A resource that defers its response and keeps the request's metadata. */
+static coap_separate_t separate_store;
+
+static void
+separate_get_handler(coap_message_t *request, coap_message_t *response,
+                     uint8_t *buffer, uint16_t preferred_size,
+                     int32_t *offset)
+{
+  coap_separate_accept(request, &separate_store);
+}
+
+RESOURCE(res_separate, "", separate_get_handler, NULL, NULL, NULL);
+/*---------------------------------------------------------------------------*/
+/*
+ * A separate response stores the block to send with the server's block
+ * size, so its number must be computed with that size too.
+ */
+UNIT_TEST_REGISTER(test_block2_separate_renumbers,
+                   "a separate response numbers a reduced block by offset");
+UNIT_TEST(test_block2_separate_renumbers)
+{
+  static uint8_t request_buf[COAP_MAX_PACKET_SIZE];
+  coap_message_t request;
+  coap_endpoint_t ep;
+  size_t len;
+
+  UNIT_TEST_BEGIN();
+
+  memset(&ep, 0, sizeof(ep));
+  uip_ip6addr(&ep.ipaddr, 0xfd00, 0, 0, 0, 0, 0, 0, 1);
+  ep.port = UIP_HTONS(COAP_DEFAULT_PORT);
+
+  coap_init_message(&request, COAP_TYPE_NON, COAP_GET, 0x4322);
+  coap_set_header_uri_path(&request, "separate");
+  UNIT_TEST_ASSERT(coap_set_header_block2(&request, 1, 0, 1024));
+  len = coap_serialize_message(&request, request_buf);
+  UNIT_TEST_ASSERT(len > 0);
+
+  memset(&separate_store, 0, sizeof(separate_store));
+  coap_receive(&ep, request_buf, len);
+
+  UNIT_TEST_ASSERT(separate_store.block2_size == COAP_MAX_BLOCK_SIZE);
+  UNIT_TEST_ASSERT(separate_store.block2_num ==
+                   1024 / COAP_MAX_BLOCK_SIZE);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(run_tests, ev, data)
 {
   PROCESS_BEGIN();
@@ -730,6 +849,8 @@ PROCESS_THREAD(run_tests, ev, data)
   printf("\nRunning CoAP unit tests\n");
 
   coap_engine_init();
+  coap_activate_resource(&res_chunked, "chunked");
+  coap_activate_resource(&res_separate, "separate");
 
   UNIT_TEST_RUN(test_parse_payload_keeps_canary);
   UNIT_TEST_RUN(test_parse_oversized_payload_is_truncated);
@@ -745,6 +866,8 @@ PROCESS_THREAD(run_tests, ev, data)
   UNIT_TEST_RUN(test_block2_rejects_short_block);
   UNIT_TEST_RUN(test_block2_without_option);
   UNIT_TEST_RUN(test_block2_callback_api_follows_server);
+  UNIT_TEST_RUN(test_block2_server_renumbers);
+  UNIT_TEST_RUN(test_block2_separate_renumbers);
 
   if(!UNIT_TEST_PASSED(test_parse_payload_keeps_canary) ||
      !UNIT_TEST_PASSED(test_parse_oversized_payload_is_truncated) ||
@@ -759,7 +882,9 @@ PROCESS_THREAD(run_tests, ev, data)
      !UNIT_TEST_PASSED(test_block2_accepts_larger_block) ||
      !UNIT_TEST_PASSED(test_block2_rejects_short_block) ||
      !UNIT_TEST_PASSED(test_block2_without_option) ||
-     !UNIT_TEST_PASSED(test_block2_callback_api_follows_server)) {
+     !UNIT_TEST_PASSED(test_block2_callback_api_follows_server) ||
+     !UNIT_TEST_PASSED(test_block2_server_renumbers) ||
+     !UNIT_TEST_PASSED(test_block2_separate_renumbers)) {
     printf("=check-me= FAILED\n");
   } else {
     printf("=check-me= DONE\n");
