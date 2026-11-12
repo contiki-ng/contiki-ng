@@ -14,5 +14,7 @@ packet-injector/native:./01-test-uip.sh \
 packet-injector/native:./02-test-sicslowpan.sh \
 packet-injector/native:./03-test-ble-l2cap.sh \
 packet-injector/native:./04-test-tcpip.sh \
+packet-injector/native:./05-test-rpl.sh \
+packet-injector/native:./05-test-rpl.sh:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 
 include ../Makefile.compile-test
