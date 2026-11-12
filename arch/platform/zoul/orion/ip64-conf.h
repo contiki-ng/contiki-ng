@@ -40,5 +40,10 @@
 #define IP64_CONF_INPUT                  ip64_eth_interface_input
 #include "enc28j60-ip64-driver.h"
 #define IP64_CONF_ETH_DRIVER             enc28j60_ip64_driver
+/*
+ * The packet held during ARP resolution costs a uip_buf_t of RAM, more
+ * than the CC2538 has to spare in the ip64-router example.
+ */
+#define IP64_ETH_INTERFACE_CONF_ARP_QUEUE 0
 /*---------------------------------------------------------------------------*/
 #endif /* IP64_CONF_H */

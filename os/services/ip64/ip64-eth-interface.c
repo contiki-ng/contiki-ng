@@ -32,6 +32,7 @@
 #include "net/ipv6/uip.h"
 #include "net/ipv6/uip-ds6.h"
 #include "dev/slip.h"
+#include "sys/clock.h"
 
 #include "ip64/ip64.h"
 #include "ip64/ip64-arp.h"
@@ -46,6 +47,64 @@
 #define LOG_LEVEL   LOG_LEVEL_IP64
 
 /*---------------------------------------------------------------------------*/
+/*
+ * Hold one outgoing IPv4 packet while its next hop is being resolved.
+ * Without this, the packet that triggers an ARP request is overwritten by
+ * that request and lost, so the first packet to every new neighbour, and
+ * the first after an ARP entry ages out, is dropped. A newer packet
+ * replaces the held one, and a held packet older than ARP_QUEUE_TIMEOUT is
+ * dropped rather than sent late. The queue costs one uip_buf_t of RAM;
+ * set IP64_ETH_INTERFACE_CONF_ARP_QUEUE to 0 to save it.
+ */
+#ifdef IP64_ETH_INTERFACE_CONF_ARP_QUEUE
+#define ARP_QUEUE IP64_ETH_INTERFACE_CONF_ARP_QUEUE
+#else
+#define ARP_QUEUE 1
+#endif
+
+#if ARP_QUEUE
+#define ARP_QUEUE_TIMEOUT (3 * CLOCK_SECOND)
+
+static uip_buf_t arp_queue_buf;
+static uint16_t arp_queue_len;
+static clock_time_t arp_queue_time;
+/*---------------------------------------------------------------------------*/
+static void
+arp_queue_put(uint16_t len)
+{
+  if(arp_queue_len > 0) {
+    LOG_DBG("ARP queue: replacing a held packet\n");
+  }
+  memcpy(arp_queue_buf.u8, ip64_packet_buffer, len);
+  arp_queue_len = len;
+  arp_queue_time = clock_time();
+}
+/*---------------------------------------------------------------------------*/
+static void
+arp_queue_flush(void)
+{
+  int ret;
+
+  if(arp_queue_len == 0) {
+    return;
+  }
+
+  if(clock_time() - arp_queue_time > ARP_QUEUE_TIMEOUT) {
+    LOG_DBG("ARP queue: held packet timed out\n");
+    arp_queue_len = 0;
+    return;
+  }
+
+  ret = ip64_arp_create_ethhdr(arp_queue_buf.u8,
+                               &arp_queue_buf.u8[sizeof(struct ip64_eth_hdr)]);
+  if(ret > 0) {
+    LOG_DBG("ARP queue: next hop resolved, sending held packet\n");
+    IP64_ETH_DRIVER.output(arp_queue_buf.u8, arp_queue_len);
+    arp_queue_len = 0;
+  }
+}
+#endif /* ARP_QUEUE */
+/*---------------------------------------------------------------------------*/
 void
 ip64_eth_interface_input(uint8_t *packet, uint16_t len)
 {
@@ -58,6 +117,13 @@ ip64_eth_interface_input(uint8_t *packet, uint16_t len)
     if(len > 0) {
       IP64_ETH_DRIVER.output(packet, len);
     }
+#if ARP_QUEUE
+    /*
+     * Both an ARP reply and an ARP request addressed to us add the sender
+     * to the ARP table, so either may resolve the held packet's next hop.
+     */
+    arp_queue_flush();
+#endif /* ARP_QUEUE */
   } else if(ethhdr->type == UIP_HTONS(IP64_ETH_TYPE_IP) &&
 	    len > sizeof(struct ip64_eth_hdr)) {
     LOG_DBG("-------------->\n");
@@ -83,6 +149,7 @@ static void
 init(void)
 {
   LOG_INFO("ip64-eth-interface: init\n");
+  ip64_arp_init();
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -111,6 +178,9 @@ output(void)
 	IP64_ETH_DRIVER.output(ip64_packet_buffer, len);
       }
     } else {
+#if ARP_QUEUE
+      arp_queue_put(len + sizeof(struct ip64_eth_hdr));
+#endif /* ARP_QUEUE */
       LOG_DBG("Create request\n");
       len = ip64_arp_create_arp_request(ip64_packet_buffer,
 					&ip64_packet_buffer[sizeof(struct ip64_eth_hdr)]);
