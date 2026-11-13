@@ -344,6 +344,17 @@
 #endif
 
 /**
+ * The maximum number of challenge ACKs that uIP sends per second, for
+ * all connections together, in answer to RST segments that are in the
+ * receive window but not at its start (RFC 5961).
+ */
+#ifdef UIP_CONF_TCP_CHALLENGE_ACK_LIMIT
+#define UIP_TCP_CHALLENGE_ACK_LIMIT (UIP_CONF_TCP_CHALLENGE_ACK_LIMIT)
+#else
+#define UIP_TCP_CHALLENGE_ACK_LIMIT 10
+#endif
+
+/**
  * How long a connection should stay in the TIME_WAIT state.
  *
  * This can be reduced for faster entry into power saving modes.
