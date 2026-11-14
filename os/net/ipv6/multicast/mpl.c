@@ -495,7 +495,8 @@ buffer_reclaim(void)
   /* Reclaim the message with min_seq in the largest seed set */
   largest = NULL;
   reclaim = NULL;
-  for(ssptr = &seed_set[MPL_SEED_SET_SIZE]; ssptr >= seed_set; ssptr--) {
+  for(size_t i = MPL_SEED_SET_SIZE; i > 0; i--) {
+    ssptr = &seed_set[i - 1];
     if(SEED_SET_IS_USED(ssptr) && (largest == NULL || ssptr->count > largest->count)) {
       largest = ssptr;
     }
@@ -618,7 +619,8 @@ domain_set_free(struct mpl_domain *domain)
 {
   uip_ds6_maddr_t *addr;
   /* Must include freeing seeds otherwise we leak memory */
-  for(locssptr = &seed_set[MPL_SEED_SET_SIZE]; locssptr >= seed_set; locssptr--) {
+  for(size_t i = MPL_SEED_SET_SIZE; i > 0; i--) {
+    locssptr = &seed_set[i - 1];
     if(SEED_SET_IS_USED(locssptr) && locssptr->domain == domain) {
       seed_set_free(locssptr);
     }
