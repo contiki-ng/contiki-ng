@@ -59,12 +59,15 @@ LIST(observers_list);
 /*---------------------------------------------------------------------------*/
 /*- Internal API ------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+static int remove_observer_by_uri(const coap_endpoint_t *endpoint,
+                                   const char *uri, size_t uri_len);
+/*---------------------------------------------------------------------------*/
 static coap_observer_t *
 add_observer(const coap_endpoint_t *endpoint, const uint8_t *token,
              size_t token_len, const char *uri, int uri_len)
 {
   /* Remove existing observe relationship, if any. */
-  coap_remove_observer_by_uri(endpoint, uri);
+  remove_observer_by_uri(endpoint, uri, uri_len);
 
   coap_observer_t *o = memb_alloc(&observers_memb);
 
@@ -140,24 +143,34 @@ coap_remove_observer_by_token(const coap_endpoint_t *endpoint,
   return removed;
 }
 /*---------------------------------------------------------------------------*/
-int
-coap_remove_observer_by_uri(const coap_endpoint_t *endpoint,
-                            const char *uri)
+static int
+remove_observer_by_uri(const coap_endpoint_t *endpoint,
+                       const char *uri, size_t uri_len)
 {
   int removed = 0;
   coap_observer_t *obs = NULL;
 
   for(obs = (coap_observer_t *)list_head(observers_list); obs;
       obs = obs->next) {
+    size_t obs_len = strlen(obs->url);
+
     LOG_DBG("Remove check URL %p\n", uri);
     if((endpoint == NULL
         || (coap_endpoint_cmp(&obs->endpoint, endpoint)))
-       && (obs->url == uri || memcmp(obs->url, uri, strlen(obs->url)) == 0)) {
+       && obs_len <= uri_len
+       && (obs_len == 0 || memcmp(obs->url, uri, obs_len) == 0)) {
       coap_remove_observer(obs);
       removed++;
     }
   }
   return removed;
+}
+/*---------------------------------------------------------------------------*/
+int
+coap_remove_observer_by_uri(const coap_endpoint_t *endpoint,
+                            const char *uri)
+{
+  return remove_observer_by_uri(endpoint, uri, strlen(uri));
 }
 /*---------------------------------------------------------------------------*/
 int
