@@ -12,6 +12,12 @@
 #define CONTIKI_CONF_H
 
 #include <stdint.h>
+/*
+ * A newlib header first: where GCC's stdint.h shadows newlib's (e.g.
+ * Debian's gcc-arm-none-eabi), <inttypes.h> alone does not define the
+ * 64-bit format macros such as PRIx64.
+ */
+#include <sys/types.h>
 #include <inttypes.h>
 
 /* Project-specific overrides */
