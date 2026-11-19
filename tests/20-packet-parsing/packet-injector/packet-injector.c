@@ -52,6 +52,7 @@
 #include <net/ipv6/uiplib.h>
 #include <net/mac/ble/ble-l2cap.h>
 #include <net/netstack.h>
+#include <net/routing/routing.h>
 #include <net/packetbuf.h>
 #include <net/ipv6/sicslowpan.h>
 #include <net/app-layer/coap/coap.h>
@@ -150,6 +151,23 @@ inject_uip_packet(char *data, int len)
 }
 /*---------------------------------------------------------------------------*/
 static bool
+inject_rpl_packet(char *data, int len)
+{
+  static bool root_started;
+
+  /* RPL control messages are only processed by a node in a DODAG. */
+  if(!root_started) {
+    if(NETSTACK_ROUTING.root_start() < 0) {
+      LOG_ERR("Unable to start as a DODAG root\n");
+      return false;
+    }
+    root_started = true;
+  }
+
+  return inject_uip_packet(data, len);
+}
+/*---------------------------------------------------------------------------*/
+static bool
 inject_ble_l2cap_packet(char *data, int len)
 {
   packetbuf_copyfrom(data, len);
@@ -183,6 +201,7 @@ select_protocol(const char *protocol_name)
   struct proto_mapper map[] = {
     {"coap", inject_coap_packet},
     {"ble-l2cap", inject_ble_l2cap_packet},
+    {"rpl", inject_rpl_packet},
     {"sicslowpan", inject_sicslowpan_packet},
     {"tcpip", inject_tcpip_packet},
     {"uip", inject_uip_packet}

@@ -1699,6 +1699,15 @@ uip_process(uint8_t flag)
   }
 #endif /*UIP_CONF_IPV6_CHECKS*/
 
+  /*
+   * ICMPv6 handlers may build a reply or forward the message from
+   * uip_buf with uip_icmp6_send(), which assumes that the ICMPv6 header
+   * directly follows the IPv6 header.
+   */
+  if(!uip_remove_ext_hdr()) {
+    goto drop;
+  }
+
   UIP_STAT(++uip_stat.icmp.recv);
   /*
    * Here we process incoming ICMPv6 packets
