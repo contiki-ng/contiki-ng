@@ -47,6 +47,12 @@
 #define DEBUG DEBUG_PRINT
 #include "net/ipv6/uip-debug.h"
 
+/* Node 1 becomes RPL root and TSCH coordinator. On by default on the
+ * simulation targets; set to 1 to do the same on other targets. */
+#ifndef SIMPLE_NODE_CONF_NODE_1_IS_ROOT
+#define SIMPLE_NODE_CONF_NODE_1_IS_ROOT (CONTIKI_TARGET_COOJA || CONTIKI_TARGET_Z1)
+#endif
+
 /*---------------------------------------------------------------------------*/
 PROCESS(node_process, "RPL Node");
 AUTOSTART_PROCESSES(&node_process);
@@ -55,7 +61,7 @@ AUTOSTART_PROCESSES(&node_process);
 PROCESS_THREAD(node_process, ev, data)
 {
   PROCESS_BEGIN();
-#if CONTIKI_TARGET_COOJA || CONTIKI_TARGET_Z1
+#if SIMPLE_NODE_CONF_NODE_1_IS_ROOT
   if(node_id == 1) { /* Coordinator node. */
     NETSTACK_ROUTING.root_start();
   }
