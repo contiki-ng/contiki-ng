@@ -106,10 +106,25 @@ input_packet(void)
 
 #if CSMA_SEND_SOFT_ACK
     if(packetbuf_attr(PACKETBUF_ATTR_MAC_ACK)) {
+      radio_value_t tx_mode;
+      int cca_off;
+
       ackdata[0] = FRAME802154_ACKFRAME;
       ackdata[1] = 0;
       ackdata[2] = ((uint8_t *)packetbuf_hdrptr())[2];
+
+      /*
+       * An ACK is sent without CCA. A CCA first would delay the ACK past
+       * the sender's CSMA_ACK_WAIT_TIME.
+       */
+      cca_off = NETSTACK_RADIO.get_value(RADIO_PARAM_TX_MODE, &tx_mode) == RADIO_RESULT_OK &&
+        (tx_mode & RADIO_TX_MODE_SEND_ON_CCA) &&
+        NETSTACK_RADIO.set_value(RADIO_PARAM_TX_MODE,
+                                 tx_mode & ~RADIO_TX_MODE_SEND_ON_CCA) == RADIO_RESULT_OK;
       NETSTACK_RADIO.send(ackdata, CSMA_ACK_LEN);
+      if(cca_off) {
+        NETSTACK_RADIO.set_value(RADIO_PARAM_TX_MODE, tx_mode);
+      }
     }
 #endif /* CSMA_SEND_SOFT_ACK */
     if(!duplicate) {
