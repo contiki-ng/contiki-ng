@@ -156,6 +156,7 @@ mqtt-client/simplelink:BOARD=sensortag/cc2650:DEFINES=BOARD_CONF_SENSORS_DISABLE
 mqtt-client/zoul:BOARD=firefly:DEFINES=MQTT_CONF_VERSION=5 \
 multicast/zoul \
 nullnet/zoul \
+nullnet/nrf:BOARD=nrf54l15/dk \
 platform-specific/cc2538-common/cc2538dk \
 platform-specific/cc2538-common/crypto/zoul \
 platform-specific/cc26x0-cc13x0/cc26x0-web-demo/cc26x0-cc13x0:BOARD=sensortag/cc2650 \
