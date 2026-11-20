@@ -59,18 +59,18 @@ static uint8_t buffer[COAP_MAX_PACKET_SIZE + 64];
 static uint16_t payload_start;
 
 /*
- * Builds a minimal CoAP POST request carrying payload_len payload bytes,
- * and places a canary directly after the message. Returns the message
- * length.
+ * Builds a minimal CoAP message with the given code, carrying payload_len
+ * payload bytes, and places a canary directly after it. Returns the
+ * message length.
  */
 static uint16_t
-build_message(size_t payload_len)
+build_coded_message(uint8_t code, size_t payload_len)
 {
   uint16_t len = 0;
   size_t i;
 
   buffer[len++] = (1 << 6);          /* Version 1, type CON, token length 0. */
-  buffer[len++] = COAP_POST;         /* Code. */
+  buffer[len++] = code;
   buffer[len++] = 0x12;              /* Message ID, high byte. */
   buffer[len++] = 0x34;              /* Message ID, low byte. */
   buffer[len++] = 0xFF;              /* Payload marker. */
@@ -195,6 +195,12 @@ run_block1(uint32_t block1, size_t payload_len, size_t *assembled_len)
   return call_block1_handler(&request, assembled_len);
 }
 /*---------------------------------------------------------------------------*/
+static uint16_t
+build_message(size_t payload_len)
+{
+  return build_coded_message(COAP_POST, payload_len);
+}
+/*---------------------------------------------------------------------------*/
 /* The parser must report the payload without writing past the message. */
 UNIT_TEST_REGISTER(test_parse_payload_keeps_canary,
                    "coap_parse_message() does not write past the message");
@@ -215,26 +221,39 @@ UNIT_TEST(test_parse_payload_keeps_canary)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
-/* An oversized payload is truncated, and the message is left intact. */
-UNIT_TEST_REGISTER(test_parse_oversized_payload_is_truncated,
-                   "an oversized payload is truncated without being modified");
-UNIT_TEST(test_parse_oversized_payload_is_truncated)
+/* An oversized payload is rejected rather than truncated. */
+UNIT_TEST_REGISTER(test_parse_oversized_payload_is_rejected,
+                   "an oversized payload is rejected rather than truncated");
+UNIT_TEST(test_parse_oversized_payload_is_rejected)
 {
   coap_message_t message;
   uint16_t len;
-  uint8_t after_truncation;
 
   UNIT_TEST_BEGIN();
 
   len = build_message(COAP_MAX_CHUNK_SIZE + 8);
-  /* Kept before parsing, since the parser is given this very buffer. */
-  after_truncation = buffer[payload_start + COAP_MAX_CHUNK_SIZE];
+
+  UNIT_TEST_ASSERT(coap_parse_message(&message, buffer, len) ==
+                   REQUEST_ENTITY_TOO_LARGE_4_13);
+  UNIT_TEST_ASSERT(buffer[len] == CANARY);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+/* An oversized response is truncated rather than refused. */
+UNIT_TEST_REGISTER(test_parse_oversized_response_is_truncated,
+                   "an oversized response is truncated rather than refused");
+UNIT_TEST(test_parse_oversized_response_is_truncated)
+{
+  coap_message_t message;
+  uint16_t len;
+
+  UNIT_TEST_BEGIN();
+
+  len = build_coded_message(CONTENT_2_05, COAP_MAX_CHUNK_SIZE + 8);
 
   UNIT_TEST_ASSERT(coap_parse_message(&message, buffer, len) == NO_ERROR);
   UNIT_TEST_ASSERT(message.payload_len == COAP_MAX_CHUNK_SIZE);
-  /* The byte after the truncation point belongs to the message, and used
-     to be overwritten with a null terminator. */
-  UNIT_TEST_ASSERT(message.payload[COAP_MAX_CHUNK_SIZE] == after_truncation);
   UNIT_TEST_ASSERT(buffer[len] == CANARY);
 
   UNIT_TEST_END();
@@ -424,7 +443,8 @@ PROCESS_THREAD(run_tests, ev, data)
   printf("\nRunning CoAP parser unit tests\n");
 
   UNIT_TEST_RUN(test_parse_payload_keeps_canary);
-  UNIT_TEST_RUN(test_parse_oversized_payload_is_truncated);
+  UNIT_TEST_RUN(test_parse_oversized_payload_is_rejected);
+  UNIT_TEST_RUN(test_parse_oversized_response_is_truncated);
   UNIT_TEST_RUN(test_parse_payload_with_null_bytes);
   UNIT_TEST_RUN(test_parse_rejects_empty_payload);
   UNIT_TEST_RUN(test_block1_offset_wrap_is_rejected);
@@ -433,7 +453,8 @@ PROCESS_THREAD(run_tests, ev, data)
   UNIT_TEST_RUN(test_block_setters_reject_2048);
 
   if(!UNIT_TEST_PASSED(test_parse_payload_keeps_canary) ||
-     !UNIT_TEST_PASSED(test_parse_oversized_payload_is_truncated) ||
+     !UNIT_TEST_PASSED(test_parse_oversized_payload_is_rejected) ||
+     !UNIT_TEST_PASSED(test_parse_oversized_response_is_truncated) ||
      !UNIT_TEST_PASSED(test_parse_payload_with_null_bytes) ||
      !UNIT_TEST_PASSED(test_parse_rejects_empty_payload) ||
      !UNIT_TEST_PASSED(test_block1_offset_wrap_is_rejected) ||
