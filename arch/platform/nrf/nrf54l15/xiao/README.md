@@ -188,13 +188,8 @@ These automatically select the correct GPIOTE instance based on the pin's port.
 
 The 802.15.4 radio is driven by Nordic's `nrf_802154` library (pulled in as the
 `sdk-nrfxlib` submodule). The Contiki-NG wrapper is in
-`arch/cpu/nrf/nrf54l15/nrf-ieee-driver-nrf54l15.c`. IPv6 and CSMA are enabled by
-default in `nrf54l15-conf.h`:
-
-```c
-#define NETSTACK_CONF_WITH_IPV6 1
-#define QUEUEBUF_CONF_NUM 4
-```
+`arch/cpu/nrf/nrf54l15/nrf-ieee-driver-nrf54l15.c`. The network stack is chosen
+with `MAKE_NET` as on other platforms (IPv6 by default).
 
 ## Troubleshooting
 
