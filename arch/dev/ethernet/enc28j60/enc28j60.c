@@ -129,8 +129,6 @@ PROCESS(enc_watchdog_process, "Enc28j60 watchdog");
 static uint8_t initialized = 0;
 static uint8_t bank = ERXTX_BANK;
 static uint8_t enc_mac_addr[6];
-static int received_packets = 0;
-static int sent_packets = 0;
 
 /*---------------------------------------------------------------------------*/
 static uint8_t
@@ -575,8 +573,6 @@ enc28j60_send(const uint8_t *data, uint16_t datalen)
   }
 #endif
 
-  sent_packets++;
-  PRINTF("enc28j60: sent_packets %d\n", sent_packets);
   return datalen;
 }
 /*---------------------------------------------------------------------------*/
@@ -624,6 +620,21 @@ enc28j60_read(uint8_t *buffer, uint16_t bufsize)
   PRINTF("enc28j60: status 0x%02x%02x\n", status[1], status[0]);
 
   len = (length[1] << 8) + length[0];
+  next = (nxtpkt[1] << 8) + nxtpkt[0];
+
+  /*
+   * The hardware stores each packet at an even address inside the receive
+   * buffer, and no packet is larger than the buffer. A header that breaks
+   * either rule means the packet chain is corrupt: following it would
+   * misread every packet after it, so start over with an empty buffer.
+   */
+  if(next > RX_BUF_END || (next & 1) != 0 ||
+     len > RX_BUF_END - RX_BUF_START + 1) {
+    PRINTF("enc28j60: corrupt rx header (next 0x%04x, len %d)\n", next, len);
+    reset();
+    return 0;
+  }
+
   if(bufsize >= len) {
     readdata(buffer, len);
   } else {
@@ -643,7 +654,6 @@ enc28j60_read(uint8_t *buffer, uint16_t bufsize)
   }
 
   /* Errata #14 */
-  next = (nxtpkt[1] << 8) + nxtpkt[0];
   if(next == RX_BUF_START) {
     next = RX_BUF_END;
   } else {
@@ -662,9 +672,33 @@ enc28j60_read(uint8_t *buffer, uint16_t bufsize)
          0xff & buffer[0], 0xff & buffer[1], 0xff & buffer[2],
          0xff & buffer[3], 0xff & buffer[4], 0xff & buffer[5]);
 
-  received_packets++;
-  PRINTF("enc28j60: received_packets %d\n", received_packets);
   return len;
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * Whether the chip has lost the configuration that reset() programmed, as
+ * it does when it resets or its supply dips, after which it no longer
+ * receives. Its receive buffer end pointer then reads the power-on value
+ * instead of RX_BUF_END, and reception is disabled. A chip that does not
+ * report a stable clock is not responding, and resetting it would wait
+ * for the clock forever, so it is left for the next check.
+ */
+static int
+config_lost(void)
+{
+  uint16_t erxnd;
+
+  if((readreg(ESTAT) & ESTAT_CLKRDY) == 0) {
+    return 0;
+  }
+
+  if((readreg(ECON1) & ECON1_RXEN) == 0) {
+    return 1;
+  }
+
+  setregbank(ERXTX_BANK);
+  erxnd = (readreg(ERXNDH) << 8) | readreg(ERXNDL);
+  return erxnd != RX_BUF_END;
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(enc_watchdog_process, ev, data)
@@ -674,17 +708,14 @@ PROCESS_THREAD(enc_watchdog_process, ev, data)
   PROCESS_BEGIN();
 
   while(1) {
-#define RESET_PERIOD (30 * CLOCK_SECOND)
-    etimer_set(&et, RESET_PERIOD);
+#define CHECK_PERIOD (5 * CLOCK_SECOND)
+    etimer_set(&et, CHECK_PERIOD);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
 
-    PRINTF("enc28j60: test received_packet %d > sent_packets %d\n", received_packets, sent_packets);
-    if(received_packets <= sent_packets) {
-      PRINTF("enc28j60: resetting chip\n");
+    if(config_lost()) {
+      PRINTF("enc28j60: configuration lost, resetting chip\n");
       reset();
     }
-    received_packets = 0;
-    sent_packets = 0;
   }
 
   PROCESS_END();

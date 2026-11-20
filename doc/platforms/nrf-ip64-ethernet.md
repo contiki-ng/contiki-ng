@@ -177,6 +177,13 @@ with ground returns, or moving MOSI/MISO off the debugger's pins with
 `BUTTON_HAL_CONF_ENABLED 0`, raise the ceiling. Throughput is bounded by the
 driver's 1-tick receive poll anyway.
 
+**IPv4 datagrams larger than the IPv6 minimum MTU are dropped.** ip64
+translates each IPv4 packet into a single IPv6 packet in uIP's 1280-byte
+buffer, so a UDP datagram from the Ethernet side carries at most 1232 bytes of
+payload. Larger datagrams, and IPv4 fragments, which ip64 does not reassemble,
+are discarded without an ICMP error. TCP is not affected: a node advertises a
+maximum segment size that keeps every segment within the limit.
+
 **RPL join takes about a minute.** A node printing "waiting to join" for 40
 seconds has not failed.
 
