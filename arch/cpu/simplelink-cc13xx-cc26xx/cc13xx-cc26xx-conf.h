@@ -494,6 +494,32 @@
 #endif /* SLIP_ARCH_CONF_ENABLED */
 /** @} */
 /*---------------------------------------------------------------------------*/
+/**
+ * \name Security configuration
+ *
+ * @{
+ */
+
+#define CC_CRYPTO_CONF_HAS_SHA_512 1
+
+#ifndef CC_CRYPTO_CONF_ENABLED
+#define CC_CRYPTO_CONF_ENABLED 1
+#endif
+
+#ifndef AES_128_CONF
+#define AES_128_CONF cc_aes_128_driver
+#endif
+
+#ifndef CCM_STAR_CONF
+#define CCM_STAR_CONF cc_ccm_star_driver
+#endif
+
+#ifndef SHA_256_CONF
+#define SHA_256_CONF cc_sha_256_driver
+#endif
+
+/** @} */
+/*---------------------------------------------------------------------------*/
 #endif /* CC13XX_CC26XX_CONF_H_ */
 /*---------------------------------------------------------------------------*/
 /** @} */
