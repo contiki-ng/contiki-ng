@@ -409,13 +409,19 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
 #ifdef HAVE_DOUBLE
     case 'f':
     case 'F':
+      flags |= CONV_FLOAT | FLOAT_NORMAL;
+      break;
     case 'e':
     case 'E':
+      flags |= CONV_FLOAT | FLOAT_EXPONENT;
+      break;
     case 'g':
     case 'G':
+      flags |= CONV_FLOAT | FLOAT_DEPENDANT;
+      break;
     case 'a':
     case 'A':
-      flags |= CONV_FLOAT;
+      flags |= CONV_FLOAT | FLOAT_HEX;
       break;
 #endif
     case 'c':
@@ -697,9 +703,152 @@ format_str_v(const strformat_context_t *ctxt, const char *format, va_list ap)
       break;
 #ifdef HAVE_DOUBLE
     case CONV_FLOAT:
+#if DBG_IO_FLOAT
+#pragma message("Using imprecise float formatting, use with care")
+    if((flags & FLOAT_MASK) == FLOAT_NORMAL) /* Only decimal floating point supported */
+    {
+      /* The method is lightweight using minimal stack, but naive and
+       * precision gets lost on the way due to floating point arithmetic
+       * It also does not implement the banker's rounding normally used by 
+       * standard printf (round to even instead of round to nearest). E.g.
+       *  printf("%.0f", 2.5) gives 2 using standard printf, 3 here.
+       * 
+       * - For best precision, use libc's routines. 
+       * - For light-weight, on target printing, this will work fine
+       */
+      const char *prefix = 0; /* to store the prefix: '-','+' or ' '*/
+      unsigned int prefix_len = 0; /* prefix length */
+      unsigned int width; /* print width */
+      bool print_dot = 0; /* whether '.' should be printed or not */
+      double to_add = 0.5; /* for rounding */
+      char c;
+      double power = 10.0;
+      double ftemp;
+      double scale = 1.0;
+      int num_int_digits = 1; /* number of digits, integer part */
+      int digit;
+
+      /* read argument */
+      double fvalue = va_arg(ap, double);
+
+      /* precision and rounding */
+      if (precision < 0) {
+        precision = 6; /* default decimal precision */
+      }
+      width = precision;
+      
+      /* Round to nearest: add/subtract 0.5 / 10^precision before integer extraction */
+      for(int i = 0; i < precision; i++) {
+        to_add /= 10;
+      }
+      fvalue += (fvalue >= 0 ? to_add : -to_add);
+
+      /* prefix and integer part */
+      if(fvalue < 0) {
+        prefix = "-";
+        prefix_len = 1;
+        fvalue = -fvalue;
+      } else {
+        switch(flags & POSITIVE_MASK) {
+        case POSITIVE_SPACE:
+          prefix = " ";
+          prefix_len = 1;
+          break;
+        case POSITIVE_PLUS:
+          prefix = "+";
+          prefix_len = 1;
+          break;
+        }
+      }
+      width += prefix_len;
+
+      /* Count integer digits */
+      ftemp = fvalue;
+      while(ftemp >= 10.0) {
+        ftemp /= 10.0;
+        num_int_digits++;
+      }
+
+      width += num_int_digits;
+
+      /* '.' only if decimal part needed */
+      if (precision > 0) {
+        width += 1;
+        print_dot = true;
+      }
+
+      /* left padding */
+      if(minwidth > width) {
+        if(flags & PAD_ZERO) {
+          /* Sign before padding 0's */
+          CHECKCB(ctxt->write_str(ctxt->user_data, prefix, prefix_len));
+          written += prefix_len;
+          prefix_len = 0;
+        }
+        if((flags & JUSTIFY_MASK) == JUSTIFY_RIGHT) {
+          /* output pad char to the left */
+          if(flags & PAD_ZERO) {
+            fill_zero(ctxt, minwidth - width);
+          } else {
+            fill_space(ctxt, minwidth - width);
+          }
+          written += minwidth - width;
+        }
+      }
+
+      /* write the prefix */
+      if(prefix_len) {
+        CHECKCB(ctxt->write_str(ctxt->user_data, prefix, prefix_len));
+        written += prefix_len;
+      }
+      /* integer part */
+      /* Extract digits from most to least significant */
+      for(int i = 0; i < num_int_digits - 1; i++) {
+        scale *= 10.0;
+      }
+      ftemp = fvalue;
+      for(int i = 0; i < num_int_digits; i++) {
+        digit = (int)(ftemp / scale);
+        c = digit + '0';
+        CHECKCB(ctxt->write_str(ctxt->user_data, &c, 1));
+        written++;
+        ftemp -= digit * scale;
+        scale /= 10.0;
+      }
+      /* '.' only if decimal part needed */
+      if (print_dot) {
+        CHECKCB(ctxt->write_str(ctxt->user_data, ".", 1));
+        written++;
+      }
+      /* write the decimal part */
+      if(precision > 0) {
+        for(int i = 0; i < precision; i++) {
+          c = (LARGEST_UNSIGNED)(ftemp * power) % 10 + '0';
+          CHECKCB(ctxt->write_str(ctxt->user_data, &c, 1));
+          power *= 10.0;
+        }
+        written += precision;
+      }
+
+      /* right padding */
+      if(minwidth > width) {
+        if((flags & JUSTIFY_MASK) == JUSTIFY_LEFT) {
+          if(flags & PAD_ZERO) {
+            fill_zero(ctxt, minwidth - width);
+          } else {
+            fill_space(ctxt, minwidth - width);
+          }
+          written += minwidth - width;
+        }
+      }
+    } else {
+      (void)va_arg(ap, double);
+    }
+#else /* DBG_IO_FLOAT */
       /* Float formatting is not implemented, but consume the argument
          to keep the va_list aligned for subsequent arguments. */
       (void)va_arg(ap, double);
+#endif /* DBG_IO_FLOAT */
       break;
 #endif
     }
