@@ -197,7 +197,14 @@ coap_receive(const coap_endpoint_t *src,
            (message, &block_num, NULL, &block_size, &block_offset)) {
           LOG_DBG("Blockwise: block request %"PRIu32" (%u/%u) @ %"PRIu32" bytes\n",
                   block_num, block_size, COAP_MAX_BLOCK_SIZE, block_offset);
+          /*
+           * When the block size is reduced, the block number must be
+           * computed with the new size so that it still identifies the
+           * requested offset (RFC 7959, Section 2.4). Both sizes are
+           * powers of two, so the offset is a multiple of the new size.
+           */
           block_size = MIN(block_size, COAP_MAX_BLOCK_SIZE);
+          block_num = block_offset / block_size;
           new_offset = block_offset;
         }
 

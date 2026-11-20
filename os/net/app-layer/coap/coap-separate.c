@@ -127,8 +127,13 @@ coap_separate_accept(coap_message_t *coap_req, coap_separate_t *separate_store)
     separate_store->block1_num = coap_req->block1_num;
     separate_store->block1_size = coap_req->block1_size;
 
-    separate_store->block2_num = coap_req->block2_num;
+    /*
+     * Number the block with the possibly reduced size, so that it still
+     * identifies the requested offset (RFC 7959, Section 2.4).
+     */
     separate_store->block2_size = coap_req->block2_size > 0 ? MIN(COAP_MAX_BLOCK_SIZE, coap_req->block2_size) : COAP_MAX_BLOCK_SIZE;
+    separate_store->block2_num = coap_req->block2_offset /
+      separate_store->block2_size;
 
     /* signal the engine to skip automatic response and clear transaction by engine */
     coap_status_code = MANUAL_RESPONSE;

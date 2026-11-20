@@ -71,7 +71,7 @@ progress_request(coap_callback_request_state_t *callback_state) {
 
     if(state->block_num > 0) {
       coap_set_header_block2(request, state->block_num, 0,
-                             COAP_MAX_BLOCK_SIZE);
+                             state->block_size);
     }
     state->transaction->message_len =
       coap_serialize_message(request, state->transaction->message);
@@ -103,7 +103,7 @@ coap_request_callback(void *callback_data, coap_message_t *response)
   }
 
   /* Got a response */
-  coap_get_header_block2(state->response, &state->res_block, &state->more, NULL, NULL);
+  bool next_block = coap_request_state_next_block2(state, state->response);
   uint32_t res_block1 = 0;
   coap_get_header_block1(state->response, &res_block1, NULL, NULL, NULL);
 
@@ -112,7 +112,7 @@ coap_request_callback(void *callback_data, coap_message_t *response)
           (unsigned long)res_block1,
           state->response->payload_len);
 
-  if(state->res_block == state->block_num) {
+  if(next_block) {
     /* Call the callback function as we have more data */
     if(state->more) {
       state->status = COAP_REQUEST_STATUS_MORE;
@@ -120,8 +120,6 @@ coap_request_callback(void *callback_data, coap_message_t *response)
       state->status = COAP_REQUEST_STATUS_RESPONSE;
     }
     callback_state->callback(callback_state);
-    /* this is only for counting BLOCK2 blocks.*/
-    ++(state->block_num);
   } else {
     LOG_WARN("WRONG BLOCK %"PRIu32"/%"PRIu32"\n", state->res_block, state->block_num);
     ++(state->block_error);
@@ -152,10 +150,7 @@ coap_send_request(coap_callback_request_state_t *callback_state, coap_endpoint_t
 {
   coap_request_state_t *state = &callback_state->state;
 
-  state->more = 0;
-  state->res_block = 0;
-  state->block_error = 0;
-  state->block_num = 0;
+  coap_request_state_init_block2(state);
   state->response = NULL;
   state->request = request;
   state->remote_endpoint = endpoint;

@@ -77,13 +77,9 @@ PT_THREAD(coap_blocking_request
 
   PT_BEGIN(&blocking_state->pt);
 
-  state->block_num = 0;
+  coap_request_state_init_block2(state);
   state->response = NULL;
   blocking_state->process = PROCESS_CURRENT();
-
-  state->more = 0;
-  state->res_block = 0;
-  state->block_error = 0;
 
   do {
     request->mid = coap_get_mid();
@@ -93,7 +89,7 @@ PT_THREAD(coap_blocking_request
 
       if(state->block_num > 0) {
         coap_set_header_block2(request, state->block_num, 0,
-                               COAP_MAX_BLOCK_SIZE);
+                               state->block_size);
       }
       state->transaction->message_len = coap_serialize_message(request,
                                                               state->
@@ -112,7 +108,7 @@ PT_THREAD(coap_blocking_request
         PT_EXIT(&blocking_state->pt);
       }
 
-      coap_get_header_block2(state->response, &state->res_block, &state->more, NULL, NULL);
+      bool next_block = coap_request_state_next_block2(state, state->response);
 
       LOG_DBG("Received #%"PRIu32"%s (%u bytes)\n", state->res_block, state->more ? "+" : "",
               state->response->payload_len);
@@ -122,9 +118,8 @@ PT_THREAD(coap_blocking_request
         state->status = COAP_REQUEST_STATUS_RESPONSE;
       }
 
-      if(state->res_block == state->block_num) {
+      if(next_block) {
         request_callback(state->response);
-        ++(state->block_num);
       } else {
         LOG_WARN("WRONG BLOCK %"PRIu32"/%"PRIu32"\n",
                  state->res_block, state->block_num);

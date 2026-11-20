@@ -42,6 +42,10 @@
 #ifndef COAP_REQUEST_STATE_H_
 #define COAP_REQUEST_STATE_H_
 
+#include "coap.h"
+#include "coap-transactions.h"
+#include <stdbool.h>
+
 typedef enum {
   COAP_REQUEST_STATUS_RESPONSE, /* Response received and no more blocks */
   COAP_REQUEST_STATUS_MORE, /* Response received and there are more blocks */
@@ -58,11 +62,34 @@ typedef struct coap_request_state {
   coap_endpoint_t *remote_endpoint;
   uint32_t block_num;
   uint32_t res_block;
+  uint16_t block_size;
   uint8_t more;
   uint8_t block_error;
   void *user_data;
   coap_request_status_t status;
 } coap_request_state_t;
+
+/**
+ * \brief Prepare the request state for a new blockwise transfer.
+ * \param state The request state.
+ */
+void coap_request_state_init_block2(coap_request_state_t *state);
+
+/**
+ * \brief Check whether a response carries the next block of a transfer.
+ * \param state The request state.
+ * \param response The received response.
+ * \return true if the response carries the next block, false otherwise.
+ *
+ * Sets res_block and more from the Block2 option of the response, if it
+ * has one. When the response carries the next block, block_size and
+ * block_num are updated to request the block after it, in the block
+ * size that the server chose if it is smaller than the one requested
+ * (RFC 7959, Section 2.4). A block larger than block_size has its
+ * payload trimmed to block_size, and the rest of it is requested next.
+ */
+bool coap_request_state_next_block2(coap_request_state_t *state,
+                                    coap_message_t *response);
 
 
 #endif /* COAP_REQUEST_STATE_H_ */
