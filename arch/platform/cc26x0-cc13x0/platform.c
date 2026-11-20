@@ -55,6 +55,7 @@
 #include "ble-addr.h"
 #include "vims.h"
 #include "dev/cc26xx-uart.h"
+#include "dev/crypto/cc/cc-crypto.h"
 #include "dev/soc-rtc.h"
 #include "dev/serial-line.h"
 #include "rf-core/rf-core.h"
@@ -165,6 +166,12 @@ platform_init_stage_one()
   ti_lib_int_master_enable();
 
   soc_rtc_init();
+
+#if CC_CRYPTO_ENABLED
+  cc_crypto_init();
+  cc_crypto_disable();
+#endif /* CC_CRYPTO_ENABLED */
+
   fade(LEDS_YELLOW);
 }
 /*---------------------------------------------------------------------------*/
