@@ -3,6 +3,7 @@ include $(CONTIKI_CPU)/Makefile.gecko_sdk
 DEVICE_FAMILY := EFR32MG12P
 RAIL_CPU := efr32xg12
 RAIL_FAMILY := efr32xg1x
+SL_SERIES := 1
 
 CFLAGS += -mfpu=fpv4-sp-d16 -mfloat-abi=softfp
 
