@@ -39,5 +39,9 @@ tests/08-native-runs/30-cycles/native:./30-cycles.sh \
 tests/08-native-runs/31-coap-link-format/native:./31-coap-link-format.sh \
 tests/08-native-runs/32-lwm2m-tlv/native:./32-lwm2m-tlv.sh \
 tests/08-native-runs/33-etimer/native:./33-etimer.sh \
+tests/08-native-runs/36-rpl-srh/native:./36-rpl-srh.sh \
+tests/08-native-runs/36-rpl-srh/native:./36-rpl-srh.sh:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
+tests/08-native-runs/36-rpl-srh/native:./36-rpl-srh.sh:DEFINES=UIP_CONF_BUFFER_SIZE=160 \
+tests/08-native-runs/36-rpl-srh/native:./36-rpl-srh.sh:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC:DEFINES=UIP_CONF_BUFFER_SIZE=160 \
 
 include ../Makefile.compile-test
