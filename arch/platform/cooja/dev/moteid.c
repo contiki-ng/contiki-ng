@@ -49,11 +49,12 @@ doInterfaceActionsBeforeTick(void)
 
     simMoteIDChanged = 0;
 
-    sha_256_hkdf(NULL, 0,
-                 (const uint8_t *)&simRandomSeed, sizeof(simRandomSeed),
-                 NULL, 0,
-                 csprng_seed.u8, sizeof(csprng_seed.u8));
-    csprng_feed(&csprng_seed);
+    if(sha_256_hkdf(NULL, 0,
+                    (const uint8_t *)&simRandomSeed, sizeof(simRandomSeed),
+                    NULL, 0,
+                    csprng_seed.u8, sizeof(csprng_seed.u8))) {
+      csprng_feed(&csprng_seed);
+    }
   }
 }
 /*-----------------------------------------------------------------------------------*/
