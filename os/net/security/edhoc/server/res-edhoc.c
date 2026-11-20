@@ -70,7 +70,10 @@ res_edhoc_post_handler(coap_message_t *request,
                        uint16_t preferred_size,
                        int32_t *offset)
 {
-  int block_size = 300; /* FIXME: Make configurable */
+  if(edhoc_ctx == NULL) {
+    coap_set_status_code(response, SERVICE_UNAVAILABLE_5_03);
+    return;
+  }
 
   if(*offset == 0) {
     if(coap_block1_handler(request, response, msg_rx, &msg_rx_len,
@@ -90,20 +93,22 @@ res_edhoc_post_handler(coap_message_t *request,
     coap_set_header_block1(response, request->block1_num, 0,
                            request->block1_size);
 
-    if(response->payload_len > block_size) {
-      coap_set_option(response, COAP_OPTION_BLOCK2);
-      coap_set_header_block2(response, 0, 1, block_size);
+    /*
+     * If the reply does not fit in one block, a non-zero offset makes the
+     * CoAP engine send its first block with a Block2 option.
+     */
+    if(response->payload_len > preferred_size) {
+      *offset = preferred_size;
     }
   } else {
+    /*
+     * A request for a later block of the reply. The offset is left
+     * unchanged, so the CoAP engine takes the block from the stored reply
+     * and rejects an offset beyond its end.
+     */
     coap_set_status_code(response, CHANGED_2_04);
-    memcpy(buffer, edhoc_ctx->buffers.msg_tx + *offset, block_size);
-    if(edhoc_ctx->buffers.tx_sz - *offset < preferred_size) {
-      preferred_size = edhoc_ctx->buffers.tx_sz - *offset;
-      *offset = -1;
-    } else {
-      *offset += preferred_size;
-    }
-    coap_set_payload(response, buffer, preferred_size);
+    response->payload = (uint8_t *)edhoc_ctx->buffers.msg_tx;
+    response->payload_len = edhoc_ctx->buffers.tx_sz;
   }
 }
 /*---------------------------------------------------------------------------*/

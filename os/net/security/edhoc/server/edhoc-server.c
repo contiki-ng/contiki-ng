@@ -291,8 +291,8 @@ setup_coap_response(void)
     memset(&(request->options), 0, sizeof(request->options));
   } else {
     coap_set_header_block2(response, 0,
-                           edhoc_ctx->buffers.tx_sz > COAP_MAX_CHUNK_SIZE ? 1 : 0,
-                           COAP_MAX_CHUNK_SIZE);
+                           edhoc_ctx->buffers.tx_sz > COAP_MAX_BLOCK_SIZE ? 1 : 0,
+                           COAP_MAX_BLOCK_SIZE);
   }
 
   if(serv->state == TX_MSG_ERR) {
