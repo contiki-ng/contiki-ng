@@ -186,5 +186,22 @@ ecc_disable(void)
   process_mutex_unlock(&mutex);
 }
 /*---------------------------------------------------------------------------*/
+/*
+ * No-op session hooks for the software (uECC) backend. They exist so callers
+ * can wrap ECC operations in ecc_session_begin()/ecc_session_end() uniformly
+ * across backends (see lib/ecc.h). The CC310 hardware backend uses them to
+ * enable CryptoCell and perform the BASEPRI-isolated RNG instantiation; the
+ * software backend needs neither, so these are intentionally empty.
+ */
+void
+ecc_session_begin(void)
+{
+}
+/*---------------------------------------------------------------------------*/
+void
+ecc_session_end(void)
+{
+}
+/*---------------------------------------------------------------------------*/
 
 /** @} */
