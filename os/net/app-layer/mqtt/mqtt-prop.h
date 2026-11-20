@@ -93,8 +93,10 @@ struct mqtt_prop_bin_data {
 };
 
 struct mqtt_prop_auth_event {
+  /* Points into auth_method_buf, and is NUL-terminated there. */
   struct mqtt_string auth_method;
   struct mqtt_prop_bin_data auth_data;
+  char auth_method_buf[MQTT_PROP_MAX_PROP_LENGTH];
 };
 /*----------------------------------------------------------------------------*/
 void mqtt_prop_print_input_props(struct mqtt_connection *conn);

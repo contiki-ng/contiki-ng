@@ -82,8 +82,9 @@ static struct mqtt_connection conn;
  * the section when every property was accepted, and PROP_REJECTED when the
  * first property was rejected.
  */
-static uint32_t
-parse_props(const uint8_t *props, uint8_t props_len, uint8_t recv_len)
+static void
+receive_props(uint8_t fhdr, const uint8_t *props, uint8_t props_len,
+              uint8_t recv_len)
 {
   uint8_t *section;
 
@@ -96,7 +97,7 @@ parse_props(const uint8_t *props, uint8_t props_len, uint8_t recv_len)
   section[0] = props_len;
   memcpy(&section[1], props, props_len);
 
-  conn.in_packet.fhdr = MQTT_FHDR_MSG_TYPE_PUBLISH;
+  conn.in_packet.fhdr = fhdr;
   conn.in_packet.payload_start = section;
   conn.in_packet.remaining_length = MQTT_INPUT_BUFF_SIZE;
   /* Bytes received: everything up to and including the encoded length, plus
@@ -106,6 +107,12 @@ parse_props(const uint8_t *props, uint8_t props_len, uint8_t recv_len)
     (section - conn.in_packet.payload) + 1 + recv_len;
 
   mqtt_prop_decode_input_props(&conn);
+}
+/*---------------------------------------------------------------------------*/
+static uint32_t
+parse_props(const uint8_t *props, uint8_t props_len, uint8_t recv_len)
+{
+  receive_props(MQTT_FHDR_MSG_TYPE_PUBLISH, props, props_len, recv_len);
   if(!conn.in_packet.has_props) {
     return 0;
   }
@@ -330,6 +337,122 @@ UNIT_TEST(test_vbi_decoder_range)
   UNIT_TEST_END();
 }
 /*---------------------------------------------------------------------------*/
+/*
+ * Parse the properties of a received AUTH packet into event, as
+ * handle_auth() does. The event is on the stack there and is not
+ * initialised, so its method pointer is aimed at guard here first,
+ * where a copy through that pointer would show.
+ */
+static uint8_t guard[MQTT_PROP_MAX_PROP_LENGTH];
+
+static void
+parse_auth(const uint8_t *props, uint8_t props_len,
+           struct mqtt_prop_auth_event *event)
+{
+  memset(guard, 0x5a, sizeof(guard));
+  memset(event, 0x5a, sizeof(*event));
+  event->auth_method.string = (char *)guard;
+
+  receive_props(MQTT_FHDR_MSG_TYPE_AUTH, props, props_len, props_len);
+  mqtt_prop_parse_auth_props(&conn, event);
+}
+/*---------------------------------------------------------------------------*/
+static bool
+guard_intact(void)
+{
+  unsigned i;
+
+  for(i = 0; i < sizeof(guard); i++) {
+    if(guard[i] != 0x5a) {
+      return false;
+    }
+  }
+  return true;
+}
+/*---------------------------------------------------------------------------*/
+/*
+ * The longest Authentication Method and the same 29 bytes as
+ * Authentication Data. The two properties differ only in their
+ * identifier, 0x15 and 0x16.
+ */
+#define AUTH_LONG_PROP(id) \
+        id, 0x00, 29, \
+        'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', \
+        'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', \
+        'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A'
+
+UNIT_TEST_REGISTER(test_auth_long, "AUTH properties of the maximum length");
+UNIT_TEST(test_auth_long)
+{
+  static const uint8_t method[] = {
+    AUTH_LONG_PROP(MQTT_VHDR_PROP_AUTH_METHOD)
+  };
+  static const uint8_t data[] = { AUTH_LONG_PROP(MQTT_VHDR_PROP_AUTH_DATA) };
+  static const char expected[] = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+  struct mqtt_prop_auth_event event;
+
+  UNIT_TEST_BEGIN();
+
+  parse_auth(method, sizeof(method), &event);
+  UNIT_TEST_ASSERT(guard_intact());
+  UNIT_TEST_ASSERT(event.auth_method.string == event.auth_method_buf);
+  UNIT_TEST_ASSERT(event.auth_method.length == 29);
+  UNIT_TEST_ASSERT(strcmp(event.auth_method.string, expected) == 0);
+  UNIT_TEST_ASSERT(event.auth_data.len == 0);
+
+  parse_auth(data, sizeof(data), &event);
+  UNIT_TEST_ASSERT(guard_intact());
+  UNIT_TEST_ASSERT(event.auth_method.length == 0);
+  UNIT_TEST_ASSERT(event.auth_data.len == 29);
+  UNIT_TEST_ASSERT(memcmp(event.auth_data.data, expected, 29) == 0);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(test_auth_values,
+                   "AUTH property values without their length prefix");
+UNIT_TEST(test_auth_values)
+{
+  /* An Authentication Method "abc", then Authentication Data 01 02 03 04 */
+  static const uint8_t both[] = {
+    MQTT_VHDR_PROP_AUTH_METHOD, 0x00, 0x03, 'a', 'b', 'c',
+    MQTT_VHDR_PROP_AUTH_DATA, 0x00, 0x04, 0x01, 0x02, 0x03, 0x04
+  };
+  static const uint8_t expected_data[] = { 0x01, 0x02, 0x03, 0x04 };
+  struct mqtt_prop_auth_event event;
+
+  UNIT_TEST_BEGIN();
+
+  parse_auth(both, sizeof(both), &event);
+  UNIT_TEST_ASSERT(guard_intact());
+  UNIT_TEST_ASSERT(event.auth_method.length == 3);
+  UNIT_TEST_ASSERT(strcmp(event.auth_method.string, "abc") == 0);
+  UNIT_TEST_ASSERT(event.auth_data.len == sizeof(expected_data));
+  UNIT_TEST_ASSERT(memcmp(event.auth_data.data, expected_data,
+                          sizeof(expected_data)) == 0);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
+UNIT_TEST_REGISTER(test_auth_none, "AUTH without properties");
+UNIT_TEST(test_auth_none)
+{
+  static const uint8_t none[1];
+  struct mqtt_prop_auth_event event;
+
+  UNIT_TEST_BEGIN();
+
+  /* An empty property section still leaves a valid, empty method. */
+  parse_auth(none, 0, &event);
+  UNIT_TEST_ASSERT(guard_intact());
+  UNIT_TEST_ASSERT(event.auth_method.string == event.auth_method_buf);
+  UNIT_TEST_ASSERT(event.auth_method.length == 0);
+  UNIT_TEST_ASSERT(event.auth_method.string[0] == '\0');
+  UNIT_TEST_ASSERT(event.auth_data.len == 0);
+
+  UNIT_TEST_END();
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(test_process, ev, data)
 {
   PROCESS_BEGIN();
@@ -344,6 +467,9 @@ PROCESS_THREAD(test_process, ev, data)
   UNIT_TEST_RUN(test_vbi);
   UNIT_TEST_RUN(test_vbi_decoder_bounds);
   UNIT_TEST_RUN(test_vbi_decoder_range);
+  UNIT_TEST_RUN(test_auth_long);
+  UNIT_TEST_RUN(test_auth_values);
+  UNIT_TEST_RUN(test_auth_none);
 
   if(!UNIT_TEST_PASSED(test_utf8) ||
      !UNIT_TEST_PASSED(test_fixed_len_int) ||
@@ -351,7 +477,10 @@ PROCESS_THREAD(test_process, ev, data)
      !UNIT_TEST_PASSED(test_utf8_pair) ||
      !UNIT_TEST_PASSED(test_vbi) ||
      !UNIT_TEST_PASSED(test_vbi_decoder_bounds) ||
-     !UNIT_TEST_PASSED(test_vbi_decoder_range)) {
+     !UNIT_TEST_PASSED(test_vbi_decoder_range) ||
+     !UNIT_TEST_PASSED(test_auth_long) ||
+     !UNIT_TEST_PASSED(test_auth_values) ||
+     !UNIT_TEST_PASSED(test_auth_none)) {
     printf("=check-me= FAILED\n");
     printf("---\n");
   }
