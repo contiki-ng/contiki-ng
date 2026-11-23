@@ -1259,9 +1259,17 @@ seed_present:
         while(list_item_next(locmmptr) != NULL) {
           locmmptr = list_item_next(locmmptr);
         }
-        r = vector_len;
-        while(!BIT_VECTOR_GET_BIT(vector, r)) {
+        if(vector_len == 0) {
+          l_missing = 1;
+          goto next;
+        }
+        r = vector_len - 1;
+        while(r > 0 && !BIT_VECTOR_GET_BIT(vector, r)) {
           r--;
+        }
+        if(!BIT_VECTOR_GET_BIT(vector, r)) {
+          l_missing = 1;
+          goto next;
         }
         if(SEQ_VAL_IS_GT(locmmptr->seq, SEQ_VAL_ADD(locsiptr->min_seqno, r))) {
           /* Our max sequence number is greater than their max sequence number */
