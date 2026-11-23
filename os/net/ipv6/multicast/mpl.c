@@ -1455,6 +1455,38 @@ accept(uint8_t in)
   S = HBH_GET_S(lochbhmptr);
   LOG_DBG("Incoming message S value = %u\n", S);
 
+  /*
+   * The seed ID length is selected by S.  Validate that the option and
+   * the enclosing HBH header carry the complete ID before reading it.
+   * Without this check an S=3 option in an 8-byte HBH header makes
+   * accept() consume the following UDP header as a 16-byte seed ID.  The
+   * stored message is later re-sent with a correctly sized S=3 header,
+   * which makes data_message_expiration() write past uip_buf.
+   */
+  size_t seed_len;
+  switch(S) {
+  case 0:
+    seed_len = 0;
+    break;
+  case 1:
+    seed_len = 2;
+    break;
+  case 2:
+    seed_len = 8;
+    break;
+  default:
+    seed_len = 16; /* S == 3 */
+    break;
+  }
+  if(lochbhmptr->len < 2 + seed_len ||
+     (uint8_t *)lochbhmptr + 2 + lochbhmptr->len >
+       (uint8_t *)UIP_EXT_BUF + ((size_t)UIP_EXT_BUF->len + 1) * 8 ||
+     (uint8_t *)lochbhmptr + 4 + seed_len > uip_buf + uip_len) {
+    LOG_ERR("MPL HBH option is too short for its seed ID\n");
+    UIP_MCAST6_STATS_ADD(mcast_bad);
+    return UIP_MCAST6_DROP;
+  }
+
   if(S == 0) {
     /* Seed ID is the IPV6 Source Address */
     seed_id_net_to_host(&seed_id, &UIP_IP_BUF->srcipaddr, S);
