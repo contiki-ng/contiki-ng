@@ -222,11 +222,20 @@ void
 rpl_remove_routes_by_nexthop(uip_ipaddr_t *nexthop, rpl_dag_t *dag)
 {
   uip_ds6_route_t *r;
+  const uip_ipaddr_t *route_nexthop;
 
   r = uip_ds6_route_head();
 
   while(r != NULL) {
-    if(uip_ipaddr_cmp(uip_ds6_route_nexthop(r), nexthop) &&
+    /*
+     * A route can outlive its neighbor entry, for example after ND has
+     * removed an unresponsive nexthop.  In that case
+     * uip_ds6_route_nexthop() returns NULL and must not be passed to
+     * uip_ipaddr_cmp().
+     */
+    route_nexthop = uip_ds6_route_nexthop(r);
+    if(route_nexthop != NULL &&
+       uip_ipaddr_cmp(route_nexthop, nexthop) &&
        r->state.dag == dag) {
       r->state.lifetime = 0;
     }
