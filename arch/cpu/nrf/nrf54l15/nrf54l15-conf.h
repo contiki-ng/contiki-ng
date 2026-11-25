@@ -14,11 +14,6 @@
 #ifndef NRF54L15_CONF_H_
 #define NRF54L15_CONF_H_
 
-/* Enable IPv6 networking -- nrf_802154 radio driver is now integrated */
-#ifndef NETSTACK_CONF_WITH_IPV6
-#define NETSTACK_CONF_WITH_IPV6 1
-#endif
-
 #ifndef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM 4
 #endif
