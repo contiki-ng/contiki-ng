@@ -1242,7 +1242,7 @@ seed_present:
     r = 0;
     if(locmmptr->seq != locsiptr->min_seqno) {
       if(SEQ_VAL_IS_GT(locmmptr->seq, locsiptr->min_seqno)) {
-        while(locmmptr->seq != SEQ_VAL_ADD(locsiptr->min_seqno, r) && r <= vector_len) {
+        while(locmmptr->seq != SEQ_VAL_ADD(locsiptr->min_seqno, r) && r < vector_len) {
           r++;
         }
       } else {
@@ -1252,16 +1252,24 @@ seed_present:
       }
 
       /* There is no overlap in message sets */
-      if(r > vector_len || locmmptr == NULL) {
+      if(r >= vector_len || locmmptr == NULL) {
         LOG_WARN("Seed sets of local and remote have no overlap.\n");
         /* Work out who is behind who */
         locmmptr = list_head(locssptr->min_seq);
         while(list_item_next(locmmptr) != NULL) {
           locmmptr = list_item_next(locmmptr);
         }
-        r = vector_len;
-        while(!BIT_VECTOR_GET_BIT(vector, r)) {
+        if(vector_len == 0) {
+          l_missing = 1;
+          goto next;
+        }
+        r = vector_len - 1;
+        while(r > 0 && !BIT_VECTOR_GET_BIT(vector, r)) {
           r--;
+        }
+        if(!BIT_VECTOR_GET_BIT(vector, r)) {
+          l_missing = 1;
+          goto next;
         }
         if(SEQ_VAL_IS_GT(locmmptr->seq, SEQ_VAL_ADD(locsiptr->min_seqno, r))) {
           /* Our max sequence number is greater than their max sequence number */
@@ -1290,7 +1298,7 @@ seed_present:
     do {
       /* This won't occur on first iteration */
       /* Resyncronise our pointers to local and remote messages after previous iteration */
-      while(locmmptr->seq != SEQ_VAL_ADD(locsiptr->min_seqno, r)) {
+      while(r < vector_len && locmmptr->seq != SEQ_VAL_ADD(locsiptr->min_seqno, r)) {
         /**
          * If we enter this loop it means there is a gap in local sequence numbers.
          *  Check that same gap exists in the remote set.
@@ -1301,6 +1309,10 @@ seed_present:
           l_missing = 1;
         }
         r++;
+      }
+      if(r >= vector_len) {
+        /* The remote bitmap has ended; remaining local messages are missing. */
+        break;
       }
       /* At this point the local pointer and remote pointer will be in sync */
 
@@ -1319,25 +1331,12 @@ seed_present:
       r++;
       locmmptr = list_item_next(locmmptr);
       /* These are then resyncronised at the top of the loop */
-    } while(locmmptr != NULL && r <= vector_len);
+    } while(locmmptr != NULL && r < vector_len);
 
     /* If we have stopped short of either message set then we may have inconsistencies */
-    if(locmmptr != NULL || r < vector_len) {
-      /**
-       * We have reached the end of local set, the remainder of the remote set should
-       *  be zero else local is missing a message.
-       */
-      while(r < vector_len) {
-        if(BIT_VECTOR_GET_BIT(vector, r)) {
-          /* We are missing a message */
-          LOG_DBG("We are missing seq=%u which is greater than our max seq number\n", SEQ_VAL_ADD(locsiptr->min_seqno, r));
-          l_missing = 1;
-        }
-        r++;
-      }
-    } else if(r >= vector_len && locmmptr != NULL) {
+    if(locmmptr != NULL) {
       /* We have reached the end of the remote set.
-       *  Any remaining messages are missing and should be reset.
+       *  Any remaining local messages are missing and should be reset.
        */
       while(locmmptr != NULL) {
         LOG_DBG("Remote is missing all above seq=%u\n", locmmptr->seq);
@@ -1347,6 +1346,19 @@ seed_present:
         mpl_trickle_timer_inconsistency(locmmptr);
         r_missing = 1;
         locmmptr = list_item_next(locmmptr);
+      }
+    } else {
+      /**
+       * We have reached the end of the local set, the remainder of the remote
+       * set should be zero else local is missing a message.
+       */
+      while(r < vector_len) {
+        if(BIT_VECTOR_GET_BIT(vector, r)) {
+          /* We are missing a message */
+          LOG_DBG("We are missing seq=%u which is greater than our max seq number\n", SEQ_VAL_ADD(locsiptr->min_seqno, r));
+          l_missing = 1;
+        }
+        r++;
       }
     }
     /* Now point to next seed info */
