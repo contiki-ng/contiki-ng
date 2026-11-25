@@ -8,7 +8,8 @@ Modes of operation
 By default, the application is going to operate in the role of a regular RPL+TSCH node.
 Change the value of `is_coordinator` variable at startup to put it in TSCH coordinator mode.
 One Cooja mote and Zolertia Z1 platforms typically used for simulation, the coordinator
-mode is automatically enabled if the node ID is equal to 1.
+mode is automatically enabled if the node ID is equal to 1. On other platforms, build with
+`DEFINES=SIMPLE_NODE_CONF_NODE_1_IS_ROOT=1` to do the same.
 
 The coordinator mode can also be configured using the Contiki-NG shell.
 Connect to the node via serial port and type this command in the shell:
