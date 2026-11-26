@@ -239,5 +239,5 @@ docker pull contiker/contiki-ng:<hash>
 ```
 
 ## Running out-of-tree-tests
-If you want to run the entire test suite inside docker, you need to either `export CI=true' before running the tests, or start 02-compile-arm-ports with `make OUT_OF_TREE_TEST=1`.
+If you want to run the entire test suite inside docker, you need to either `export CI=true` before running the tests, or start 02-compile-arm-ports with `make OUT_OF_TREE_TEST=1`.
 
