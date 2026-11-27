@@ -901,6 +901,24 @@ icmp_out(struct mpl_domain *dom)
   MPL_STATS_ADD(icmp_out);
   return;
 }
+/*
+ * Length of the Hop-by-Hop header that data_message_expiration() puts in
+ * front of a buffered message whose seed ID has type s.
+ */
+static uint16_t
+hbho_len(uint8_t s)
+{
+  switch(s) {
+  case 0:
+    return HBHO_BASE_LEN + HBHO_S0_LEN;
+  case 1:
+    return HBHO_BASE_LEN + HBHO_S1_LEN;
+  case 2:
+    return HBHO_BASE_LEN + HBHO_S2_LEN;
+  default:
+    return HBHO_BASE_LEN + HBHO_S3_LEN;
+  }
+}
 static void
 data_message_expiration(void *ptr, uint8_t suppress)
 {
@@ -908,6 +926,12 @@ data_message_expiration(void *ptr, uint8_t suppress)
   locmmptr = ((struct mpl_msg *)ptr);
   if(locmmptr->e > MPL_DATA_MESSAGE_TIMER_EXPIRATIONS) {
     /* Terminate the trickle timer here if we've already expired enough times */
+    trickle_timer_stop(&locmmptr->tt);
+    return;
+  }
+  if(UIP_IPH_LEN + hbho_len(locmmptr->seed->seed_id.s) + locmmptr->size >
+     UIP_BUFSIZE) {
+    LOG_ERR("Buffered message too long to retransmit\n");
     trickle_timer_stop(&locmmptr->tt);
     return;
   }
@@ -1525,6 +1549,18 @@ accept(uint8_t in)
     }
   }
   /* We have not seen this message before */
+
+  /*
+   * The message is retransmitted behind the header that its seed's S
+   * calls for. Seed lookup ignores S, so an existing seed can need a
+   * longer header than the one this message arrived with.
+   */
+  if(uip_len - UIP_IPH_LEN - uip_ext_len >
+     UIP_BUFSIZE - UIP_IPH_LEN - hbho_len(locssptr ? locssptr->seed_id.s : S)) {
+    LOG_ERR("Message too long to retransmit for its seed\n");
+    UIP_MCAST6_STATS_ADD(mcast_dropped);
+    return UIP_MCAST6_DROP;
+  }
 
   /* Allocate a seed set if we have to */
   if(!locssptr) {
