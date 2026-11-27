@@ -657,8 +657,8 @@ seed_id_net_to_host(seed_id_t *dst, void *src, uint8_t s)
   case 1:
     /* 16 bit seed ID */
     dst->s = 1;
-    for(i = 2; i < 15; i++) {
-      /* Clear the first 13 bytes in the id */
+    for(i = 2; i < 16; i++) {
+      /* Clear the rest of the id */
       dst->id[i] = 0;
     }
     dst->id[0] = ptr[1];
